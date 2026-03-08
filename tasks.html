@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Household Tasks — Alan's Brain 🧠</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PASSPHRASE GATE
+       Covers the entire page until unlocked.
+       ══════════════════════════════════════ -->
+  <div class="auth-gate" id="authGate">
+    <div class="auth-card">
+      <div class="auth-icon">🔒</div>
+      <div class="auth-title"><span class="gradient-text">Family Zone</span></div>
+      <div class="auth-subtitle">this part's just for us</div>
+      <div class="auth-input-wrap">
+        <input type="password" class="auth-input" placeholder="Enter passphrase..." autocomplete="off" spellcheck="false">
+      </div>
+      <button class="auth-btn">Unlock</button>
+      <div class="auth-error">That's not it — try again</div>
+      <div class="auth-hint">
+        Don't have the passphrase? <a href="index.html">← Back to the main site</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PROTECTED CONTENT
+       Hidden until passphrase is verified.
+       ══════════════════════════════════════ -->
+  <div id="protectedContent" style="display:none">
+
+    <!-- Navigation -->
+    <nav>
+      <div class="nav-inner">
+        <a href="index.html" class="nav-logo">Alan's Brain 🧠</a>
+        <div class="nav-links">
+          <a href="index.html">Home</a>
+          <a href="tasks.html" class="active">Tasks</a>
+          <a href="index.html#links">Links</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="page">
+
+      <!-- ══════ TASK TRACKER ══════ -->
+      <div class="section-header" id="tasks" style="margin-top:30px">
+        <span class="section-icon">🏠</span>
+        <span class="section-title">Household Tasks</span>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="tracker-controls">
+        <span class="tracker-updated" id="tUpdated">Loading...</span>
+        <button class="tracker-refresh" id="tRefresh" onclick="manualRefresh()" aria-label="Refresh">↻</button>
+      </div>
+
+      <div class="t-alert" id="tAlert">
+        <div class="t-alert-title">⚠ Needs Attention</div>
+        <div class="t-alert-text" id="tAlertText"></div>
+      </div>
+
+      <div class="tracker-stats" id="tStats"></div>
+
+      <div class="t-filters" id="tFilters">
+        <button class="t-filter active" data-filter="all">All</button>
+        <button class="t-filter" data-filter="overdue">Overdue</button>
+        <button class="t-filter" data-filter="due-soon">Due Soon</button>
+        <button class="t-filter" data-filter="ok">On Track</button>
+        <button class="t-filter" data-filter="never">Not Started</button>
+      </div>
+
+      <!-- Task data loads here -->
+      <div id="tLoading" class="t-loading">
+        <div class="t-loading-dots">
+          <div class="t-loading-dot"></div>
+          <div class="t-loading-dot"></div>
+          <div class="t-loading-dot"></div>
+        </div>
+        <div>Loading tasks...</div>
+      </div>
+
+      <div id="tList"></div>
+      <div id="tEmpty" class="t-empty">✨ No tasks match this filter</div>
+
+      <div id="tWeekly" class="t-weekly" style="display:none">
+        <div class="t-weekly-title">📊 This Week</div>
+        <div class="t-weekly-bars" id="tWeeklyBars"></div>
+      </div>
+
+      <!-- ══════ FOOTER ══════ -->
+      <footer class="site-footer">
+        <div class="footer-stamp">Handcrafted by Alan 🛸</div>
+        <div class="footer-text">
+          Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. No tracking. No ads. Just a human on the internet.<br>
+          Built with HTML, CSS, and JS — the way the web was meant to be.
+        </div>
+        <div class="footer-buttons">
+          <span class="footer-btn">HTML</span>
+          <span class="footer-btn">CSS</span>
+          <span class="footer-btn">JS</span>
+          <span class="footer-btn">☕</span>
+        </div>
+      </footer>
+
+    </div><!-- /.page -->
+  </div><!-- /#protectedContent -->
+
+  <!-- Scripts: auth gate first, then tracker -->
+  <script src="auth.js"></script>
+  <script src="tasks.js"></script>
+  <script>
+    // Initialize the gate — when unlocked, start the task tracker
+    initAuthGate('authGate', 'protectedContent', initTaskTracker);
+  </script>
+
+</body>
+</html>

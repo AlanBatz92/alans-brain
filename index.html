@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Alan's Brain 🧠</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Alan's Brain 🧠</a>
+      <div class="nav-links">
+        <a href="index.html" class="active">Home</a>
+        <a href="tasks.html">Tasks</a>
+        <a href="#links">Links</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <!-- ══════ HERO ══════ -->
+    <section class="hero">
+      <div class="hero-brain-wrap anim" style="animation-delay:0.1s">
+        <div class="hero-brain">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="brainGrad" x1="20" y1="10" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#2dd4bf"/>
+                <stop offset="50%" stop-color="#38bdf8"/>
+                <stop offset="100%" stop-color="#a78bfa"/>
+              </linearGradient>
+              <linearGradient id="brainGrad2" x1="100" y1="20" x2="20" y2="100" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.5"/>
+                <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0.3"/>
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            <!-- Brain left hemisphere -->
+            <path d="M58 18c-8-1-16 3-21 9-6 7-8 15-7 23 0 3-1 5-3 7-4 4-7 10-6 16 1 5 4 10 8 13 2 2 3 4 3 7-1 5 1 10 5 13s9 4 14 3l3-1"
+                  stroke="url(#brainGrad)" stroke-width="2.5" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+            <!-- Brain right hemisphere -->
+            <path d="M62 18c8-1 16 3 21 9 6 7 8 15 7 23 0 3 1 5 3 7 4 4 7 10 6 16-1 5-4 10-8 13-2 2-3 4-3 7 1 5-1 10-5 13s-9 4-14 3l-3-1"
+                  stroke="url(#brainGrad)" stroke-width="2.5" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+            <!-- Brain stem -->
+            <path d="M60 108 L60 115" stroke="url(#brainGrad)" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Center line -->
+            <path d="M60 18 L60 108" stroke="url(#brainGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+            <!-- Left folds -->
+            <path d="M38 35c-3 5-2 12 2 16" stroke="url(#brainGrad)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/>
+            <path d="M30 52c0 6 3 11 7 14" stroke="url(#brainGrad)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+            <path d="M35 75c2 4 6 7 10 8" stroke="url(#brainGrad)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+            <path d="M44 42c-5 3-7 9-5 14" stroke="url(#brainGrad2)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/>
+            <!-- Right folds -->
+            <path d="M82 35c3 5 2 12-2 16" stroke="url(#brainGrad)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/>
+            <path d="M90 52c0 6-3 11-7 14" stroke="url(#brainGrad)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+            <path d="M85 75c-2 4-6 7-10 8" stroke="url(#brainGrad)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+            <path d="M76 42c5 3 7 9 5 14" stroke="url(#brainGrad2)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/>
+            <!-- Neural sparkle nodes -->
+            <circle cx="40" cy="32" r="2" fill="#2dd4bf" opacity="0.8">
+              <animate attributeName="opacity" values="0.8;0.2;0.8" dur="3s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="80" cy="32" r="2" fill="#38bdf8" opacity="0.6">
+              <animate attributeName="opacity" values="0.6;0.15;0.6" dur="2.5s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="34" cy="55" r="1.5" fill="#a78bfa" opacity="0.7">
+              <animate attributeName="opacity" values="0.7;0.2;0.7" dur="4s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="86" cy="55" r="1.5" fill="#2dd4bf" opacity="0.5">
+              <animate attributeName="opacity" values="0.5;0.1;0.5" dur="3.5s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="45" cy="80" r="1.5" fill="#38bdf8" opacity="0.6">
+              <animate attributeName="opacity" values="0.6;0.15;0.6" dur="2.8s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="75" cy="80" r="1.5" fill="#a78bfa" opacity="0.7">
+              <animate attributeName="opacity" values="0.7;0.2;0.7" dur="3.2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="60" cy="45" r="2" fill="#f472b6" opacity="0.5">
+              <animate attributeName="opacity" values="0.5;0.1;0.5" dur="4.5s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </div>
+      </div>
+      <h1 class="anim" style="animation-delay:0.2s">
+        <span class="gradient-text">Alan's Brain</span>
+      </h1>
+      <div class="hero-tagline anim" style="animation-delay:0.35s">my little corner of the internet</div>
+      <p class="hero-desc anim" style="animation-delay:0.45s">
+        A personal homepage, project hub, and digital garden. Built by hand, 
+        owned by me, part of the indie web. No algorithms, no ads, no data harvesting — 
+        just my brain.
+      </p>
+      <div class="hero-badges anim" style="animation-delay:0.55s">
+        <span class="hero-badge">
+          <span class="badge-dot" style="background:var(--green)"></span>
+          Online
+        </span>
+        <span class="hero-badge">🏗️ Always under construction</span>
+        <span class="hero-badge">☕ Fueled by caffeine</span>
+      </div>
+    </section>
+
+    <!-- ══════ PROJECTS ══════ -->
+    <div class="section-header reveal">
+      <span class="section-icon">🚀</span>
+      <span class="section-title">Projects</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="projects-grid">
+      <a href="tasks.html" class="project-card card-teal reveal">
+        <div class="card-emoji">🏠</div>
+        <div class="card-title">Household Task Tracker</div>
+        <div class="card-desc">Keep the house running. Tracks chores, cycles, and who did what — live from Google Sheets.</div>
+        <span class="card-tag tag-live">Live</span>
+      </a>
+      <div class="project-card card-purple reveal">
+        <div class="card-emoji">🎮</div>
+        <div class="card-title">Coming Soon...</div>
+        <div class="card-desc">More projects on the way. This site grows with me.</div>
+        <span class="card-tag tag-soon">Soon</span>
+      </div>
+    </div>
+
+    <!-- ══════ LINKS (INDIE WEB) ══════ -->
+    <div class="section-header reveal" id="links">
+      <span class="section-icon">🔗</span>
+      <span class="section-title">Cool Links</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="links-grid">
+      <a href="https://neocities.org" target="_blank" rel="noopener" class="link-card reveal">
+        <div class="link-emoji">🏙️</div>
+        <div class="link-name">Neocities</div>
+        <div class="link-url">neocities.org</div>
+      </a>
+      <a href="https://32bit.cafe" target="_blank" rel="noopener" class="link-card reveal">
+        <div class="link-emoji">☕</div>
+        <div class="link-name">32-Bit Cafe</div>
+        <div class="link-url">32bit.cafe</div>
+      </a>
+      <a href="https://melonking.net" target="_blank" rel="noopener" class="link-card reveal">
+        <div class="link-emoji">🍈</div>
+        <div class="link-name">Melon King</div>
+        <div class="link-url">melonking.net</div>
+      </a>
+      <a href="#" class="link-card reveal">
+        <div class="link-emoji">✨</div>
+        <div class="link-name">Your Link Here</div>
+        <div class="link-url">add your neighbors!</div>
+      </a>
+    </div>
+
+    <!-- ══════ FOOTER ══════ -->
+    <footer class="site-footer reveal">
+      <div class="footer-stamp">Handcrafted by Alan 🛸</div>
+      <div class="footer-text">
+        Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. No tracking. No ads. Just a human on the internet.<br>
+        Built with HTML, CSS, and JS — the way the web was meant to be.
+      </div>
+      <div class="footer-buttons">
+        <span class="footer-btn">HTML</span>
+        <span class="footer-btn">CSS</span>
+        <span class="footer-btn">JS</span>
+        <span class="footer-btn">☕</span>
+      </div>
+    </footer>
+
+  </div><!-- /.page -->
+
+<script>
+  /* Scroll reveal */
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(function(el) { observer.observe(el); });
+
+  /* Active nav link on scroll */
+  window.addEventListener('scroll', function() {
+    var links = document.querySelectorAll('.nav-links a');
+    var sections = ['links'];
+    var current = '';
+    sections.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top < 200) current = id;
+    });
+    links.forEach(function(a) {
+      a.classList.remove('active');
+      if (current && a.getAttribute('href') === '#' + current) a.classList.add('active');
+      else if (!current && a.getAttribute('href') === 'index.html') a.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
