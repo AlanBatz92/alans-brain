@@ -16,7 +16,7 @@
    ──────────────────────────────────────────────
    ══════════════════════════════════════════════ */
 
-var PASSPHRASE_HASH = 'b477d4d59a4aa24056f18810899de8dc76ef94adf83a15fa7e9b955ad63e3911'; // <-- PASTE YOUR SHA-256 HEX HASH HERE
+var PASSPHRASE_HASH = 'e1d2af2c58543c34910115fa89871af058e5274adc2a8955dd8385d0b303ef25'; // <-- PASTE YOUR SHA-256 HEX HASH HERE
 
 // Key used in sessionStorage so the unlock persists across page navigations
 var AUTH_SESSION_KEY = 'ab_auth';
