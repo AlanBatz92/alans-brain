@@ -173,10 +173,6 @@ function Slideshow(container, images, opts) {
   container.addEventListener('mouseenter', function() { self.paused = true; });
   container.addEventListener('mouseleave', function() { self.paused = false; });
 
-  // Init
-  self._showSlide(true);
-  self._startAuto();
-
   self.goTo = function(idx) {
     self.index = idx;
     self._showSlide(false);
@@ -251,4 +247,8 @@ function Slideshow(container, images, opts) {
   self.destroy = function() {
     clearInterval(self.progressTimer);
   };
+
+  // Init
+  self._showSlide(true);
+  self._startAuto();
 }
