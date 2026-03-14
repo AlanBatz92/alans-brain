@@ -1,1 +1,4 @@
-[{ "src": "img/art/full/River_Scene_Sebastian_Pether.jpg", "thumb": "img/art/thumbs/River_Scene_Sebastian_Pether.jpg", "title": "River Scene", "artist": "Sebastian Pether" }]
+[
+  { "src": "img/art/full/River_Scene_Sebastian_Pether.jpg", "thumb": "img/art/thumbs/River_Scene_Sebastian_Pether.jpg", "title": "River Scene", "artist": "Sebastian Pether" },
+  { "src": "img/art/full/A_Ruined_Gothic_Church_beside_a_River_by_Moonlight_Sebastian_Pether.jpg", "thumb": "img/art/thumbs/A_Ruined_Gothic_Church_beside_a_River_by_Moonlight_Sebastian_Pether.jpg", "title": "A Ruined Gothic Church beside a River by Moonlight", "artist": "Sebastian Pether" }
+]
