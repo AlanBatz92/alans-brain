@@ -25,10 +25,45 @@
       <a href="index.html" class="nav-logo">Alan's Brain 🧠</a>
       <div class="nav-links">
         <a href="index.html" class="active">Home</a>
+        <a href="tasks.html">Tasks</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+            Explore <span class="nav-dropdown-arrow">▼</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="youtube.html"><span class="dropdown-icon">📺</span> YouTube Channels</a>
+            <a href="transart.html"><span class="dropdown-icon">🎨</span> Trans Art & Resources</a>
+            <a href="soundboards.html"><span class="dropdown-icon">🔊</span> Soundboards</a>
+            <a href="tools.html"><span class="dropdown-icon">🛠️</span> Great & Free</a>
+            <a href="photos.html"><span class="dropdown-icon">📸</span> Photo Gallery</a>
+            <a href="art.html"><span class="dropdown-icon">🖼️</span> Art Gallery</a>
+            <a href="ufo.html"><span class="dropdown-icon">🛸</span> UFO Cases</a>
+          </div>
+        </div>
         <a href="#links">Links</a>
       </div>
+      <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <div class="nav-hamburger-lines">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
     </div>
   </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="nav-mobile-overlay">
+    <a href="index.html" class="active">Home</a>
+    <a href="tasks.html">Tasks</a>
+    <span class="mobile-section-label">Explore</span>
+    <a href="youtube.html">📺 YouTube Channels</a>
+    <a href="transart.html">🎨 Trans Art & Resources</a>
+    <a href="soundboards.html">🔊 Soundboards</a>
+    <a href="tools.html">🛠️ Great & Free</a>
+    <a href="photos.html">📸 Photo Gallery</a>
+    <a href="art.html">🖼️ Art Gallery</a>
+    <a href="ufo.html">🛸 UFO Cases</a>
+    <a href="#links">Links</a>
+  </div>
 
   <div class="page">
 
@@ -194,7 +229,7 @@
 
   /* Active nav link on scroll */
   window.addEventListener('scroll', function() {
-    var links = document.querySelectorAll('.nav-links a');
+    var links = document.querySelectorAll('.nav-links > a');
     var sections = ['links'];
     var current = '';
     sections.forEach(function(id) {
@@ -207,6 +242,45 @@
       else if (!current && a.getAttribute('href') === 'index.html') a.classList.add('active');
     });
   });
+
+  /* Explore dropdown toggle */
+  (function() {
+    var dropdown = document.querySelector('.nav-dropdown');
+    if (!dropdown) return;
+    var toggle = dropdown.querySelector('.nav-dropdown-toggle');
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = dropdown.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+
+  /* Mobile hamburger menu */
+  (function() {
+    var hamburger = document.querySelector('.nav-hamburger');
+    var overlay = document.querySelector('.nav-mobile-overlay');
+    if (!hamburger || !overlay) return;
+    hamburger.addEventListener('click', function() {
+      var isOpen = hamburger.classList.toggle('open');
+      overlay.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    overlay.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        hamburger.classList.remove('open');
+        overlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  })();
 </script>
 
 </body>
