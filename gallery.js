@@ -144,7 +144,7 @@ function Slideshow(container, images, opts) {
 
   self.info = document.createElement('div');
   self.info.className = 'slideshow-info';
-  self.info.innerHTML = '<div class="slide-title"></div><div class="slide-artist"></div>';
+  self.info.innerHTML = '<div class="slide-title"></div><div class="slide-artist"></div><div class="slide-year"></div>';
 
   self.progress = document.createElement('div');
   self.progress.className = 'slideshow-progress';
@@ -211,6 +211,7 @@ function Slideshow(container, images, opts) {
     // Update info
     self.info.querySelector('.slide-title').textContent = item.title || '';
     self.info.querySelector('.slide-artist').textContent = item.artist || '';
+    self.info.querySelector('.slide-year').textContent = item.year || '';
 
     // Preload next
     var nextIdx = (self.index + 1) % self.images.length;

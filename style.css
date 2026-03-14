@@ -1470,6 +1470,11 @@ nav {
   font-size: 0.82rem;
   color: var(--text-muted);
 }
+.slideshow-info .slide-year {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
 .slideshow-progress {
   position: absolute;
   bottom: 0;

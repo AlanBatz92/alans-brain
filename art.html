@@ -151,7 +151,7 @@
   function initSlideshow() {
     var container = document.getElementById('artSlideshow');
     var images = artworks.map(function(a) {
-      return { src: a.src, title: a.title || '', artist: a.artist || '' };
+      return { src: a.src, title: a.title || '', artist: a.artist || '', year: a.year || '' };
     });
     slideshow = new Slideshow(container, images, {
       interval: 15000,
@@ -174,7 +174,7 @@
 
   function openArtLightbox(idx) {
     var images = artworks.map(function(a) {
-      return { src: a.src, caption: (a.title || '') + (a.artist ? ' — ' + a.artist : '') };
+      return { src: a.src, caption: (a.title || '') + (a.artist ? ' — ' + a.artist : '') + (a.year ? ' (' + a.year + ')' : '') };
     });
     lightbox.open(images, idx);
   }
@@ -184,7 +184,7 @@
     var html = '';
 
     artworks.forEach(function(a, i) {
-      html += '<div class="gallery-item" data-index="' + i + '" title="' + esc(a.title || '') + ' — ' + esc(a.artist || '') + '">' +
+      html += '<div class="gallery-item" data-index="' + i + '" title="' + esc(a.title || '') + ' — ' + esc(a.artist || '') + (a.year ? ' (' + esc(a.year) + ')' : '') + '">' +
         '<img src="' + esc(a.thumb || a.src) + '" alt="' + esc(a.title || '') + '" loading="lazy">' +
       '</div>';
     });
