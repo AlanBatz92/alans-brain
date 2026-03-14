@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Art That Moves Me — Alan's Brain 🧠</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Alan's Brain 🧠</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="tasks.html">Tasks</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+            Explore <span class="nav-dropdown-arrow">▼</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="youtube.html"><span class="dropdown-icon">📺</span> YouTube Channels</a>
+            <a href="transart.html"><span class="dropdown-icon">🎨</span> Trans Art & Resources</a>
+            <a href="soundboards.html"><span class="dropdown-icon">🔊</span> Soundboards</a>
+            <a href="tools.html"><span class="dropdown-icon">🛠️</span> Great & Free</a>
+            <a href="photos.html"><span class="dropdown-icon">📸</span> Photo Gallery</a>
+            <a href="art.html"><span class="dropdown-icon">🖼️</span> Art Gallery</a>
+            <a href="ufo.html"><span class="dropdown-icon">🛸</span> UFO Cases</a>
+          </div>
+        </div>
+        <a href="index.html#links">Links</a>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <div class="nav-hamburger-lines">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="nav-mobile-overlay">
+    <a href="index.html">Home</a>
+    <a href="tasks.html">Tasks</a>
+    <span class="mobile-section-label">Explore</span>
+    <a href="youtube.html">📺 YouTube Channels</a>
+    <a href="transart.html">🎨 Trans Art & Resources</a>
+    <a href="soundboards.html">🔊 Soundboards</a>
+    <a href="tools.html">🛠️ Great & Free</a>
+    <a href="photos.html">📸 Photo Gallery</a>
+    <a href="art.html" class="active">🖼️ Art Gallery</a>
+    <a href="ufo.html">🛸 UFO Cases</a>
+    <a href="index.html#links">Links</a>
+  </div>
+
+  <div class="page">
+
+    <!-- ══════ PAGE HERO ══════ -->
+    <section class="page-hero">
+      <div class="page-hero-icon anim" style="animation-delay:0.1s">🖼️</div>
+      <h1 class="anim" style="animation-delay:0.2s">
+        <span class="gradient-text">Art That Moves Me</span>
+      </h1>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">the stuff that lives in my head rent-free</div>
+    </section>
+
+    <!-- ══════ HERO SLIDESHOW ══════ -->
+    <div class="slideshow anim" style="animation-delay:0.45s" id="artSlideshow"></div>
+
+    <!-- ══════ THUMBNAIL GRID ══════ -->
+    <div class="section-header reveal">
+      <span class="section-icon">🎨</span>
+      <span class="section-title">All Pieces</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="masonry-grid" id="artGrid">
+      <div class="t-loading" id="artLoading">
+        <div class="t-loading-dots">
+          <div class="t-loading-dot"></div>
+          <div class="t-loading-dot"></div>
+          <div class="t-loading-dot"></div>
+        </div>
+        Loading art...
+      </div>
+    </div>
+
+    <!-- ══════ EMPTY STATE ══════ -->
+    <div class="t-empty" id="artEmpty" style="display:none">
+      <div style="font-size:2rem;margin-bottom:10px">🖼️</div>
+      <div>No artwork yet — check back soon!</div>
+    </div>
+
+    <!-- ══════ FOOTER ══════ -->
+    <footer class="site-footer reveal">
+      <div class="footer-stamp">Crafted by Alan 🛸</div>
+      <div class="footer-text">
+        Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. No tracking. No ads. Just a human on the internet.<br>
+        All artwork belongs to the original artists. This is a personal inspiration board.
+      </div>
+      <div class="footer-buttons">
+        <span class="footer-btn">HTML</span>
+        <span class="footer-btn">CSS</span>
+        <span class="footer-btn">JS</span>
+        <span class="footer-btn">☕</span>
+      </div>
+    </footer>
+
+  </div><!-- /.page -->
+
+<script src="gallery.js"></script>
+<script>
+  /* ── Data ── */
+  var artworks = [];
+  var slideshow = null;
+  var lightbox = new Lightbox();
+
+  fetch('data/art.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      artworks = data;
+      document.getElementById('artLoading').style.display = 'none';
+      if (artworks.length === 0) {
+        document.getElementById('artSlideshow').style.display = 'none';
+        document.getElementById('artEmpty').style.display = 'block';
+        return;
+      }
+      initSlideshow();
+      renderGrid();
+    })
+    .catch(function() {
+      document.getElementById('artLoading').innerHTML = 'Failed to load artwork. Try refreshing.';
+    });
+
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function initSlideshow() {
+    var container = document.getElementById('artSlideshow');
+    var images = artworks.map(function(a) {
+      return { src: a.src, title: a.title || '', artist: a.artist || '' };
+    });
+    slideshow = new Slideshow(container, images, {
+      interval: 15000,
+      onSlideChange: function(idx) {
+        // Highlight active thumbnail
+        document.querySelectorAll('#artGrid .gallery-item').forEach(function(item, i) {
+          item.style.outline = (i === idx) ? '2px solid var(--teal)' : 'none';
+          item.style.outlineOffset = (i === idx) ? '2px' : '0';
+        });
+      }
+    });
+  }
+
+  function renderGrid() {
+    var grid = document.getElementById('artGrid');
+    var html = '';
+
+    artworks.forEach(function(a, i) {
+      html += '<div class="gallery-item" data-index="' + i + '" title="' + esc(a.title || '') + ' — ' + esc(a.artist || '') + '">' +
+        '<img src="' + esc(a.thumb || a.src) + '" alt="' + esc(a.title || '') + '" loading="lazy">' +
+      '</div>';
+    });
+
+    grid.innerHTML = html;
+
+    // Click thumbnail → jump slideshow to that image
+    grid.querySelectorAll('.gallery-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        var idx = parseInt(this.dataset.index);
+        if (slideshow) {
+          slideshow.goTo(idx);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    });
+  }
+
+  /* ── Scroll reveal ── */
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(function(el) { observer.observe(el); });
+
+  /* ── Nav dropdown ── */
+  (function() {
+    var dropdown = document.querySelector('.nav-dropdown');
+    if (!dropdown) return;
+    var toggle = dropdown.querySelector('.nav-dropdown-toggle');
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = dropdown.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+
+  /* ── Mobile hamburger ── */
+  (function() {
+    var hamburger = document.querySelector('.nav-hamburger');
+    var overlay = document.querySelector('.nav-mobile-overlay');
+    if (!hamburger || !overlay) return;
+    hamburger.addEventListener('click', function() {
+      var isOpen = hamburger.classList.toggle('open');
+      overlay.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    overlay.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        hamburger.classList.remove('open');
+        overlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

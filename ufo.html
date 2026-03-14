@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Those That Matter — Alan's Brain 🧠</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Alan's Brain 🧠</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="tasks.html">Tasks</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+            Explore <span class="nav-dropdown-arrow">▼</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="youtube.html"><span class="dropdown-icon">📺</span> YouTube Channels</a>
+            <a href="transart.html"><span class="dropdown-icon">🎨</span> Trans Art & Resources</a>
+            <a href="soundboards.html"><span class="dropdown-icon">🔊</span> Soundboards</a>
+            <a href="tools.html"><span class="dropdown-icon">🛠️</span> Great & Free</a>
+            <a href="photos.html"><span class="dropdown-icon">📸</span> Photo Gallery</a>
+            <a href="art.html"><span class="dropdown-icon">🖼️</span> Art Gallery</a>
+            <a href="ufo.html"><span class="dropdown-icon">🛸</span> UFO Cases</a>
+          </div>
+        </div>
+        <a href="index.html#links">Links</a>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <div class="nav-hamburger-lines">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="nav-mobile-overlay">
+    <a href="index.html">Home</a>
+    <a href="tasks.html">Tasks</a>
+    <span class="mobile-section-label">Explore</span>
+    <a href="youtube.html">📺 YouTube Channels</a>
+    <a href="transart.html">🎨 Trans Art & Resources</a>
+    <a href="soundboards.html">🔊 Soundboards</a>
+    <a href="tools.html">🛠️ Great & Free</a>
+    <a href="photos.html">📸 Photo Gallery</a>
+    <a href="art.html">🖼️ Art Gallery</a>
+    <a href="ufo.html" class="active">🛸 UFO Cases</a>
+    <a href="index.html#links">Links</a>
+  </div>
+
+  <div class="page">
+
+    <!-- ══════ PAGE HERO ══════ -->
+    <section class="page-hero">
+      <div class="page-hero-icon anim" style="animation-delay:0.1s">🛸</div>
+      <h1 class="anim" style="animation-delay:0.2s">
+        <span class="gradient-text">Those That Matter to Me, Thus Far...</span>
+      </h1>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">the ones that make you go hmm</div>
+    </section>
+
+    <!-- ══════ SORT/FILTER ══════ -->
+    <div class="filter-bar anim" style="animation-delay:0.45s" id="ufoFilters"></div>
+
+    <!-- ══════ TIMELINE ══════ -->
+    <div class="timeline anim" style="animation-delay:0.5s" id="ufoTimeline">
+      <div class="t-loading" id="ufoLoading">
+        <div class="t-loading-dots">
+          <div class="t-loading-dot"></div>
+          <div class="t-loading-dot"></div>
+          <div class="t-loading-dot"></div>
+        </div>
+        Loading cases...
+      </div>
+    </div>
+
+    <!-- ══════ EMPTY STATE ══════ -->
+    <div class="t-empty" id="ufoEmpty" style="display:none">
+      <div style="font-size:2rem;margin-bottom:10px">🛸</div>
+      <div>No cases documented yet — check back soon!</div>
+    </div>
+
+    <!-- ══════ FOOTER ══════ -->
+    <footer class="site-footer reveal">
+      <div class="footer-stamp">Crafted by Alan 🛸</div>
+      <div class="footer-text">
+        Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. No tracking. No ads. Just a human on the internet.<br>
+        Built with HTML, CSS, and JS — the way the web was meant to be.
+      </div>
+      <div class="footer-buttons">
+        <span class="footer-btn">HTML</span>
+        <span class="footer-btn">CSS</span>
+        <span class="footer-btn">JS</span>
+        <span class="footer-btn">☕</span>
+      </div>
+    </footer>
+
+  </div><!-- /.page -->
+
+<script>
+  /* ── Data ── */
+  var cases = [];
+  var currentSort = 'date';
+  var currentEvidence = 'all';
+
+  var EVIDENCE_LABELS = {
+    'witnesses': '👁️ Witnesses',
+    'radar': '📡 Radar',
+    'photo': '📸 Photo/Video',
+    'government': '🏛️ Government',
+    'physical': '🔬 Physical'
+  };
+
+  fetch('data/ufo-cases.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      cases = data;
+      document.getElementById('ufoLoading').style.display = 'none';
+      if (cases.length === 0) {
+        document.getElementById('ufoEmpty').style.display = 'block';
+        document.querySelector('.timeline').style.display = 'none';
+        return;
+      }
+      buildFilters();
+      renderTimeline();
+    })
+    .catch(function() {
+      document.getElementById('ufoLoading').innerHTML = 'Failed to load cases. Try refreshing.';
+    });
+
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function buildFilters() {
+    var html = '<button class="tag-pill active" data-sort="date">📅 By Date</button>';
+    html += '<button class="tag-pill" data-sort="conviction">🎯 By Conviction</button>';
+
+    // Evidence type filters
+    var evidenceTypes = [];
+    cases.forEach(function(c) {
+      (c.evidence || []).forEach(function(e) {
+        if (evidenceTypes.indexOf(e) === -1) evidenceTypes.push(e);
+      });
+    });
+    evidenceTypes.forEach(function(e) {
+      html += '<button class="tag-pill" data-evidence="' + esc(e) + '">' + (EVIDENCE_LABELS[e] || esc(e)) + '</button>';
+    });
+
+    document.getElementById('ufoFilters').innerHTML = html;
+  }
+
+  function renderTimeline() {
+    var filtered = cases.slice();
+
+    // Filter by evidence type
+    if (currentEvidence !== 'all') {
+      filtered = filtered.filter(function(c) {
+        return (c.evidence || []).indexOf(currentEvidence) > -1;
+      });
+    }
+
+    // Sort
+    if (currentSort === 'conviction') {
+      filtered.sort(function(a, b) { return (b.conviction || 0) - (a.conviction || 0); });
+    } else {
+      filtered.sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+    }
+
+    if (filtered.length === 0) {
+      document.getElementById('ufoTimeline').innerHTML = '';
+      document.getElementById('ufoEmpty').style.display = 'block';
+      return;
+    }
+    document.getElementById('ufoEmpty').style.display = 'none';
+
+    var html = '';
+    filtered.forEach(function(c, i) {
+      var dateStr = c.date ? new Date(c.date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date unknown';
+
+      html += '<div class="timeline-item reveal visible">' +
+        '<div class="timeline-marker"><div class="timeline-marker-dot"></div></div>' +
+        '<div class="timeline-card">' +
+          '<div class="timeline-date">' + esc(dateStr) + '</div>' +
+          '<h3>' + esc(c.name) + '</h3>' +
+          '<div class="timeline-location">📍 ' + esc(c.location || '') + '</div>';
+
+      // Evidence tags
+      if (c.evidence && c.evidence.length) {
+        html += '<div class="timeline-evidence">';
+        c.evidence.forEach(function(e) {
+          html += '<span class="evidence-tag">' + (EVIDENCE_LABELS[e] || esc(e)) + '</span>';
+        });
+        html += '</div>';
+      }
+
+      // Conviction meter
+      if (c.conviction) {
+        html += '<div class="conviction-meter">' +
+          '<div class="conviction-bar"><div class="conviction-fill" style="width:' + (c.conviction * 10) + '%"></div></div>' +
+          '<span class="conviction-label">' + c.conviction + '/10</span>' +
+        '</div>';
+      }
+
+      html += '<div class="timeline-summary">' + esc(c.summary || '') + '</div>';
+
+      // Expandable details
+      if (c.details) {
+        html += '<button class="timeline-read-more" data-idx="' + i + '">Read more ▾</button>' +
+          '<div class="timeline-details" id="details-' + i + '">' +
+            '<div class="timeline-details-text">' + esc(c.details) + '</div>' +
+          '</div>';
+      }
+
+      // Image
+      if (c.image) {
+        html += '<img src="' + esc(c.image) + '" alt="' + esc(c.name) + '" style="width:100%;border-radius:12px;margin-bottom:14px" loading="lazy">';
+      }
+
+      // Sources
+      if (c.sources && c.sources.length) {
+        html += '<div class="timeline-sources">';
+        c.sources.forEach(function(s) {
+          html += '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.label) + ' ↗</a>';
+        });
+        html += '</div>';
+      }
+
+      html += '</div></div>';
+    });
+
+    document.getElementById('ufoTimeline').innerHTML = html;
+  }
+
+  /* ── Events ── */
+  document.getElementById('ufoFilters').addEventListener('click', function(e) {
+    var btn = e.target.closest('.tag-pill');
+    if (!btn) return;
+
+    if (btn.dataset.sort) {
+      currentSort = btn.dataset.sort;
+      // Deactivate other sort buttons
+      document.querySelectorAll('#ufoFilters [data-sort]').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    } else if (btn.dataset.evidence) {
+      if (btn.classList.contains('active')) {
+        btn.classList.remove('active');
+        currentEvidence = 'all';
+      } else {
+        document.querySelectorAll('#ufoFilters [data-evidence]').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        currentEvidence = btn.dataset.evidence;
+      }
+    }
+    renderTimeline();
+  });
+
+  document.getElementById('ufoTimeline').addEventListener('click', function(e) {
+    var btn = e.target.closest('.timeline-read-more');
+    if (!btn) return;
+    var details = document.getElementById('details-' + btn.dataset.idx);
+    if (details) {
+      var isOpen = details.classList.toggle('open');
+      btn.textContent = isOpen ? 'Show less ▴' : 'Read more ▾';
+    }
+  });
+
+  /* ── Scroll reveal ── */
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(function(el) { observer.observe(el); });
+
+  /* ── Nav dropdown ── */
+  (function() {
+    var dropdown = document.querySelector('.nav-dropdown');
+    if (!dropdown) return;
+    var toggle = dropdown.querySelector('.nav-dropdown-toggle');
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = dropdown.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+
+  /* ── Mobile hamburger ── */
+  (function() {
+    var hamburger = document.querySelector('.nav-hamburger');
+    var overlay = document.querySelector('.nav-mobile-overlay');
+    if (!hamburger || !overlay) return;
+    hamburger.addEventListener('click', function() {
+      var isOpen = hamburger.classList.toggle('open');
+      overlay.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    overlay.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        hamburger.classList.remove('open');
+        overlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>
