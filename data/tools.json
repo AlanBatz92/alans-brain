@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Draw.io",
+    "url": "https://draw.io",
+    "description": "Free diagramming tool — flowcharts, network diagrams, wireframes, the works.",
+    "category": "Design",
+    "icon": "✏️"
+  },
+  {
+    "name": "P2R3 Convert",
+    "url": "https://p2r3.github.io/convert/",
+    "description": "Clean, fast unit and format converter.",
+    "category": "Utilities",
+    "icon": "🔄"
+  },
+  {
+    "name": "Have I Been Pwned",
+    "url": "https://haveibeenpwned.com",
+    "description": "Check if your email or password has appeared in a data breach.",
+    "category": "Security",
+    "icon": "🔒"
+  }
+]

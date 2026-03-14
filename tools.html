@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Great & Free — Alan's Brain 🧠</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Alan's Brain 🧠</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="tasks.html">Tasks</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+            Explore <span class="nav-dropdown-arrow">▼</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="youtube.html"><span class="dropdown-icon">📺</span> YouTube Channels</a>
+            <a href="transart.html"><span class="dropdown-icon">🎨</span> Trans Art & Resources</a>
+            <a href="soundboards.html"><span class="dropdown-icon">🔊</span> Soundboards</a>
+            <a href="tools.html"><span class="dropdown-icon">🛠️</span> Great & Free</a>
+            <a href="photos.html"><span class="dropdown-icon">📸</span> Photo Gallery</a>
+            <a href="art.html"><span class="dropdown-icon">🖼️</span> Art Gallery</a>
+            <a href="ufo.html"><span class="dropdown-icon">🛸</span> UFO Cases</a>
+          </div>
+        </div>
+        <a href="index.html#links">Links</a>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <div class="nav-hamburger-lines">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="nav-mobile-overlay">
+    <a href="index.html">Home</a>
+    <a href="tasks.html">Tasks</a>
+    <span class="mobile-section-label">Explore</span>
+    <a href="youtube.html">📺 YouTube Channels</a>
+    <a href="transart.html">🎨 Trans Art & Resources</a>
+    <a href="soundboards.html">🔊 Soundboards</a>
+    <a href="tools.html" class="active">🛠️ Great & Free</a>
+    <a href="photos.html">📸 Photo Gallery</a>
+    <a href="art.html">🖼️ Art Gallery</a>
+    <a href="ufo.html">🛸 UFO Cases</a>
+    <a href="index.html#links">Links</a>
+  </div>
+
+  <div class="page">
+
+    <!-- ══════ PAGE HERO ══════ -->
+    <section class="page-hero">
+      <div class="page-hero-icon anim" style="animation-delay:0.1s">🛠️</div>
+      <h1 class="anim" style="animation-delay:0.2s">
+        <span class="gradient-text">Great & Free</span>
+      </h1>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">tools that don't cost a dime or your soul</div>
+    </section>
+
+    <!-- ══════ SEARCH ══════ -->
+    <div class="search-wrap anim" style="animation-delay:0.45s">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="toolSearch" placeholder="Search tools...">
+    </div>
+
+    <!-- ══════ FILTERS ══════ -->
+    <div class="filter-bar anim" style="animation-delay:0.5s" id="toolFilters"></div>
+
+    <!-- ══════ TOOL LIST ══════ -->
+    <div class="media-grid single-col" id="toolList">
+      <div class="t-loading" id="toolLoading">
+        <div class="t-loading-dots">
+          <div class="t-loading-dot"></div>
+          <div class="t-loading-dot"></div>
+          <div class="t-loading-dot"></div>
+        </div>
+        Loading tools...
+      </div>
+    </div>
+
+    <!-- ══════ EMPTY STATE ══════ -->
+    <div class="t-empty" id="toolEmpty">✨ No tools match that search</div>
+
+    <!-- ══════ FOOTER ══════ -->
+    <footer class="site-footer reveal">
+      <div class="footer-stamp">Crafted by Alan 🛸</div>
+      <div class="footer-text">
+        Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. No tracking. No ads. Just a human on the internet.<br>
+        Built with HTML, CSS, and JS — the way the web was meant to be.
+      </div>
+      <div class="footer-buttons">
+        <span class="footer-btn">HTML</span>
+        <span class="footer-btn">CSS</span>
+        <span class="footer-btn">JS</span>
+        <span class="footer-btn">☕</span>
+      </div>
+    </footer>
+
+  </div><!-- /.page -->
+
+<script>
+  /* ── Data ── */
+  var tools = [];
+  var currentCategory = 'all';
+
+  fetch('data/tools.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      tools = data;
+      buildFilters();
+      renderTools();
+      document.getElementById('toolLoading').style.display = 'none';
+    })
+    .catch(function() {
+      document.getElementById('toolLoading').innerHTML = 'Failed to load tools. Try refreshing.';
+    });
+
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function buildFilters() {
+    var cats = ['All'];
+    tools.forEach(function(t) {
+      if (cats.indexOf(t.category) === -1) cats.push(t.category);
+    });
+    var html = '';
+    cats.forEach(function(c) {
+      var isActive = (c === 'All' && currentCategory === 'all') ? ' active' : '';
+      html += '<button class="tag-pill' + isActive + '" data-cat="' + (c === 'All' ? 'all' : esc(c)) + '">' + esc(c) + '</button>';
+    });
+    document.getElementById('toolFilters').innerHTML = html;
+  }
+
+  function renderTools() {
+    var query = document.getElementById('toolSearch').value.toLowerCase();
+    var filtered = tools.filter(function(t) {
+      var matchCat = currentCategory === 'all' || t.category === currentCategory;
+      var matchSearch = !query || t.name.toLowerCase().indexOf(query) > -1 || t.description.toLowerCase().indexOf(query) > -1;
+      return matchCat && matchSearch;
+    });
+
+    var empty = document.getElementById('toolEmpty');
+    var list = document.getElementById('toolList');
+
+    if (filtered.length === 0) {
+      list.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    var html = '';
+    filtered.forEach(function(t) {
+      html += '<a href="' + esc(t.url) + '" target="_blank" rel="noopener" class="media-card has-accent reveal visible">' +
+        '<div style="display:flex;align-items:flex-start;gap:16px">' +
+          '<div style="font-size:2rem;flex-shrink:0;width:48px;text-align:center">' + t.icon + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-size:1.05rem;font-weight:800;margin-bottom:4px">' + esc(t.name) + '</div>' +
+            '<div style="font-size:0.82rem;color:var(--text-muted);line-height:1.5">' + esc(t.description) + '</div>' +
+          '</div>' +
+          '<div style="flex-shrink:0;display:flex;align-items:center;gap:8px">' +
+            '<span class="tag-pill" style="cursor:default;pointer-events:none">' + esc(t.category) + '</span>' +
+            '<span style="color:var(--text-dim);font-size:0.8rem">↗</span>' +
+          '</div>' +
+        '</div>' +
+      '</a>';
+    });
+    list.innerHTML = html;
+  }
+
+  /* ── Events ── */
+  document.getElementById('toolSearch').addEventListener('input', renderTools);
+
+  document.getElementById('toolFilters').addEventListener('click', function(e) {
+    var btn = e.target.closest('.tag-pill');
+    if (!btn) return;
+    currentCategory = btn.dataset.cat;
+    document.querySelectorAll('#toolFilters .tag-pill').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderTools();
+  });
+
+  /* ── Scroll reveal ── */
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(function(el) { observer.observe(el); });
+
+  /* ── Nav dropdown ── */
+  (function() {
+    var dropdown = document.querySelector('.nav-dropdown');
+    if (!dropdown) return;
+    var toggle = dropdown.querySelector('.nav-dropdown-toggle');
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = dropdown.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+
+  /* ── Mobile hamburger ── */
+  (function() {
+    var hamburger = document.querySelector('.nav-hamburger');
+    var overlay = document.querySelector('.nav-mobile-overlay');
+    if (!hamburger || !overlay) return;
+    hamburger.addEventListener('click', function() {
+      var isOpen = hamburger.classList.toggle('open');
+      overlay.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    overlay.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        hamburger.classList.remove('open');
+        overlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>
