@@ -163,6 +163,20 @@
         });
       }
     });
+
+    // Click slideshow image → open lightbox
+    container.addEventListener('click', function(e) {
+      if (e.target.classList.contains('slideshow-img')) {
+        openArtLightbox(slideshow.index);
+      }
+    });
+  }
+
+  function openArtLightbox(idx) {
+    var images = artworks.map(function(a) {
+      return { src: a.src, caption: (a.title || '') + (a.artist ? ' — ' + a.artist : '') };
+    });
+    lightbox.open(images, idx);
   }
 
   function renderGrid() {
@@ -177,14 +191,11 @@
 
     grid.innerHTML = html;
 
-    // Click thumbnail → jump slideshow to that image
+    // Click thumbnail → open lightbox
     grid.querySelectorAll('.gallery-item').forEach(function(item) {
       item.addEventListener('click', function() {
         var idx = parseInt(this.dataset.index);
-        if (slideshow) {
-          slideshow.goTo(idx);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        openArtLightbox(idx);
       });
     });
   }

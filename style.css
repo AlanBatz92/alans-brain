@@ -1449,6 +1449,7 @@ nav {
   opacity: 0;
   transition: opacity 0.8s ease;
   background: var(--bg-deep);
+  cursor: pointer;
 }
 .slideshow-img.active {
   opacity: 1;
