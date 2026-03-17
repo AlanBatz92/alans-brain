@@ -1,0 +1,128 @@
+[
+  {
+    "name": "Atlas Obscura",
+    "url": "https://www.atlasobscura.com/",
+    "description": "A guide to the world's most wondrous and hidden places.",
+    "category": "Exploration",
+    "icon": "🗺️"
+  },
+  {
+    "name": "Library of Babel",
+    "url": "https://libraryofbabel.info/",
+    "description": "Browse a virtual library containing every possible page of text that could ever be written.",
+    "category": "Exploration",
+    "icon": "📚"
+  },
+  {
+    "name": "Neal.fun",
+    "url": "https://neal.fun/",
+    "description": "A collection of delightful interactive web experiments and visualizations.",
+    "category": "Fun & Games",
+    "icon": "🕹️"
+  },
+  {
+    "name": "UpToDate (MedLib)",
+    "url": "https://medilib.ir/uptodate",
+    "description": "Free access to UpToDate, the gold-standard clinical decision support resource for doctors.",
+    "category": "Knowledge",
+    "icon": "🩺"
+  },
+  {
+    "name": "TalkSmi",
+    "url": "https://talksmi.com/6728cd4d1a60334ead83a170",
+    "description": "Practice conversations with AI-powered characters to sharpen your language skills.",
+    "category": "Knowledge",
+    "icon": "💬"
+  },
+  {
+    "name": "Information is Beautiful",
+    "url": "https://informationisbeautiful.net/",
+    "description": "Stunning data visualizations that turn complex information into clear, beautiful graphics.",
+    "category": "Knowledge",
+    "icon": "📊"
+  },
+  {
+    "name": "Today is Gay",
+    "url": "https://todayis.gay/",
+    "description": "A daily dose of LGBTQ+ history, holidays, and celebrations for every day of the year.",
+    "category": "Knowledge",
+    "icon": "🏳️‍🌈"
+  },
+  {
+    "name": "MapChart",
+    "url": "https://www.mapchart.net/",
+    "description": "Create beautiful custom color-coded maps of the world, countries, and regions.",
+    "category": "Outdoors & Maps",
+    "icon": "🌍"
+  },
+  {
+    "name": "Scratch",
+    "url": "https://scratch.mit.edu/",
+    "description": "MIT's visual programming language that lets kids create games, animations, and stories.",
+    "category": "Knowledge",
+    "icon": "🐱"
+  },
+  {
+    "name": "Flightradar24",
+    "url": "https://www.flightradar24.com",
+    "description": "Watch every flight in the world move across the sky in real time.",
+    "category": "Outdoors & Maps",
+    "icon": "✈️"
+  },
+  {
+    "name": "Wayback Machine",
+    "url": "https://web.archive.org/",
+    "description": "Travel back in time to see what any website looked like in the past.",
+    "category": "Exploration",
+    "icon": "⏪"
+  },
+  {
+    "name": "Scale of the Universe",
+    "url": "https://scaleofuniverse.com/",
+    "description": "Zoom from quantum particles to the entire observable universe in one interactive slider.",
+    "category": "Exploration",
+    "icon": "🔭"
+  },
+  {
+    "name": "Monkeytype",
+    "url": "https://monkeytype.com/",
+    "description": "A minimalist, customizable typing test to measure and improve your speed.",
+    "category": "Fun & Games",
+    "icon": "⌨️"
+  },
+  {
+    "name": "AllTrails",
+    "url": "https://www.alltrails.com/",
+    "description": "Find and navigate hiking, biking, and running trails with reviews and maps.",
+    "category": "Outdoors & Maps",
+    "icon": "🥾"
+  },
+  {
+    "name": "Komoot",
+    "url": "https://www.komoot.com/",
+    "description": "Plan, navigate, and share outdoor adventures with smart route planning.",
+    "category": "Outdoors & Maps",
+    "icon": "🚴"
+  },
+  {
+    "name": "Pointer Pointer",
+    "url": "https://pointerpointer.com/",
+    "description": "Move your cursor anywhere and watch a photo of someone pointing right at it appear.",
+    "category": "Fun & Games",
+    "icon": "👆"
+  },
+  {
+    "name": "Neato Studio",
+    "url": "https://studio.neato.fun/",
+    "description": "A creative sandbox for making pixel art and tiny interactive scenes in your browser.",
+    "category": "Fun & Games",
+    "icon": "🎨"
+  },
+  {
+    "name": "Xikipedia",
+    "url": "https://xikipedia.org/",
+    "description": "A xkcd-style parody wiki full of absurd, nerdy, and hilariously rewritten articles.",
+    "category": "Fun & Games",
+    "icon": "📖"
+  }
+]

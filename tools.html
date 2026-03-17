@@ -74,6 +74,12 @@
       <div class="page-hero-tagline anim" style="animation-delay:0.35s">these won't even make a dent</div>
     </section>
 
+    <!-- ══════ TAB TOGGLE ══════ -->
+    <div class="tab-toggle anim" style="animation-delay:0.4s" id="tabToggle">
+      <button class="tab-toggle-btn active" data-tab="tools">Tools & Apps</button>
+      <button class="tab-toggle-btn" data-tab="websites">Cool Websites</button>
+    </div>
+
     <!-- ══════ SEARCH ══════ -->
     <div class="search-wrap anim" style="animation-delay:0.45s">
       <span class="search-icon">🔍</span>
@@ -81,9 +87,15 @@
     </div>
 
     <!-- ══════ FILTERS ══════ -->
-    <div class="filter-bar anim" style="animation-delay:0.5s" id="toolFilters"></div>
+    <div class="filter-dropdown anim" style="animation-delay:0.5s" id="toolFilterDropdown">
+      <button class="filter-dropdown-btn" id="toolFilterBtn">
+        Category: <span class="filter-active-label" id="toolFilterLabel">All</span>
+        <span class="filter-arrow">▼</span>
+      </button>
+      <div class="filter-dropdown-panel" id="toolFilters"></div>
+    </div>
 
-    <!-- ══════ TOOL LIST ══════ -->
+    <!-- ══════ ITEM LIST ══════ -->
     <div class="media-grid single-col" id="toolList">
       <div class="t-loading" id="toolLoading">
         <div class="t-loading-dots">
@@ -96,7 +108,7 @@
     </div>
 
     <!-- ══════ EMPTY STATE ══════ -->
-    <div class="t-empty" id="toolEmpty">✨ No tools match that search</div>
+    <div class="t-empty" id="toolEmpty">✨ No results match that search</div>
 
     <!-- ══════ FOOTER ══════ -->
     <footer class="site-footer reveal">
@@ -118,18 +130,24 @@
 <script>
   /* ── Data ── */
   var tools = [];
+  var websites = [];
+  var currentTab = 'tools';
   var currentCategory = 'all';
 
-  fetch('data/tools.json')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      tools = data;
+  /* ── Load both data sources ── */
+  var toolsReady = fetch('data/tools.json').then(function(r) { return r.json(); });
+  var sitesReady = fetch('data/websites.json').then(function(r) { return r.json(); });
+
+  Promise.all([toolsReady, sitesReady])
+    .then(function(results) {
+      tools = results[0];
+      websites = results[1];
       buildFilters();
-      renderTools();
+      renderItems();
       document.getElementById('toolLoading').style.display = 'none';
     })
     .catch(function() {
-      document.getElementById('toolLoading').innerHTML = 'Failed to load tools. Try refreshing.';
+      document.getElementById('toolLoading').innerHTML = 'Failed to load data. Try refreshing.';
     });
 
   function esc(s) {
@@ -138,22 +156,30 @@
     return d.innerHTML;
   }
 
+  function getActiveData() {
+    return currentTab === 'tools' ? tools : websites;
+  }
+
   function buildFilters() {
+    var data = getActiveData();
     var cats = ['All'];
-    tools.forEach(function(t) {
+    data.forEach(function(t) {
       if (cats.indexOf(t.category) === -1) cats.push(t.category);
     });
     var html = '';
     cats.forEach(function(c) {
-      var isActive = (c === 'All' && currentCategory === 'all') ? ' active' : '';
-      html += '<button class="tag-pill' + isActive + '" data-cat="' + (c === 'All' ? 'all' : esc(c)) + '">' + esc(c) + '</button>';
+      var catVal = c === 'All' ? 'all' : c;
+      var isActive = catVal === currentCategory ? ' active' : '';
+      html += '<button class="tag-pill' + isActive + '" data-cat="' + esc(catVal) + '">' + esc(c) + '</button>';
     });
     document.getElementById('toolFilters').innerHTML = html;
+    document.getElementById('toolFilterLabel').textContent = currentCategory === 'all' ? 'All' : currentCategory;
   }
 
-  function renderTools() {
+  function renderItems() {
+    var data = getActiveData();
     var query = document.getElementById('toolSearch').value.toLowerCase();
-    var filtered = tools.filter(function(t) {
+    var filtered = data.filter(function(t) {
       var matchCat = currentCategory === 'all' || t.category === currentCategory;
       var matchSearch = !query || t.name.toLowerCase().indexOf(query) > -1 || t.description.toLowerCase().indexOf(query) > -1;
       return matchCat && matchSearch;
@@ -188,16 +214,52 @@
     list.innerHTML = html;
   }
 
-  /* ── Events ── */
-  document.getElementById('toolSearch').addEventListener('input', renderTools);
+  /* ── Tab toggle ── */
+  document.getElementById('tabToggle').addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab-toggle-btn');
+    if (!btn || btn.classList.contains('active')) return;
 
+    document.querySelectorAll('#tabToggle .tab-toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+
+    currentTab = btn.dataset.tab;
+    currentCategory = 'all';
+    document.getElementById('toolSearch').value = '';
+
+    // Update search placeholder
+    var searchInput = document.getElementById('toolSearch');
+    searchInput.placeholder = currentTab === 'tools' ? 'Search tools...' : 'Search websites...';
+
+    buildFilters();
+    renderItems();
+  });
+
+  /* ── Search ── */
+  document.getElementById('toolSearch').addEventListener('input', renderItems);
+
+  /* ── Filter dropdown toggle ── */
+  (function() {
+    var dropdown = document.getElementById('toolFilterDropdown');
+    var btn = document.getElementById('toolFilterBtn');
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) dropdown.classList.remove('open');
+    });
+  })();
+
+  /* ── Filter pills ── */
   document.getElementById('toolFilters').addEventListener('click', function(e) {
     var btn = e.target.closest('.tag-pill');
     if (!btn) return;
     currentCategory = btn.dataset.cat;
     document.querySelectorAll('#toolFilters .tag-pill').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
-    renderTools();
+    document.getElementById('toolFilterLabel').textContent = currentCategory === 'all' ? 'All' : currentCategory;
+    document.getElementById('toolFilterDropdown').classList.remove('open');
+    renderItems();
   });
 
   /* ── Scroll reveal ── */

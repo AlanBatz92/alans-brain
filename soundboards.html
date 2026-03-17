@@ -75,14 +75,20 @@
     </section>
 
     <!-- ══════ BOARD SELECTOR ══════ -->
-    <div class="filter-bar anim" style="animation-delay:0.45s" id="boardSelector">
-      <div class="t-loading" id="boardLoading" style="width:100%">
-        <div class="t-loading-dots">
-          <div class="t-loading-dot"></div>
-          <div class="t-loading-dot"></div>
-          <div class="t-loading-dot"></div>
+    <div class="filter-dropdown anim" style="animation-delay:0.45s" id="boardSelectorDropdown">
+      <button class="filter-dropdown-btn" id="boardSelectorBtn">
+        Board: <span class="filter-active-label" id="boardSelectorLabel">...</span>
+        <span class="filter-arrow">▼</span>
+      </button>
+      <div class="filter-dropdown-panel" id="boardSelector">
+        <div class="t-loading" id="boardLoading" style="width:100%">
+          <div class="t-loading-dots">
+            <div class="t-loading-dot"></div>
+            <div class="t-loading-dot"></div>
+            <div class="t-loading-dot"></div>
+          </div>
+          Loading soundboards...
         </div>
-        Loading soundboards...
       </div>
     </div>
 
@@ -157,7 +163,7 @@
   function renderBoardSelector() {
     var html = '';
     boards.forEach(function(b) {
-      html += '<button class="tag-pill sb-board-btn" data-id="' + esc(b.id) + '">' +
+      html += '<button class="tag-pill sb-board-btn" data-id="' + esc(b.id) + '" data-name="' + esc(b.name) + '">' +
         b.icon + ' ' + esc(b.name) +
         (b.clipCount > 0 ? ' <span style="font-family:var(--font-mono);font-size:0.65rem;opacity:0.6">(' + b.clipCount + ')</span>' : '') +
       '</button>';
@@ -168,10 +174,15 @@
   function selectBoard(id) {
     activeBoard = id;
 
-    // Update button states
+    // Update button states and label
+    var label = id;
     document.querySelectorAll('.sb-board-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.dataset.id === id);
+      var isActive = btn.dataset.id === id;
+      btn.classList.toggle('active', isActive);
+      if (isActive) label = btn.dataset.name || id;
     });
+    document.getElementById('boardSelectorLabel').textContent = label;
+    document.getElementById('boardSelectorDropdown').classList.remove('open');
 
     engine.stopAll();
     updateCombo();
@@ -246,6 +257,19 @@
       el.textContent = '';
     }
   }
+
+  /* ── Board dropdown toggle ── */
+  (function() {
+    var dropdown = document.getElementById('boardSelectorDropdown');
+    var btn = document.getElementById('boardSelectorBtn');
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) dropdown.classList.remove('open');
+    });
+  })();
 
   /* ── Events ── */
   document.getElementById('boardSelector').addEventListener('click', function(e) {

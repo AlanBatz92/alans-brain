@@ -124,5 +124,145 @@
     "description": "Cross-platform level editor for Quake-engine games. Map like it's 1996.",
     "category": "Game Dev",
     "icon": "🗺️"
+  },
+  {
+    "name": "PeaZip",
+    "url": "https://peazip.github.io/",
+    "description": "Open-source file archiver supporting 200+ formats. Extract, compress, encrypt.",
+    "category": "Utilities",
+    "icon": "📦"
+  },
+  {
+    "name": "LocalSend",
+    "url": "https://localsend.org/",
+    "description": "Share files to nearby devices over Wi-Fi. No internet, no accounts, no nonsense.",
+    "category": "Utilities",
+    "icon": "📤"
+  },
+  {
+    "name": "LibreOffice",
+    "url": "https://www.libreoffice.org/",
+    "description": "Full office suite — docs, spreadsheets, presentations — without the subscription.",
+    "category": "Productivity",
+    "icon": "📝"
+  },
+  {
+    "name": "Notepad++",
+    "url": "https://notepad-plus-plus.org/",
+    "description": "Lightweight, powerful text and code editor for Windows. Fast and endlessly extensible.",
+    "category": "Productivity",
+    "icon": "📋"
+  },
+  {
+    "name": "qBittorrent",
+    "url": "https://www.qbittorrent.org/",
+    "description": "Clean, ad-free torrent client. Open source and gets the job done.",
+    "category": "Utilities",
+    "icon": "🌊"
+  },
+  {
+    "name": "Zen Browser",
+    "url": "https://zen-browser.app/",
+    "description": "Privacy-focused, beautifully designed browser built on Firefox. Fast and distraction-free.",
+    "category": "Internet",
+    "icon": "🧭"
+  },
+  {
+    "name": "Krita",
+    "url": "https://krita.org/",
+    "description": "Professional digital painting app — brushes, layers, animation. Rivals the paid stuff.",
+    "category": "Creative",
+    "icon": "🎨"
+  },
+  {
+    "name": "ImageMagick",
+    "url": "https://imagemagick.org/",
+    "description": "Command-line image Swiss Army knife. Resize, convert, composite, and transform in bulk.",
+    "category": "Media",
+    "icon": "🖼️"
+  },
+  {
+    "name": "Upscayl",
+    "url": "https://upscayl.org/",
+    "description": "AI-powered image upscaler. Sharpen and enlarge photos without the blur.",
+    "category": "Media",
+    "icon": "🔎"
+  },
+  {
+    "name": "yt-dlp",
+    "url": "https://github.com/yt-dlp/yt-dlp",
+    "description": "Download video and audio from YouTube and thousands of other sites. Command-line powerhouse.",
+    "category": "Media",
+    "icon": "📥"
+  },
+  {
+    "name": "Jellyfin",
+    "url": "https://jellyfin.org/",
+    "description": "Self-hosted media server for movies, shows, and music. Your library, your rules.",
+    "category": "Media",
+    "icon": "📺"
+  },
+  {
+    "name": "HandBrake",
+    "url": "https://handbrake.fr/",
+    "description": "Convert video from nearly any format. Rip DVDs, compress files, batch encode.",
+    "category": "Media",
+    "icon": "💿"
+  },
+  {
+    "name": "Obsidian",
+    "url": "https://obsidian.md/",
+    "description": "Markdown-based note-taking with linked thinking. Your second brain, stored locally.",
+    "category": "Productivity",
+    "icon": "🗒️"
+  },
+  {
+    "name": "Stirling PDF",
+    "url": "https://stirlingpdf.io/",
+    "description": "Self-hosted PDF toolkit — merge, split, compress, convert, and more. All in the browser.",
+    "category": "Utilities",
+    "icon": "📄"
+  },
+  {
+    "name": "Pi-hole",
+    "url": "https://pi-hole.net/",
+    "description": "Network-wide ad blocker. One device protects every device on your network.",
+    "category": "Networking",
+    "icon": "🛡️"
+  },
+  {
+    "name": "Bitwarden",
+    "url": "https://bitwarden.com/",
+    "description": "Open-source password manager. Sync across devices, share vaults, sleep better.",
+    "category": "Security",
+    "icon": "🔐"
+  },
+  {
+    "name": "RustDesk",
+    "url": "https://rustdesk.com/",
+    "description": "Open-source remote desktop. Self-host your own relay or use theirs — no strings attached.",
+    "category": "Utilities",
+    "icon": "🖥️"
+  },
+  {
+    "name": "balenaEtcher",
+    "url": "https://etcher.balena.io/",
+    "description": "Flash OS images to USB drives and SD cards. Three clicks and you're done.",
+    "category": "Utilities",
+    "icon": "💾"
+  },
+  {
+    "name": "Anki",
+    "url": "https://apps.ankiweb.net/",
+    "description": "Spaced-repetition flashcards that actually make things stick. Study smarter, not harder.",
+    "category": "Productivity",
+    "icon": "🧠"
+  },
+  {
+    "name": "Stellarium",
+    "url": "https://stellarium.org/",
+    "description": "Open-source planetarium on your screen. Explore stars, planets, and constellations in real time.",
+    "category": "Education",
+    "icon": "🔭"
   }
 ]

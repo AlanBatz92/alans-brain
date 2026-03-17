@@ -1231,17 +1231,122 @@ nav {
   transform: scale(0.96);
 }
 
-/* ── Filter bar (horizontal scroll) ── */
+/* ── Filter bar (legacy fallback — wrapping pills) ── */
 .filter-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
   margin-bottom: 20px;
-  padding-bottom: 2px;
 }
-.filter-bar::-webkit-scrollbar { display: none; }
+
+/* ── Filter dropdown ── */
+.filter-dropdown {
+  position: relative;
+  margin-bottom: 20px;
+}
+.filter-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+}
+.filter-dropdown-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--teal);
+}
+.filter-dropdown-btn .filter-arrow {
+  font-size: 0.6rem;
+  transition: transform 0.2s;
+  color: var(--text-muted);
+}
+.filter-dropdown.open .filter-arrow {
+  transform: rotate(180deg);
+}
+.filter-dropdown-btn .filter-active-label {
+  color: var(--teal);
+}
+.filter-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 240px;
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  z-index: 100;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  animation: filterDropIn 0.15s ease-out;
+}
+@keyframes filterDropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.filter-dropdown.open .filter-dropdown-panel {
+  display: flex;
+}
+.filter-dropdown-panel .tag-pill {
+  font-size: 0.74rem;
+  padding: 7px 16px;
+}
+@media (max-width: 600px) {
+  .filter-dropdown-panel {
+    min-width: 0;
+    width: calc(100vw - 48px);
+    max-width: none;
+  }
+}
+
+/* ── Tab toggle (segmented control) ── */
+.tab-toggle {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 4px;
+  margin-bottom: 24px;
+  gap: 4px;
+}
+.tab-toggle-btn {
+  flex: 1;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  white-space: nowrap;
+}
+.tab-toggle-btn:hover {
+  color: var(--text);
+}
+.tab-toggle-btn.active {
+  background: var(--teal);
+  color: var(--bg-deep);
+  box-shadow: 0 2px 8px rgba(45, 212, 191, 0.25);
+}
+.tab-toggle-btn:active {
+  transform: scale(0.97);
+}
 
 /* ── Search input ── */
 .search-input {

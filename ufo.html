@@ -75,7 +75,22 @@
     </section>
 
     <!-- ══════ SORT/FILTER ══════ -->
-    <div class="filter-bar anim" style="animation-delay:0.45s" id="ufoFilters"></div>
+    <div class="anim" style="animation-delay:0.45s;display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px" id="ufoFilterBar">
+      <div class="filter-dropdown" id="ufoSortDropdown" style="margin-bottom:0">
+        <button class="filter-dropdown-btn" id="ufoSortBtn">
+          Sort: <span class="filter-active-label" id="ufoSortLabel">By Date</span>
+          <span class="filter-arrow">▼</span>
+        </button>
+        <div class="filter-dropdown-panel" id="ufoSortFilters"></div>
+      </div>
+      <div class="filter-dropdown" id="ufoEvidenceDropdown" style="margin-bottom:0">
+        <button class="filter-dropdown-btn" id="ufoEvidenceBtn">
+          Evidence: <span class="filter-active-label" id="ufoEvidenceLabel">All</span>
+          <span class="filter-arrow">▼</span>
+        </button>
+        <div class="filter-dropdown-panel" id="ufoEvidenceFilters"></div>
+      </div>
+    </div>
 
     <!-- ══════ TIMELINE ══════ -->
     <div class="timeline anim" style="animation-delay:0.5s" id="ufoTimeline">
@@ -150,8 +165,10 @@
   }
 
   function buildFilters() {
-    var html = '<button class="tag-pill active" data-sort="date">📅 By Date</button>';
-    html += '<button class="tag-pill" data-sort="conviction">🎯 By Conviction</button>';
+    // Sort options
+    var sortHtml = '<button class="tag-pill active" data-sort="date">📅 By Date</button>';
+    sortHtml += '<button class="tag-pill" data-sort="conviction">🎯 By Conviction</button>';
+    document.getElementById('ufoSortFilters').innerHTML = sortHtml;
 
     // Evidence type filters
     var evidenceTypes = [];
@@ -160,11 +177,15 @@
         if (evidenceTypes.indexOf(e) === -1) evidenceTypes.push(e);
       });
     });
+    if (evidenceTypes.length === 0) {
+      document.getElementById('ufoEvidenceDropdown').style.display = 'none';
+      return;
+    }
+    var evHtml = '<button class="tag-pill active" data-evidence="all">All</button>';
     evidenceTypes.forEach(function(e) {
-      html += '<button class="tag-pill" data-evidence="' + esc(e) + '">' + (EVIDENCE_LABELS[e] || esc(e)) + '</button>';
+      evHtml += '<button class="tag-pill" data-evidence="' + esc(e) + '">' + (EVIDENCE_LABELS[e] || esc(e)) + '</button>';
     });
-
-    document.getElementById('ufoFilters').innerHTML = html;
+    document.getElementById('ufoEvidenceFilters').innerHTML = evHtml;
   }
 
   function renderTimeline() {
@@ -249,26 +270,46 @@
     document.getElementById('ufoTimeline').innerHTML = html;
   }
 
-  /* ── Events ── */
-  document.getElementById('ufoFilters').addEventListener('click', function(e) {
-    var btn = e.target.closest('.tag-pill');
-    if (!btn) return;
+  /* ── Dropdown toggles ── */
+  (function() {
+    ['ufoSortDropdown', 'ufoEvidenceDropdown'].forEach(function(id) {
+      var dropdown = document.getElementById(id);
+      var btn = dropdown.querySelector('.filter-dropdown-btn');
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // Close the other dropdown
+        var otherId = id === 'ufoSortDropdown' ? 'ufoEvidenceDropdown' : 'ufoSortDropdown';
+        document.getElementById(otherId).classList.remove('open');
+        dropdown.classList.toggle('open');
+      });
+    });
+    document.addEventListener('click', function(e) {
+      document.getElementById('ufoSortDropdown').classList.remove('open');
+      document.getElementById('ufoEvidenceDropdown').classList.remove('open');
+    });
+  })();
 
-    if (btn.dataset.sort) {
-      currentSort = btn.dataset.sort;
-      // Deactivate other sort buttons
-      document.querySelectorAll('#ufoFilters [data-sort]').forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-    } else if (btn.dataset.evidence) {
-      if (btn.classList.contains('active')) {
-        btn.classList.remove('active');
-        currentEvidence = 'all';
-      } else {
-        document.querySelectorAll('#ufoFilters [data-evidence]').forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        currentEvidence = btn.dataset.evidence;
-      }
-    }
+  /* ── Sort events ── */
+  document.getElementById('ufoSortFilters').addEventListener('click', function(e) {
+    var btn = e.target.closest('.tag-pill');
+    if (!btn || !btn.dataset.sort) return;
+    currentSort = btn.dataset.sort;
+    document.querySelectorAll('#ufoSortFilters .tag-pill').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('ufoSortLabel').textContent = btn.textContent;
+    document.getElementById('ufoSortDropdown').classList.remove('open');
+    renderTimeline();
+  });
+
+  /* ── Evidence filter events ── */
+  document.getElementById('ufoEvidenceFilters').addEventListener('click', function(e) {
+    var btn = e.target.closest('.tag-pill');
+    if (!btn || btn.dataset.evidence === undefined) return;
+    currentEvidence = btn.dataset.evidence;
+    document.querySelectorAll('#ufoEvidenceFilters .tag-pill').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('ufoEvidenceLabel').textContent = currentEvidence === 'all' ? 'All' : (EVIDENCE_LABELS[currentEvidence] || currentEvidence);
+    document.getElementById('ufoEvidenceDropdown').classList.remove('open');
     renderTimeline();
   });
 

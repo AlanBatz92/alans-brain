@@ -75,7 +75,13 @@
     </section>
 
     <!-- ══════ FILTERS ══════ -->
-    <div class="filter-bar anim" style="animation-delay:0.45s" id="photoFilters"></div>
+    <div class="filter-dropdown anim" style="animation-delay:0.45s" id="photoFilterDropdown" style="display:none">
+      <button class="filter-dropdown-btn" id="photoFilterBtn">
+        Category: <span class="filter-active-label" id="photoFilterLabel">All</span>
+        <span class="filter-arrow">▼</span>
+      </button>
+      <div class="filter-dropdown-panel" id="photoFilters"></div>
+    </div>
 
     <!-- ══════ GALLERY ══════ -->
     <div class="masonry-grid anim" style="animation-delay:0.5s" id="photoGrid">
@@ -146,13 +152,19 @@
     photos.forEach(function(p) {
       if (p.category && cats.indexOf(p.category) === -1) cats.push(p.category);
     });
-    if (cats.length <= 1) return;
+    if (cats.length <= 1) {
+      document.getElementById('photoFilterDropdown').style.display = 'none';
+      return;
+    }
+    document.getElementById('photoFilterDropdown').style.display = '';
     var html = '';
     cats.forEach(function(c) {
-      var isActive = (c === 'All' && currentCategory === 'all') ? ' active' : '';
-      html += '<button class="tag-pill' + isActive + '" data-cat="' + (c === 'All' ? 'all' : esc(c)) + '">' + esc(c) + '</button>';
+      var catVal = c === 'All' ? 'all' : c;
+      var isActive = catVal === currentCategory ? ' active' : '';
+      html += '<button class="tag-pill' + isActive + '" data-cat="' + esc(catVal) + '">' + esc(c) + '</button>';
     });
     document.getElementById('photoFilters').innerHTML = html;
+    document.getElementById('photoFilterLabel').textContent = currentCategory === 'all' ? 'All' : currentCategory;
   }
 
   function renderPhotos() {
@@ -183,6 +195,19 @@
     });
   }
 
+  /* ── Filter dropdown toggle ── */
+  (function() {
+    var dropdown = document.getElementById('photoFilterDropdown');
+    var btn = document.getElementById('photoFilterBtn');
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) dropdown.classList.remove('open');
+    });
+  })();
+
   /* ── Events ── */
   document.getElementById('photoFilters').addEventListener('click', function(e) {
     var btn = e.target.closest('.tag-pill');
@@ -190,6 +215,8 @@
     currentCategory = btn.dataset.cat;
     document.querySelectorAll('#photoFilters .tag-pill').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
+    document.getElementById('photoFilterLabel').textContent = currentCategory === 'all' ? 'All' : currentCategory;
+    document.getElementById('photoFilterDropdown').classList.remove('open');
     renderPhotos();
   });
 
