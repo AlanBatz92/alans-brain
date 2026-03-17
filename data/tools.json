@@ -19,5 +19,110 @@
     "description": "Check if your email or password has appeared in a data breach.",
     "category": "Security",
     "icon": "🔒"
+  },
+  {
+    "name": "Espanso",
+    "url": "https://espanso.org/",
+    "description": "Cross-platform text expander — type a shortcut, get a full snippet. Privacy-first.",
+    "category": "Productivity",
+    "icon": "⌨️"
+  },
+  {
+    "name": "Down for Everyone or Just Me",
+    "url": "https://downforeveryoneorjustme.com/",
+    "description": "Quickly check if a website is down for everyone or just you.",
+    "category": "Utilities",
+    "icon": "🌐"
+  },
+  {
+    "name": "TeraCopy",
+    "url": "https://www.codesector.com/teracopy",
+    "description": "Copy and move files at max speed with verification and error recovery.",
+    "category": "Utilities",
+    "icon": "📂"
+  },
+  {
+    "name": "Microsoft PowerToys",
+    "url": "https://learn.microsoft.com/en-us/windows/powertoys/",
+    "description": "25+ power-user utilities for Windows — window layouts, key remapping, quick launcher, and more.",
+    "category": "Productivity",
+    "icon": "⚡"
+  },
+  {
+    "name": "BCUninstaller",
+    "url": "https://www.bcuninstaller.com/",
+    "description": "Bulk remove unwanted programs cleanly and efficiently. Open source.",
+    "category": "Utilities",
+    "icon": "🧹"
+  },
+  {
+    "name": "Everything",
+    "url": "https://www.voidtools.com/support/everything/",
+    "description": "Lightning-fast file search for Windows — indexes your entire drive in seconds.",
+    "category": "Utilities",
+    "icon": "🔍"
+  },
+  {
+    "name": "OBS Studio",
+    "url": "https://obsproject.com/",
+    "description": "Record your screen or stream live to any platform. The industry standard.",
+    "category": "Media",
+    "icon": "🎥"
+  },
+  {
+    "name": "Kdenlive",
+    "url": "https://kdenlive.org/",
+    "description": "Full-featured, open-source video editor for Linux, Windows, and Mac.",
+    "category": "Media",
+    "icon": "🎬"
+  },
+  {
+    "name": "Audacity",
+    "url": "https://www.audacityteam.org/",
+    "description": "The classic free audio recorder and editor. Record, cut, mix, and export.",
+    "category": "Media",
+    "icon": "🎧"
+  },
+  {
+    "name": "FFmpeg",
+    "url": "https://www.ffmpeg.org/download.html",
+    "description": "The Swiss Army knife of audio/video processing. Convert, stream, and transcode anything from the command line.",
+    "category": "Media",
+    "icon": "🎞️"
+  },
+  {
+    "name": "VLC",
+    "url": "https://www.videolan.org/",
+    "description": "Plays virtually any media file you throw at it. No codecs needed.",
+    "category": "Media",
+    "icon": "🔶"
+  },
+  {
+    "name": "ZeroTier",
+    "url": "https://www.zerotier.com/",
+    "description": "Create secure virtual networks between your devices anywhere in the world. Like a VPN, but peer-to-peer.",
+    "category": "Networking",
+    "icon": "🌍"
+  },
+  {
+    "name": "Blender",
+    "url": "https://www.blender.org/",
+    "description": "Professional-grade 3D modeling, animation, rendering, and VFX — completely free.",
+    "category": "Creative",
+    "icon": "🧊"
+  },
+  {
+    "name": "Godot Engine",
+    "url": "https://godotengine.org/",
+    "description": "Open-source 2D and 3D game engine. Lightweight, flexible, and community-driven.",
+    "category": "Game Dev",
+    "icon": "🎮"
+  },
+  {
+    "name": "TrenchBroom",
+    "url": "https://trenchbroom.github.io/",
+    "description": "Cross-platform level editor for Quake-engine games. Map like it's 1996.",
+    "category": "Game Dev",
+    "icon": "🗺️"
   }
 ]
