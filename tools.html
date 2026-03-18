@@ -86,13 +86,20 @@
       <input type="text" class="search-input" id="toolSearch" placeholder="Search tools...">
     </div>
 
-    <!-- ══════ FILTERS ══════ -->
-    <div class="filter-dropdown anim" style="animation-delay:0.5s" id="toolFilterDropdown">
-      <button class="filter-dropdown-btn" id="toolFilterBtn">
-        Category: <span class="filter-active-label" id="toolFilterLabel">All</span>
-        <span class="filter-arrow">▼</span>
-      </button>
-      <div class="filter-dropdown-panel" id="toolFilters"></div>
+    <!-- ══════ FILTERS + SORT ══════ -->
+    <div class="toolbar-row anim" style="animation-delay:0.5s">
+      <div class="filter-dropdown" id="toolFilterDropdown">
+        <button class="filter-dropdown-btn" id="toolFilterBtn">
+          Category: <span class="filter-active-label" id="toolFilterLabel">All</span>
+          <span class="filter-arrow">▼</span>
+        </button>
+        <div class="filter-dropdown-panel" id="toolFilters"></div>
+      </div>
+      <div class="sort-controls" id="sortControls">
+        <button class="sort-btn active" data-sort="default">Default</button>
+        <button class="sort-btn" data-sort="az">A → Z</button>
+        <button class="sort-btn" data-sort="za">Z → A</button>
+      </div>
     </div>
 
     <!-- ══════ ITEM LIST ══════ -->
@@ -109,6 +116,12 @@
 
     <!-- ══════ EMPTY STATE ══════ -->
     <div class="t-empty" id="toolEmpty">✨ No results match that search</div>
+
+    <!-- ══════ SCROLL NAV ══════ -->
+    <div class="scroll-nav" id="scrollNav">
+      <button class="scroll-nav-btn" id="scrollTopBtn" title="Jump to top">↑</button>
+      <button class="scroll-nav-btn" id="scrollBottomBtn" title="Jump to bottom">↓</button>
+    </div>
 
     <!-- ══════ FOOTER ══════ -->
     <footer class="site-footer reveal">
@@ -133,6 +146,7 @@
   var websites = [];
   var currentTab = 'tools';
   var currentCategory = 'all';
+  var currentSort = 'default';
 
   /* ── Load both data sources ── */
   var toolsReady = fetch('data/tools.json').then(function(r) { return r.json(); });
@@ -176,6 +190,10 @@
     document.getElementById('toolFilterLabel').textContent = currentCategory === 'all' ? 'All' : currentCategory;
   }
 
+  function getDomain(url) {
+    try { return new URL(url).hostname; } catch(e) { return ''; }
+  }
+
   function renderItems() {
     var data = getActiveData();
     var query = document.getElementById('toolSearch').value.toLowerCase();
@@ -184,6 +202,12 @@
       var matchSearch = !query || t.name.toLowerCase().indexOf(query) > -1 || t.description.toLowerCase().indexOf(query) > -1;
       return matchCat && matchSearch;
     });
+
+    if (currentSort === 'az') {
+      filtered.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    } else if (currentSort === 'za') {
+      filtered.sort(function(a, b) { return b.name.localeCompare(a.name); });
+    }
 
     var empty = document.getElementById('toolEmpty');
     var list = document.getElementById('toolList');
@@ -197,16 +221,24 @@
 
     var html = '';
     filtered.forEach(function(t) {
+      var domain = getDomain(t.url);
+      var iconHtml = domain
+        ? '<img class="tc-favicon" src="https://www.google.com/s2/favicons?domain=' + esc(domain) + '&sz=64" alt="" ' +
+          'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'\';">' +
+          '<span class="tc-emoji-icon" style="display:none">' + t.icon + '</span>'
+        : '<span class="tc-emoji-icon">' + t.icon + '</span>';
+
       html += '<a href="' + esc(t.url) + '" target="_blank" rel="noopener" class="media-card has-accent reveal visible">' +
-        '<div style="display:flex;align-items:flex-start;gap:16px">' +
-          '<div style="font-size:2rem;flex-shrink:0;width:48px;text-align:center">' + t.icon + '</div>' +
-          '<div style="flex:1;min-width:0">' +
-            '<div style="font-size:1.05rem;font-weight:800;margin-bottom:4px">' + esc(t.name) + '</div>' +
-            '<div style="font-size:0.82rem;color:var(--text-muted);line-height:1.5">' + esc(t.description) + '</div>' +
-          '</div>' +
-          '<div style="flex-shrink:0;display:flex;align-items:center;gap:8px">' +
-            '<span class="tag-pill" style="cursor:default;pointer-events:none">' + esc(t.category) + '</span>' +
-            '<span style="color:var(--text-dim);font-size:0.8rem">↗</span>' +
+        '<div class="tc-inner">' +
+          '<div class="tc-icon">' + iconHtml + '</div>' +
+          '<div class="tc-main">' +
+            '<div class="tc-header">' +
+              '<div class="tc-name">' + esc(t.name) + '</div>' +
+              '<span class="tag-pill tc-cat-desktop">' + esc(t.category) + '</span>' +
+              '<span class="tc-arr">↗</span>' +
+            '</div>' +
+            '<div class="tc-desc">' + esc(t.description) + '</div>' +
+            '<span class="tag-pill tc-cat-mobile">' + esc(t.category) + '</span>' +
           '</div>' +
         '</div>' +
       '</a>';
@@ -224,7 +256,9 @@
 
     currentTab = btn.dataset.tab;
     currentCategory = 'all';
+    currentSort = 'default';
     document.getElementById('toolSearch').value = '';
+    document.querySelectorAll('#sortControls .sort-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.sort === 'default'); });
 
     // Update search placeholder
     var searchInput = document.getElementById('toolSearch');
@@ -286,6 +320,34 @@
         dropdown.classList.remove('open');
         toggle.setAttribute('aria-expanded', 'false');
       }
+    });
+  })();
+
+  /* ── Sort controls ── */
+  document.getElementById('sortControls').addEventListener('click', function(e) {
+    var btn = e.target.closest('.sort-btn');
+    if (!btn || btn.classList.contains('active')) return;
+    document.querySelectorAll('#sortControls .sort-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentSort = btn.dataset.sort;
+    renderItems();
+  });
+
+  /* ── Scroll nav ── */
+  (function() {
+    var nav = document.getElementById('scrollNav');
+    var topBtn = document.getElementById('scrollTopBtn');
+    var botBtn = document.getElementById('scrollBottomBtn');
+
+    window.addEventListener('scroll', function() {
+      nav.classList.toggle('visible', window.scrollY > 200);
+    }, { passive: true });
+
+    topBtn.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    botBtn.addEventListener('click', function() {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     });
   })();
 

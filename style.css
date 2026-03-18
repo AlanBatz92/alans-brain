@@ -1797,3 +1797,163 @@ nav {
 @media (min-width: 700px) {
   .page { max-width: 640px; }
 }
+
+/* ═══════════════════════════════════
+   TOOLS PAGE — TOOLBAR (filter + sort)
+   ═══════════════════════════════════ */
+.toolbar-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.toolbar-row .filter-dropdown {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 160px;
+}
+.sort-controls {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.sort-btn {
+  padding: 8px 14px;
+  border-radius: 100px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+}
+.sort-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.sort-btn.active {
+  background: var(--teal);
+  color: var(--bg-deep);
+  border-color: var(--teal);
+}
+.sort-btn:active {
+  transform: scale(0.96);
+}
+
+/* ═══════════════════════════════════
+   TOOLS PAGE — SCROLL NAV
+   ═══════════════════════════════════ */
+.scroll-nav {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.scroll-nav.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.scroll-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  -webkit-appearance: none;
+  line-height: 1;
+}
+.scroll-nav-btn:hover {
+  background: var(--teal);
+  color: var(--bg-deep);
+  border-color: var(--teal);
+  transform: translateY(-1px);
+}
+.scroll-nav-btn:active {
+  transform: scale(0.92);
+}
+
+/* ═══════════════════════════════════
+   TOOLS PAGE — CARD LAYOUT
+   ═══════════════════════════════════ */
+.tc-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.tc-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tc-favicon {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  object-fit: contain;
+}
+.tc-emoji-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+.tc-main {
+  flex: 1;
+  min-width: 0;
+}
+.tc-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.tc-name {
+  flex: 1;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.tc-arr {
+  flex-shrink: 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  padding-top: 3px;
+}
+.tc-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.tc-cat-desktop {
+  flex-shrink: 0;
+  cursor: default;
+  pointer-events: none;
+}
+.tc-cat-mobile {
+  display: none;
+  cursor: default;
+  pointer-events: none;
+}
+@media (max-width: 520px) {
+  .tc-cat-desktop { display: none; }
+  .tc-cat-mobile  { display: inline-block; }
+}
