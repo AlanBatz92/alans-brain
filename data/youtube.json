@@ -1,1 +1,800 @@
-[]
+[
+  {
+    "name": "Xbox Ahoy",
+    "handle": "@XboxAhoy",
+    "url": "https://youtube.com/@xboxahoy",
+    "description": "Insightful, beautifully produced gaming videos — history, retrospectives, and deep dives.",
+    "category": "Gaming"
+  },
+  {
+    "name": "AI Explained",
+    "handle": "@aiexplained-official",
+    "url": "https://youtube.com/@aiexplained-official",
+    "description": "Clear, thorough breakdowns of the biggest developments in AI.",
+    "category": "Tech"
+  },
+  {
+    "name": "Alien Theory",
+    "handle": "@AlienTheory",
+    "url": "https://youtube.com/@alientheory",
+    "description": "Theories and explanations from the Alien film universe.",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "Area 52 Investigations",
+    "handle": "@Area52Investigations",
+    "url": "https://youtube.com/@area52investigations",
+    "description": "Investigations and deep dives into unexplained phenomena.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "Audiotree",
+    "handle": "@audiotree",
+    "url": "https://youtube.com/@audiotree",
+    "description": "Intimate live studio sessions from talented musicians and bands around the world.",
+    "category": "Music"
+  },
+  {
+    "name": "Benn Jordan",
+    "handle": "@BennJordan",
+    "url": "https://youtube.com/@bennjordan",
+    "description": "Music, science, and wonderfully honest takes from a prolific electronic artist.",
+    "category": "Music"
+  },
+  {
+    "name": "Bob Gymlan",
+    "handle": "@BobGymlan",
+    "url": "https://youtube.com/@bobgymlan",
+    "description": "Compelling, old-school storytelling about mysterious and unexplained subjects.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "CG Why",
+    "handle": "@CGWHY",
+    "url": "https://youtube.com/@cgwhy",
+    "description": "Discussions on VFX quality, styles, and the realities behind the curtain of visual effects.",
+    "category": "Creative"
+  },
+  {
+    "name": "Defunctland",
+    "handle": "@Defunctland",
+    "url": "https://youtube.com/@defunctland",
+    "description": "Pop culture history with a focus on extinct theme park experiences.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Dump Truck ds",
+    "handle": "@dumptruckds",
+    "url": "https://youtube.com/@dumptruckds",
+    "description": "Quake-related tutorials and fandom.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Emily Harpist",
+    "handle": "@emilyharpist",
+    "url": "https://youtube.com/@emilyharpist",
+    "description": "Cool videos about music technology from a harpist's perspective.",
+    "category": "Music"
+  },
+  {
+    "name": "Farrell McGuire",
+    "handle": "@farrellmcguire",
+    "url": "https://youtube.com/@farrellmcguire",
+    "description": "A cozy slice of cyberspace.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Fireship",
+    "handle": "@Fireship",
+    "url": "https://youtube.com/@fireship",
+    "description": "High-intensity code tutorials and tech news to help you ship your app faster.",
+    "category": "Tech"
+  },
+  {
+    "name": "Eridanus 333",
+    "handle": "@Eridanus333",
+    "url": "https://youtube.com/@eridanus333",
+    "description": "Mysterious, atmospheric content. Keep doing whatever you did to get here.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "GeoWizard",
+    "handle": "@GeoWizard",
+    "url": "https://youtube.com/@geowizard",
+    "description": "Adventure and geography — GeoGuessr mastery and straight-line missions across countries.",
+    "category": "Nature & Adventure"
+  },
+  {
+    "name": "In Praise of Shadows",
+    "handle": "@InPraiseofShadows",
+    "url": "https://youtube.com/@inpraiseofshadows",
+    "description": "Horror history, reviews, and retrospectives across all forms of media.",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "Jesse Michels",
+    "handle": "@JesseMichels",
+    "url": "https://youtube.com/@jessemichels",
+    "description": "American Alchemy — highlighting our time's most heretical thinkers and ideas.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "Kid Leaves Stoop",
+    "handle": "@KidLeavesStoop",
+    "url": "https://youtube.com/@kidleavesstoop",
+    "description": "Lost media and obscure topics — things we've seen but never paid attention to.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Layton Eversaul",
+    "handle": "@LaytonEversaul",
+    "url": "https://youtube.com/@laytoneversaul",
+    "description": "Cinephile video essays — no movie is off limits, from Bergman to Batman.",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "LEMMiNO",
+    "handle": "@LEMMiNO",
+    "url": "https://youtube.com/@lemmino",
+    "description": "Gorgeously produced long-form videos about space, mysteries, and whatnot.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Matt Draper",
+    "handle": "@MattDraper",
+    "url": "https://youtube.com/@mattdraper",
+    "description": "Stunning adventure filmmaking — the best video machine on YouTube.",
+    "category": "Nature & Adventure"
+  },
+  {
+    "name": "Max Derrat",
+    "handle": "@maxderrat",
+    "url": "https://youtube.com/@maxderrat",
+    "description": "Deep dives into psychology, philosophy, and their intersection with gaming and entertainment.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Metal Trenches",
+    "handle": "@MetalTrenches",
+    "url": "https://youtube.com/@metaltrenches",
+    "description": "Underground metal deep dives, best-of lists, and lesser-known artist spotlights.",
+    "category": "Music"
+  },
+  {
+    "name": "More Perfect Union",
+    "handle": "@moreperfectunion",
+    "url": "https://youtube.com/@moreperfectunion",
+    "description": "Emmy-winning nonprofit newsroom building power for working people.",
+    "category": "News & Society"
+  },
+  {
+    "name": "Mother Jones",
+    "handle": "@MotherJones",
+    "url": "https://youtube.com/@motherjones",
+    "description": "Award-winning investigative journalism covering politics, environment, and human rights.",
+    "category": "News & Society"
+  },
+  {
+    "name": "Nostalgia Nerd",
+    "handle": "@Nostalgianerd",
+    "url": "https://youtube.com/@nostalgianerd",
+    "description": "Retro computing nostalgia — software, hardware, and games from the 70s, 80s, and 90s.",
+    "category": "Tech"
+  },
+  {
+    "name": "Quiet Nerd",
+    "handle": "@QuietNerd",
+    "url": "https://youtube.com/@quietnerd",
+    "description": "Appreciating the small things with a smile.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Bookpilled",
+    "handle": "@Bookpilled",
+    "url": "https://www.youtube.com/@Bookpilled",
+    "description": "Books. That's it. That's the channel.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Emergent Garden",
+    "handle": "@EmergentGarden",
+    "url": "https://www.youtube.com/@EmergentGarden",
+    "description": "Artificial life, artificial intelligence, emergence, and weird programs.",
+    "category": "Tech"
+  },
+  {
+    "name": "Fexl",
+    "handle": "@fexl",
+    "url": "https://www.youtube.com/@fexl",
+    "description": "Unlock the cosmos, one theory at a time.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "Leadhead",
+    "handle": "@Leadhead",
+    "url": "https://www.youtube.com/@Leadhead",
+    "description": "Gonzo still-life video essays for the overly romantic — introspection through games and life.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Learn Your Land",
+    "handle": "@LearnYourLand",
+    "url": "https://www.youtube.com/@LearnYourLand",
+    "description": "Develop a connection to nature one species at a time.",
+    "category": "Nature & Adventure"
+  },
+  {
+    "name": "NetworkChuck",
+    "handle": "@NetworkChuck",
+    "url": "https://www.youtube.com/@NetworkChuck",
+    "description": "Energetic IT tutorials — certifications, networking, and everything in information technology.",
+    "category": "Tech"
+  },
+  {
+    "name": "Philosophy Tube",
+    "handle": "@PhilosophyTube",
+    "url": "https://www.youtube.com/@PhilosophyTube",
+    "description": "A philosophy degree for free — theatrical, well-researched video essays.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Pursuit of Wonder",
+    "handle": "@PursuitofWonder",
+    "url": "https://www.youtube.com/@PursuitofWonder",
+    "description": "Philosophy, psychology, and science through powerful ideas and stories.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Quake Speedruns Explained",
+    "handle": "@quakespeedrunsexplained",
+    "url": "https://www.youtube.com/@quakespeedrunsexplained",
+    "description": "The history, players, techniques, and records of Quake speedrunning.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Red Letter Media",
+    "handle": "@RedLetterMedia",
+    "url": "https://www.youtube.com/@RedLetterMedia",
+    "description": "Half in the Bag, Best of the Worst, and the legendary Phantom Menace review. Full-time frauds.",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "Redlyne",
+    "handle": "@Redlyne_",
+    "url": "https://www.youtube.com/@Redlyne_",
+    "description": "Long-form content with staying power.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Richard Dolan",
+    "handle": "@RichardMDolan",
+    "url": "https://www.youtube.com/@RichardMDolan",
+    "description": "Leading UFO researcher — in-depth UAP analysis, government cover-ups, and disclosure.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "Roca News",
+    "handle": "@rocanews",
+    "url": "https://www.youtube.com/@rocanews",
+    "description": "Capturing the world without bias or fear — news that brings people together.",
+    "category": "News & Society"
+  },
+  {
+    "name": "Sarah Davis Baker",
+    "handle": "@sarahdavisbaker",
+    "url": "https://www.youtube.com/@sarahdavisbaker",
+    "description": "Slightly-haunted video essays about the internet, memory, and the things we've left behind.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Scott Carney",
+    "handle": "@sgcarney",
+    "url": "https://www.youtube.com/@sgcarney",
+    "description": "Investigative journalist exploring consciousness, history, AI, and truth.",
+    "category": "News & Society"
+  },
+  {
+    "name": "Second Thought",
+    "handle": "@SecondThought",
+    "url": "https://www.youtube.com/@SecondThought",
+    "description": "Education and analysis of current events from a socialist perspective.",
+    "category": "News & Society"
+  },
+  {
+    "name": "Camping with Steve",
+    "handle": "@campingwithsteve",
+    "url": "https://www.youtube.com/@campingwithsteve",
+    "description": "ABC — Always Be Camping. Four-season adventures in some of the coldest places on Earth.",
+    "category": "Nature & Adventure"
+  },
+  {
+    "name": "Territory Space",
+    "handle": "@territoryspace",
+    "url": "https://www.youtube.com/@territoryspace",
+    "description": "Reporting from the pale blue dot.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "Cobwebs Channel",
+    "handle": "@cobwebschannel",
+    "url": "https://www.youtube.com/@cobwebschannel",
+    "description": "Exploring the crypts of horror and cult films — rankings and recommendations.",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "The Dreamland Motel",
+    "handle": "@TheDreamlandMotel",
+    "url": "https://www.youtube.com/@TheDreamlandMotel",
+    "description": "Slow, softly spoken stories from the stranger corners of history — UFO lore, hidden tech, and altered states.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "The Sol Foundation",
+    "handle": "@_SolFoundation",
+    "url": "https://www.youtube.com/@_SolFoundation",
+    "description": "Experts from academia and government addressing the philosophical and scientific problems of UAP.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "The Space Race",
+    "handle": "@TheSpaceRaceYT",
+    "url": "https://www.youtube.com/@TheSpaceRaceYT",
+    "description": "Space exploration news — SpaceX, Blue Origin, NASA, and humanity's mission to the stars.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "The Why Files",
+    "handle": "@TheWhyFiles",
+    "url": "https://www.youtube.com/@TheWhyFiles",
+    "description": "Mysteries, myths, legends, and conspiracies — seeking the truth with a few laughs along the way.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "This is Dan Bell",
+    "handle": "@ThisisDanBell",
+    "url": "https://www.youtube.com/@ThisisDanBell",
+    "description": "Producer and filmmaker exploring abandoned places and forgotten spaces.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Thomas Flight",
+    "handle": "@ThomasFlight",
+    "url": "https://www.youtube.com/@ThomasFlight",
+    "description": "Exploring the artistry behind cinema, TV, and the visual media landscape.",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "Trap University",
+    "handle": "@trappuniversity",
+    "url": "https://www.youtube.com/@trappuniversity",
+    "description": "Unbiased takes on crime.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Two Minute Papers",
+    "handle": "@TwoMinutePapers",
+    "url": "https://www.youtube.com/@TwoMinutePapers",
+    "description": "What a time to be alive — cutting-edge research papers explained in minutes.",
+    "category": "Tech"
+  },
+  {
+    "name": "UAP Gerb",
+    "handle": "@UAPGerb",
+    "url": "https://www.youtube.com/@UAPGerb",
+    "description": "UFO documentaries, investigations, and deep dives into reverse engineering and whistleblower analysis.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "Upper Echelon",
+    "handle": "@UpperEchelon",
+    "url": "https://www.youtube.com/@UpperEchelon",
+    "description": "Informative content about technology, finance, media, and gaming.",
+    "category": "Tech"
+  },
+  {
+    "name": "Upscaled History",
+    "handle": "@UpscaledHistory",
+    "url": "https://www.youtube.com/@UpscaledHistory",
+    "description": "Restoring vintage films and videos into the modern world with cutting-edge tech.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Utopic Dreamer",
+    "handle": "@utopicdreamer",
+    "url": "https://www.youtube.com/@utopicdreamer",
+    "description": "Nostalgia is the best feeling, right?",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Vagrant Holiday",
+    "handle": "@VagrantHoliday",
+    "url": "https://www.youtube.com/@VagrantHoliday",
+    "description": "Raw, unfiltered travel documentaries. No more videos — but the existing ones are legendary.",
+    "category": "Nature & Adventure"
+  },
+  {
+    "name": "Valve",
+    "handle": "@Valve",
+    "url": "https://www.youtube.com/@Valve",
+    "description": "The studio behind Half-Life, Portal, Counter-Strike, Steam, and the Source engine.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Venus Theory",
+    "handle": "@VenusTheory",
+    "url": "https://www.youtube.com/@VenusTheory",
+    "description": "Human grumpy cat impersonator — music production with personality.",
+    "category": "Music"
+  },
+  {
+    "name": "Coffeezilla Extras",
+    "handle": "@coffeezillaextras",
+    "url": "https://www.youtube.com/@coffeezillaextras",
+    "description": "The stuff that doesn't fit the main channel — shorter, looser Coffeezilla content.",
+    "category": "News & Society"
+  },
+  {
+    "name": "Walter Masterson",
+    "handle": "@waltermasterson",
+    "url": "https://www.youtube.com/@waltermasterson",
+    "description": "\"Comedian\" — satirical street interviews and political comedy.",
+    "category": "News & Society"
+  },
+  {
+    "name": "Whatever Comes Next",
+    "handle": "@WhateverComesNextwithTomOsman",
+    "url": "https://www.youtube.com/@WhateverComesNextwithTomOsman",
+    "description": "Weekly conversations with underground musicians, label owners, and producers carving their own path.",
+    "category": "Music"
+  },
+  {
+    "name": "Yes Theory",
+    "handle": "@YesTheory",
+    "url": "https://www.youtube.com/@YesTheory",
+    "description": "Life's greatest moments exist outside your comfort zone.",
+    "category": "Nature & Adventure"
+  },
+  {
+    "name": "Yogev Gabay",
+    "handle": "@YogevGabay",
+    "url": "https://www.youtube.com/@YogevGabay",
+    "description": "Numbers, drums, and a camera — creative drumming content.",
+    "category": "Music"
+  },
+  {
+    "name": "2SICH",
+    "handle": "@2SICH",
+    "url": "https://www.youtube.com/@2SICH",
+    "description": "Visual content with a unique vibe.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "3kliksphilip",
+    "handle": "@3kliksphilip",
+    "url": "https://www.youtube.com/@3kliksphilip",
+    "description": "Counter-Strike content for people who don't play Counter-Strike.",
+    "category": "Gaming"
+  },
+  {
+    "name": "66Samus",
+    "handle": "@66Samus",
+    "url": "https://www.youtube.com/@66Samus",
+    "description": "Drumming and metal — inspiring you to play music from a channel of doom.",
+    "category": "Music"
+  },
+  {
+    "name": "A Flash of Bigfoot",
+    "handle": "@aflashofbigfoot",
+    "url": "https://www.youtube.com/@aflashofbigfoot",
+    "description": "Documentary series exploring the Bigfoot enigma — firsthand accounts, evidence, and research.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "A24",
+    "handle": "@A24",
+    "url": "https://www.youtube.com/@A24",
+    "description": "The studio behind Everything Everywhere All at Once, Uncut Gems, Midsommar, Moonlight, and more.",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "Anonymous FO",
+    "handle": "@AnonymousFO",
+    "url": "https://www.youtube.com/@AnonymousFO",
+    "description": "UFOs, UFOs, and more UFOs.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "AI and Games",
+    "handle": "@AIandGames",
+    "url": "https://www.youtube.com/@AIandGames",
+    "description": "How AI makes better games and games make better AI — hosted by Dr. Tommy Thompson.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Alpha Beta Gamer",
+    "handle": "@AlphaBetaGamer",
+    "url": "https://www.youtube.com/@AlphaBetaGamer",
+    "description": "Spreading the word about interesting, overlooked indie games.",
+    "category": "Gaming"
+  },
+  {
+    "name": "any austin",
+    "handle": "@any_austin",
+    "url": "https://www.youtube.com/@any_austin",
+    "description": "THE worst video game shows on the internet. By far.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Below The Fray",
+    "handle": "@BelowTheFray",
+    "url": "https://www.youtube.com/@BelowTheFray",
+    "description": "Occasional deep dives into literary topics.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Channel 5",
+    "handle": "@Channel5YouTube",
+    "url": "https://www.youtube.com/@Channel5YouTube",
+    "description": "Directed, produced, filmed, edited, and created by Andrew Callaghan.",
+    "category": "News & Society"
+  },
+  {
+    "name": "CinemaStix",
+    "handle": "@CinemaStix",
+    "url": "https://www.youtube.com/@CinemaStix",
+    "description": "Filmmaking stories and video essays focused on popular and classic movies.",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "CinemaTyler",
+    "handle": "@CinemaTyler",
+    "url": "https://www.youtube.com/@CinemaTyler",
+    "description": "In-depth analysis of cinema's greatest movies — understanding filmmaking through research.",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "Codeer",
+    "handle": "@Codeer",
+    "url": "https://www.youtube.com/@Codeer",
+    "description": "Hobbyist game development.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Dami Lee",
+    "handle": "@DamiLeeArch",
+    "url": "https://www.youtube.com/@DamiLeeArch",
+    "description": "Architecture and design explained with clarity and charm.",
+    "category": "Creative"
+  },
+  {
+    "name": "Dave's Garage",
+    "handle": "@DavesGarage",
+    "url": "https://www.youtube.com/@DavesGarage",
+    "description": "Windows history, Arduino projects, and DIY tech from a former Microsoft engineer.",
+    "category": "Tech"
+  },
+  {
+    "name": "decino",
+    "handle": "@decino",
+    "url": "https://www.youtube.com/@decino",
+    "description": "Fast-paced FPS playthroughs on high difficulty — calm narration, no screaming.",
+    "category": "Gaming"
+  },
+  {
+    "name": "DrModGTA",
+    "handle": "@DrModGTA",
+    "url": "https://www.youtube.com/@DrModGTA",
+    "description": "Grand Theft Auto entertainment for GTA fans.",
+    "category": "Gaming"
+  },
+  {
+    "name": "EphiTV",
+    "handle": "@EphiTV",
+    "url": "https://www.youtube.com/@EphiTV",
+    "description": "Spending way too much time looking into things that don't really matter.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Eyes on Cinema",
+    "handle": "@EyesOnCinema",
+    "url": "https://www.youtube.com/@EyesOnCinema",
+    "description": "Extensive collection of eyewitness accounts and informative material on the UFO phenomenon.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "Finowa",
+    "handle": "@finowa",
+    "url": "https://www.youtube.com/@finowa",
+    "description": "Been doing this since '06, not planning on stopping.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Jake at Flashback",
+    "handle": "@JakeAtFlashback",
+    "url": "https://www.youtube.com/@JakeAtFlashback",
+    "description": "Come for the horror, stay for the history.",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "Fredrik Knudsen",
+    "handle": "@FredrikKnudsen",
+    "url": "https://www.youtube.com/@FredrikKnudsen",
+    "description": "Down the Rabbit Hole — deep dives into the strange parts of the internet and absurd history.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Game Maker's Toolkit",
+    "handle": "@GMTK",
+    "url": "https://www.youtube.com/@GMTK",
+    "description": "Deep dives into game design, level design, and game production by Mark Brown.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Garza Podcast",
+    "handle": "@GarzaPodcast",
+    "url": "https://www.youtube.com/@GarzaPodcast",
+    "description": "Hosted by Chris Garza, guitarist and founder of Suicide Silence.",
+    "category": "Music"
+  },
+  {
+    "name": "Grabbitt",
+    "handle": "@grabbitt",
+    "url": "https://www.youtube.com/@grabbitt",
+    "description": "Game design, game art, Blender tutorials, and vlogs about the creative industries.",
+    "category": "Creative"
+  },
+  {
+    "name": "Grant Harting",
+    "handle": "@grant_harting",
+    "url": "https://www.youtube.com/@grant_harting",
+    "description": "Expert tips on saving money on medication and understanding drug pricing.",
+    "category": "News & Society"
+  },
+  {
+    "name": "GVMERS",
+    "handle": "@GVMERS",
+    "url": "https://www.youtube.com/@GVMERS",
+    "description": "Video game history told in beautifully crafted documentary form.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Happy Imaeda",
+    "handle": "@HappyImaeda",
+    "url": "https://www.youtube.com/@HappyImaeda",
+    "description": "Drummer, composer, and video-maker — original tracks every Saturday.",
+    "category": "Music"
+  },
+  {
+    "name": "How Town",
+    "handle": "@Howtown",
+    "url": "https://www.youtube.com/@Howtown",
+    "description": "The \"How Do They Know\" show from journalists Adam Cole and Joss Fong.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "I Finished a Video Game",
+    "handle": "@IFinishedAVideoGame",
+    "url": "https://www.youtube.com/@IFinishedAVideoGame",
+    "description": "Extremely detailed videos about the beautiful bygone world of video games.",
+    "category": "Gaming"
+  },
+  {
+    "name": "J.J. McCullough",
+    "handle": "@JJMcCullough",
+    "url": "https://www.youtube.com/@JJMcCullough",
+    "description": "Culture videos with the right mix of skepticism and gratitude.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Jack Sather",
+    "handle": "@JackSather",
+    "url": "https://www.youtube.com/@JackSather",
+    "description": "Florida man attempts gaming comedy.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Jacob Geller",
+    "handle": "@JacobGeller",
+    "url": "https://www.youtube.com/@JacobGeller",
+    "description": "Video games, history, politics, and empathy — always unpredictably, always at the same time.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Prof. Jeffrey Kaplan",
+    "handle": "@profjeffreykaplan",
+    "url": "https://www.youtube.com/@profjeffreykaplan",
+    "description": "Philosophy video lectures from an actual philosophy professor.",
+    "category": "Essays & Deep Dives"
+  },
+  {
+    "name": "Jenined",
+    "handle": "@Jenined",
+    "url": "https://www.youtube.com/@Jenined",
+    "description": "UFO research, collection, and compilation creation.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "Jim Lake",
+    "handle": "@jimlake5404",
+    "url": "https://www.youtube.com/@jimlake5404",
+    "description": "Night sky exploration, engineering, aviation, RC planes, and UFOs.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "Joe Cappa",
+    "handle": "@JoeCappa",
+    "url": "https://www.youtube.com/@JoeCappa",
+    "description": "Short animations and paper mache head videos.",
+    "category": "Creative"
+  },
+  {
+    "name": "John Michael Godier",
+    "handle": "@JohnMichaelGodier",
+    "url": "https://www.youtube.com/@JohnMichaelGodier",
+    "description": "Weekly documentaries about science, future technology, and the mysteries of the universe.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "Kane Pixels",
+    "handle": "@kanepixels",
+    "url": "https://www.youtube.com/@kanepixels",
+    "description": "Director and VFX artist — stunning visual storytelling.",
+    "category": "Creative"
+  },
+  {
+    "name": "LIMC",
+    "handle": "@LIMC",
+    "url": "https://www.youtube.com/@LIMC",
+    "description": "Director and VFX artist.",
+    "category": "Creative"
+  },
+  {
+    "name": "Marphitimus Blackimus",
+    "handle": "@MarphitimusBlackimus",
+    "url": "https://www.youtube.com/@MarphitimusBlackimus",
+    "description": "Also known as Marphy Black / Revenant100 — deep game analysis.",
+    "category": "Gaming"
+  },
+  {
+    "name": "Media Death Cult",
+    "handle": "@MediaDeathCult",
+    "url": "https://www.youtube.com/@MediaDeathCult",
+    "description": "This is not for you...",
+    "category": "Film & Cinema"
+  },
+  {
+    "name": "Mick West",
+    "handle": "@MickWest",
+    "url": "https://www.youtube.com/@MickWest",
+    "description": "Skeptic, writer, and UFO investigator — debunking experiments and the Tales From the Rabbit Hole podcast.",
+    "category": "Space & UAP"
+  },
+  {
+    "name": "My Wild Backyard",
+    "handle": "@MyWildBackyard",
+    "url": "https://www.youtube.com/@MyWildBackyard",
+    "description": "Discovering the natural world together.",
+    "category": "Nature & Adventure"
+  },
+  {
+    "name": "Necros Videos",
+    "handle": "@NecrosVideos",
+    "url": "https://www.youtube.com/@NecrosVideos",
+    "description": "Garry's Mod and player-made content — having a good time.",
+    "category": "Gaming"
+  },
+  {
+    "name": "NPR Music",
+    "handle": "@nprmusic",
+    "url": "https://www.youtube.com/@nprmusic",
+    "description": "Tiny Desk Concerts, live shows, documentaries, and more from NPR Music.",
+    "category": "Music"
+  },
+  {
+    "name": "The Good Liars",
+    "handle": "@TheGoodLiars",
+    "url": "https://www.youtube.com/@TheGoodLiars",
+    "description": "Jason Selvig and Davram Stiefler — satirical interviews and political comedy.",
+    "category": "News & Society"
+  }
+]

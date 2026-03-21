@@ -74,17 +74,36 @@
       <div class="page-hero-tagline anim" style="animation-delay:0.35s">the algorithm wishes it was this good</div>
     </section>
 
-    <!-- ══════ FILTERS ══════ -->
-    <div class="filter-dropdown anim" style="animation-delay:0.45s" id="ytFilterDropdown" style="display:none">
-      <button class="filter-dropdown-btn" id="ytFilterBtn">
-        Category: <span class="filter-active-label" id="ytFilterLabel">All</span>
-        <span class="filter-arrow">▼</span>
-      </button>
-      <div class="filter-dropdown-panel" id="ytFilters"></div>
+    <!-- ══════ TAB TOGGLE ══════ -->
+    <div class="tab-toggle anim" style="animation-delay:0.4s" id="tabToggle">
+      <button class="tab-toggle-btn active" data-tab="channels">Channels</button>
+      <button class="tab-toggle-btn" data-tab="videos">Videos</button>
     </div>
 
-    <!-- ══════ CHANNEL GRID ══════ -->
-    <div class="media-grid" id="ytList">
+    <!-- ══════ SEARCH ══════ -->
+    <div class="search-wrap anim" style="animation-delay:0.45s">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="ytSearch" placeholder="Search channels...">
+    </div>
+
+    <!-- ══════ FILTERS + SORT ══════ -->
+    <div class="toolbar-row anim" style="animation-delay:0.5s">
+      <div class="filter-dropdown" id="ytFilterDropdown">
+        <button class="filter-dropdown-btn" id="ytFilterBtn">
+          Category: <span class="filter-active-label" id="ytFilterLabel">All</span>
+          <span class="filter-arrow">▼</span>
+        </button>
+        <div class="filter-dropdown-panel" id="ytFilters"></div>
+      </div>
+      <div class="sort-controls" id="sortControls">
+        <button class="sort-btn active" data-sort="default">Default</button>
+        <button class="sort-btn" data-sort="az">A → Z</button>
+        <button class="sort-btn" data-sort="za">Z → A</button>
+      </div>
+    </div>
+
+    <!-- ══════ ITEM LIST ══════ -->
+    <div class="media-grid single-col" id="ytList">
       <div class="t-loading" id="ytLoading">
         <div class="t-loading-dots">
           <div class="t-loading-dot"></div>
@@ -96,9 +115,12 @@
     </div>
 
     <!-- ══════ EMPTY STATE ══════ -->
-    <div class="t-empty" id="ytEmpty" style="display:none">
-      <div style="font-size:2rem;margin-bottom:10px">📺</div>
-      <div>No channels yet — check back soon!</div>
+    <div class="t-empty" id="ytEmpty">✨ No results match that search</div>
+
+    <!-- ══════ SCROLL NAV ══════ -->
+    <div class="scroll-nav" id="scrollNav">
+      <button class="scroll-nav-btn" id="scrollTopBtn" title="Jump to top">↑</button>
+      <button class="scroll-nav-btn" id="scrollBottomBtn" title="Jump to bottom">↓</button>
     </div>
 
     <!-- ══════ FOOTER ══════ -->
@@ -121,22 +143,25 @@
 <script>
   /* ── Data ── */
   var channels = [];
+  var videos = [];
+  var currentTab = 'channels';
   var currentCategory = 'all';
+  var currentSort = 'default';
 
-  fetch('data/youtube.json')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      channels = data;
-      document.getElementById('ytLoading').style.display = 'none';
-      if (channels.length === 0) {
-        document.getElementById('ytEmpty').style.display = 'block';
-        return;
-      }
+  /* ── Load both data sources ── */
+  var channelsReady = fetch('data/youtube.json').then(function(r) { return r.json(); });
+  var videosReady = fetch('data/videos.json').then(function(r) { return r.json(); });
+
+  Promise.all([channelsReady, videosReady])
+    .then(function(results) {
+      channels = results[0];
+      videos = results[1];
       buildFilters();
-      renderChannels();
+      renderItems();
+      document.getElementById('ytLoading').style.display = 'none';
     })
     .catch(function() {
-      document.getElementById('ytLoading').innerHTML = 'Failed to load channels. Try refreshing.';
+      document.getElementById('ytLoading').innerHTML = 'Failed to load data. Try refreshing.';
     });
 
   function esc(s) {
@@ -145,16 +170,16 @@
     return d.innerHTML;
   }
 
+  function getActiveData() {
+    return currentTab === 'channels' ? channels : videos;
+  }
+
   function buildFilters() {
+    var data = getActiveData();
     var cats = ['All'];
-    channels.forEach(function(c) {
-      if (c.category && cats.indexOf(c.category) === -1) cats.push(c.category);
+    data.forEach(function(t) {
+      if (t.category && cats.indexOf(t.category) === -1) cats.push(t.category);
     });
-    if (cats.length <= 1) {
-      document.getElementById('ytFilterDropdown').style.display = 'none';
-      return;
-    }
-    document.getElementById('ytFilterDropdown').style.display = '';
     var html = '';
     cats.forEach(function(c) {
       var catVal = c === 'All' ? 'all' : c;
@@ -165,42 +190,118 @@
     document.getElementById('ytFilterLabel').textContent = currentCategory === 'all' ? 'All' : currentCategory;
   }
 
-  function renderChannels() {
-    var filtered = channels.filter(function(c) {
-      return currentCategory === 'all' || c.category === currentCategory;
+  function renderItems() {
+    var data = getActiveData();
+    var query = document.getElementById('ytSearch').value.toLowerCase();
+    var filtered = data.filter(function(t) {
+      var matchCat = currentCategory === 'all' || t.category === currentCategory;
+      var matchSearch = !query || t.name.toLowerCase().indexOf(query) > -1 || t.description.toLowerCase().indexOf(query) > -1;
+      return matchCat && matchSearch;
     });
 
+    if (currentSort === 'az') {
+      filtered.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    } else if (currentSort === 'za') {
+      filtered.sort(function(a, b) { return b.name.localeCompare(a.name); });
+    }
+
+    var empty = document.getElementById('ytEmpty');
+    var list = document.getElementById('ytList');
+
+    if (filtered.length === 0) {
+      list.innerHTML = '';
+      if (currentTab === 'videos' && videos.length === 0) {
+        empty.innerHTML = '<div style="font-size:2rem;margin-bottom:10px">🎬</div><div>No videos yet — check back soon!</div>';
+      } else {
+        empty.innerHTML = '✨ No results match that search';
+      }
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    if (currentTab === 'channels') {
+      renderChannels(filtered);
+    } else {
+      renderVideos(filtered);
+    }
+  }
+
+  function renderChannels(filtered) {
     var html = '';
     filtered.forEach(function(c) {
-      var thumbSrc = c.exemplar && c.exemplar.thumbnail
-        ? c.exemplar.thumbnail
-        : (c.exemplar && c.exemplar.videoId
-          ? 'https://img.youtube.com/vi/' + c.exemplar.videoId + '/mqdefault.jpg'
+      html += '<a href="' + esc(c.url) + '" target="_blank" rel="noopener" class="media-card has-accent reveal visible">' +
+        '<div class="tc-inner">' +
+          '<div class="tc-icon">' +
+            (c.image
+              ? '<img src="' + esc(c.image) + '" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover">'
+              : '<span class="tc-emoji-icon">📺</span>') +
+          '</div>' +
+          '<div class="tc-main">' +
+            '<div class="tc-header">' +
+              '<div class="tc-name">' + esc(c.name) + '</div>' +
+              '<span class="tag-pill tc-cat-desktop">' + esc(c.category) + '</span>' +
+              '<span class="tc-arr">↗</span>' +
+            '</div>' +
+            '<div class="tc-desc">' + esc(c.description) + '</div>' +
+            (c.handle ? '<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim);margin-top:4px">' + esc(c.handle) + '</div>' : '') +
+            '<span class="tag-pill tc-cat-mobile">' + esc(c.category) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</a>';
+    });
+    document.getElementById('ytList').innerHTML = html;
+  }
+
+  function renderVideos(filtered) {
+    if (filtered.length === 0) return;
+    var html = '';
+    filtered.forEach(function(v) {
+      var thumbSrc = v.thumbnail
+        ? v.thumbnail
+        : (v.videoId
+          ? 'https://img.youtube.com/vi/' + v.videoId + '/mqdefault.jpg'
           : '');
 
       html += '<div class="media-card has-accent reveal visible">' +
-        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">' +
-          (c.image ? '<img src="' + esc(c.image) + '" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0">' : '') +
-          '<div style="flex:1;min-width:0">' +
-            '<a href="' + esc(c.url) + '" target="_blank" rel="noopener" style="font-size:1.05rem;font-weight:800;color:var(--text);text-decoration:none">' + esc(c.name) + ' ↗</a>' +
-            (c.category ? '<div style="margin-top:4px"><span class="tag-pill" style="cursor:default;pointer-events:none;font-size:0.65rem;padding:3px 10px">' + esc(c.category) + '</span></div>' : '') +
-          '</div>' +
-        '</div>' +
-        '<div style="font-size:0.82rem;color:var(--text-muted);line-height:1.5;margin-bottom:14px">' + esc(c.description) + '</div>' +
-        (thumbSrc && c.exemplar ? '<a href="https://youtube.com/watch?v=' + esc(c.exemplar.videoId) + '" target="_blank" rel="noopener" style="display:block;position:relative;border-radius:12px;overflow:hidden">' +
-          '<img src="' + esc(thumbSrc) + '" alt="' + esc(c.exemplar.title || '') + '" style="width:100%;display:block;border-radius:12px" loading="lazy">' +
+        (thumbSrc ? '<a href="https://youtube.com/watch?v=' + esc(v.videoId) + '" target="_blank" rel="noopener" style="display:block;position:relative;border-radius:12px;overflow:hidden;margin-bottom:14px">' +
+          '<img src="' + esc(thumbSrc) + '" alt="' + esc(v.name || '') + '" style="width:100%;display:block;border-radius:12px" loading="lazy">' +
           '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);opacity:0;transition:opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">' +
             '<div style="width:48px;height:48px;background:rgba(255,0,0,0.9);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem">▶</div>' +
           '</div>' +
-        '</a>' +
-        (c.exemplar.title ? '<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);margin-top:8px">' + esc(c.exemplar.title) + '</div>' : '')
-        : '') +
-        (c.exemplar && c.exemplar.note ? '<div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px;font-style:italic">' + esc(c.exemplar.note) + '</div>' : '') +
+        '</a>' : '') +
+        '<div style="font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:6px">' + esc(v.name) + '</div>' +
+        (v.channel ? '<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);margin-bottom:8px">' + esc(v.channel) + '</div>' : '') +
+        '<div style="font-size:0.82rem;color:var(--text-muted);line-height:1.5">' + esc(v.description) + '</div>' +
+        (v.category ? '<div style="margin-top:10px"><span class="tag-pill" style="cursor:default;pointer-events:none;font-size:0.65rem;padding:3px 10px">' + esc(v.category) + '</span></div>' : '') +
       '</div>';
     });
-
     document.getElementById('ytList').innerHTML = html;
   }
+
+  /* ── Tab toggle ── */
+  document.getElementById('tabToggle').addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab-toggle-btn');
+    if (!btn || btn.classList.contains('active')) return;
+
+    document.querySelectorAll('#tabToggle .tab-toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+
+    currentTab = btn.dataset.tab;
+    currentCategory = 'all';
+    currentSort = 'default';
+    document.getElementById('ytSearch').value = '';
+    document.querySelectorAll('#sortControls .sort-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.sort === 'default'); });
+
+    var searchInput = document.getElementById('ytSearch');
+    searchInput.placeholder = currentTab === 'channels' ? 'Search channels...' : 'Search videos...';
+
+    buildFilters();
+    renderItems();
+  });
+
+  /* ── Search ── */
+  document.getElementById('ytSearch').addEventListener('input', renderItems);
 
   /* ── Filter dropdown toggle ── */
   (function() {
@@ -215,7 +316,7 @@
     });
   })();
 
-  /* ── Events ── */
+  /* ── Filter pills ── */
   document.getElementById('ytFilters').addEventListener('click', function(e) {
     var btn = e.target.closest('.tag-pill');
     if (!btn) return;
@@ -224,7 +325,17 @@
     btn.classList.add('active');
     document.getElementById('ytFilterLabel').textContent = currentCategory === 'all' ? 'All' : currentCategory;
     document.getElementById('ytFilterDropdown').classList.remove('open');
-    renderChannels();
+    renderItems();
+  });
+
+  /* ── Sort controls ── */
+  document.getElementById('sortControls').addEventListener('click', function(e) {
+    var btn = e.target.closest('.sort-btn');
+    if (!btn || btn.classList.contains('active')) return;
+    document.querySelectorAll('#sortControls .sort-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentSort = btn.dataset.sort;
+    renderItems();
   });
 
   /* ── Scroll reveal ── */
@@ -235,6 +346,24 @@
     });
   }, { threshold: 0.1 });
   revealEls.forEach(function(el) { observer.observe(el); });
+
+  /* ── Scroll nav ── */
+  (function() {
+    var nav = document.getElementById('scrollNav');
+    var topBtn = document.getElementById('scrollTopBtn');
+    var botBtn = document.getElementById('scrollBottomBtn');
+
+    window.addEventListener('scroll', function() {
+      nav.classList.toggle('visible', window.scrollY > 200);
+    }, { passive: true });
+
+    topBtn.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    botBtn.addEventListener('click', function() {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+  })();
 
   /* ── Nav dropdown ── */
   (function() {
