@@ -660,7 +660,7 @@ nav {
 }
 .reveal.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 
 /* ═══════════════════════════════════
@@ -1180,6 +1180,7 @@ nav {
   padding: 20px;
   transition: all 0.25s;
   position: relative;
+  z-index: 0;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
