@@ -1,0 +1,16 @@
+{
+  "categories": [
+    {
+      "name": "Scientists",
+      "clips": [
+        { "label": "A Fellow Scientist", "file": "afellowsci.wav" },
+        { "label": "Beverage", "file": "beverage.wav" },
+        { "label": "Get Out of Here", "file": "getoutofhere.wav" },
+        { "label": "Hello Freeman", "file": "hellofreeman.wav" },
+        { "label": "Stench", "file": "stench.wav" },
+        { "label": "Wear a Tie", "file": "weartie.wav" },
+        { "label": "What Are You Doing", "file": "whatyoudoing.wav" }
+      ]
+    }
+  ]
+}

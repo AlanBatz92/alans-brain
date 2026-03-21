@@ -239,7 +239,7 @@
       html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:8px">';
       cat.clips.forEach(function(clip) {
         var audioPath = 'audio/' + activeBoard + '/' + clip.file;
-        html += '<button class="audio-btn" data-src="' + esc(audioPath) + '">' + esc(clip.label) + '</button>';
+        html += '<button class="audio-btn" data-src="' + esc(audioPath) + '" title="' + esc(clip.label) + '">' + esc(clip.label) + '</button>';
       });
       html += '</div>';
     });
