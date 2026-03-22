@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a0e1a">
-  <title>Soundboards — Alan's Brain 🧠</title>
+  <title>Soundboards — Alan's Brain</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -29,7 +29,7 @@
   <!-- Navigation -->
   <nav>
     <div class="nav-inner">
-      <a href="index.html" class="nav-logo">Alan's Brain 🧠</a>
+      <a href="index.html" class="nav-logo">Alan's Brain <img class="nav-mobile-icon" src="img/Icons/icons/Alan's_Brain/world-creativity-and-innovation-day.png" alt=""></a>
       <div class="nav-links">
         <a href="index.html">Home</a>
         <div class="nav-dropdown">
@@ -37,13 +37,13 @@
             Explore <span class="nav-dropdown-arrow">▼</span>
           </button>
           <div class="nav-dropdown-menu">
-            <a href="youtube.html"><span class="dropdown-icon">📺</span> YouTube Channels</a>
-            <a href="transart.html"><span class="dropdown-icon">🎨</span> Trans Art & Resources</a>
-            <a href="soundboards.html"><span class="dropdown-icon">🔊</span> Soundboards</a>
-            <a href="tools.html"><span class="dropdown-icon">🛠️</span> Great & Free</a>
-            <a href="photos.html"><span class="dropdown-icon">📸</span> Photo Gallery</a>
-            <a href="art.html"><span class="dropdown-icon">🖼️</span> Art Gallery</a>
-            <a href="paranormal.html"><span class="dropdown-icon">👁️</span> Paranormal</a>
+            <a href="youtube.html"><img class="dropdown-icon" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
+            <a href="transart.html"><img class="dropdown-icon" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
+            <a href="soundboards.html"><img class="dropdown-icon" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
+            <a href="tools.html"><img class="dropdown-icon" src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""> Great & Free</a>
+            <a href="photos.html"><img class="dropdown-icon" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
+            <a href="art.html"><img class="dropdown-icon" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
+            <a href="paranormal.html"><img class="dropdown-icon" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
           </div>
         </div>
         <a href="index.html#links">Links</a>
@@ -60,13 +60,13 @@
   <div class="nav-mobile-overlay">
     <a href="index.html">Home</a>
     <span class="mobile-section-label">Explore</span>
-    <a href="youtube.html">📺 YouTube Channels</a>
-    <a href="transart.html">🎨 Trans Art & Resources</a>
-    <a href="soundboards.html" class="active">🔊 Soundboards</a>
-    <a href="tools.html">🛠️ Great & Free</a>
-    <a href="photos.html">📸 Photo Gallery</a>
-    <a href="art.html">🖼️ Art Gallery</a>
-    <a href="paranormal.html">👁️ Paranormal</a>
+    <a href="youtube.html"><img class="nav-mobile-icon" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
+    <a href="transart.html"><img class="nav-mobile-icon" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
+    <a href="soundboards.html" class="active"><img class="nav-mobile-icon" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
+    <a href="tools.html"><img class="nav-mobile-icon" src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""> Great & Free</a>
+    <a href="photos.html"><img class="nav-mobile-icon" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
+    <a href="art.html"><img class="nav-mobile-icon" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
+    <a href="paranormal.html"><img class="nav-mobile-icon" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
     <a href="index.html#links">Links</a>
   </div>
 
@@ -74,11 +74,11 @@
 
     <!-- ══════ PAGE HERO ══════ -->
     <section class="page-hero">
-      <div class="page-hero-icon anim" style="animation-delay:0.1s">🔊</div>
+      <div class="page-hero-icon anim" style="animation-delay:0.1s"><img src="img/Icons/icons/Audio_Related/speaker.png" alt=""></div>
       <h1 class="anim" style="animation-delay:0.2s">
         <span class="gradient-text">Soundboards</span>
       </h1>
-      <div class="page-hero-tagline anim" style="animation-delay:0.35s">press buttons, get sounds</div>
+      <div class="page-hero-tagline sb-quote anim" style="animation-delay:0.35s" id="sbTagline"></div>
     </section>
 
     <!-- ══════ BOARD SELECTOR ══════ -->
@@ -126,15 +126,15 @@
     <div class="explore-more reveal">
       <div class="explore-more-heading">More from Alan's Brain</div>
       <div class="explore-more-grid">
-        <a href="youtube.html" class="explore-more-card"><span class="explore-more-emoji">📺</span><span class="explore-more-label">YouTube Channels</span></a>
-        <a href="paranormal.html" class="explore-more-card"><span class="explore-more-emoji">👁️</span><span class="explore-more-label">Paranormal</span></a>
-        <a href="tools.html" class="explore-more-card"><span class="explore-more-emoji">🛠️</span><span class="explore-more-label">Great & Free</span></a>
+        <a href="youtube.html" class="explore-more-card"><span class="explore-more-emoji"><img src="img/Icons/icons/Youtube_Channels/tv.png" alt=""></span><span class="explore-more-label">YouTube Channels</span></a>
+        <a href="paranormal.html" class="explore-more-card"><span class="explore-more-emoji"><img src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""></span><span class="explore-more-label">Paranormal</span></a>
+        <a href="tools.html" class="explore-more-card"><span class="explore-more-emoji"><img src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""></span><span class="explore-more-label">Great & Free</span></a>
       </div>
     </div>
 
     <!-- ══════ FOOTER ══════ -->
     <footer class="site-footer reveal">
-      <div class="footer-stamp">Crafted by Alan 🛸</div>
+      <div class="footer-stamp">Crafted by Alan <img class="nav-mobile-icon" src="img/Icons/icons/UFO/ufo.png" alt=""></div>
       <div class="footer-text">
         Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. No tracking. No ads. Just a human on the internet.<br>
         Built with HTML, CSS, and JS — the way the web was meant to be.
@@ -158,10 +158,43 @@
   var engine = new SoundEngine();
   var chaosInterval = null;
 
+  /* ── Rotating quotes per board ── */
+  var BOARD_QUOTES = {
+    halflife: [
+      "Why do we all have to wear these ridiculous ties?",
+      "Time to choose."
+    ],
+    maxpayne: [],
+    theyhunger: [],
+    quake2: [],
+    rlm: []
+  };
+
+  /* ── Category images for known boards ── */
+  var CATEGORY_IMAGES = {
+    halflife: {
+      'Scientists': 'img/Icons/Soundboards/Scientist_No_BG.png',
+      'G-Man': 'img/Icons/Soundboards/G-Man_No_BG.png'
+    },
+    maxpayne: {
+      'default': 'img/Icons/Soundboards/Max_Payne_No_BG.png'
+    }
+  };
+
   function esc(s) {
     var d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
+  }
+
+  function updateQuote(boardId) {
+    var tagline = document.getElementById('sbTagline');
+    var quotes = BOARD_QUOTES[boardId] || [];
+    if (quotes.length > 0) {
+      tagline.textContent = '"' + quotes[Math.floor(Math.random() * quotes.length)] + '"';
+    } else {
+      tagline.textContent = '';
+    }
   }
 
   /* ── Load manifest ── */
@@ -180,8 +213,11 @@
   function renderBoardSelector() {
     var html = '';
     boards.forEach(function(b) {
+      var iconHtml = b.icon.indexOf('/') !== -1
+        ? '<img class="nav-mobile-icon" src="' + esc(b.icon) + '" alt="" style="width:16px;height:16px">'
+        : b.icon;
       html += '<button class="tag-pill sb-board-btn" data-id="' + esc(b.id) + '" data-name="' + esc(b.name) + '">' +
-        b.icon + ' ' + esc(b.name) +
+        iconHtml + ' ' + esc(b.name) +
         (b.clipCount > 0 ? ' <span style="font-family:var(--font-mono);font-size:0.65rem;opacity:0.6">(' + b.clipCount + ')</span>' : '') +
       '</button>';
     });
@@ -203,6 +239,7 @@
 
     engine.stopAll();
     updateCombo();
+    updateQuote(id);
 
     // Check if we already loaded this board's data
     if (boardData[id]) {
@@ -248,15 +285,21 @@
     sbControls.style.display = 'block';
 
     var html = '';
+    var boardImages = CATEGORY_IMAGES[activeBoard] || {};
     categories.forEach(function(cat) {
-      html += '<div class="section-header" style="margin-top:24px;margin-bottom:12px">' +
-        '<span class="section-title" style="font-size:0.85rem">' + esc(cat.name) + '</span>' +
-        '<div class="section-line"></div>' +
+      var catImg = boardImages[cat.name] || boardImages['default'] || '';
+      html += '<div class="sb-category-header">';
+      if (catImg) {
+        html += '<img class="sb-category-img" src="' + esc(catImg) + '" alt="' + esc(cat.name) + '">';
+      }
+      html += '<span class="section-title" style="font-size:0.85rem">' + esc(cat.name) + '</span>' +
+        '<div class="section-line" style="flex:1"></div>' +
       '</div>';
       html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:8px">';
       cat.clips.forEach(function(clip) {
         var audioPath = 'audio/' + activeBoard + '/' + clip.file;
-        html += '<button class="audio-btn" data-src="' + esc(audioPath) + '" title="' + esc(clip.label) + '">' + esc(clip.label) + '</button>';
+        html += '<button class="audio-btn" data-src="' + esc(audioPath) + '" title="' + esc(clip.label) + '">' +
+          '<span class="clip-progress"></span>' + esc(clip.label) + '</button>';
       });
       html += '</div>';
     });
@@ -300,8 +343,23 @@
     if (!btn) return;
 
     btn.classList.add('playing');
-    engine.play(btn.dataset.src, function() {
+    var progress = btn.querySelector('.clip-progress');
+    engine.play(btn.dataset.src, function(duration) {
+      // Animate progress bar across clip duration
+      if (progress && duration > 0) {
+        progress.style.transition = 'none';
+        progress.style.width = '0';
+        // Force reflow
+        progress.offsetWidth;
+        progress.style.transition = 'width ' + duration + 's linear';
+        progress.style.width = '100%';
+      }
+    }, function() {
       btn.classList.remove('playing');
+      if (progress) {
+        progress.style.transition = 'none';
+        progress.style.width = '0';
+      }
       updateCombo();
     });
     updateCombo();
@@ -309,7 +367,11 @@
 
   document.getElementById('stopAll').addEventListener('click', function() {
     engine.stopAll();
-    document.querySelectorAll('.audio-btn.playing').forEach(function(b) { b.classList.remove('playing'); });
+    document.querySelectorAll('.audio-btn.playing').forEach(function(b) {
+      b.classList.remove('playing');
+      var p = b.querySelector('.clip-progress');
+      if (p) { p.style.transition = 'none'; p.style.width = '0'; }
+    });
     updateCombo();
   });
 

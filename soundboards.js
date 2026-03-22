@@ -37,8 +37,8 @@ function SoundEngine() {
       });
   };
 
-  // Play a clip — returns the source node
-  self.play = function(url, onEnded) {
+  // Play a clip — onStart(duration) called when playback begins, onEnded() when it finishes
+  self.play = function(url, onStart, onEnded) {
     self._init();
 
     var doPlay = function(buffer) {
@@ -47,6 +47,7 @@ function SoundEngine() {
       source.connect(self.gainNode);
       source.start(0);
       self.sources.push(source);
+      if (onStart) onStart(buffer.duration);
       source.onended = function() {
         var idx = self.sources.indexOf(source);
         if (idx > -1) self.sources.splice(idx, 1);

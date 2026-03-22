@@ -8,13 +8,13 @@
   {
     "id": "halflife",
     "name": "Half-Life",
-    "icon": "🔬",
+    "icon": "img/Icons/Soundboards/Scientist_No_BG.png",
     "clipCount": 23
   },
   {
     "id": "maxpayne",
     "name": "Max Payne",
-    "icon": "🔫",
+    "icon": "img/Icons/Soundboards/Max_Payne_No_BG.png",
     "clipCount": 0
   },
   {
