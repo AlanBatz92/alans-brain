@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Paranormal — Alan's Brain 🧠</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    // Apply saved theme immediately to prevent flash of default theme
+    (function() {
+      var t = localStorage.getItem('ab_theme');
+      if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Alan's Brain 🧠</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+            Explore <span class="nav-dropdown-arrow">▼</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="youtube.html"><span class="dropdown-icon">📺</span> YouTube Channels</a>
+            <a href="transart.html"><span class="dropdown-icon">🎨</span> Trans Art & Resources</a>
+            <a href="soundboards.html"><span class="dropdown-icon">🔊</span> Soundboards</a>
+            <a href="tools.html"><span class="dropdown-icon">🛠️</span> Great & Free</a>
+            <a href="photos.html"><span class="dropdown-icon">📸</span> Photo Gallery</a>
+            <a href="art.html"><span class="dropdown-icon">🖼️</span> Art Gallery</a>
+            <a href="paranormal.html"><span class="dropdown-icon">👁️</span> Paranormal</a>
+          </div>
+        </div>
+        <a href="index.html#links">Links</a>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <div class="nav-hamburger-lines">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="nav-mobile-overlay">
+    <a href="index.html">Home</a>
+    <span class="mobile-section-label">Explore</span>
+    <a href="youtube.html">📺 YouTube Channels</a>
+    <a href="transart.html">🎨 Trans Art & Resources</a>
+    <a href="soundboards.html">🔊 Soundboards</a>
+    <a href="tools.html">🛠️ Great & Free</a>
+    <a href="photos.html">📸 Photo Gallery</a>
+    <a href="art.html">🖼️ Art Gallery</a>
+    <a href="paranormal.html" class="active">👁️ Paranormal</a>
+    <a href="index.html#links">Links</a>
+  </div>
+
+  <div class="page">
+
+    <!-- ══════ PAGE HERO ══════ -->
+    <section class="page-hero">
+      <div class="page-hero-icon anim" style="animation-delay:0.1s">👁️</div>
+      <h1 class="anim" style="animation-delay:0.2s">
+        <span class="gradient-text">Those That Matter to Me, Thus Far...</span>
+      </h1>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">the ones that make you go hmm</div>
+    </section>
+
+    <!-- ══════ FILTERS ══════ -->
+    <div class="anim" style="animation-delay:0.45s;display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px" id="paraFilterBar">
+      <div class="filter-dropdown" id="paraCategoryDropdown" style="margin-bottom:0">
+        <button class="filter-dropdown-btn" id="paraCategoryBtn">
+          Category: <span class="filter-active-label" id="paraCategoryLabel">All</span>
+          <span class="filter-arrow">▼</span>
+        </button>
+        <div class="filter-dropdown-panel" id="paraCategoryFilters"></div>
+      </div>
+      <div class="filter-dropdown" id="paraTypeDropdown" style="margin-bottom:0">
+        <button class="filter-dropdown-btn" id="paraTypeBtn">
+          Type: <span class="filter-active-label" id="paraTypeLabel">All</span>
+          <span class="filter-arrow">▼</span>
+        </button>
+        <div class="filter-dropdown-panel" id="paraTypeFilters"></div>
+      </div>
+    </div>
+
+    <!-- ══════ CONTENT GRID ══════ -->
+    <div class="media-grid anim" style="animation-delay:0.5s" id="paraGrid">
+      <div class="t-loading" id="paraLoading">
+        <div class="t-loading-dots">
+          <div class="t-loading-dot"></div>
+          <div class="t-loading-dot"></div>
+          <div class="t-loading-dot"></div>
+        </div>
+        Loading...
+      </div>
+    </div>
+
+    <!-- ══════ EMPTY STATE ══════ -->
+    <div class="empty-state" id="paraEmpty" style="display:none">
+      <div class="empty-icon">👁️</div>
+      <div class="empty-text">Nothing here yet — check back soon.<br>The unknown awaits.</div>
+    </div>
+
+    <!-- ══════ FOOTER ══════ -->
+    <footer class="site-footer reveal">
+      <div class="footer-stamp">Crafted by Alan 🛸</div>
+      <div class="footer-text">
+        Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. No tracking. No ads. Just a human on the internet.<br>
+        Built with HTML, CSS, and JS — the way the web was meant to be.
+      </div>
+      <div class="footer-buttons">
+        <span class="footer-btn">HTML</span>
+        <span class="footer-btn">CSS</span>
+        <span class="footer-btn">JS</span>
+        <span class="footer-btn">☕</span>
+      </div>
+    </footer>
+
+  </div><!-- /.page -->
+
+<script>
+  /* ── Data ── */
+  var entries = [];
+  var currentCategory = 'all';
+  var currentType = 'all';
+
+  var TYPE_ICONS = {
+    'video': '🎬',
+    'article': '📰',
+    'photo': '📸',
+    'writing': '✍️',
+    'podcast': '🎙️',
+    'documentary': '🎥',
+    'book': '📖',
+    'case': '📋'
+  };
+
+  var CATEGORY_ICONS = {
+    'UFOs': '🛸',
+    'Ghosts': '👻',
+    'Cryptids': '🦶',
+    'Psychic': '🔮',
+    'Unexplained': '❓',
+    'Conspiracy': '🕵️',
+    'Ancient': '🏛️',
+    'Other': '🌀'
+  };
+
+  fetch('data/paranormal.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      entries = data;
+      document.getElementById('paraLoading').style.display = 'none';
+      if (entries.length === 0) {
+        document.getElementById('paraEmpty').style.display = 'block';
+        return;
+      }
+      buildFilters();
+      renderGrid();
+    })
+    .catch(function() {
+      document.getElementById('paraLoading').innerHTML = 'Failed to load entries. Try refreshing.';
+    });
+
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function buildFilters() {
+    // Category filters
+    var categories = [];
+    entries.forEach(function(e) {
+      if (e.category && categories.indexOf(e.category) === -1) categories.push(e.category);
+    });
+    if (categories.length <= 1) {
+      document.getElementById('paraCategoryDropdown').style.display = 'none';
+    } else {
+      var catHtml = '<button class="tag-pill active" data-category="all">All</button>';
+      categories.sort().forEach(function(c) {
+        var icon = CATEGORY_ICONS[c] || '';
+        catHtml += '<button class="tag-pill" data-category="' + esc(c) + '">' + icon + (icon ? ' ' : '') + esc(c) + '</button>';
+      });
+      document.getElementById('paraCategoryFilters').innerHTML = catHtml;
+    }
+
+    // Type filters
+    var types = [];
+    entries.forEach(function(e) {
+      if (e.type && types.indexOf(e.type) === -1) types.push(e.type);
+    });
+    if (types.length <= 1) {
+      document.getElementById('paraTypeDropdown').style.display = 'none';
+    } else {
+      var typeHtml = '<button class="tag-pill active" data-type="all">All</button>';
+      types.sort().forEach(function(t) {
+        var icon = TYPE_ICONS[t] || '';
+        typeHtml += '<button class="tag-pill" data-type="' + esc(t) + '">' + icon + (icon ? ' ' : '') + esc(t) + '</button>';
+      });
+      document.getElementById('paraTypeFilters').innerHTML = typeHtml;
+    }
+  }
+
+  function renderGrid() {
+    var filtered = entries.slice();
+
+    if (currentCategory !== 'all') {
+      filtered = filtered.filter(function(e) { return e.category === currentCategory; });
+    }
+    if (currentType !== 'all') {
+      filtered = filtered.filter(function(e) { return e.type === currentType; });
+    }
+
+    if (filtered.length === 0) {
+      document.getElementById('paraGrid').innerHTML = '';
+      document.getElementById('paraEmpty').style.display = 'block';
+      return;
+    }
+    document.getElementById('paraEmpty').style.display = 'none';
+
+    var html = '';
+    filtered.forEach(function(e) {
+      var typeIcon = TYPE_ICONS[e.type] || '📌';
+      var catIcon = CATEGORY_ICONS[e.category] || '🌀';
+
+      html += '<div class="media-card para-card reveal visible">';
+
+      // Thumbnail/image
+      if (e.image) {
+        html += '<div class="para-card-img"><img src="' + esc(e.image) + '" alt="' + esc(e.title) + '" loading="lazy"></div>';
+      }
+
+      // Tags row
+      html += '<div class="para-card-tags">';
+      html += '<span class="evidence-tag">' + typeIcon + ' ' + esc(e.type || 'other') + '</span>';
+      html += '<span class="evidence-tag">' + catIcon + ' ' + esc(e.category || 'Other') + '</span>';
+      html += '</div>';
+
+      // Title
+      html += '<h3 class="para-card-title">' + esc(e.title) + '</h3>';
+
+      // Description
+      if (e.description) {
+        html += '<div class="para-card-desc">' + esc(e.description) + '</div>';
+      }
+
+      // Conviction meter (optional — carry over from UFO page)
+      if (e.conviction) {
+        html += '<div class="conviction-meter">' +
+          '<div class="conviction-bar"><div class="conviction-fill" style="width:' + (e.conviction * 10) + '%"></div></div>' +
+          '<span class="conviction-label">' + e.conviction + '/10</span>' +
+        '</div>';
+      }
+
+      // Source/link
+      if (e.url) {
+        html += '<a href="' + esc(e.url) + '" target="_blank" rel="noopener" class="para-card-link">View source ↗</a>';
+      }
+
+      html += '</div>';
+    });
+
+    document.getElementById('paraGrid').innerHTML = html;
+  }
+
+  /* ── Dropdown toggles ── */
+  (function() {
+    ['paraCategoryDropdown', 'paraTypeDropdown'].forEach(function(id) {
+      var dropdown = document.getElementById(id);
+      var btn = dropdown.querySelector('.filter-dropdown-btn');
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var otherId = id === 'paraCategoryDropdown' ? 'paraTypeDropdown' : 'paraCategoryDropdown';
+        document.getElementById(otherId).classList.remove('open');
+        dropdown.classList.toggle('open');
+      });
+    });
+    document.addEventListener('click', function() {
+      document.getElementById('paraCategoryDropdown').classList.remove('open');
+      document.getElementById('paraTypeDropdown').classList.remove('open');
+    });
+  })();
+
+  /* ── Category filter events ── */
+  document.getElementById('paraCategoryFilters').addEventListener('click', function(e) {
+    var btn = e.target.closest('.tag-pill');
+    if (!btn || btn.dataset.category === undefined) return;
+    currentCategory = btn.dataset.category;
+    document.querySelectorAll('#paraCategoryFilters .tag-pill').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('paraCategoryLabel').textContent = currentCategory === 'all' ? 'All' : currentCategory;
+    document.getElementById('paraCategoryDropdown').classList.remove('open');
+    renderGrid();
+  });
+
+  /* ── Type filter events ── */
+  document.getElementById('paraTypeFilters').addEventListener('click', function(e) {
+    var btn = e.target.closest('.tag-pill');
+    if (!btn || btn.dataset.type === undefined) return;
+    currentType = btn.dataset.type;
+    document.querySelectorAll('#paraTypeFilters .tag-pill').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('paraTypeLabel').textContent = currentType === 'all' ? 'All' : (TYPE_ICONS[currentType] || '') + ' ' + currentType;
+    document.getElementById('paraTypeDropdown').classList.remove('open');
+    renderGrid();
+  });
+
+  /* ── Scroll reveal ── */
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(function(el) { observer.observe(el); });
+
+  /* ── Nav dropdown ── */
+  (function() {
+    var dropdown = document.querySelector('.nav-dropdown');
+    if (!dropdown) return;
+    var toggle = dropdown.querySelector('.nav-dropdown-toggle');
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = dropdown.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+
+  /* ── Mobile hamburger ── */
+  (function() {
+    var hamburger = document.querySelector('.nav-hamburger');
+    var overlay = document.querySelector('.nav-mobile-overlay');
+    if (!hamburger || !overlay) return;
+    hamburger.addEventListener('click', function() {
+      var isOpen = hamburger.classList.toggle('open');
+      overlay.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    overlay.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        hamburger.classList.remove('open');
+        overlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  })();
+</script>
+
+<script src="theme-switcher.js"></script>
+</body>
+</html>

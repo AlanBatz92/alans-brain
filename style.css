@@ -495,8 +495,8 @@ nav {
    PROJECT CARDS (homepage grid)
    ═══════════════════════════════════ */
 .projects-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px;
 }
 .project-card {
@@ -1789,6 +1789,51 @@ nav {
 }
 
 /* ═══════════════════════════════════
+   PARANORMAL CARDS
+   ═══════════════════════════════════ */
+.para-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.para-card-img {
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+.para-card-img img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 16 / 9;
+}
+.para-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.para-card-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0;
+}
+.para-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.para-card-link {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--teal);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.para-card-link:hover {
+  color: var(--blue);
+}
+
+/* ═══════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════ */
 @media (max-width: 380px) {
@@ -2053,6 +2098,36 @@ nav {
 /* ═══════════════════════════════════════════
    TRANS ART & RESOURCES
    ═══════════════════════════════════════════ */
+
+/* ── Trans flag accents ── */
+.page-hero-trans .gradient-text {
+  background: linear-gradient(135deg, #5BCEFA 0%, #F5A9B8 40%, #FFFFFF 60%, #F5A9B8 80%, #5BCEFA 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.page-hero-trans .page-hero-tagline {
+  color: #F5A9B8;
+}
+.page-hero-trans::after {
+  content: '';
+  display: block;
+  width: 120px;
+  height: 3px;
+  margin: 18px auto 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #5BCEFA 0%, #F5A9B8 33%, #FFFFFF 50%, #F5A9B8 67%, #5BCEFA 100%);
+  opacity: 0.7;
+}
+.resource-cat-heading {
+  border-left: 3px solid;
+  border-image: linear-gradient(180deg, #5BCEFA, #F5A9B8) 1;
+  padding-left: 12px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
 
 /* ── Crisis banner ── */
 .crisis-banner {
