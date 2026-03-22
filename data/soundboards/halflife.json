@@ -9,7 +9,21 @@
         { "label": "Hello Freeman", "file": "hellofreeman.wav" },
         { "label": "Stench", "file": "stench.wav" },
         { "label": "Wear a Tie", "file": "weartie.wav" },
-        { "label": "What Are You Doing", "file": "whatyoudoing.wav" }
+        { "label": "Do You Smell", "file": "doyousmell.wav" },
+		{ "label": "Hello Ladies", "file": "helloladies.wav" },
+		{ "label": "How Interesting", "file": "howinteresting.wav" },
+		{ "label": "Odor from You", "file": "odorfromyou.wav" },
+		{ "label": "Smell Burn?", "file": "smellburn.wav" },
+		{ "label": "Seen Cup?", "file": "seencup.wav" },
+		{ "label": "Calhoun", "file": "Calhoun.wav" },
+		{ "label": "Can't Be Serious", "file": "cantbeserious.wav" },
+		{ "label": "What are you doing?", "file": "whatyoudoing.wav" },
+      ]
+    }
+	{
+      "name": "G-Man",
+      "clips": [
+        { "label": "A Fellow Scientist", "file": "choose1.wav" }
       ]
     }
   ]
