@@ -84,6 +84,7 @@
     <!-- ══════ TAB TOGGLE ══════ -->
     <div class="tab-toggle anim" style="animation-delay:0.4s" id="tabToggle">
       <button class="tab-toggle-btn active" data-tab="art">Art</button>
+      <button class="tab-toggle-btn" data-tab="polyamory">Polyamory</button>
       <button class="tab-toggle-btn" data-tab="resources">Resources</button>
     </div>
 
@@ -93,6 +94,15 @@
       <div class="empty-state" id="artEmpty">
         <div class="empty-icon">🎨</div>
         <div class="empty-text">Artist profiles coming soon.<br>Check back as this page grows.</div>
+      </div>
+    </div>
+
+    <!-- ══════ POLYAMORY SECTION ══════ -->
+    <div id="polyamorySection" style="display:none">
+      <div class="media-grid" id="polyGrid"></div>
+      <div class="empty-state" id="polyEmpty">
+        <div class="empty-icon">💙❤️🖤</div>
+        <div class="empty-text">Polyamory content coming soon.<br>Art, articles, resources, and more.</div>
       </div>
     </div>
 
@@ -137,8 +147,11 @@
   /* Tab toggle */
   (function() {
     var toggle = document.getElementById('tabToggle');
-    var artSection = document.getElementById('artSection');
-    var resourcesSection = document.getElementById('resourcesSection');
+    var sections = {
+      art: document.getElementById('artSection'),
+      polyamory: document.getElementById('polyamorySection'),
+      resources: document.getElementById('resourcesSection')
+    };
     if (!toggle) return;
 
     toggle.addEventListener('click', function(e) {
@@ -147,8 +160,9 @@
       toggle.querySelectorAll('.tab-toggle-btn').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
       var tab = btn.getAttribute('data-tab');
-      artSection.style.display = tab === 'art' ? '' : 'none';
-      resourcesSection.style.display = tab === 'resources' ? '' : 'none';
+      Object.keys(sections).forEach(function(key) {
+        sections[key].style.display = key === tab ? '' : 'none';
+      });
     });
   })();
 
@@ -174,6 +188,27 @@
         card.innerHTML = photoHtml +
           '<div class="artist-name">' + a.name + '</div>' +
           pronounsHtml + bioHtml + tagsHtml;
+        grid.appendChild(card);
+      });
+    })
+    .catch(function() {});
+
+  /* Load polyamory content */
+  fetch('data/transart-polyamory.json')
+    .then(function(r) { return r.json(); })
+    .then(function(items) {
+      if (!items.length) return;
+      document.getElementById('polyEmpty').style.display = 'none';
+      var grid = document.getElementById('polyGrid');
+      items.forEach(function(item) {
+        var card = document.createElement('a');
+        card.className = 'media-card reveal';
+        if (item.url) { card.href = item.url; card.target = '_blank'; card.rel = 'noopener'; }
+        var typeHtml = item.type ? '<span class="tag-pill">' + item.type + '</span>' : '';
+        card.innerHTML =
+          '<div class="artist-name">' + item.name + '</div>' +
+          (item.description ? '<div class="artist-bio">' + item.description + '</div>' : '') +
+          typeHtml;
         grid.appendChild(card);
       });
     })
