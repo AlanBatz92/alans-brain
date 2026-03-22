@@ -23,7 +23,7 @@
 	{
       "name": "G-Man",
       "clips": [
-        { "label": "A Fellow Scientist", "file": "choose1.wav" }
+        { "label": "Time to Choose", "file": "choose1.wav" }
       ]
     }
   ]
