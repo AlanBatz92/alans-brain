@@ -137,7 +137,12 @@
       "Bash(rm -f \"The Good Liars.png\")",
       "Bash(mv Screenshot*Jenined* \"jenined.png\")",
       "Bash(ls Screenshot*)",
-      "Bash(/c/Python313/python -c \":*)"
+      "Bash(/c/Python313/python -c \":*)",
+      "Bash(find /c/Users/505ma/Documents/GitHub/alans-brain/audio -type f -name *.mp3 -o -name *.wav -o -name *.webm -o -name *.ogg)",
+      "Bash(/c/Python313/python C:/Users/505ma/Documents/GitHub/alans-brain/soundboard-admin.py list)",
+      "Bash(/c/Python313/python C:/Users/505ma/Documents/GitHub/alans-brain/soundboard-admin.py list halflife)",
+      "Bash(/c/Python313/python C:/Users/505ma/Documents/GitHub/alans-brain/soundboard-admin.py help)",
+      "Bash(/c/Python313/python -c \"import tkinter; print\\(''tkinter OK''\\)\")"
     ]
   }
 }

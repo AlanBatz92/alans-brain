@@ -2,31 +2,31 @@
   {
     "id": "theyhunger",
     "name": "They Hunger",
-    "icon": "\ud83e\udddf",
+    "icon": "🧟",
     "clipCount": 0
   },
   {
     "id": "halflife",
     "name": "Half-Life",
-    "icon": "\ud83d\udd2c",
-    "clipCount": 16
+    "icon": "🔬",
+    "clipCount": 23
   },
   {
     "id": "maxpayne",
     "name": "Max Payne",
-    "icon": "\ud83d\udd2b",
+    "icon": "🔫",
     "clipCount": 0
   },
   {
     "id": "quake2",
     "name": "Quake 2",
-    "icon": "\ud83d\udc7e",
+    "icon": "👾",
     "clipCount": 0
   },
   {
     "id": "rlm",
     "name": "Red Letter Media",
-    "icon": "\ud83c\udfa5",
+    "icon": "🎥",
     "clipCount": 0
   }
 ]
