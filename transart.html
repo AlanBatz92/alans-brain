@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Trans Art & Resources — Alan's Brain 🧠</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    // Apply saved theme immediately to prevent flash of default theme
+    (function() {
+      var t = localStorage.getItem('ab_theme');
+      if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Alan's Brain 🧠</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+            Explore <span class="nav-dropdown-arrow">▼</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="youtube.html"><span class="dropdown-icon">📺</span> YouTube Channels</a>
+            <a href="transart.html"><span class="dropdown-icon">🎨</span> Trans Art & Resources</a>
+            <a href="soundboards.html"><span class="dropdown-icon">🔊</span> Soundboards</a>
+            <a href="tools.html"><span class="dropdown-icon">🛠️</span> Great & Free</a>
+            <a href="photos.html"><span class="dropdown-icon">📸</span> Photo Gallery</a>
+            <a href="art.html"><span class="dropdown-icon">🖼️</span> Art Gallery</a>
+            <a href="ufo.html"><span class="dropdown-icon">🛸</span> UFO Cases</a>
+          </div>
+        </div>
+        <a href="index.html#links">Links</a>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <div class="nav-hamburger-lines">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="nav-mobile-overlay">
+    <a href="index.html">Home</a>
+    <span class="mobile-section-label">Explore</span>
+    <a href="youtube.html">📺 YouTube Channels</a>
+    <a href="transart.html" class="active">🎨 Trans Art & Resources</a>
+    <a href="soundboards.html">🔊 Soundboards</a>
+    <a href="tools.html">🛠️ Great & Free</a>
+    <a href="photos.html">📸 Photo Gallery</a>
+    <a href="art.html">🖼️ Art Gallery</a>
+    <a href="ufo.html">🛸 UFO Cases</a>
+    <a href="index.html#links">Links</a>
+  </div>
+
+  <div class="page">
+
+    <!-- ══════ PAGE HERO ══════ -->
+    <section class="page-hero">
+      <div class="page-hero-icon anim" style="animation-delay:0.1s">🎨</div>
+      <h1 class="anim" style="animation-delay:0.2s">
+        <span class="gradient-text">Trans Art & Resources</span>
+      </h1>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">art, voices, and resources that matter</div>
+    </section>
+
+    <!-- ══════ TAB TOGGLE ══════ -->
+    <div class="tab-toggle anim" style="animation-delay:0.4s" id="tabToggle">
+      <button class="tab-toggle-btn active" data-tab="art">Art</button>
+      <button class="tab-toggle-btn" data-tab="resources">Resources</button>
+    </div>
+
+    <!-- ══════ ART SECTION ══════ -->
+    <div id="artSection">
+      <div class="media-grid" id="artistGrid"></div>
+      <div class="empty-state" id="artEmpty">
+        <div class="empty-icon">🎨</div>
+        <div class="empty-text">Artist profiles coming soon.<br>Check back as this page grows.</div>
+      </div>
+    </div>
+
+    <!-- ══════ RESOURCES SECTION ══════ -->
+    <div id="resourcesSection" style="display:none">
+      <div id="crisisBanner"></div>
+      <div id="resourcesList"></div>
+      <div class="empty-state" id="resourcesEmpty">
+        <div class="empty-icon">📚</div>
+        <div class="empty-text">Resources coming soon.<br>This page is being carefully curated.</div>
+      </div>
+    </div>
+
+    <!-- ══════ FOOTER ══════ -->
+    <footer class="site-footer reveal">
+      <div class="footer-stamp">Crafted by Alan 🛸</div>
+      <div class="footer-text">
+        Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. No tracking. No ads. Just a human on the internet.<br>
+        Built with HTML, CSS, and JS — the way the web was meant to be.
+      </div>
+      <div class="footer-buttons">
+        <span class="footer-btn">HTML</span>
+        <span class="footer-btn">CSS</span>
+        <span class="footer-btn">JS</span>
+        <span class="footer-btn">☕</span>
+      </div>
+    </footer>
+
+  </div><!-- /.page -->
+
+<script>
+  /* Tab toggle */
+  (function() {
+    var toggle = document.getElementById('tabToggle');
+    var artSection = document.getElementById('artSection');
+    var resourcesSection = document.getElementById('resourcesSection');
+    if (!toggle) return;
+
+    toggle.addEventListener('click', function(e) {
+      var btn = e.target.closest('.tab-toggle-btn');
+      if (!btn) return;
+      toggle.querySelectorAll('.tab-toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var tab = btn.getAttribute('data-tab');
+      artSection.style.display = tab === 'art' ? '' : 'none';
+      resourcesSection.style.display = tab === 'resources' ? '' : 'none';
+    });
+  })();
+
+  /* Load artists */
+  fetch('data/transart-artists.json')
+    .then(function(r) { return r.json(); })
+    .then(function(artists) {
+      if (!artists.length) return;
+      document.getElementById('artEmpty').style.display = 'none';
+      var grid = document.getElementById('artistGrid');
+      artists.forEach(function(a) {
+        var card = document.createElement('div');
+        card.className = 'media-card reveal';
+        var photoHtml = a.photo ? '<img src="' + a.photo + '" alt="' + a.name + '" class="artist-photo" loading="lazy">' : '';
+        var pronounsHtml = a.pronouns ? '<div class="artist-pronouns">' + a.pronouns + '</div>' : '';
+        var bioHtml = a.bio ? '<div class="artist-bio">' + a.bio + '</div>' : '';
+        var tagsHtml = '';
+        if (a.categories && a.categories.length) {
+          tagsHtml = '<div class="artist-tags">' + a.categories.map(function(c) {
+            return '<span class="tag-pill">' + c + '</span>';
+          }).join('') + '</div>';
+        }
+        card.innerHTML = photoHtml +
+          '<div class="artist-name">' + a.name + '</div>' +
+          pronounsHtml + bioHtml + tagsHtml;
+        grid.appendChild(card);
+      });
+    })
+    .catch(function() {});
+
+  /* Load resources */
+  fetch('data/transart-resources.json')
+    .then(function(r) { return r.json(); })
+    .then(function(resources) {
+      if (!resources.length) return;
+      document.getElementById('resourcesEmpty').style.display = 'none';
+      var list = document.getElementById('resourcesList');
+      var banner = document.getElementById('crisisBanner');
+
+      /* Crisis resources pinned at top */
+      var crisis = resources.filter(function(r) { return r.crisis; });
+      if (crisis.length) {
+        var crisisHtml = '<div class="crisis-banner"><div class="crisis-heading">Crisis Resources</div>';
+        crisis.forEach(function(r) {
+          crisisHtml += '<div class="crisis-item">';
+          crisisHtml += '<strong>' + r.name + '</strong>';
+          if (r.phone) crisisHtml += ' &mdash; <a href="tel:' + r.phone.replace(/[^+\d]/g, '') + '">' + r.phone + '</a>';
+          if (r.url) crisisHtml += ' &mdash; <a href="' + r.url + '" target="_blank" rel="noopener">Website</a>';
+          if (r.description) crisisHtml += '<div class="crisis-desc">' + r.description + '</div>';
+          crisisHtml += '</div>';
+        });
+        crisisHtml += '</div>';
+        banner.innerHTML = crisisHtml;
+      }
+
+      /* Group remaining by category */
+      var grouped = {};
+      resources.forEach(function(r) {
+        if (r.crisis) return;
+        var cat = r.category || 'Other';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(r);
+      });
+
+      Object.keys(grouped).forEach(function(cat) {
+        var section = document.createElement('div');
+        section.className = 'resource-category reveal';
+        var itemsHtml = grouped[cat].map(function(r) {
+          var html = '<div class="resource-item">';
+          html += '<div class="resource-name">' + (r.url ? '<a href="' + r.url + '" target="_blank" rel="noopener">' + r.name + '</a>' : r.name) + '</div>';
+          if (r.description) html += '<div class="resource-desc">' + r.description + '</div>';
+          if (r.phone) html += '<div class="resource-phone"><a href="tel:' + r.phone.replace(/[^+\d]/g, '') + '">' + r.phone + '</a></div>';
+          if (r.region) html += '<span class="tag-pill">' + r.region + '</span>';
+          html += '</div>';
+          return html;
+        }).join('');
+        section.innerHTML = '<h3 class="resource-cat-heading">' + cat + '</h3>' + itemsHtml;
+        list.appendChild(section);
+      });
+    })
+    .catch(function() {});
+
+  /* Scroll reveal */
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(function(el) { observer.observe(el); });
+
+  /* Explore dropdown toggle */
+  (function() {
+    var dropdown = document.querySelector('.nav-dropdown');
+    if (!dropdown) return;
+    var toggle = dropdown.querySelector('.nav-dropdown-toggle');
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = dropdown.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+
+  /* Mobile hamburger menu */
+  (function() {
+    var hamburger = document.querySelector('.nav-hamburger');
+    var overlay = document.querySelector('.nav-mobile-overlay');
+    if (!hamburger || !overlay) return;
+    hamburger.addEventListener('click', function() {
+      var isOpen = hamburger.classList.toggle('open');
+      overlay.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    overlay.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        hamburger.classList.remove('open');
+        overlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  })();
+</script>
+
+<script src="theme-switcher.js"></script>
+</body>
+</html>

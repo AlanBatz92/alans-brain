@@ -2049,3 +2049,141 @@ nav {
   border-color: var(--teal);
   color: var(--teal);
 }
+
+/* ═══════════════════════════════════════════
+   TRANS ART & RESOURCES
+   ═══════════════════════════════════════════ */
+
+/* ── Crisis banner ── */
+.crisis-banner {
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+}
+.crisis-heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--red);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 12px;
+}
+.crisis-item {
+  padding: 8px 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.crisis-item + .crisis-item {
+  border-top: 1px solid var(--red-border);
+}
+.crisis-item a {
+  color: var(--red);
+  text-decoration: none;
+  font-weight: 600;
+}
+.crisis-item a:hover {
+  text-decoration: underline;
+}
+.crisis-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── Artist cards ── */
+.artist-photo {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.artist-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.artist-pronouns {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.artist-bio {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.artist-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ── Resource sections ── */
+.resource-category {
+  margin-bottom: 32px;
+}
+.resource-cat-heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--text);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.resource-item {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.resource-item:last-child {
+  border-bottom: none;
+}
+.resource-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+.resource-name a {
+  color: var(--teal);
+  text-decoration: none;
+}
+.resource-name a:hover {
+  text-decoration: underline;
+}
+.resource-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+.resource-phone a {
+  color: var(--blue);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-dim);
+}
+.empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+}
+.empty-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
