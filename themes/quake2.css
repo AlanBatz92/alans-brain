@@ -1,0 +1,73 @@
+/* ═══════════════════════════════════════════
+   QUAKE II THEME — Alan's Brain
+   256-color palette: warm browns, golds, olives.
+   Phase 1: Color-only variable overrides.
+   Textures, fonts, and UI chrome come in Phase 2.
+   ═══════════════════════════════════════════ */
+
+html[data-theme="quake2"] {
+  /* Deep brown base (from Q2 palette darkest tones) */
+  --bg-deep: #1a1008;
+  --bg: #2b1c0e;
+  --surface: #3a2a16;
+  --surface-hover: #4a3a22;
+  --border: #5a4528;
+
+  /* Accent colors — warm golds and olives replace the cool spectrum */
+  --teal: #c8a84e;
+  --teal-glow: rgba(200, 168, 78, 0.15);
+  --blue: #7a8a6a;
+  --blue-glow: rgba(122, 138, 106, 0.12);
+  --purple: #8b6e4e;
+  --purple-glow: rgba(139, 110, 78, 0.12);
+  --pink: #b87848;
+  --pink-glow: rgba(184, 120, 72, 0.10);
+
+  /* Status colors — pulled from Q2 palette nearest matches */
+  --red: #c85040;
+  --red-bg: rgba(200, 80, 64, 0.12);
+  --red-border: rgba(200, 80, 64, 0.25);
+  --yellow: #d4a830;
+  --yellow-bg: rgba(212, 168, 48, 0.12);
+  --yellow-border: rgba(212, 168, 48, 0.25);
+  --green: #6a9a50;
+  --green-bg: rgba(106, 154, 80, 0.10);
+  --green-border: rgba(106, 154, 80, 0.20);
+  --gray: #7a6a4a;
+  --gray-bg: rgba(122, 106, 74, 0.12);
+  --gray-border: rgba(122, 106, 74, 0.25);
+
+  /* Text — warm beige tones */
+  --text: #d4c4a0;
+  --text-muted: #9a8a6a;
+  --text-dim: #6a5a3a;
+}
+
+/* ── Gradient text override ── */
+html[data-theme="quake2"] .gradient-text {
+  background: linear-gradient(135deg, #c8a84e 0%, #d4b860 40%, #8b6e4e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Ambient blobs — warm torch-like glow instead of cool tones ── */
+html[data-theme="quake2"] .blob-1 {
+  background: radial-gradient(circle, rgba(200, 168, 78, 0.10) 0%, transparent 70%);
+}
+html[data-theme="quake2"] .blob-2 {
+  background: radial-gradient(circle, rgba(184, 120, 72, 0.08) 0%, transparent 70%);
+}
+html[data-theme="quake2"] .blob-3 {
+  background: radial-gradient(circle, rgba(139, 110, 78, 0.06) 0%, transparent 70%);
+}
+
+/* ── Nav backdrop — warmer tint ── */
+html[data-theme="quake2"] nav {
+  background: rgba(26, 16, 8, 0.85);
+}
+
+/* ── Auth gate ── */
+html[data-theme="quake2"] .auth-gate {
+  background: rgba(26, 16, 8, 0.97);
+}
