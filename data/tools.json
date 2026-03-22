@@ -264,5 +264,19 @@
     "description": "Open-source planetarium on your screen. Explore stars, planets, and constellations in real time.",
     "category": "Education",
     "icon": "🔭"
+  },
+  {
+    "name": "On The Go Map",
+    "url": "https://onthegomap.com/",
+    "description": "Map out running, walking, or cycling routes with distance and elevation. Click to plot, done.",
+    "category": "Utilities",
+    "icon": "🗺️"
+  },
+  {
+    "name": "Piixes",
+    "url": "https://piixes.com/",
+    "description": "Library of 15,000+ free pixelated icons organized by category. Great for design and dev projects.",
+    "category": "Creative",
+    "icon": "👾"
   }
 ]

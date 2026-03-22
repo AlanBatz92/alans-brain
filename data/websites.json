@@ -124,5 +124,33 @@
     "description": "A xkcd-style parody wiki full of absurd, nerdy, and hilariously rewritten articles.",
     "category": "Fun & Games",
     "icon": "📖"
+  },
+  {
+    "name": "Space Jam (1996)",
+    "url": "https://www.spacejam.com/1996/",
+    "description": "The original 1996 Space Jam movie website, preserved in all its web 1.0 glory. A piece of internet history.",
+    "category": "Exploration",
+    "icon": "🏀"
+  },
+  {
+    "name": "Blair Witch Project",
+    "url": "https://www.blairwitch.com/",
+    "description": "The original Blair Witch movie site — an early masterpiece of web-based viral marketing and immersive horror storytelling.",
+    "category": "Exploration",
+    "icon": "🧙"
+  },
+  {
+    "name": "The Black Vault",
+    "url": "https://www.theblackvault.com/",
+    "description": "Massive archive of declassified government documents on UFOs, paranormal phenomena, and more — all obtained through FOIA requests.",
+    "category": "Knowledge",
+    "icon": "🗄️"
+  },
+  {
+    "name": "SCP Foundation",
+    "url": "https://scp-wiki.wikidot.com/",
+    "description": "Collaborative horror fiction wiki documenting supernatural entities and anomalies through \"Secure Containment Procedures.\" Endlessly deep.",
+    "category": "Fun & Games",
+    "icon": "🔬"
   }
 ]
