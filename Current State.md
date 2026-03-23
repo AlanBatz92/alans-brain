@@ -1,7 +1,7 @@
 # Alan's Brain — Current State
 
 **Last Updated:** March 23, 2026
-**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (23 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, Phases 4–5 remaining
+**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (23 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, Phases 4–5 remaining
 
 -----
 
@@ -352,6 +352,17 @@ New CSS: `.filter-dropdown`, `.filter-dropdown-btn`, `.filter-dropdown-panel`, `
 
 **Attributions updated** in `img/Icons/icons/Attributions_for_Artists.txt` — added credits for eye (Freepik), star (Freepik), construction (IconMarketPK), search (Freepik), sound off (Andrean Prabowo).
 
+### Homepage Layout Updates — Links Removal, Description, Soundboard Styles
+
+**What changed:** Merged `claude/homepage-layout-updates-UslXV` branch. Cleaned up homepage layout and nav structure.
+
+**Changes:**
+- **"Links" nav item removed** from desktop nav and mobile overlay across all 9 HTML pages (`index.html`, `tools.html`, `youtube.html`, `photos.html`, `art.html`, `soundboards.html`, `paranormal.html`, `transart.html`, `tasks.html`)
+- **"Cool Links" section removed** from homepage — the 3 indie web links (Neocities, 32-Bit Cafe, Melon King) were moved into `data/websites.json` as a new "Indie Web" category (bringing websites total to 25)
+- **Homepage hero description updated** from "A personal homepage, project hub, and digital garden. A little emulation of my brain and the multitudes it contains." to "An emulation of my Brain and the multitudes it contains."
+- **Soundboard category images enlarged** from 36px to 52px
+- **Soundboard rotating quote font enlarged** from 1.1rem to 1.3rem
+
 ### Trans Art & Resources → Pride and Identity
 
 **What changed:** Renamed "Trans Art & Resources" to "Pride and Identity" everywhere — page title, nav dropdown (all 9 HTML files), mobile nav overlay, homepage Explore card, cross-linking footers, and the page hero heading. File remains `transart.html`. The trans flag gradient accents on the page are preserved.
@@ -635,7 +646,7 @@ alans-brain/
 │       └── quake2/         ⬚ Empty — ready for Phase 4 texture assets
 ├── data/
 │   ├── tools.json          ✅ 38 entries across 11 categories — ready for more
-│   ├── websites.json       ✅ 22 entries across 4 categories — ready for more
+│   ├── websites.json       ✅ 25 entries across 5 categories (incl. Indie Web) — ready for more
 │   ├── youtube.json        ✅ 114 channels with profile images
 │   ├── photos.json         ⬚ Empty [] — needs photo entries + images
 │   ├── art.json            ✅ 2 entries (Sebastian Pether) — ready for more
@@ -788,7 +799,8 @@ Each new theme = a CSS file + texture folder + one line in the `THEMES` object:
 | `6a7f75d` | Add polyamory heart icon to empty state, update UFO attribution |
 | `dc9e5fc` | Update UFO icon with new design |
 | `9c2ea14` | Replace remaining emoji icons (no-sound, references, theme picker) with custom PNGs |
-| *(next)* | Icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound |
+| `52b4f77` | Icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound |
+| *(merge)* | Merge `claude/homepage-layout-updates-UslXV`: remove Links nav, move Cool Links to websites.json, update description, enlarge soundboard styles |
 
 Unpushed changes pending commit.
 
