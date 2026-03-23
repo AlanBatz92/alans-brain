@@ -1,5 +1,26 @@
 [
   {
+    "name": "Neocities",
+    "url": "https://neocities.org",
+    "description": "A free web hosting platform inspired by GeoCities — create and explore hand-crafted personal websites and bring back the indie web.",
+    "category": "Indie Web",
+    "icon": "🏙️"
+  },
+  {
+    "name": "32-Bit Cafe",
+    "url": "https://32bit.cafe",
+    "description": "A community for indie web enthusiasts — share, learn, and celebrate the joy of making your own little corner of the internet.",
+    "category": "Indie Web",
+    "icon": "☕"
+  },
+  {
+    "name": "Melon King",
+    "url": "https://melonking.net",
+    "description": "A wild, imaginative personal site from Melon King — one of the most creative expressions of the modern indie web.",
+    "category": "Indie Web",
+    "icon": "🍈"
+  },
+  {
     "name": "Atlas Obscura",
     "url": "https://www.atlasobscura.com/",
     "description": "A guide to the world's most wondrous and hidden places.",
