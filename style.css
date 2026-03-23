@@ -1462,8 +1462,8 @@ nav {
   margin-bottom: 12px;
 }
 .sb-category-img {
-  width: 36px;
-  height: 36px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
   border-radius: 6px;
 }
@@ -1471,7 +1471,7 @@ nav {
 /* Soundboard rotating quote */
 .sb-quote {
   font-family: var(--font-hand);
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   color: var(--text-muted);
   font-style: italic;
   opacity: 0.8;
