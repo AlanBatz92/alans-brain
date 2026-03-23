@@ -60,8 +60,8 @@
     // Fetch pageview count for this page from GoatCounter API
     var path = window.location.pathname;
     if (path === '/') path = '/index.html';
-    var url = 'https://' + GOATCOUNTER_SITE + '.goatcounter.com/counter/' +
-              encodeURIComponent(path) + '.json';
+    var url = 'https://' + GOATCOUNTER_SITE + '.goatcounter.com/counter' +
+              path + '.json';
 
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url);
