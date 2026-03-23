@@ -160,17 +160,7 @@
   var engine = new SoundEngine();
   var chaosInterval = null;
 
-  /* ── Rotating quotes per board ── */
-  var BOARD_QUOTES = {
-    halflife: [
-      "Why do we all have to wear these ridiculous ties?",
-      "Time to choose."
-    ],
-    maxpayne: [],
-    theyhunger: [],
-    quake2: [],
-    rlm: []
-  };
+  /* ── Rotating quotes per board (loaded from board JSON "quotes" array) ── */
 
   /* ── Category images for known boards ── */
   var CATEGORY_IMAGES = {
@@ -191,7 +181,8 @@
 
   function updateQuote(boardId) {
     var tagline = document.getElementById('sbTagline');
-    var quotes = BOARD_QUOTES[boardId] || [];
+    var data = boardData[boardId];
+    var quotes = (data && data.quotes) ? data.quotes : [];
     if (quotes.length > 0) {
       tagline.textContent = '"' + quotes[Math.floor(Math.random() * quotes.length)] + '"';
     } else {
@@ -241,10 +232,10 @@
 
     engine.stopAll();
     updateCombo();
-    updateQuote(id);
 
     // Check if we already loaded this board's data
     if (boardData[id]) {
+      updateQuote(id);
       renderClips(boardData[id]);
       return;
     }
@@ -257,6 +248,7 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         boardData[id] = data;
+        updateQuote(id);
         renderClips(data);
       })
       .catch(function() {

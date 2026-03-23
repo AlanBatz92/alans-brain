@@ -3,21 +3,26 @@
 Soundboard Admin — helper script for managing soundboard data.
 
 Usage:
-  python soundboard-admin.py add <board> <category> <file> [--label "Custom Label"]
+  python soundboard-admin.py add <board> <category> <file> [--label "Custom Label"] [--quote "Quote text"]
   python soundboard-admin.py bulk <board> <category> <file1> <file2> ...
   python soundboard-admin.py new-board <id> <name> <icon>
   python soundboard-admin.py new-category <board> <category>
   python soundboard-admin.py remove <board> <category> <file>
+  python soundboard-admin.py add-quote <board> "Quote text"
+  python soundboard-admin.py remove-quote <board> "Quote text"
   python soundboard-admin.py list [board]
   python soundboard-admin.py sync
 
 Examples:
   python soundboard-admin.py add halflife G-Man choose2.wav
   python soundboard-admin.py add halflife G-Man choose2.wav --label "The Right Man"
+  python soundboard-admin.py add halflife G-Man choose2.wav --label "The Right Man" --quote "The right man in the wrong place"
   python soundboard-admin.py bulk halflife Scientists hello.wav goodbye.wav
   python soundboard-admin.py new-board quake2 "Quake 2" "👾"
   python soundboard-admin.py new-category halflife "Vortigaunts"
   python soundboard-admin.py remove halflife Scientists stench.wav
+  python soundboard-admin.py add-quote halflife "Unforeseen consequences"
+  python soundboard-admin.py remove-quote halflife "Unforeseen consequences"
   python soundboard-admin.py list
   python soundboard-admin.py list halflife
   python soundboard-admin.py sync
@@ -123,15 +128,20 @@ def find_category(data, cat_name):
 
 def cmd_add(args):
     if len(args) < 3:
-        print("Usage: add <board> <category> <file> [--label \"Label\"]")
+        print("Usage: add <board> <category> <file> [--label \"Label\"] [--quote \"Quote\"]")
         sys.exit(1)
 
     board_id, cat_name, filename = args[0], args[1], args[2]
     label = None
+    quote = None
     if "--label" in args:
         li = args.index("--label")
         if li + 1 < len(args):
             label = args[li + 1]
+    if "--quote" in args:
+        qi = args.index("--quote")
+        if qi + 1 < len(args):
+            quote = args[qi + 1]
 
     if label is None:
         label = label_from_filename(filename)
@@ -161,6 +171,17 @@ def cmd_add(args):
             return
 
     cat["clips"].append({"label": label, "file": filename})
+
+    # Add quote if provided
+    if quote:
+        if "quotes" not in data:
+            data["quotes"] = []
+        if quote not in data["quotes"]:
+            data["quotes"].append(quote)
+            print(f"Quote added: \"{quote}\"")
+        else:
+            print(f"Quote already exists: \"{quote}\"")
+
     save_board(board_id, data)
     sync_clip_counts()
     print(f"Added: \"{label}\" ({filename}) -> {board_id}/{cat_name}")
@@ -284,6 +305,58 @@ def cmd_remove(args):
     print(f"Removed '{filename}' from {board_id}/{cat_name}.")
 
 
+def cmd_add_quote(args):
+    if len(args) < 2:
+        print("Usage: add-quote <board> \"Quote text\"")
+        sys.exit(1)
+
+    board_id, quote = args[0], args[1]
+
+    data = load_board(board_id)
+    if data is None:
+        print(f"Error: Board '{board_id}' not found.")
+        sys.exit(1)
+
+    if "quotes" not in data:
+        data["quotes"] = []
+
+    if quote in data["quotes"]:
+        print(f"Quote already exists in '{board_id}'.")
+        return
+
+    data["quotes"].append(quote)
+    save_board(board_id, data)
+    print(f"Added quote to {board_id}: \"{quote}\"")
+    print(f"  Total quotes: {len(data['quotes'])}")
+
+
+def cmd_remove_quote(args):
+    if len(args) < 2:
+        print("Usage: remove-quote <board> \"Quote text\"")
+        sys.exit(1)
+
+    board_id, quote = args[0], args[1]
+
+    data = load_board(board_id)
+    if data is None:
+        print(f"Error: Board '{board_id}' not found.")
+        sys.exit(1)
+
+    quotes = data.get("quotes", [])
+    if quote not in quotes:
+        print(f"Quote not found in '{board_id}'.")
+        if quotes:
+            print("  Existing quotes:")
+            for q in quotes:
+                print(f"    \"{q}\"")
+        sys.exit(1)
+
+    data["quotes"].remove(quote)
+    save_board(board_id, data)
+    print(f"Removed quote from {board_id}: \"{quote}\"")
+    print(f"  Remaining quotes: {len(data['quotes'])}")
+
+
 def cmd_list(args):
     index = load_index()
     if len(args) == 0:
@@ -309,6 +382,11 @@ def cmd_list(args):
 
     print(f"Board: {board_name}")
     print("-" * 40)
+    quotes = data.get("quotes", [])
+    if quotes:
+        print(f"\n  Quotes ({len(quotes)}):")
+        for q in quotes:
+            print(f"    \"{q}\"")
     for cat in data.get("categories", []):
         print(f"\n  {cat['name']} ({len(cat['clips'])} clips):")
         for clip in cat["clips"]:
@@ -331,6 +409,8 @@ def main():
         "new-board": cmd_new_board,
         "new-category": cmd_new_category,
         "remove": cmd_remove,
+        "add-quote": cmd_add_quote,
+        "remove-quote": cmd_remove_quote,
         "list": cmd_list,
         "sync": lambda a: sync_clip_counts(),
     }
