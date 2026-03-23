@@ -81,7 +81,11 @@ function buildThemePicker() {
   trigger.className = 'theme-trigger';
   trigger.setAttribute('aria-label', 'Change theme');
   trigger.setAttribute('title', 'Change theme');
-  trigger.textContent = '\uD83C\uDFA8';
+  var triggerImg = document.createElement('img');
+  triggerImg.src = 'img/Icons/icons/Theme/colors.png';
+  triggerImg.alt = 'Theme';
+  triggerImg.style.cssText = 'width:24px;height:24px;object-fit:contain';
+  trigger.appendChild(triggerImg);
 
   var picker = document.createElement('div');
   picker.className = 'theme-picker';

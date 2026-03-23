@@ -150,6 +150,10 @@ nav {
   color: var(--teal);
   text-decoration: none;
 }
+.nav-logo .nav-mobile-icon {
+  width: 34px;
+  height: 34px;
+}
 .nav-links {
   display: flex;
   gap: 6px;
@@ -1946,8 +1950,8 @@ nav {
   line-height: 1;
 }
 .explore-more-emoji img {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 .explore-more-label {
