@@ -1,7 +1,7 @@
 # Alan's Brain — Current State
 
-**Last Updated:** March 22, 2026
-**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (23 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, Phases 4–5 remaining
+**Last Updated:** March 23, 2026
+**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (23 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, Phases 4–5 remaining
 
 -----
 
@@ -311,13 +311,16 @@ New CSS: `.filter-dropdown`, `.filter-dropdown-btn`, `.filter-dropdown-panel`, `
 | Photo Gallery | 📸 | Camera | `img/Icons/icons/Photo_Gallery/cam.png` |
 | Art Gallery | 🖼️ | Starry Night | `img/Icons/icons/Art/starry-night.png` |
 | Paranormal | 👁️ | Paranormal icon (updated) | `img/Icons/icons/Paranormal/clairvoyance.png` |
-| Explore section | 🚀 | Solar system | `img/Icons/icons/Explore/galaxy.png` |
+| Explore section | 🚀 | Cloud | `img/Icons/icons/Explore/cloud.png` |
 | Cool Links section | 🔗 | Domain | `img/Icons/icons/Other/domain.png` |
 | Footer | 🛸 | UFO (updated) | `img/Icons/icons/UFO/ufo.png` |
-| Soundboard empty state | 🔇 | No sound | `img/Icons/icons/No_Sound/no-sound(1).png` |
+| Soundboard empty state | 🔇 | No sound (updated) | `img/Icons/icons/No_Sound/no-sound.png` |
 | Resources empty state | 📚 | Research book | `img/Icons/icons/References/research.png` |
 | Theme picker button | 🎨 | Color palette | `img/Icons/icons/Theme/colors.png` |
 | Polyamory empty state | — | Polyamory heart | `img/Icons/icons/Pride_and_Identity/polyamory(1).png` |
+| Paranormal empty state | 👁️ | Eye | `img/Icons/icons/Nothing_To_See/eye.png` |
+| "Always under construction" badge | 🏗️ | Construction/heating | `img/Icons/icons/Under_Construction/heating.png` |
+| Search bars | 🔍 | Transparency/search | `img/Icons/icons/Search/transparency.png` |
 
 **Where icons are used:** Nav dropdown (`<img class="dropdown-icon">`), mobile nav overlay (`<img class="nav-mobile-icon">`), homepage Explore cards (`.card-emoji img`), page hero icons (`.page-hero-icon img`), cross-linking footers (`.explore-more-emoji img`), section headers (`.section-icon img`).
 
@@ -326,6 +329,28 @@ New CSS: `.filter-dropdown`, `.filter-dropdown-btn`, `.filter-dropdown-panel`, `
 **Empty state updates:** The "Artist profiles coming soon" empty state uses the Starry Night art icon. The "Polyamory content coming soon" empty state uses the polyamory heart icon. The "Resources coming soon" empty state uses the research book icon. The soundboard "No clips loaded" empty state uses the no-sound icon.
 
 **Note:** Custom PNGs don't auto-recolor with the theme system (unlike emoji/SVG), but this provides visual consistency across themes.
+
+### Icon Refresh — Explore, Empty States, Search, Construction Badge
+
+**What changed:** Replaced remaining emoji icons and updated several custom PNGs across the site.
+
+**Icon updates:**
+
+| Location | Old | New | Path |
+|---|---|---|---|
+| Homepage "Explore" section header | galaxy.png | cloud.png | `img/Icons/icons/Explore/cloud.png` |
+| Homepage "Always under construction" badge | 🏗️ emoji | heating.png | `img/Icons/icons/Under_Construction/heating.png` |
+| Paranormal empty state | 👁️ emoji | eye.png | `img/Icons/icons/Nothing_To_See/eye.png` |
+| Search bars (YouTube, Great & Free) | 🔍 emoji | transparency.png | `img/Icons/icons/Search/transparency.png` |
+| Soundboard empty state | no-sound(1).png | no-sound.png (updated) | `img/Icons/icons/No_Sound/no-sound.png` |
+
+**Files modified:** `index.html`, `youtube.html`, `tools.html`, `soundboards.html`, `paranormal.html`
+
+**Files deleted:** `img/Icons/icons/Explore/galaxy.png`, `img/Icons/icons/No_Sound/no-sound(1).png`
+
+**New icon folders:** `Nothing_To_See/`, `Search/`, `Under_Construction/`
+
+**Attributions updated** in `img/Icons/icons/Attributions_for_Artists.txt` — added credits for eye (Freepik), star (Freepik), construction (IconMarketPK), search (Freepik), sound off (Andrean Prabowo).
 
 ### Trans Art & Resources → Pride and Identity
 
@@ -621,7 +646,7 @@ alans-brain/
 ├── img/
 │   ├── Icons/
 │   │   ├── Soundboards/    ✅ Character images (Scientist, G-Man, Max Payne) — used as category headers
-│   │   └── icons/          ✅ 24 custom PNG icons organized by page (Alan's_Brain, Art, Audio_Related, Cool_Links, Other, Paranormal, Photo_Gallery, Pride_and_Identity, UFO, Youtube_Channels)
+│   │   └── icons/          ✅ Custom PNG icons organized by page (Alan's_Brain, Art, Audio_Related, Cool_Links, Explore, No_Sound, Nothing_To_See, Other, Paranormal, Photo_Gallery, Pride_and_Identity, Search, UFO, Under_Construction, Youtube_Channels)
 │   ├── youtube/            ✅ Channel profile pictures
 │   ├── photos/
 │   │   ├── full/           ⬚ Empty — for full-resolution photos
@@ -758,7 +783,12 @@ Each new theme = a CSS file + texture folder + one line in the `THEMES` object:
 | `028e8cf` | Rework UFO→Paranormal, trans flag accents, Brain SVG CSS vars, homepage Explore refresh |
 | `84eeee0` | Add cross-linking footers, new tools/websites |
 | `f9eff06` | Clean up homepage cards, add Polyamory tab to Trans Art page |
-| *(next)* | Current State update |
+| `0c2caff` | Replace emoji icons with custom PNGs, rename Trans Art to Pride and Identity, add soundboard enhancements |
+| `9ccaaba` | Update icons: new galaxy Explore icon, refreshed Paranormal icon, adjust icon sizes |
+| `6a7f75d` | Add polyamory heart icon to empty state, update UFO attribution |
+| `dc9e5fc` | Update UFO icon with new design |
+| `9c2ea14` | Replace remaining emoji icons (no-sound, references, theme picker) with custom PNGs |
+| *(next)* | Icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound |
 
 Unpushed changes pending commit.
 

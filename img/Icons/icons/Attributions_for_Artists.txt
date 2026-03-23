@@ -4,3 +4,8 @@
 <a href="https://www.flaticon.com/free-icons/no-sound" title="no sound icons">No sound icons created by Andrean Prabowo - Flaticon</a>
 <a href="https://www.flaticon.com/free-icons/research" title="research icons">Research icons created by Freepik - Flaticon</a>
 <a href="https://www.flaticon.com/free-icons/color" title="color icons">Color icons created by Freepik - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/eye" title="eye icons">Eye icons created by Freepik - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/star" title="star icons">Star icons created by Freepik - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/construction-and-tools" title="construction and tools icons">Construction and tools icons created by IconMarketPK - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/search" title="search icons">Search icons created by Freepik - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/sound-off" title="sound off icons">Sound off icons created by Andrean Prabowo - Flaticon</a>
