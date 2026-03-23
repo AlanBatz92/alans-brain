@@ -650,6 +650,64 @@ nav {
   text-decoration: none;
 }
 
+/* ── Visit ticker (odometer) ── */
+.visit-ticker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  margin-bottom: 4px;
+}
+.ticker-label {
+  font-family: var(--font-hand);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+}
+.ticker-digits {
+  display: flex;
+  gap: 2px;
+}
+.ticker-digit {
+  width: 22px;
+  height: 30px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.ticker-digit-inner {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: transform 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.ticker-digit-inner span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--teal);
+  font-weight: 700;
+}
+.ticker-separator {
+  width: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  opacity: 0.4;
+}
+
 /* ═══════════════════════════════════
    ANIMATIONS
    ═══════════════════════════════════ */
