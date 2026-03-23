@@ -1,7 +1,7 @@
 # Alan's Brain — Current State
 
 **Last Updated:** March 23, 2026
-**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (23 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, Phases 4–5 remaining
+**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (23 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, **visit counter ticker added (GoatCounter)**, **footer "No tracking. No ads." removed**, **search icons enlarged**, **soundboard quotes moved to board JSON + admin script quote management**, Phases 4–5 remaining
 
 -----
 
@@ -352,6 +352,52 @@ New CSS: `.filter-dropdown`, `.filter-dropdown-btn`, `.filter-dropdown-panel`, `
 
 **Attributions updated** in `img/Icons/icons/Attributions_for_Artists.txt` — added credits for eye (Freepik), star (Freepik), construction (IconMarketPK), search (Freepik), sound off (Andrean Prabowo).
 
+### Visit Counter Ticker (GoatCounter)
+
+**What changed:** Added an odometer-style rolling digit visit counter to the footer of all 9 pages, powered by GoatCounter (`dbatz92.goatcounter.com`).
+
+**How it works:**
+- `visit-ticker.js` fetches the per-page view count from GoatCounter's public JSON API
+- Builds 6 digit boxes (padded with leading zeros) with comma separators
+- Each digit "rolls" into place with a staggered animation (120ms delay per digit, cubic-bezier ease)
+- Falls back to `000,000` if the API is unreachable
+- GoatCounter's `count.js` script tracks visits (privacy-friendly, no cookies)
+
+**Files created:** `visit-ticker.js`
+
+**CSS added:** `.visit-ticker`, `.ticker-label`, `.ticker-digits`, `.ticker-digit`, `.ticker-digit-inner`, `.ticker-separator` — odometer layout with `overflow: hidden` digit boxes and `translateY` animation
+
+**Footer updated across all 9 pages:**
+- Added ticker HTML (`#visitTicker` container)
+- Added GoatCounter tracking script (`//gc.zgo.at/count.js`)
+- Removed "No tracking. No ads." from footer text — now reads: "Part of the indie web. Just a human on the internet."
+
+### Search Icon Enlargement
+
+**What changed:** Search bar icons on YouTube Channels and Great & Free pages enlarged from 18px to 24px for better visibility.
+
+**Files modified:** `youtube.html`, `tools.html`
+
+### Soundboard Quotes — JSON Migration & Admin Commands
+
+**What changed:** Rotating quotes moved from a hardcoded `BOARD_QUOTES` object in `soundboards.html` to each board's JSON file under a `"quotes"` array. This allows quotes to be managed alongside clip data via the admin script.
+
+**Board JSON schema updated:** Each board file (e.g., `data/soundboards/halflife.json`) now supports an optional top-level `"quotes"` array:
+```json
+{
+  "quotes": ["Quote one", "Quote two"],
+  "categories": [...]
+}
+```
+
+**`soundboards.html` updated:** `updateQuote()` now reads from `boardData[id].quotes` instead of the removed `BOARD_QUOTES` object. Quote display is deferred until after board data is fetched.
+
+**`soundboard-admin.py` updated:**
+- `add` command now accepts `--quote "text"` to add a quote alongside a clip
+- New `add-quote <board> "text"` command — add a quote standalone
+- New `remove-quote <board> "text"` command — remove a quote
+- `list <board>` now displays quotes in the output
+
 ### Homepage Layout Updates — Links Removal, Description, Soundboard Styles
 
 **What changed:** Merged `claude/homepage-layout-updates-UslXV` branch. Cleaned up homepage layout and nav structure.
@@ -381,9 +427,9 @@ Category image mapping is defined in `CATEGORY_IMAGES` object in the inline scri
 
 **Clip progress bar:** Each audio button now contains a `.clip-progress` element — a 3px teal bar at the bottom that animates from left to right over the clip's duration while playing. The `SoundEngine.play()` signature changed from `play(url, onEnded)` to `play(url, onStart, onEnded)` where `onStart(duration)` receives the clip duration in seconds. Progress bars reset on stop/end.
 
-**Rotating quotes:** Each soundboard can have an array of exemplar quotes defined in `BOARD_QUOTES` (in the inline script). When a board is selected, a random quote displays as the page tagline in the Caveat handwriting font. Current quotes:
+**Rotating quotes:** Each soundboard can have a `"quotes"` array in its board JSON file (e.g., `data/soundboards/halflife.json`). When a board is selected, a random quote displays as the page tagline in the Caveat handwriting font. Quotes are managed via `soundboard-admin.py` (`add-quote`, `remove-quote`, or `--quote` flag on `add`). Current quotes:
 - Half-Life: "Why do we all have to wear these ridiculous ties?", "Time to choose."
-- Other boards: empty arrays (ready for future quotes)
+- Other boards: no quotes yet (add via `soundboard-admin.py add-quote <board> "text"`)
 
 **Board selector icons:** `data/soundboards/index.json` updated — Half-Life and Max Payne now use image paths instead of emoji for their `icon` field. The `renderBoardSelector()` function detects path-based icons (containing `/`) and renders `<img>` tags instead of text.
 
@@ -399,7 +445,7 @@ Think of each JSON file as a list. Each item in the list is wrapped in `{ }` cur
 
 ### 🛠️ Great & Free Tools → `data/tools.json`
 
-**What's there now:** 40 tools across 11 categories (Design, Utilities, Security, Productivity, Media, Networking, Creative, Game Dev, Internet, Education) + 18 websites across 4 categories (Exploration, Fun & Games, Knowledge, Outdoors & Maps)
+**What's there now:** 40 tools across 11 categories (Design, Utilities, Security, Productivity, Media, Networking, Creative, Game Dev, Internet, Education) + 25 websites across 5 categories (Exploration, Fun & Games, Knowledge, Outdoors & Maps, Indie Web)
 
 **To add a new tool**, copy-paste this block inside the `[ ]` brackets (after the last `}`, put a comma first):
 
@@ -637,7 +683,8 @@ alans-brain/
 ├── tasks.js                ✅ Existing (task tracker engine)
 ├── gallery.js              ✅ Phase 1 (Lightbox + Slideshow constructors)
 ├── soundboards.js          ✅ Phase 3 (SoundEngine constructor — Web Audio API)
-├── soundboard-admin.py     ✅ CLI tool for soundboard JSON management
+├── visit-ticker.js         ✅ Odometer-style visit counter (GoatCounter API integration)
+├── soundboard-admin.py     ✅ CLI tool for soundboard JSON management (clips + quotes)
 ├── soundboard-admin-gui.py ✅ GUI wrapper for soundboard admin
 ├── .gitignore              ✅ Excludes: New Pages Plan.md, Current State.md, Task Tracker Write-Back Feature Plan.md
 ├── themes/
@@ -801,6 +848,8 @@ Each new theme = a CSS file + texture folder + one line in the `THEMES` object:
 | `9c2ea14` | Replace remaining emoji icons (no-sound, references, theme picker) with custom PNGs |
 | `52b4f77` | Icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound |
 | *(merge)* | Merge `claude/homepage-layout-updates-UslXV`: remove Links nav, move Cool Links to websites.json, update description, enlarge soundboard styles |
+| `5ff2f13` | Add visit counter ticker with GoatCounter integration, remove "No tracking. No ads." from footer |
+| `b22fbba` | Enlarge search icons, add quote management to soundboard admin and JSON |
 
 Unpushed changes pending commit.
 
