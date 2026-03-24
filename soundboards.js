@@ -9,6 +9,7 @@ function SoundEngine() {
   self.buffers = {};    // file path → AudioBuffer
   self.sources = [];    // active AudioBufferSourceNodes
   self.sourceMap = {};  // url → { source, onEnded } for toggle-off support
+  self.pending = 0;     // number of clips currently loading (not yet playing)
   self.gainNode = null;
   self.volume = 0.8;
 
@@ -21,7 +22,7 @@ function SoundEngine() {
   };
 
   // Load and decode an audio file, cache the buffer
-  self.load = function(url, callback) {
+  self.load = function(url, callback, onError) {
     if (self.buffers[url]) {
       if (callback) callback(self.buffers[url]);
       return;
@@ -35,6 +36,7 @@ function SoundEngine() {
       })
       .catch(function(err) {
         console.warn('Failed to load audio:', url, err);
+        if (onError) onError();
       });
   };
 
@@ -57,6 +59,7 @@ function SoundEngine() {
     self._init();
 
     var doPlay = function(buffer) {
+      self.pending = Math.max(0, self.pending - 1);
       var source = self.ctx.createBufferSource();
       source.buffer = buffer;
       source.connect(self.gainNode);
@@ -75,7 +78,11 @@ function SoundEngine() {
     if (self.buffers[url]) {
       doPlay(self.buffers[url]);
     } else {
-      self.load(url, doPlay);
+      self.pending++;
+      self.load(url, doPlay, function() {
+        self.pending = Math.max(0, self.pending - 1);
+        if (onEnded) onEnded();
+      });
     }
   };
 
@@ -86,6 +93,7 @@ function SoundEngine() {
     });
     self.sources = [];
     self.sourceMap = {};
+    self.pending = 0;
   };
 
   // Set volume (0–1)
@@ -94,8 +102,8 @@ function SoundEngine() {
     if (self.gainNode) self.gainNode.gain.value = v;
   };
 
-  // How many sounds are currently playing
+  // How many sounds are currently playing or loading
   self.playingCount = function() {
-    return self.sources.length;
+    return self.sources.length + self.pending;
   };
 }
