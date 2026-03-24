@@ -100,7 +100,6 @@
     <!-- ══════ CONTROLS ══════ -->
     <div class="sb-controls anim" style="animation-delay:0.5s;display:none" id="sbControls">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-        <button class="tag-pill" id="stopAll" style="background:var(--red-bg);color:var(--red);border-color:var(--red-border)">⏹ Stop All</button>
         <button class="tag-pill" id="randomBtn">🎲 Random</button>
         <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
           <span style="font-size:0.75rem;color:var(--text-dim)">🔈</span>
@@ -219,7 +218,7 @@
     var html = '';
     boards.forEach(function(b) {
       var iconHtml = b.icon.indexOf('/') !== -1
-        ? '<img class="nav-mobile-icon" src="' + esc(b.icon) + '" alt="" style="width:16px;height:16px">'
+        ? '<img class="nav-mobile-icon" src="' + esc(b.icon) + '" alt="" style="width:24px;height:24px">'
         : b.icon;
       html += '<button class="tag-pill sb-board-btn" data-id="' + esc(b.id) + '" data-name="' + esc(b.name) + '">' +
         iconHtml + ' ' + esc(b.name) +
@@ -378,16 +377,6 @@
         progress.style.width = '0';
       }
       updateCombo();
-    });
-    updateCombo();
-  });
-
-  document.getElementById('stopAll').addEventListener('click', function() {
-    engine.stopAll();
-    document.querySelectorAll('.audio-btn.playing').forEach(function(b) {
-      b.classList.remove('playing');
-      var p = b.querySelector('.clip-progress');
-      if (p) { p.style.transition = 'none'; p.style.width = '0'; }
     });
     updateCombo();
   });

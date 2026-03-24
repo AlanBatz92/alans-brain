@@ -49,7 +49,7 @@ All three pages follow the JSON-driven pattern: thin HTML shell → `fetch()` JS
 | Page | File(s) | Features | Data File(s) |
 |---|---|---|---|
 | Art Gallery | `art.html` | Hero slideshow (15s auto-crossfade, progress bar, pause-on-hover, prev/next). Thumbnail grid syncs with slideshow — click thumb to jump. Uses `gallery.js` | `data/art.json` — empty, ready to fill |
-| Soundboards | `soundboards.html` + `soundboards.js` | Board selector (5 boards), categorized clip grids, Web Audio API engine (max 2 concurrent, click-to-toggle), volume slider, Stop All, Random, combo counter | `data/soundboards/index.json` — manifest with 5 boards (They Hunger, Half-Life, Max Payne, Quake 2, RLM). Half-Life: 20 clips, others: 0 clips but JSON + icons ready |
+| Soundboards | `soundboards.html` + `soundboards.js` | Board selector (5 boards, 24px character icons), categorized clip grids, Web Audio API engine (max 2 concurrent, click-to-toggle), volume slider, Random, combo counter | `data/soundboards/index.json` — manifest with 5 boards (They Hunger, Half-Life, Max Payne, Quake 2, RLM). Half-Life: 20 clips, others: 0 clips but JSON + icons ready |
 | UFO Cases | `ufo.html` | Vertical timeline (teal gradient line + date markers), evidence tags, conviction meter bars (x/10), expandable "Read more", source links. Sort by date/conviction, filter by evidence type | `data/ufo-cases.json` — empty, ready to fill |
 
 **New CSS added:** Full timeline component system (`.timeline`, `.timeline-item`, `.timeline-card`, `.timeline-marker`, `.evidence-tag`, `.conviction-meter`, etc.)
@@ -428,7 +428,7 @@ New CSS: `.filter-dropdown`, `.filter-dropdown-btn`, `.filter-dropdown-panel`, `
 
 Category image mapping is defined in `CATEGORY_IMAGES` object in the inline script on `soundboards.html`. Categories are matched by name — e.g., naming an RLM category "Jay" will display Jay's image.
 
-**Playback rules:** Maximum 2 concurrent sounds — additional clicks are ignored until a slot opens. Clicking a currently-playing clip toggles it off (stops playback, resets progress bar). `SoundEngine` tracks active sources by URL via `sourceMap` for toggle support, exposes `isPlaying(url)` and `stop(url)` methods.
+**Playback rules:** Maximum 2 concurrent sounds — additional clicks are ignored until a slot opens. Clicking a currently-playing clip toggles it off (stops playback, resets progress bar). `SoundEngine` tracks active sources by URL via `sourceMap` for toggle support, exposes `isPlaying(url)` and `stop(url)` methods. Pending (loading) clips count toward the limit to prevent race conditions. "Stop All" button removed — click-to-toggle and the 2-sound limit make it unnecessary.
 
 **Clip progress bar:** Each audio button now contains a `.clip-progress` element — a 3px teal bar at the bottom that animates from left to right over the clip's duration while playing. The `SoundEngine.play()` signature changed from `play(url, onEnded)` to `play(url, onStart, onEnded)` where `onStart(duration)` receives the clip duration in seconds. Progress bars reset on stop/end.
 
