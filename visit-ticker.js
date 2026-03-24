@@ -1,22 +1,21 @@
 /* Visit Ticker — odometer-style rolling digit counter
-   Fetches total unique visitor count from GoatCounter and
+   Fetches total pageview count from GoatCounter and
    animates digits rolling into place. */
 
 (function () {
-  var GOATCOUNTER_SITE = 'dbatz92';
-  var MIN_DIGITS = 6; // pad to at least this many digits
-  var STAGGER_MS = 120; // delay between each digit starting to roll
+  var SITE = 'dbatz92';
+  var MIN_DIGITS = 6;
+  var STAGGER_MS = 120;
 
   function buildDigits(container, count) {
+    container.innerHTML = '';
     var str = String(count);
     while (str.length < MIN_DIGITS) str = '0' + str;
 
-    // Insert thousand separators
     var digits = str.split('');
     var fragment = document.createDocumentFragment();
 
     for (var i = 0; i < digits.length; i++) {
-      // Add separator every 3 digits from the right
       var fromRight = digits.length - i;
       if (fromRight % 3 === 0 && i !== 0) {
         var sep = document.createElement('div');
@@ -32,7 +31,6 @@
       var inner = document.createElement('div');
       inner.className = 'ticker-digit-inner';
 
-      // Build digit strip: 0–9 then repeat target at end
       for (var d = 0; d <= 9; d++) {
         var s = document.createElement('span');
         s.textContent = d;
@@ -42,7 +40,6 @@
       box.appendChild(inner);
       fragment.appendChild(box);
 
-      // Animate after a stagger delay
       (function (innerEl, targetVal, delay) {
         setTimeout(function () {
           innerEl.style.transform = 'translateY(-' + (targetVal * 30) + 'px)';
@@ -53,15 +50,10 @@
     container.appendChild(fragment);
   }
 
-  function initTicker() {
-    var container = document.getElementById('visitTicker');
-    if (!container) return;
-
-    // Fetch pageview count for this page from GoatCounter API
-    var path = window.location.pathname;
-    if (path === '/') path = '/index.html';
-    var url = 'https://' + GOATCOUNTER_SITE + '.goatcounter.com/counter/' +
-              encodeURIComponent(path) + '.json';
+  function fetchCount(container) {
+    // Fetch TOTAL site-wide pageviews (not per-page)
+    var url = 'https://' + SITE + '.goatcounter.com/counter/' +
+              encodeURIComponent('TOTAL') + '.json';
 
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url);
@@ -69,7 +61,7 @@
       if (xhr.status === 200) {
         try {
           var data = JSON.parse(xhr.responseText);
-          var count = parseInt(data.count.replace(/,/g, ''), 10) || 0;
+          var count = parseInt(String(data.count).replace(/[^0-9]/g, ''), 10) || 0;
           buildDigits(container, count);
         } catch (e) {
           buildDigits(container, 0);
@@ -82,6 +74,17 @@
       buildDigits(container, 0);
     };
     xhr.send();
+  }
+
+  function initTicker() {
+    var container = document.getElementById('visitTicker');
+    if (!container) return;
+
+    // Show zeros immediately, then fetch real count
+    buildDigits(container, 0);
+
+    // Small delay so the initial zeros render first, then real count rolls in
+    setTimeout(function () { fetchCount(container); }, 800);
   }
 
   if (document.readyState === 'loading') {
