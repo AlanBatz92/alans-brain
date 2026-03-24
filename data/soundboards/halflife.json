@@ -77,18 +77,6 @@
           "file": "choose1.wav"
         },
         {
-          "label": "Misc 02",
-          "file": "misc_02.wav"
-        },
-        {
-          "label": "Misc 03",
-          "file": "misc_03.wav"
-        },
-        {
-          "label": "Misc 04",
-          "file": "misc_04.wav"
-        },
-        {
           "label": "Otherwise",
           "file": "otherwise.wav"
         },

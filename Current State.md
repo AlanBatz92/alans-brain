@@ -1,7 +1,7 @@
 # Alan's Brain — Current State
 
-**Last Updated:** March 23, 2026
-**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (23 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, **visit counter ticker added (GoatCounter)**, **footer "No tracking. No ads." removed**, **search icons enlarged**, **soundboard quotes moved to board JSON + admin script quote management**, Phases 4–5 remaining
+**Last Updated:** March 24, 2026
+**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (20 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, **visit counter ticker added (GoatCounter)**, **footer "No tracking. No ads." removed**, **search icons enlarged**, **soundboard quotes moved to board JSON + admin script quote management**, **soundboard icons reorganized into per-board subfolders, They Hunger/Quake 2/RLM boards scaffolded with icons + JSON**, Phases 4–5 remaining
 
 -----
 
@@ -49,7 +49,7 @@ All three pages follow the JSON-driven pattern: thin HTML shell → `fetch()` JS
 | Page | File(s) | Features | Data File(s) |
 |---|---|---|---|
 | Art Gallery | `art.html` | Hero slideshow (15s auto-crossfade, progress bar, pause-on-hover, prev/next). Thumbnail grid syncs with slideshow — click thumb to jump. Uses `gallery.js` | `data/art.json` — empty, ready to fill |
-| Soundboards | `soundboards.html` + `soundboards.js` | Board selector (5 boards), categorized clip grids, Web Audio API engine with overlapping playback, volume slider, Stop All, Random, combo counter | `data/soundboards/index.json` — manifest with 5 boards (They Hunger, Half-Life, Max Payne, Quake 2, RLM), all at 0 clips |
+| Soundboards | `soundboards.html` + `soundboards.js` | Board selector (5 boards), categorized clip grids, Web Audio API engine with overlapping playback, volume slider, Stop All, Random, combo counter | `data/soundboards/index.json` — manifest with 5 boards (They Hunger, Half-Life, Max Payne, Quake 2, RLM). Half-Life: 20 clips, others: 0 clips but JSON + icons ready |
 | UFO Cases | `ufo.html` | Vertical timeline (teal gradient line + date markers), evidence tags, conviction meter bars (x/10), expandable "Read more", source links. Sort by date/conviction, filter by evidence type | `data/ufo-cases.json` — empty, ready to fill |
 
 **New CSS added:** Full timeline component system (`.timeline`, `.timeline-item`, `.timeline-card`, `.timeline-marker`, `.evidence-tag`, `.conviction-meter`, etc.)
@@ -151,7 +151,7 @@ New CSS: `.filter-dropdown`, `.filter-dropdown-btn`, `.filter-dropdown-panel`, `
 
 **Commits:** `eb8503d`, `72248ab`, `1a9b31d`, `1514429`
 
-- `data/soundboards/halflife.json` — 23 clips across categories (Scientists, G-Man)
+- `data/soundboards/halflife.json` — 20 clips across categories (Scientists, G-Man)
 - Audio files stored in `audio/halflife/`
 - Fixed JSON syntax errors in soundboard data
 
@@ -419,11 +419,14 @@ New CSS: `.filter-dropdown`, `.filter-dropdown-btn`, `.filter-dropdown-panel`, `
 
 ### Soundboard Enhancements
 
-**Category images:** Each soundboard category header now shows a character image alongside the category name. Images stored in `img/Icons/Soundboards/`:
-- Half-Life → Scientists: `Scientist_No_BG.png`, G-Man: `G-Man_No_BG.png`
-- Max Payne → `Max_Payne_No_BG.png` (default for all categories)
+**Category images:** Each soundboard category header now shows a character image alongside the category name. Images organized in per-board subfolders under `img/Icons/Soundboards/`:
+- Half-Life → Scientists: `Half-Life/Scientist_No_BG.png`, G-Man: `Half-Life/G-Man_No_BG.png`
+- Max Payne → `Max_Payne/Max_Payne_No_BG.png` (default for all categories)
+- They Hunger → `They_Hunger/They_Hunger_Boy_No_BG.png` (default)
+- Quake 2 → `Quake2/Bitterman_No_BG.png` (default)
+- Red Letter Media → Per-person mapping: `RLM/Mike_Stoklasa_No_BG.png` (Mike + default), `RLM/Jay_RLM_No_BG.png` (Jay), `RLM/Rich_No_BG.png` (Rich). `Rich_2_No_BG.png` also available for a second Rich category.
 
-Category image mapping is defined in `CATEGORY_IMAGES` object in the inline script on `soundboards.html`.
+Category image mapping is defined in `CATEGORY_IMAGES` object in the inline script on `soundboards.html`. Categories are matched by name — e.g., naming an RLM category "Jay" will display Jay's image.
 
 **Clip progress bar:** Each audio button now contains a `.clip-progress` element — a 3px teal bar at the bottom that animates from left to right over the clip's duration while playing. The `SoundEngine.play()` signature changed from `play(url, onEnded)` to `play(url, onStart, onEnded)` where `onStart(duration)` receives the clip duration in seconds. Progress bars reset on stop/end.
 
@@ -431,7 +434,35 @@ Category image mapping is defined in `CATEGORY_IMAGES` object in the inline scri
 - Half-Life: "Why do we all have to wear these ridiculous ties?", "Time to choose."
 - Other boards: no quotes yet (add via `soundboard-admin.py add-quote <board> "text"`)
 
-**Board selector icons:** `data/soundboards/index.json` updated — Half-Life and Max Payne now use image paths instead of emoji for their `icon` field. The `renderBoardSelector()` function detects path-based icons (containing `/`) and renders `<img>` tags instead of text.
+**Board selector icons:** All 5 boards in `data/soundboards/index.json` now use image paths (containing `/`) instead of emoji for their `icon` field. The `renderBoardSelector()` function detects path-based icons and renders `<img>` tags instead of text.
+
+### Soundboard Icon Reorganization & New Board Scaffolding
+
+**What changed:** Soundboard character icons moved from flat `img/Icons/Soundboards/` into per-board subfolders. Three new boards (They Hunger, Quake 2, Red Letter Media) fully scaffolded with icons, JSON data files, and category image mappings.
+
+**Icon folder restructure:**
+| Before | After |
+|---|---|
+| `img/Icons/Soundboards/Scientist_No_BG.png` | `img/Icons/Soundboards/Half-Life/Scientist_No_BG.png` |
+| `img/Icons/Soundboards/G-Man_No_BG.png` | `img/Icons/Soundboards/Half-Life/G-Man_No_BG.png` |
+| `img/Icons/Soundboards/Max_Payne_No_BG.png` | `img/Icons/Soundboards/Max_Payne/Max_Payne_No_BG.png` |
+| *(new)* | `img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.png` |
+| *(new)* | `img/Icons/Soundboards/Quake2/Bitterman_No_BG.png` |
+| *(new)* | `img/Icons/Soundboards/RLM/Mike_Stoklasa_No_BG.png` |
+| *(new)* | `img/Icons/Soundboards/RLM/Jay_RLM_No_BG.png` |
+| *(new)* | `img/Icons/Soundboards/RLM/Rich_No_BG.png` |
+| *(new)* | `img/Icons/Soundboards/RLM/Rich_2_No_BG.png` |
+
+**Files updated:**
+- `data/soundboards/index.json` — All 5 boards now use subfolder image paths instead of emoji
+- `soundboards.html` — `CATEGORY_IMAGES` updated with new paths + entries for theyhunger, quake2, and rlm
+
+**Files created:**
+- `data/soundboards/theyhunger.json` — Empty board JSON (quotes + categories ready)
+- `data/soundboards/quake2.json` — Empty board JSON
+- `data/soundboards/rlm.json` — Empty board JSON
+
+**RLM category mapping:** The RLM board maps category names to person images — name a category "Mike", "Jay", or "Rich" and the matching character image appears in the header. Unmatched categories fall back to Mike's image.
 
 -----
 
@@ -603,48 +634,47 @@ Key fields explained:
 
 ### 🔊 Soundboards → `data/soundboards/`
 
-**What's there now:** 5 boards named (They Hunger, Half-Life, Max Payne, Quake 2, Red Letter Media). Half-Life has 23 clips across Scientists + G-Man categories. Others have 0 clips.
+**What's there now:** 5 boards (They Hunger, Half-Life, Max Payne, Quake 2, Red Letter Media). Half-Life has 20 clips across Scientists + G-Man categories. Others have 0 clips but all have JSON files and character icons ready.
 
 This one's a bit different because it uses multiple files. There's a master list, and then each board gets its own file.
 
-**Step 1: The master list is already set up** at `data/soundboards/index.json`. It looks like this:
+**Step 1: The master list is already set up** at `data/soundboards/index.json`. Each board has a character image icon from `img/Icons/Soundboards/{BoardFolder}/`:
 
 ```json
 [
-  { "id": "theyhunger", "name": "They Hunger", "icon": "🧟", "clipCount": 0 },
-  { "id": "halflife", "name": "Half-Life", "icon": "🔬", "clipCount": 0 }
+  { "id": "theyhunger", "name": "They Hunger", "icon": "img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.png", "clipCount": 0 },
+  { "id": "halflife", "name": "Half-Life", "icon": "img/Icons/Soundboards/Half-Life/Scientist_No_BG.png", "clipCount": 20 }
 ]
 ```
 
 **Step 2: To add clips to a board** (e.g., They Hunger):
 
 1. Create a folder for the audio files: `audio/theyhunger/`
-2. Put your MP3 files in there (e.g., `audio/theyhunger/hello.mp3`, `audio/theyhunger/scream.mp3`)
-3. Create a new file at `data/soundboards/theyhunger.json`:
+2. Put your audio files in there (e.g., `audio/theyhunger/hello.wav`, `audio/theyhunger/scream.wav`)
+3. Edit the existing `data/soundboards/theyhunger.json` (already created with empty categories):
 
 ```json
 {
+  "quotes": ["Some memorable quote from the game"],
   "categories": [
     {
       "name": "Dialogue",
       "clips": [
-        { "label": "Hello there", "file": "audio/theyhunger/hello.mp3" },
-        { "label": "Get out!", "file": "audio/theyhunger/getout.mp3" }
-      ]
-    },
-    {
-      "name": "Screams",
-      "clips": [
-        { "label": "Big scream", "file": "audio/theyhunger/scream.mp3" }
+        { "label": "Hello there", "file": "hello.wav" },
+        { "label": "Get out!", "file": "getout.wav" }
       ]
     }
   ]
 }
 ```
 
-4. Update the `clipCount` in `data/soundboards/index.json` to match how many clips you added (in this example, 3).
+Note: The `file` field is just the filename — the page auto-prefixes `audio/{boardId}/`.
 
-**To add a brand new board:** Add a new line to `index.json` with a unique `id`, then create the matching `data/soundboards/{id}.json` and `audio/{id}/` folder following the same pattern above.
+4. Update the `clipCount` in `data/soundboards/index.json` to match how many clips you added.
+
+**Category images:** To get a character image next to a category header, name the category to match a key in the `CATEGORY_IMAGES` object in `soundboards.html`. For RLM, naming categories "Mike", "Jay", or "Rich" will show the corresponding person's image. Any unmatched category falls back to the board's `default` image.
+
+**To add a brand new board:** Add a new entry to `index.json` with a unique `id`, create `data/soundboards/{id}.json`, create `audio/{id}/` for clips, and optionally add a character icon to `img/Icons/Soundboards/{BoardFolder}/` and a `CATEGORY_IMAGES` entry in `soundboards.html`.
 
 ---
 
@@ -699,11 +729,19 @@ alans-brain/
 │   ├── art.json            ✅ 2 entries (Sebastian Pether) — ready for more
 │   ├── paranormal.json      ⬚ Empty [] — needs paranormal entries (videos, articles, photos, writing, etc.)
 │   └── soundboards/
-│       ├── index.json      ✅ 5-board manifest (Half-Life: 23 clips, others: 0)
-│       └── halflife.json   ✅ 23 clips across Scientists + G-Man categories
+│       ├── index.json      ✅ 5-board manifest (Half-Life: 20 clips, others: 0) — all boards use image icons
+│       ├── halflife.json   ✅ 20 clips across Scientists + G-Man categories
+│       ├── theyhunger.json ⬚ Empty categories — ready for clips
+│       ├── quake2.json     ⬚ Empty categories — ready for clips
+│       └── rlm.json        ⬚ Empty categories — ready for clips
 ├── img/
 │   ├── Icons/
-│   │   ├── Soundboards/    ✅ Character images (Scientist, G-Man, Max Payne) — used as category headers
+│   │   ├── Soundboards/    ✅ Character images organized by board subfolder — used as nav icons + category headers
+│   │   │   ├── Half-Life/      ✅ Scientist_No_BG.png, G-Man_No_BG.png
+│   │   │   ├── Max_Payne/      ✅ Max_Payne_No_BG.png
+│   │   │   ├── They_Hunger/    ✅ They_Hunger_Boy_No_BG.png
+│   │   │   ├── Quake2/         ✅ Bitterman_No_BG.png
+│   │   │   └── RLM/            ✅ Mike_Stoklasa_No_BG.png, Jay_RLM_No_BG.png, Rich_No_BG.png, Rich_2_No_BG.png
 │   │   └── icons/          ✅ Custom PNG icons organized by page (Alan's_Brain, Art, Audio_Related, Cool_Links, Explore, No_Sound, Nothing_To_See, Other, Paranormal, Photo_Gallery, Pride_and_Identity, Search, UFO, Under_Construction, Youtube_Channels)
 │   ├── youtube/            ✅ Channel profile pictures
 │   ├── photos/
@@ -718,7 +756,7 @@ alans-brain/
 
 **Directories not yet created** (create as needed):
 - `img/paranormal/` — for paranormal entry images
-- `audio/{boardId}/` — one per soundboard (e.g., `audio/theyhunger/`)
+- `audio/theyhunger/`, `audio/maxpayne/`, `audio/quake2/`, `audio/rlm/` — audio clip folders per board
 
 -----
 
@@ -738,7 +776,7 @@ The color-only theme is in place. The next step is to elevate it from "brown web
    - `box-shadow: inset 1px 1px 0 rgba(255,255,255,0.08), inset -1px -1px 0 rgba(0,0,0,0.3)`
 3. **Pixel font** — Load `Press Start 2P` or similar chunky pixel font, override `--font-display`
 4. **Scanline overlay** — `body::after` with `repeating-linear-gradient` for CRT feel
-5. **Brain SVG** — Integrate CSS variables into inline SVG gradient `stop-color` attributes
+5. ~~**Brain SVG**~~ — ✅ Done: CSS variables integrated into inline SVG gradient `stop-color` attributes
 
 ### Theme System Phase 5: Additional Themes
 
@@ -802,7 +840,7 @@ Each new theme = a CSS file + texture folder + one line in the `THEMES` object:
    - `data/photos.json` — Add photo entries (needs actual images in `img/photos/`)
    - `data/art.json` — Add more artwork entries (2 entries so far)
    - `data/paranormal.json` — Add paranormal entries (videos, articles, photos, writing, etc.)
-   - `data/soundboards/*.json` — Add clip data per remaining boards (Half-Life done, 4 boards at 0 clips)
+   - `data/soundboards/*.json` — Add clip data per remaining boards (Half-Life done, 4 boards at 0 clips: They Hunger, Max Payne, Quake 2, RLM — JSON files and icons ready, just needs audio files + clip entries)
    - `data/transart-artists.json` — Add artist profiles (Phase 4)
    - `data/transart-resources.json` — Add resource listings (Phase 4)
 
@@ -850,8 +888,7 @@ Each new theme = a CSS file + texture folder + one line in the `THEMES` object:
 | *(merge)* | Merge `claude/homepage-layout-updates-UslXV`: remove Links nav, move Cool Links to websites.json, update description, enlarge soundboard styles |
 | `5ff2f13` | Add visit counter ticker with GoatCounter integration, remove "No tracking. No ads." from footer |
 | `b22fbba` | Enlarge search icons, add quote management to soundboard admin and JSON |
-
-Unpushed changes pending commit.
+| `7df4010` | Fix visit ticker to use GoatCounter TOTAL counter endpoint |
 
 -----
 
