@@ -347,10 +347,21 @@
   document.getElementById('clipGrid').addEventListener('click', function(e) {
     var btn = e.target.closest('.audio-btn');
     if (!btn) return;
+    var src = btn.dataset.src;
+
+    // Toggle off if already playing
+    if (engine.isPlaying(src)) {
+      engine.stop(src);
+      updateCombo();
+      return;
+    }
+
+    // Limit to 2 concurrent sounds — ignore click if at capacity
+    if (engine.playingCount() >= 2) return;
 
     btn.classList.add('playing');
     var progress = btn.querySelector('.clip-progress');
-    engine.play(btn.dataset.src, function(duration) {
+    engine.play(src, function(duration) {
       // Animate progress bar across clip duration
       if (progress && duration > 0) {
         progress.style.transition = 'none';

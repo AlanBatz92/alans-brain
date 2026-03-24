@@ -8,6 +8,7 @@ function SoundEngine() {
   self.ctx = null;
   self.buffers = {};    // file path → AudioBuffer
   self.sources = [];    // active AudioBufferSourceNodes
+  self.sourceMap = {};  // url → { source, onEnded } for toggle-off support
   self.gainNode = null;
   self.volume = 0.8;
 
@@ -37,6 +38,20 @@ function SoundEngine() {
       });
   };
 
+  // Check if a specific clip is currently playing
+  self.isPlaying = function(url) {
+    return !!self.sourceMap[url];
+  };
+
+  // Stop a specific clip by URL
+  self.stop = function(url) {
+    var entry = self.sourceMap[url];
+    if (entry) {
+      try { entry.source.stop(); } catch(e) {}
+      // onended handler cleans up sources/sourceMap
+    }
+  };
+
   // Play a clip — onStart(duration) called when playback begins, onEnded() when it finishes
   self.play = function(url, onStart, onEnded) {
     self._init();
@@ -47,10 +62,12 @@ function SoundEngine() {
       source.connect(self.gainNode);
       source.start(0);
       self.sources.push(source);
+      self.sourceMap[url] = { source: source, onEnded: onEnded };
       if (onStart) onStart(buffer.duration);
       source.onended = function() {
         var idx = self.sources.indexOf(source);
         if (idx > -1) self.sources.splice(idx, 1);
+        delete self.sourceMap[url];
         if (onEnded) onEnded();
       };
     };
@@ -68,6 +85,7 @@ function SoundEngine() {
       try { s.stop(); } catch(e) {}
     });
     self.sources = [];
+    self.sourceMap = {};
   };
 
   // Set volume (0–1)
