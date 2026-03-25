@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
       html += '<div class="gallery-item" data-index="' + i + '" title="' + esc(a.title || '') + ' — ' + esc(a.artist || '') + (a.year ? ' (' + esc(a.year) + ')' : '') + '">' +
         '<picture>' +
           '<source srcset="' + thumbWebp + '" type="image/webp">' +
-          '<img src="' + thumbSrc + '" alt="' + esc(a.title || '') + '" loading="lazy" width="400" height="300">' +
+          '<img src="' + thumbSrc + '" alt="' + esc(a.title || '') + '" loading="lazy">' +
         '</picture>' +
       '</div>';
     });
