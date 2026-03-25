@@ -3,6 +3,18 @@
    Used by photos.html and art.html
    ═══════════════════════════════════════════ */
 
+/* ── WebP detection ── */
+var _webpSupported = false;
+(function() {
+  var img = new Image();
+  img.onload = function() { _webpSupported = (img.width > 0); };
+  img.onerror = function() { _webpSupported = false; };
+  img.src = 'data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiTjN/4A=';
+})();
+function webpSrc(src) {
+  return _webpSupported ? src.replace(/\.(jpe?g|png)$/i, '.webp') : src;
+}
+
 /* ── Lightbox ──
    Creates a full-screen image viewer with prev/next navigation.
    Usage:
@@ -105,7 +117,7 @@ function Lightbox() {
   self._show = function() {
     var item = self.images[self.index];
     if (!item) return;
-    self.imgEl.src = item.src;
+    self.imgEl.src = webpSrc(item.src);
     self.imgEl.alt = item.caption || '';
     self.captionEl.textContent = item.caption || '';
     self.captionEl.style.display = item.caption ? '' : 'none';
@@ -197,14 +209,14 @@ function Slideshow(container, images, opts) {
     var active = container.querySelector('.slideshow-img.active');
     var inactive = (active === self.imgA) ? self.imgB : self.imgA;
 
-    inactive.src = item.src;
+    inactive.src = webpSrc(item.src);
     inactive.alt = item.title || '';
 
     if (!isFirst) {
       inactive.classList.add('active');
       active.classList.remove('active');
     } else {
-      self.imgA.src = item.src;
+      self.imgA.src = webpSrc(item.src);
       self.imgA.alt = item.title || '';
     }
 
@@ -216,7 +228,7 @@ function Slideshow(container, images, opts) {
     // Preload next
     var nextIdx = (self.index + 1) % self.images.length;
     var preload = new Image();
-    preload.src = self.images[nextIdx].src;
+    preload.src = webpSrc(self.images[nextIdx].src);
 
     // Callback
     if (self.onSlideChange) self.onSlideChange(self.index);

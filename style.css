@@ -87,6 +87,7 @@ body::before {
   border-radius: 50%;
   filter: blur(80px);
   animation: drift 20s ease-in-out infinite;
+  will-change: transform;
 }
 .blob-1 {
   width: 400px; height: 400px;
@@ -374,6 +375,7 @@ nav {
   position: relative;
   animation: brainFloat 5s ease-in-out infinite;
   transform-style: preserve-3d;
+  will-change: transform;
   filter: drop-shadow(0 20px 40px rgba(45, 212, 191, 0.25))
           drop-shadow(0 8px 16px rgba(167, 139, 250, 0.2));
 }
@@ -1691,6 +1693,7 @@ nav {
   transition: opacity 0.8s ease;
   background: var(--bg-deep);
   cursor: pointer;
+  will-change: opacity;
 }
 .slideshow-img.active {
   opacity: 1;
@@ -1751,120 +1754,7 @@ nav {
 .slideshow-prev { left: 12px; }
 .slideshow-next { right: 12px; }
 
-/* ── Timeline (UFO cases) ── */
-.timeline {
-  position: relative;
-  padding-left: 32px;
-}
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 10px;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  border-radius: 3px;
-  background: linear-gradient(180deg, var(--teal) 0%, var(--purple) 50%, var(--blue) 100%);
-  opacity: 0.4;
-}
-.timeline-item {
-  position: relative;
-  margin-bottom: 24px;
-}
-.timeline-marker {
-  position: absolute;
-  left: -32px;
-  top: 20px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--bg-deep);
-  border: 3px solid var(--teal);
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.timeline-marker-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--teal);
-}
-.timeline-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 24px;
-  transition: all 0.25s;
-}
-.timeline-card:hover {
-  border-color: rgba(45, 212, 191, 0.3);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-}
-.timeline-date {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--teal);
-  font-weight: 700;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.timeline-card h3 {
-  font-size: 1.15rem;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-.timeline-location {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-.timeline-summary {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin-bottom: 14px;
-}
-.timeline-details {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transition: max-height 0.4s ease, opacity 0.3s;
-}
-.timeline-details.open {
-  max-height: 2000px;
-  opacity: 1;
-}
-.timeline-details-text {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.7;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-  margin-bottom: 14px;
-}
-.timeline-read-more {
-  background: none;
-  border: none;
-  color: var(--teal);
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.15s;
-}
-.timeline-read-more:hover {
-  color: var(--blue);
-}
-.timeline-evidence {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
-}
+/* ── Shared: evidence & conviction (used by paranormal cards) ── */
 .evidence-tag {
   display: inline-flex;
   align-items: center;
@@ -1901,24 +1791,6 @@ nav {
   font-weight: 700;
   color: var(--teal);
   flex-shrink: 0;
-}
-.timeline-sources {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.timeline-sources a {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--blue);
-  text-decoration: none;
-  padding: 4px 10px;
-  background: var(--blue-glow);
-  border-radius: 8px;
-  transition: all 0.15s;
-}
-.timeline-sources a:hover {
-  background: rgba(56, 189, 248, 0.2);
 }
 
 /* ═══════════════════════════════════
@@ -2446,4 +2318,19 @@ nav {
   font-size: 1rem;
   line-height: 1.6;
   color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .blob { animation: none; }
+  .hero-brain { animation: none; }
+  .hero-brain-wrap::after { animation: none; }
+  .badge-dot { animation: none; }
+  .anim { animation: none; opacity: 1; }
+  .reveal { opacity: 1; transform: none; }
+  .slideshow-img { transition: none; }
+  .clip-progress { transition: none; }
+  html { scroll-behavior: auto; }
 }

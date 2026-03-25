@@ -22,22 +22,37 @@ function SoundEngine() {
   };
 
   // Load and decode an audio file, cache the buffer
+  // Tries OGG version first (smaller), falls back to original URL
   self.load = function(url, callback, onError) {
     if (self.buffers[url]) {
       if (callback) callback(self.buffers[url]);
       return;
     }
-    fetch(url)
-      .then(function(r) { return r.arrayBuffer(); })
-      .then(function(data) { return self.ctx.decodeAudioData(data); })
-      .then(function(buffer) {
-        self.buffers[url] = buffer;
-        if (callback) callback(buffer);
-      })
-      .catch(function(err) {
-        console.warn('Failed to load audio:', url, err);
-        if (onError) onError();
-      });
+    var oggUrl = url.replace(/\.wav$/i, '.ogg');
+    var tryUrl = (oggUrl !== url) ? oggUrl : url;
+
+    var decode = function(fetchUrl, fallback) {
+      fetch(fetchUrl)
+        .then(function(r) {
+          if (!r.ok) throw new Error(r.status);
+          return r.arrayBuffer();
+        })
+        .then(function(data) { return self.ctx.decodeAudioData(data); })
+        .then(function(buffer) {
+          self.buffers[url] = buffer;
+          if (callback) callback(buffer);
+        })
+        .catch(function() {
+          if (fallback) {
+            decode(fallback, null);
+          } else {
+            console.warn('Failed to load audio:', url);
+            if (onError) onError();
+          }
+        });
+    };
+
+    decode(tryUrl, (tryUrl !== url) ? url : null);
   };
 
   // Check if a specific clip is currently playing

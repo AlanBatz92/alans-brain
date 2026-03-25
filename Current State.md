@@ -1,7 +1,7 @@
 # Alan's Brain — Current State
 
-**Last Updated:** March 24, 2026
-**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (20 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, **visit counter ticker added (GoatCounter)**, **footer "No tracking. No ads." removed**, **search icons enlarged**, **soundboard quotes moved to board JSON + admin script quote management**, **soundboard icons reorganized into per-board subfolders, They Hunger/Quake 2/RLM boards scaffolded with icons + JSON**, Phases 4–5 remaining
+**Last Updated:** March 25, 2026
+**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (20 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, **visit counter ticker added (GoatCounter)**, **footer "No tracking. No ads." removed**, **search icons enlarged**, **soundboard quotes moved to board JSON + admin script quote management**, **soundboard icons reorganized into per-board subfolders, They Hunger/Quake 2/RLM boards scaffolded with icons + JSON**, **performance audit & image optimization pipeline (optimize-media.py, WebP generation, OGG audio, defer scripts, reduced-motion, dead CSS cleanup, CLS fixes)**, Phases 4–5 remaining
 
 -----
 
@@ -465,6 +465,58 @@ Category image mapping is defined in `CATEGORY_IMAGES` object in the inline scri
 - `data/soundboards/rlm.json` — Empty board JSON
 
 **RLM category mapping:** The RLM board maps category names to person images — name a category "Mike", "Jay", or "Rich" and the matching character image appears in the header. Unmatched categories fall back to Mike's image.
+
+### Performance Audit & Image Optimization Pipeline
+
+**What changed:** Comprehensive performance and asset optimization pass across the entire site. No visual changes — everything looks and works the same, just faster and more accessible.
+
+**New file created:** `optimize-media.py` — standalone Python CLI tool for batch media optimization. Follows the `soundboard-admin.py` pattern. Requires Pillow (`pip install Pillow`) and ffmpeg on PATH.
+
+**Subcommands:**
+| Command | What it does |
+|---|---|
+| `python optimize-media.py art` | Resize full-size art JPGs to max 2000px, compress, generate WebP |
+| `python optimize-media.py youtube` | Compress YouTube channel PNGs, generate WebP copies |
+| `python optimize-media.py icons` | Resize UI icons to max 96px (2x retina), quantize to 256 colors, generate WebP |
+| `python optimize-media.py soundboards` | Resize character PNGs to max 300px, generate WebP |
+| `python optimize-media.py audio` | Convert WAV files to OGG Vorbis via ffmpeg |
+| `python optimize-media.py all` | Run all of the above |
+| `python optimize-media.py report` | Print size report without modifying anything |
+
+All subcommands support `--dry-run` flag.
+
+**Image compression results:**
+| Category | Before | After |
+|---|---|---|
+| Art full-size (River Scene) | 3.1MB (5532px) | 375KB (2000px) |
+| Art thumbnails | 87KB | 32KB |
+| YouTube channel icons (114) | 7.3MB PNG | 6.2MB PNG + 634KB WebP |
+| UI/Nav icons (29) | 758KB | 114KB (96px, quantized) |
+| Soundboard characters (9) | 1.4MB | 554KB |
+| Audio WAV → OGG (24 files) | 1.6MB | 722KB |
+
+WebP files placed alongside originals (same directory, `.webp` extension) to enable `<picture>` fallback in HTML.
+
+**CSS performance fixes** (`style.css`):
+- **Dead CSS removed:** ~130 lines of unused `.timeline` through `.timeline-sources` styles from the old UFO page. The `.evidence-tag` and `.conviction-meter` classes were kept — still used by `paranormal.html`.
+- **`prefers-reduced-motion: reduce`** media query added: disables blob drift, brainFloat, shadowPulse, blink, entrance animations (`.anim`, `.reveal`), slideshow crossfade transitions, clip progress transitions, and smooth scroll. Accessibility improvement.
+- **`will-change` hints** added to `.blob` (transform), `.hero-brain` (transform), `.slideshow-img` (opacity) — GPU acceleration for continuously-animated elements only.
+
+**JavaScript performance fixes** (all 9 HTML files):
+- **`defer` added** to all external `<script>` tags: `theme-switcher.js`, `visit-ticker.js`, `gallery.js`, `soundboards.js`. Allows parallel download during HTML parsing.
+- **`DOMContentLoaded` wrappers** added to inline scripts in `art.html`, `photos.html`, `soundboards.html` — these pages depend on deferred external scripts (`Lightbox()`, `SoundEngine()`), so inline code must wait for them to load.
+- **Scroll handler throttled** in `index.html` — wrapped in `requestAnimationFrame` with `{ passive: true }` to prevent firing on every scroll frame.
+
+**Responsive image markup** (HTML files + `gallery.js`):
+- **`<picture>` elements with WebP sources** added to YouTube channel grid (114 icons) and art thumbnail grid. Browsers that support WebP load the smaller file; others fall back to PNG/JPG.
+- **WebP detection utility** added to `gallery.js` — `webpSrc(src)` function detects WebP support and swaps file extensions for lightbox and slideshow image loading.
+- **`width`/`height` attributes** added to all static icon `<img>` tags across all 9 pages to prevent Cumulative Layout Shift (CLS): nav dropdown icons (24×24), mobile nav icons (28×28), page hero icons (72×72), homepage card icons (44×44), footer icons (28×28).
+
+**Audio format optimization** (`soundboards.js`):
+- `SoundEngine.load()` now tries the `.ogg` version of audio files first, falling back to the original `.wav` URL on error. No JSON changes needed — the fallback is transparent.
+- OGG files generated by `optimize-media.py audio` sit alongside WAVs in `audio/halflife/`.
+
+**How to optimize new media:** When adding new images or audio, run `python optimize-media.py all` to compress and generate WebP/OGG versions. For YouTube channel icons specifically, `python optimize-media.py youtube`. For new soundboard audio, `python optimize-media.py audio`.
 
 -----
 
