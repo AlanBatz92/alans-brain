@@ -10,6 +10,8 @@ Usage:
   python soundboard-admin.py remove <board> <category> <file>
   python soundboard-admin.py add-quote <board> "Quote text"
   python soundboard-admin.py remove-quote <board> "Quote text"
+  python soundboard-admin.py add-icon <board> <category> <image-file>
+  python soundboard-admin.py remove-icon <board> <category> <image-path>
   python soundboard-admin.py list [board]
   python soundboard-admin.py sync
 
@@ -23,6 +25,8 @@ Examples:
   python soundboard-admin.py remove halflife Scientists stench.wav
   python soundboard-admin.py add-quote halflife "Unforeseen consequences"
   python soundboard-admin.py remove-quote halflife "Unforeseen consequences"
+  python soundboard-admin.py add-icon halflife Scientists MyScientist_No_BG.png
+  python soundboard-admin.py add-icon theyhunger default Zombie_No_BG.png
   python soundboard-admin.py list
   python soundboard-admin.py list halflife
   python soundboard-admin.py sync
@@ -38,9 +42,12 @@ import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
+import shutil
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(SCRIPT_DIR, "data", "soundboards")
 AUDIO_DIR = os.path.join(SCRIPT_DIR, "audio")
+ICONS_DIR = os.path.join(SCRIPT_DIR, "img", "Icons", "Soundboards")
 INDEX_FILE = os.path.join(DATA_DIR, "index.json")
 
 
@@ -172,7 +179,7 @@ def cmd_add(args):
 
     cat["clips"].append({"label": label, "file": filename})
 
-    # Add quote if provided
+    # Add quote if provided via flag
     if quote:
         if "quotes" not in data:
             data["quotes"] = []
@@ -185,6 +192,22 @@ def cmd_add(args):
     save_board(board_id, data)
     sync_clip_counts()
     print(f"Added: \"{label}\" ({filename}) -> {board_id}/{cat_name}")
+
+    # Interactive: offer to add a subtitle/quote
+    if not quote:
+        try:
+            q = input("Add a subtitle/quote for this board? (Enter to skip): ").strip()
+            if q:
+                if "quotes" not in data:
+                    data["quotes"] = []
+                if q not in data["quotes"]:
+                    data["quotes"].append(q)
+                    save_board(board_id, data)
+                    print(f"Quote added: \"{q}\"")
+                else:
+                    print(f"Quote already exists: \"{q}\"")
+        except (EOFError, KeyboardInterrupt):
+            pass
 
 
 def cmd_bulk(args):
@@ -222,6 +245,24 @@ def cmd_bulk(args):
     save_board(board_id, data)
     sync_clip_counts()
     print(f"\nDone: {added} clip(s) added to {board_id}/{cat_name}")
+
+    # Interactive: offer to add subtitles/quotes
+    if added > 0:
+        try:
+            while True:
+                q = input("Add a subtitle/quote? (Enter to skip, or type quote): ").strip()
+                if not q:
+                    break
+                if "quotes" not in data:
+                    data["quotes"] = []
+                if q not in data["quotes"]:
+                    data["quotes"].append(q)
+                    save_board(board_id, data)
+                    print(f"  Quote added: \"{q}\"")
+                else:
+                    print(f"  Quote already exists: \"{q}\"")
+        except (EOFError, KeyboardInterrupt):
+            pass
 
 
 def cmd_new_board(args):
@@ -303,6 +344,134 @@ def cmd_remove(args):
     save_board(board_id, data)
     sync_clip_counts()
     print(f"Removed '{filename}' from {board_id}/{cat_name}.")
+
+
+def icons_folder_for_board(board_id):
+    """Find the existing Icons/Soundboards subfolder for a board.
+    Falls back to the board_id if no match is found."""
+    if not os.path.isdir(ICONS_DIR):
+        return board_id
+    for name in os.listdir(ICONS_DIR):
+        if name.lower().replace("_", "").replace("-", "") == board_id.lower().replace("_", "").replace("-", ""):
+            return name
+    # Check index.json icon path for folder name
+    index = load_index()
+    for b in index:
+        if b["id"] == board_id and "/" in b.get("icon", ""):
+            parts = b["icon"].replace("\\", "/").split("/")
+            # Path like img/Icons/Soundboards/Half-Life/file.png
+            for i, p in enumerate(parts):
+                if p == "Soundboards" and i + 1 < len(parts) - 1:
+                    return parts[i + 1]
+    return board_id
+
+
+def cmd_add_icon(args):
+    if len(args) < 3:
+        print("Usage: add-icon <board> <category> <image-file>")
+        print("  <category> can be a category name (e.g. 'Scientists') or 'default' for all categories.")
+        print("  <image-file> is an image file. If it's not already in the board's icon folder,")
+        print("  it will be copied there automatically.")
+        sys.exit(1)
+
+    board_id, cat_name, image_file = args[0], args[1], args[2]
+
+    data = load_board(board_id)
+    if data is None:
+        print(f"Error: Board '{board_id}' not found.")
+        sys.exit(1)
+
+    # Determine the board's icon folder
+    folder_name = icons_folder_for_board(board_id)
+    dest_dir = os.path.join(ICONS_DIR, folder_name)
+    os.makedirs(dest_dir, exist_ok=True)
+
+    # If the image is an absolute/relative path to an existing file, copy it in
+    if os.path.exists(image_file):
+        dest_path = os.path.join(dest_dir, os.path.basename(image_file))
+        if os.path.abspath(image_file) != os.path.abspath(dest_path):
+            shutil.copy2(image_file, dest_path)
+            print(f"Copied: {image_file} -> {dest_path}")
+        rel_path = "img/Icons/Soundboards/" + folder_name + "/" + os.path.basename(image_file)
+    else:
+        # Assume the file is already in the board's icon folder
+        check_path = os.path.join(dest_dir, image_file)
+        if not os.path.exists(check_path):
+            print(f"WARNING: Image not found: {check_path}")
+            print("  Make sure the file exists before deploying.")
+        rel_path = "img/Icons/Soundboards/" + folder_name + "/" + image_file
+
+    # Update the board JSON icons map
+    if "icons" not in data:
+        data["icons"] = {}
+
+    existing = data["icons"].get(cat_name)
+    if existing is None:
+        # First icon for this category
+        data["icons"][cat_name] = rel_path
+        print(f"Added icon for '{cat_name}': {rel_path}")
+    elif isinstance(existing, str):
+        if existing == rel_path:
+            print(f"Icon already exists for '{cat_name}': {rel_path}")
+            return
+        # Convert to array for rotation
+        data["icons"][cat_name] = [existing, rel_path]
+        print(f"Added icon for '{cat_name}': {rel_path}")
+        print(f"  Now rotates between {len(data['icons'][cat_name])} images.")
+    elif isinstance(existing, list):
+        if rel_path in existing:
+            print(f"Icon already exists for '{cat_name}': {rel_path}")
+            return
+        existing.append(rel_path)
+        print(f"Added icon for '{cat_name}': {rel_path}")
+        print(f"  Now rotates between {len(existing)} images.")
+
+    save_board(board_id, data)
+
+
+def cmd_remove_icon(args):
+    if len(args) < 3:
+        print("Usage: remove-icon <board> <category> <image-path>")
+        sys.exit(1)
+
+    board_id, cat_name, image_path = args[0], args[1], args[2]
+
+    data = load_board(board_id)
+    if data is None:
+        print(f"Error: Board '{board_id}' not found.")
+        sys.exit(1)
+
+    icons = data.get("icons", {})
+    existing = icons.get(cat_name)
+    if existing is None:
+        print(f"No icons found for category '{cat_name}' in '{board_id}'.")
+        sys.exit(1)
+
+    if isinstance(existing, str):
+        if existing == image_path:
+            del icons[cat_name]
+            print(f"Removed icon for '{cat_name}': {image_path}")
+        else:
+            print(f"Icon not found: {image_path}")
+            print(f"  Current: {existing}")
+            sys.exit(1)
+    elif isinstance(existing, list):
+        if image_path not in existing:
+            print(f"Icon not found: {image_path}")
+            print(f"  Current: {existing}")
+            sys.exit(1)
+        existing.remove(image_path)
+        if len(existing) == 1:
+            icons[cat_name] = existing[0]
+        elif len(existing) == 0:
+            del icons[cat_name]
+        print(f"Removed icon for '{cat_name}': {image_path}")
+        remaining = icons.get(cat_name)
+        if remaining:
+            count = len(remaining) if isinstance(remaining, list) else 1
+            print(f"  {count} icon(s) remaining.")
+
+    save_board(board_id, data)
 
 
 def cmd_add_quote(args):
@@ -387,6 +556,16 @@ def cmd_list(args):
         print(f"\n  Quotes ({len(quotes)}):")
         for q in quotes:
             print(f"    \"{q}\"")
+    icons = data.get("icons", {})
+    if icons:
+        print(f"\n  Icons ({len(icons)} categories):")
+        for cat_name, val in icons.items():
+            if isinstance(val, list):
+                print(f"    {cat_name}: [{len(val)} images, rotates]")
+                for v in val:
+                    print(f"      {v}")
+            else:
+                print(f"    {cat_name}: {val}")
     for cat in data.get("categories", []):
         print(f"\n  {cat['name']} ({len(cat['clips'])} clips):")
         for clip in cat["clips"]:
@@ -411,6 +590,8 @@ def main():
         "remove": cmd_remove,
         "add-quote": cmd_add_quote,
         "remove-quote": cmd_remove_quote,
+        "add-icon": cmd_add_icon,
+        "remove-icon": cmd_remove_icon,
         "list": cmd_list,
         "sync": lambda a: sync_clip_counts(),
     }

@@ -1,4 +1,7 @@
 {
   "quotes": [],
+  "icons": {
+    "default": "img/Icons/Soundboards/Quake2/Bitterman_No_BG.png"
+  },
   "categories": []
 }

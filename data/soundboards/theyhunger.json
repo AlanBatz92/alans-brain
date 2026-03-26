@@ -1,4 +1,10 @@
 {
   "quotes": [],
+  "icons": {
+    "default": [
+      "img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.webp",
+      "img/Icons/Soundboards/They_Hunger/ChesterRockwood_No_BG.png"
+    ]
+  },
   "categories": []
 }

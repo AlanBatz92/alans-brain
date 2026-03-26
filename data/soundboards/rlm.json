@@ -1,4 +1,10 @@
 {
   "quotes": [],
+  "icons": {
+    "Mike": "img/Icons/Soundboards/RLM/Mike_Stoklasa_No_BG.png",
+    "Jay": "img/Icons/Soundboards/RLM/Jay_RLM_No_BG.png",
+    "Rich": "img/Icons/Soundboards/RLM/Rich_No_BG.png",
+    "default": "img/Icons/Soundboards/RLM/Mike_Stoklasa_No_BG.png"
+  },
   "categories": []
 }

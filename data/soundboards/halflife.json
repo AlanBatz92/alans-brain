@@ -3,6 +3,14 @@
     "Why do we all have to wear these ridiculous ties?",
     "Time to choose."
   ],
+  "icons": {
+    "Scientists": [
+      "img/Icons/Soundboards/Half-Life/Scientist_1_No_BG.png",
+      "img/Icons/Soundboards/Half-Life/Scientist_2_No_BG.png",
+      "img/Icons/Soundboards/Half-Life/Scientist_3_No_BG.png"
+    ],
+    "G-Man": "img/Icons/Soundboards/Half-Life/G-Man_No_BG.png"
+  },
   "categories": [
     {
       "name": "Scientists",

@@ -1,7 +1,7 @@
 # Alan's Brain — Current State
 
 **Last Updated:** March 26, 2026
-**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (20 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, **visit counter ticker added (GoatCounter)**, **footer "No tracking. No ads." removed**, **search icons enlarged**, **soundboard quotes moved to board JSON + admin script quote management**, **soundboard icons reorganized into per-board subfolders, They Hunger/Quake 2/RLM boards scaffolded with icons + JSON**, **performance audit & image optimization pipeline (optimize-media.py, WebP generation, OGG audio, defer scripts, reduced-motion, dead CSS cleanup, CLS fixes)**, **random cycling category icons for soundboards, Grape-Nuts footer easter egg, button deselect fix, scroll arrow fix**, **Grape-Nuts hover pop, They Hunger board icon fix, soundboard selection persists across refresh**, **soundboard icon cover-crop scaling, Grape-Nuts mobile scroll growth, weighted image rotation to reduce repeats**, Phases 4–5 remaining
+**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (20 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, **visit counter ticker added (GoatCounter)**, **footer "No tracking. No ads." removed**, **search icons enlarged**, **soundboard quotes moved to board JSON + admin script quote management**, **soundboard icons reorganized into per-board subfolders, They Hunger/Quake 2/RLM boards scaffolded with icons + JSON**, **performance audit & image optimization pipeline (optimize-media.py, WebP generation, OGG audio, defer scripts, reduced-motion, dead CSS cleanup, CLS fixes)**, **random cycling category icons for soundboards, Grape-Nuts footer easter egg, button deselect fix, scroll arrow fix**, **Grape-Nuts hover pop, They Hunger board icon fix, soundboard selection persists across refresh**, **soundboard icon cover-crop scaling, Grape-Nuts mobile scroll growth, weighted image rotation to reduce repeats**, **Grape-Nuts mobile tap-to-pop**, **icon config moved to board JSON, add-icon/remove-icon admin commands, interactive quote prompts, weighted quote rotation**, Phases 4–5 remaining
 
 -----
 
@@ -590,13 +590,37 @@ The selected soundboard now saves to `localStorage('ab_soundboard')` whenever a 
 
 Changed `.sb-category-img` from `object-fit: contain` (52px) to `object-fit: cover` with `object-position: top center` (56px). Full-body character images now crop to show the head/upper body at a decent size instead of shrinking the entire figure into a tiny square. Head-shot images continue to look great.
 
-**2. Grape-Nuts mobile scroll growth (`visit-ticker.js`, `style.css`):**
+**2. Grape-Nuts mobile tap-to-pop (`visit-ticker.js`, `style.css`):**
 
-Removed the CSS `:active` state for the Grape-Nuts easter egg (mobile tap). Replaced with scroll-based scaling in JavaScript: on touch devices (detected via `matchMedia('(hover: hover)')`), when within the last 200px of the page bottom, the Grape-Nuts icon gradually scales from 1× to 4.4× proportionally. Scrolling back up smoothly shrinks it. On desktop, the CSS `:hover` effect continues to work as before. This makes the easter egg discoverable on mobile by scrolling to the very bottom of any page.
+On touch devices (detected via `matchMedia('(hover: hover)')`): first tap pops the Grape-Nuts icon to 4.4× scale, second tap shrinks it back and navigates to grapenuts.com. On desktop, the CSS `:hover` effect continues to work as before. The click handler uses `e.preventDefault()` on first tap to block navigation, then lets the default `<a>` behavior through on the second tap.
 
 **3. Weighted image rotation to reduce repeats (`soundboards.html`):**
 
 Replaced pure `Math.random()` selection for rotating category images with a `pickWeighted()` function that uses `sessionStorage` to track the last image shown per board+category key (e.g. `sb_img_halflife_Scientists`). On each page load, the previously shown image is excluded from candidates, ensuring you won't see the same icon twice in a row. Gracefully falls back to standard random if sessionStorage is unavailable or if there's only one image option.
+
+### Icon Config to JSON, Admin Script Enhancements, Weighted Quotes
+
+**1. Icon configuration moved from HTML to board JSON (`soundboards.html`, `data/soundboards/*.json`):**
+
+The hardcoded `CATEGORY_IMAGES_RAW` object in `soundboards.html` has been removed. Icon paths are now stored in each board's JSON file under an `"icons"` field (e.g. `halflife.json` → `{"icons": {"Scientists": ["path1.png", "path2.png"], "G-Man": "path.png"}}`). The HTML reads icons from the loaded board data via a `resolveIcons()` function that applies the same weighted random pick logic. This means icons are fully managed through the admin script and JSON — no HTML editing needed.
+
+**2. Admin script — new `add-icon` / `remove-icon` commands (`soundboard-admin.py`):**
+
+- `add-icon <board> <category> <image-file>` — copies the image into the board's `img/Icons/Soundboards/{Board}/` folder (if not already there) and adds it to the JSON `"icons"` map. Automatically converts a single string to a rotation array when a second image is added.
+- `remove-icon <board> <category> <image-path>` — removes an icon from the rotation. Collapses array back to string when only one remains.
+- `list <board>` — now also displays the icons section with rotation counts.
+
+**3. Interactive quote prompts (`soundboard-admin.py`):**
+
+Both `add` and `bulk` commands now prompt interactively after adding clips: "Add a subtitle/quote for this board?" — press Enter to skip or type a quote. The `bulk` command loops so you can add multiple quotes in one session. Gracefully handles EOF/Ctrl+C.
+
+**4. Weighted quote rotation (`soundboards.html`):**
+
+The `updateQuote()` function now uses `pickWeighted()` with sessionStorage key `sb_quote_{boardId}` — same anti-repeat logic as icons. Won't show the same quote twice in a row.
+
+**5. Missing `maxpayne.json` created:**
+
+Added `data/soundboards/maxpayne.json` with empty categories/quotes and a default icon entry, matching the other board JSON files.
 
 -----
 
@@ -1031,7 +1055,8 @@ Each new theme = a CSS file + texture folder + one line in the `THEMES` object:
 | `f1cae8c` | Random category icons, Grape-Nuts footer easter egg, fix button deselect and scroll arrows |
 | `a07270e` | Grape-Nuts hover pop, fix They Hunger board icon, persist selected soundboard |
 | `68676b2` | Increase Grape-Nuts hover pop to 4.4x, add mobile active state |
-| `3a05083` | Soundboard icon cover-crop, Grape-Nuts mobile scroll growth, weighted image rotation |
+| `d165f9f` | Soundboard icon cover-crop, Grape-Nuts mobile scroll growth, weighted image rotation |
+| `0ead5f6` | Grape-Nuts mobile: tap-to-pop then tap-to-navigate replaces scroll growth |
 
 -----
 
