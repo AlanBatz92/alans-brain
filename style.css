@@ -654,8 +654,13 @@ nav {
 .footer-btn img {
   transition: transform 0.2s ease;
 }
-.footer-btn:hover img {
-  transform: scale(2.2);
+@media (hover: hover) {
+  .footer-btn:hover img {
+    transform: scale(4.4);
+  }
+}
+.footer-btn:active img {
+  transform: scale(4.4);
 }
 
 /* ── Visit ticker (odometer) ── */
