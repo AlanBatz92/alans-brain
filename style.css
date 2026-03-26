@@ -1512,6 +1512,11 @@ nav {
 .audio-btn.playing .clip-progress {
   opacity: 1;
 }
+.audio-btn:focus:not(.playing) {
+  outline: none;
+  box-shadow: none;
+  border-color: var(--border);
+}
 
 /* Soundboard category header images */
 .sb-category-header {
@@ -1984,14 +1989,21 @@ nav {
   box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   -webkit-appearance: none;
   line-height: 1;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
-.scroll-nav-btn:hover {
+@media (hover: hover) {
+  .scroll-nav-btn:hover {
+    background: var(--teal);
+    color: var(--bg-deep);
+    border-color: var(--teal);
+    transform: translateY(-1px);
+  }
+}
+.scroll-nav-btn:active {
   background: var(--teal);
   color: var(--bg-deep);
   border-color: var(--teal);
-  transform: translateY(-1px);
-}
-.scroll-nav-btn:active {
   transform: scale(0.92);
 }
 

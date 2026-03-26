@@ -140,7 +140,7 @@
         <span class="footer-btn">HTML</span>
         <span class="footer-btn">CSS</span>
         <span class="footer-btn">JS</span>
-        <span class="footer-btn">☕</span>
+        <a class="footer-btn" href="https://www.grapenuts.com/our-story/" target="_blank" title="🥣"><img src="img/Icons/icons/Grapenuts/Grape_Nuts_No_BG.png" alt="Grape-Nuts" style="width:14px;height:14px;vertical-align:middle"></a>
       </div>
       <div class="visit-ticker">
         <span class="ticker-label">visitors</span>
@@ -162,17 +162,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /* ── Rotating quotes per board (loaded from board JSON "quotes" array) ── */
 
-  /* ── Category images for known boards ── */
-  var CATEGORY_IMAGES = {
+  /* ── Category images for known boards ──
+       Each value can be a single string OR an array of strings.
+       When an array is provided, one image is picked at random per page load. */
+  var CATEGORY_IMAGES_RAW = {
     halflife: {
-      'Scientists': 'img/Icons/Soundboards/Half-Life/Scientist_No_BG.png',
+      'Scientists': [
+        'img/Icons/Soundboards/Half-Life/Scientist_1_No_BG.png',
+        'img/Icons/Soundboards/Half-Life/Scientist_2_No_BG.png',
+        'img/Icons/Soundboards/Half-Life/Scientist_3_No_BG.png'
+      ],
       'G-Man': 'img/Icons/Soundboards/Half-Life/G-Man_No_BG.png'
     },
     maxpayne: {
       'default': 'img/Icons/Soundboards/Max_Payne/Max_Payne_No_BG.png'
     },
     theyhunger: {
-      'default': 'img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.png'
+      'default': [
+        'img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.webp',
+        'img/Icons/Soundboards/They_Hunger/ChesterRockwood_No_BG.png'
+      ]
     },
     quake2: {
       'default': 'img/Icons/Soundboards/Quake2/Bitterman_No_BG.png'
@@ -184,6 +193,19 @@ document.addEventListener('DOMContentLoaded', function() {
       'default': 'img/Icons/Soundboards/RLM/Mike_Stoklasa_No_BG.png'
     }
   };
+
+  /* Resolve arrays to a single random pick (once per page load) */
+  var CATEGORY_IMAGES = {};
+  Object.keys(CATEGORY_IMAGES_RAW).forEach(function(board) {
+    CATEGORY_IMAGES[board] = {};
+    var cats = CATEGORY_IMAGES_RAW[board];
+    Object.keys(cats).forEach(function(cat) {
+      var val = cats[cat];
+      CATEGORY_IMAGES[board][cat] = Array.isArray(val)
+        ? val[Math.floor(Math.random() * val.length)]
+        : val;
+    });
+  });
 
   function esc(s) {
     var d = document.createElement('div');
@@ -352,6 +374,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle off if already playing
     if (engine.isPlaying(src)) {
       engine.stop(src);
+      btn.classList.remove('playing');
+      btn.blur();
       updateCombo();
       return;
     }
