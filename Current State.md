@@ -1,7 +1,7 @@
 # Alan's Brain — Current State
 
-**Last Updated:** March 25, 2026
-**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (20 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, **visit counter ticker added (GoatCounter)**, **footer "No tracking. No ads." removed**, **search icons enlarged**, **soundboard quotes moved to board JSON + admin script quote management**, **soundboard icons reorganized into per-board subfolders, They Hunger/Quake 2/RLM boards scaffolded with icons + JSON**, **performance audit & image optimization pipeline (optimize-media.py, WebP generation, OGG audio, defer scripts, reduced-motion, dead CSS cleanup, CLS fixes)**, Phases 4–5 remaining
+**Last Updated:** March 26, 2026
+**Status:** Phases 1–3 complete, tasks link removal done, art gallery bug fixes & enhancements done, Great & Free expanded to 38 tools + 18 websites with tab toggle, filter dropdown redesign across all pages, YouTube channels page built (114 channels), Half-Life soundboard populated (20 clips), soundboard admin tools added, **theme system implemented (Phases 1–3: switcher engine + Quake II color theme + picker UI)**, **UFO page reworked into Paranormal page**, **trans flag accents added to Trans Art page**, **Brain SVG CSS variable integration done**, **homepage Explore section refreshed with 7 page cards**, **cross-linking footers added to all Explore pages**, **Great & Free expanded to 40 tools + 22 websites**, **homepage cards cleaned up (no subtitles/tags)**, **Polyamory tab added to Pride and Identity page**, **all emoji icons replaced with custom PNG icons**, **Pride and Identity renamed to Pride and Identity**, **soundboard enhancements (category images, clip progress bar, rotating quotes)**, **Paranormal subtitle updated**, **icon refresh: new Explore cloud, eye empty state, construction badge, search icon, updated no-sound icon**, **Links nav removed, Cool Links section moved to websites.json, homepage description updated, soundboard category images/quote enlarged**, **visit counter ticker added (GoatCounter)**, **footer "No tracking. No ads." removed**, **search icons enlarged**, **soundboard quotes moved to board JSON + admin script quote management**, **soundboard icons reorganized into per-board subfolders, They Hunger/Quake 2/RLM boards scaffolded with icons + JSON**, **performance audit & image optimization pipeline (optimize-media.py, WebP generation, OGG audio, defer scripts, reduced-motion, dead CSS cleanup, CLS fixes)**, **random cycling category icons for soundboards, Grape-Nuts footer easter egg, button deselect fix, scroll arrow fix**, **Grape-Nuts hover pop, They Hunger board icon fix, soundboard selection persists across refresh**, **soundboard icon cover-crop scaling, Grape-Nuts mobile scroll growth, weighted image rotation to reduce repeats**, Phases 4–5 remaining
 
 -----
 
@@ -419,14 +419,14 @@ New CSS: `.filter-dropdown`, `.filter-dropdown-btn`, `.filter-dropdown-panel`, `
 
 ### Soundboard Enhancements
 
-**Category images:** Each soundboard category header now shows a character image alongside the category name. Images organized in per-board subfolders under `img/Icons/Soundboards/`:
-- Half-Life → Scientists: `Half-Life/Scientist_No_BG.png`, G-Man: `Half-Life/G-Man_No_BG.png`
+**Category images:** Each soundboard category header now shows a character image alongside the category name. Images organized in per-board subfolders under `img/Icons/Soundboards/`. Images can be a single path OR an array of paths — arrays are randomly resolved to one pick per page load (see "Random Cycling Category Icons" section below):
+- Half-Life → Scientists: **3 random variants** (`Scientist_1_No_BG.png`, `Scientist_2_No_BG.png`, `Scientist_3_No_BG.png`), G-Man: `Half-Life/G-Man_No_BG.png`
 - Max Payne → `Max_Payne/Max_Payne_No_BG.png` (default for all categories)
-- They Hunger → `They_Hunger/They_Hunger_Boy_No_BG.png` (default)
+- They Hunger → **2 random variants** (`They_Hunger_Boy_No_BG.webp`, `ChesterRockwood_No_BG.png`)
 - Quake 2 → `Quake2/Bitterman_No_BG.png` (default)
 - Red Letter Media → Per-person mapping: `RLM/Mike_Stoklasa_No_BG.png` (Mike + default), `RLM/Jay_RLM_No_BG.png` (Jay), `RLM/Rich_No_BG.png` (Rich). `Rich_2_No_BG.png` also available for a second Rich category.
 
-Category image mapping is defined in `CATEGORY_IMAGES` object in the inline script on `soundboards.html`. Categories are matched by name — e.g., naming an RLM category "Jay" will display Jay's image.
+Category image mapping is defined in `CATEGORY_IMAGES_RAW` object in the inline script on `soundboards.html`, then resolved into `CATEGORY_IMAGES` at page load. To add cycling to any category, change its value from a string to an array of strings. Categories are matched by name — e.g., naming an RLM category "Jay" will display Jay's image.
 
 **Playback rules:** Maximum 2 concurrent sounds — additional clicks are ignored until a slot opens. Clicking a currently-playing clip toggles it off (stops playback, resets progress bar). `SoundEngine` tracks active sources by URL via `sourceMap` for toggle support, exposes `isPlaying(url)` and `stop(url)` methods. Pending (loading) clips count toward the limit to prevent race conditions. "Stop All" button removed — click-to-toggle and the 2-sound limit make it unnecessary.
 
@@ -445,10 +445,10 @@ Category image mapping is defined in `CATEGORY_IMAGES` object in the inline scri
 **Icon folder restructure:**
 | Before | After |
 |---|---|
-| `img/Icons/Soundboards/Scientist_No_BG.png` | `img/Icons/Soundboards/Half-Life/Scientist_No_BG.png` |
+| `img/Icons/Soundboards/Scientist_No_BG.png` | `img/Icons/Soundboards/Half-Life/Scientist_1_No_BG.png` (+ `Scientist_2_No_BG.png`, `Scientist_3_No_BG.png`) |
 | `img/Icons/Soundboards/G-Man_No_BG.png` | `img/Icons/Soundboards/Half-Life/G-Man_No_BG.png` |
 | `img/Icons/Soundboards/Max_Payne_No_BG.png` | `img/Icons/Soundboards/Max_Payne/Max_Payne_No_BG.png` |
-| *(new)* | `img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.png` |
+| *(new)* | `img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.webp`, `ChesterRockwood_No_BG.png` |
 | *(new)* | `img/Icons/Soundboards/Quake2/Bitterman_No_BG.png` |
 | *(new)* | `img/Icons/Soundboards/RLM/Mike_Stoklasa_No_BG.png` |
 | *(new)* | `img/Icons/Soundboards/RLM/Jay_RLM_No_BG.png` |
@@ -517,6 +517,86 @@ WebP files placed alongside originals (same directory, `.webp` extension) to ena
 - OGG files generated by `optimize-media.py audio` sit alongside WAVs in `audio/halflife/`.
 
 **How to optimize new media:** When adding new images or audio, run `python optimize-media.py all` to compress and generate WebP/OGG versions. For YouTube channel icons specifically, `python optimize-media.py youtube`. For new soundboard audio, `python optimize-media.py audio`.
+
+### Random Cycling Category Icons, Grape-Nuts Easter Egg, Button & Scroll Fixes
+
+**What changed:** Four improvements in a single commit — random character icons for soundboard categories, a Grape-Nuts footer easter egg, a button deselect bug fix, and a scroll arrow responsiveness fix.
+
+**1. Random cycling category icons (`soundboards.html`):**
+
+The `CATEGORY_IMAGES` object was refactored into a two-step system:
+- `CATEGORY_IMAGES_RAW` — the raw mapping where each value can be a **single string** (one image) OR an **array of strings** (multiple images to cycle through)
+- On page load, a resolver loop picks one image at random from each array (or passes through single strings unchanged) into the final `CATEGORY_IMAGES` object
+
+This means adding more variant images for any board/category is just a matter of adding more paths to the array — no other code changes needed.
+
+**Current cycling images:**
+| Board | Category | Images |
+|---|---|---|
+| Half-Life | Scientists | `Scientist_1_No_BG.png`, `Scientist_2_No_BG.png`, `Scientist_3_No_BG.png` (3 variants) |
+| They Hunger | default | `They_Hunger_Boy_No_BG.webp`, `ChesterRockwood_No_BG.png` (2 variants) |
+
+All other boards remain single-image (G-Man, Max Payne, Quake 2, RLM per-person) but can be converted to arrays at any time.
+
+**New image files added:**
+- `img/Icons/Soundboards/Half-Life/Scientist_1_No_BG.png`
+- `img/Icons/Soundboards/Half-Life/Scientist_2_No_BG.png`
+- `img/Icons/Soundboards/Half-Life/Scientist_3_No_BG.png`
+- `img/Icons/Soundboards/They_Hunger/ChesterRockwood_No_BG.png`
+
+**File removed:** `img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.png` (original PNG deleted; WebP version `They_Hunger_Boy_No_BG.webp` from optimization pipeline still exists and is referenced)
+
+**2. Grape-Nuts footer easter egg (all 9 pages):**
+
+The coffee cup emoji (`☕`) in the footer button row (`HTML | CSS | JS | ☕`) was replaced with a clickable Grape-Nuts icon. Clicking it opens the Grape-Nuts "Our Story" page (`https://www.grapenuts.com/our-story/`) in a new tab.
+
+- Icon: `img/Icons/icons/Grapenuts/Grape_Nuts_No_BG.png` (14×14px, inline styled)
+- Element changed from `<span class="footer-btn">☕</span>` to `<a class="footer-btn" href="..." target="_blank" title="🥣"><img ...></a>`
+- Files modified: `index.html`, `art.html`, `paranormal.html`, `photos.html`, `soundboards.html`, `tasks.html`, `tools.html`, `transart.html`, `youtube.html`
+
+**3. Button deselect fix (`soundboards.html`):**
+
+When clicking a playing audio button to stop it, the button stayed visually highlighted (retained `.playing` class and keyboard focus). Fixed by adding `btn.classList.remove('playing')` and `btn.blur()` to the stop-toggle branch in the click handler.
+
+Additionally, a new CSS rule `.audio-btn:focus:not(.playing)` removes the focus outline/box-shadow when a button is focused but not actively playing, preventing the "stuck highlight" appearance.
+
+**4. Scroll arrow fix (`style.css`):**
+
+The scroll navigation arrows (up/down page buttons) required two taps on mobile — the first tap triggered the hover state, the second tap actually activated the button. Fixed by:
+- Wrapping `.scroll-nav-btn:hover` styles in `@media (hover: hover)` so hover effects only apply on devices with real hover capability (mouse/trackpad), not touch
+- Adding `touch-action: manipulation` to prevent 300ms tap delay on mobile
+- Adding `-webkit-tap-highlight-color: transparent` to remove the default tap highlight
+- Moving the `background`/`color`/`border-color` change into `.scroll-nav-btn:active` so touch devices get immediate visual feedback on press
+
+### Grape-Nuts Hover Pop, They Hunger Icon Fix, Soundboard Persistence
+
+**1. Grape-Nuts hover pop (`style.css`):**
+
+Added hover effect to the Grape-Nuts footer icon — on hover, the image scales to 2.2× its size via `transform: scale(2.2)` with a 0.2s ease transition. Makes the small 14px icon much more noticeable and discoverable as a clickable easter egg.
+
+CSS added: `.footer-btn img` (transition) and `.footer-btn:hover img` (scale transform).
+
+**2. They Hunger board selector icon fix (`data/soundboards/index.json`):**
+
+The They Hunger entry in `index.json` referenced `They_Hunger_Boy_No_BG.png` which was deleted in the previous commit. Updated to `They_Hunger_Boy_No_BG.webp` (the WebP version generated by the optimization pipeline, which still exists).
+
+**3. Soundboard selection persists across refresh (`soundboards.html`):**
+
+The selected soundboard now saves to `localStorage('ab_soundboard')` whenever a board is selected. On page load, the saved board ID is read and validated against the loaded manifest — if valid, that board is selected instead of defaulting to the first board (They Hunger). Falls back to first board if the saved ID no longer exists in the manifest.
+
+### Soundboard Icon Scaling, Grape-Nuts Mobile Scroll, Weighted Image Rotation
+
+**1. Soundboard category icon scaling (`style.css`):**
+
+Changed `.sb-category-img` from `object-fit: contain` (52px) to `object-fit: cover` with `object-position: top center` (56px). Full-body character images now crop to show the head/upper body at a decent size instead of shrinking the entire figure into a tiny square. Head-shot images continue to look great.
+
+**2. Grape-Nuts mobile scroll growth (`visit-ticker.js`, `style.css`):**
+
+Removed the CSS `:active` state for the Grape-Nuts easter egg (mobile tap). Replaced with scroll-based scaling in JavaScript: on touch devices (detected via `matchMedia('(hover: hover)')`), when within the last 200px of the page bottom, the Grape-Nuts icon gradually scales from 1× to 4.4× proportionally. Scrolling back up smoothly shrinks it. On desktop, the CSS `:hover` effect continues to work as before. This makes the easter egg discoverable on mobile by scrolling to the very bottom of any page.
+
+**3. Weighted image rotation to reduce repeats (`soundboards.html`):**
+
+Replaced pure `Math.random()` selection for rotating category images with a `pickWeighted()` function that uses `sessionStorage` to track the last image shown per board+category key (e.g. `sb_img_halflife_Scientists`). On each page load, the previously shown image is excluded from candidates, ensuring you won't see the same icon twice in a row. Gracefully falls back to standard random if sessionStorage is unavailable or if there's only one image option.
 
 -----
 
@@ -791,12 +871,12 @@ alans-brain/
 ├── img/
 │   ├── Icons/
 │   │   ├── Soundboards/    ✅ Character images organized by board subfolder — used as nav icons + category headers
-│   │   │   ├── Half-Life/      ✅ Scientist_No_BG.png, G-Man_No_BG.png
+│   │   │   ├── Half-Life/      ✅ Scientist_1_No_BG.png, Scientist_2_No_BG.png, Scientist_3_No_BG.png, G-Man_No_BG.png
 │   │   │   ├── Max_Payne/      ✅ Max_Payne_No_BG.png
-│   │   │   ├── They_Hunger/    ✅ They_Hunger_Boy_No_BG.png
+│   │   │   ├── They_Hunger/    ✅ They_Hunger_Boy_No_BG.webp, ChesterRockwood_No_BG.png
 │   │   │   ├── Quake2/         ✅ Bitterman_No_BG.png
 │   │   │   └── RLM/            ✅ Mike_Stoklasa_No_BG.png, Jay_RLM_No_BG.png, Rich_No_BG.png, Rich_2_No_BG.png
-│   │   └── icons/          ✅ Custom PNG icons organized by page (Alan's_Brain, Art, Audio_Related, Cool_Links, Explore, No_Sound, Nothing_To_See, Other, Paranormal, Photo_Gallery, Pride_and_Identity, Search, UFO, Under_Construction, Youtube_Channels)
+│   │   └── icons/          ✅ Custom PNG icons organized by page (Alan's_Brain, Art, Audio_Related, Cool_Links, Explore, Grapenuts, No_Sound, Nothing_To_See, Other, Paranormal, Photo_Gallery, Pride_and_Identity, Search, UFO, Under_Construction, Youtube_Channels)
 │   ├── youtube/            ✅ Channel profile pictures
 │   ├── photos/
 │   │   ├── full/           ⬚ Empty — for full-resolution photos
@@ -943,6 +1023,15 @@ Each new theme = a CSS file + texture folder + one line in the `THEMES` object:
 | `5ff2f13` | Add visit counter ticker with GoatCounter integration, remove "No tracking. No ads." from footer |
 | `b22fbba` | Enlarge search icons, add quote management to soundboard admin and JSON |
 | `7df4010` | Fix visit ticker to use GoatCounter TOTAL counter endpoint |
+| `e569d8b` | Limit soundboard to 2 concurrent sounds, add click-to-toggle stop |
+| `f6fdd41` | Fix race condition in soundboard concurrent playback limit |
+| `f0631c4` | Remove Stop All button, enlarge board selector icons to 24px |
+| `bf96e58` | Performance audit: image optimization pipeline, WebP/OGG generation, defer scripts, reduced-motion |
+| `8efbfab` | Fix stretched art thumbnails on mobile by removing fixed dimensions |
+| `f1cae8c` | Random category icons, Grape-Nuts footer easter egg, fix button deselect and scroll arrows |
+| `a07270e` | Grape-Nuts hover pop, fix They Hunger board icon, persist selected soundboard |
+| `68676b2` | Increase Grape-Nuts hover pop to 4.4x, add mobile active state |
+| `3a05083` | Soundboard icon cover-crop, Grape-Nuts mobile scroll growth, weighted image rotation |
 
 -----
 

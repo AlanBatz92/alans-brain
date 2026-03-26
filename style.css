@@ -652,15 +652,12 @@ nav {
   text-decoration: none;
 }
 .footer-btn img {
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
 }
 @media (hover: hover) {
   .footer-btn:hover img {
     transform: scale(4.4);
   }
-}
-.footer-btn:active img {
-  transform: scale(4.4);
 }
 
 /* ── Visit ticker (odometer) ── */
@@ -1538,9 +1535,10 @@ nav {
   margin-bottom: 12px;
 }
 .sb-category-img {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  object-position: top center;
   border-radius: 6px;
 }
 

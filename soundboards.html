@@ -194,7 +194,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
-  /* Resolve arrays to a single random pick (once per page load) */
+  /* Resolve arrays to a single random pick (once per page load).
+     Uses sessionStorage to track recently used images per category
+     so the same image is less likely to repeat on consecutive loads. */
+  function pickWeighted(arr, storageKey) {
+    if (arr.length <= 1) return arr[0];
+    var last = '';
+    try { last = sessionStorage.getItem(storageKey) || ''; } catch(e) {}
+    // Filter out the last-used image if we have alternatives
+    var candidates = arr.filter(function(v) { return v !== last; });
+    if (candidates.length === 0) candidates = arr;
+    var pick = candidates[Math.floor(Math.random() * candidates.length)];
+    try { sessionStorage.setItem(storageKey, pick); } catch(e) {}
+    return pick;
+  }
+
   var CATEGORY_IMAGES = {};
   Object.keys(CATEGORY_IMAGES_RAW).forEach(function(board) {
     CATEGORY_IMAGES[board] = {};
@@ -202,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     Object.keys(cats).forEach(function(cat) {
       var val = cats[cat];
       CATEGORY_IMAGES[board][cat] = Array.isArray(val)
-        ? val[Math.floor(Math.random() * val.length)]
+        ? pickWeighted(val, 'sb_img_' + board + '_' + cat)
         : val;
     });
   });

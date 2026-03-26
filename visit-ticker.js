@@ -87,9 +87,45 @@
     setTimeout(function () { fetchCount(container); }, 800);
   }
 
+  /* ── Grape-Nuts scroll easter egg (mobile) ──
+     On touch devices / narrow screens, scale the Grape-Nuts icon
+     as the user scrolls to the very bottom of the page. */
+  function initGrapeNuts() {
+    var gn = document.querySelector('.footer-btn[title="🥣"] img');
+    if (!gn) return;
+
+    var THRESHOLD = 200; // px from bottom where scaling begins
+    var MAX_SCALE = 4.4;
+    // On devices with a hover pointer, CSS :hover handles the effect,
+    // so skip the scroll-based scaling there.
+    var hasHover = window.matchMedia('(hover: hover)').matches;
+
+    function onScroll() {
+      if (hasHover) return;
+
+      var scrollBottom = window.innerHeight + window.scrollY;
+      var docHeight = document.documentElement.scrollHeight;
+      var remaining = docHeight - scrollBottom;
+
+      if (remaining < THRESHOLD) {
+        var progress = 1 - (remaining / THRESHOLD); // 0→1
+        var scale = 1 + (MAX_SCALE - 1) * progress;
+        gn.style.transform = 'scale(' + Math.min(scale, MAX_SCALE) + ')';
+      } else {
+        gn.style.transform = '';
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initTicker);
+    document.addEventListener('DOMContentLoaded', function() {
+      initTicker();
+      initGrapeNuts();
+    });
   } else {
     initTicker();
+    initGrapeNuts();
   }
 })();
