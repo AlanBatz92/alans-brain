@@ -651,6 +651,12 @@ nav {
   color: var(--text-dim);
   text-decoration: none;
 }
+.footer-btn img {
+  transition: transform 0.2s ease;
+}
+.footer-btn:hover img {
+  transform: scale(2.2);
+}
 
 /* ── Visit ticker (odometer) ── */
 .visit-ticker {

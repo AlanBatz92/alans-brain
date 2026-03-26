@@ -231,7 +231,11 @@ document.addEventListener('DOMContentLoaded', function() {
       boards = data;
       document.getElementById('boardLoading').style.display = 'none';
       renderBoardSelector();
-      if (boards.length > 0) selectBoard(boards[0].id);
+      /* Restore last-selected board from localStorage, or default to first */
+      var savedBoard = localStorage.getItem('ab_soundboard');
+      var startBoard = (savedBoard && boards.some(function(b) { return b.id === savedBoard; }))
+        ? savedBoard : (boards.length > 0 ? boards[0].id : null);
+      if (startBoard) selectBoard(startBoard);
     })
     .catch(function() {
       document.getElementById('boardLoading').innerHTML = 'Failed to load soundboards.';
@@ -253,6 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function selectBoard(id) {
     activeBoard = id;
+    localStorage.setItem('ab_soundboard', id);
 
     // Update button states and label
     var label = id;
