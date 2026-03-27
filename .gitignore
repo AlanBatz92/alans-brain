@@ -1,3 +1,9 @@
 Task Tracker Write-Back Feature Plan.md
 New Pages Plan.md
 Current State.md
+Build History.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
