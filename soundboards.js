@@ -1,133 +1,87 @@
 /* ═══════════════════════════════════════════
-   soundboards.js — Web Audio API engine
-   Handles loading, decoding, and playing clips
+   soundboards.js — Audio playback engine
+   Uses <audio> elements (not Web Audio API)
+   so iOS plays clips regardless of the
+   silent/ringer switch — same as YouTube.
    ═══════════════════════════════════════════ */
 
 function SoundEngine() {
   var self = this;
-  self.ctx = null;
-  self.buffers = {};    // file path → AudioBuffer
-  self.sources = [];    // active AudioBufferSourceNodes
-  self.sourceMap = {};  // url → { source, onEnded } for toggle-off support
-  self.pending = 0;     // number of clips currently loading (not yet playing)
-  self.gainNode = null;
+  self.active = {};   // canonical url → HTMLAudioElement
   self.volume = 0.8;
 
-  self._init = function() {
-    if (self.ctx) return;
-    self.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    self.gainNode = self.ctx.createGain();
-    self.gainNode.gain.value = self.volume;
-    self.gainNode.connect(self.ctx.destination);
-    // iOS Safari fix: playing a silent <audio> element within the user gesture
-    // promotes the audio session to "playback" category, so sound plays even
-    // when the ringer/silent switch is off (matches Android behavior).
-    try {
-      var silence = document.createElement('audio');
-      silence.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
-      silence.setAttribute('playsinline', '');
-      silence.play().catch(function(){});
-    } catch(e) {}
-  };
-
-  // Load and decode an audio file, cache the buffer
-  // Tries OGG version first (smaller), falls back to original URL
-  self.load = function(url, callback, onError) {
-    if (self.buffers[url]) {
-      if (callback) callback(self.buffers[url]);
-      return;
-    }
-    var oggUrl = url.replace(/\.wav$/i, '.ogg');
-    var tryUrl = (oggUrl !== url) ? oggUrl : url;
-
-    var decode = function(fetchUrl, fallback) {
-      fetch(fetchUrl)
-        .then(function(r) {
-          if (!r.ok) throw new Error(r.status);
-          return r.arrayBuffer();
-        })
-        .then(function(data) { return self.ctx.decodeAudioData(data); })
-        .then(function(buffer) {
-          self.buffers[url] = buffer;
-          if (callback) callback(buffer);
-        })
-        .catch(function() {
-          if (fallback) {
-            decode(fallback, null);
-          } else {
-            console.warn('Failed to load audio:', url);
-            if (onError) onError();
-          }
-        });
-    };
-
-    decode(tryUrl, (tryUrl !== url) ? url : null);
-  };
-
-  // Check if a specific clip is currently playing
-  self.isPlaying = function(url) {
-    return !!self.sourceMap[url];
-  };
-
-  // Stop a specific clip by URL
-  self.stop = function(url) {
-    var entry = self.sourceMap[url];
-    if (entry) {
-      try { entry.source.stop(); } catch(e) {}
-      // onended handler cleans up sources/sourceMap
-    }
-  };
-
-  // Play a clip — onStart(duration) called when playback begins, onEnded() when it finishes
+  // Play a clip.
+  // Tries the .ogg version first (smaller file), falls back to original URL.
+  // onStart(duration) fires when playback begins (duration in seconds).
+  // onEnded() fires when the clip ends naturally or on unrecoverable error.
   self.play = function(url, onStart, onEnded) {
-    self._init();
+    var audio = document.createElement('audio');
+    audio.setAttribute('playsinline', '');  // stay inline on iOS (no fullscreen)
+    audio.volume = self.volume;
+    self.active[url] = audio;
 
-    var doPlay = function(buffer) {
-      self.pending = Math.max(0, self.pending - 1);
-      var source = self.ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(self.gainNode);
-      source.start(0);
-      self.sources.push(source);
-      self.sourceMap[url] = { source: source, onEnded: onEnded };
-      if (onStart) onStart(buffer.duration);
-      source.onended = function() {
-        var idx = self.sources.indexOf(source);
-        if (idx > -1) self.sources.splice(idx, 1);
-        delete self.sourceMap[url];
-        if (onEnded) onEnded();
-      };
-    };
+    // Trigger progress bar once audio actually starts playing
+    audio.addEventListener('play', function() {
+      if (onStart) onStart(isFinite(audio.duration) ? audio.duration : 0);
+    }, { once: true });
 
-    if (self.buffers[url]) {
-      doPlay(self.buffers[url]);
+    // Clean up when clip ends naturally
+    audio.addEventListener('ended', function() {
+      delete self.active[url];
+      if (onEnded) onEnded();
+    }, { once: true });
+
+    // Try OGG first; on failure fall back to the original URL
+    var oggUrl = url.replace(/\.wav$/i, '.ogg');
+    if (oggUrl !== url) {
+      audio.src = oggUrl;
+      audio.play().catch(function() {
+        if (self.active[url] === audio) {
+          audio.src = url;
+          audio.play().catch(function() {
+            delete self.active[url];
+            if (onEnded) onEnded();
+          });
+        }
+      });
     } else {
-      self.pending++;
-      self.load(url, doPlay, function() {
-        self.pending = Math.max(0, self.pending - 1);
+      audio.src = url;
+      audio.play().catch(function() {
+        delete self.active[url];
         if (onEnded) onEnded();
       });
     }
   };
 
-  // Stop all playing sounds
-  self.stopAll = function() {
-    self.sources.forEach(function(s) {
-      try { s.stop(); } catch(e) {}
-    });
-    self.sources = [];
-    self.sourceMap = {};
-    self.pending = 0;
+  // Stop a specific clip by URL
+  self.stop = function(url) {
+    var audio = self.active[url];
+    if (audio) {
+      audio.pause();
+      delete self.active[url];
+    }
   };
 
-  // Set volume (0–1)
+  // Check if a specific clip is currently active
+  self.isPlaying = function(url) {
+    return !!self.active[url];
+  };
+
+  // Stop all active clips
+  self.stopAll = function() {
+    Object.keys(self.active).forEach(function(u) { self.stop(u); });
+  };
+
+  // Set volume (0–1) — applies immediately to all active clips
   self.setVolume = function(v) {
     self.volume = v;
-    if (self.gainNode) self.gainNode.gain.value = v;
+    Object.keys(self.active).forEach(function(u) {
+      self.active[u].volume = v;
+    });
   };
 
-  // How many sounds are currently playing or loading
+  // How many clips are currently active (playing or loading)
   self.playingCount = function() {
-    return self.sources.length + self.pending;
+    return Object.keys(self.active).length;
   };
 }
