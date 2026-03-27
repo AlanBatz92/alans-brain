@@ -1,10 +1,54 @@
 {
-  "quotes": [],
+  "quotes": [
+    "So much flesh...",
+    "You're going to nourish the little ones...",
+    "Flesh creature!",
+    "Good work boys...now have yourselves a little rayward."
+  ],
   "icons": {
     "default": [
       "img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.webp",
       "img/Icons/Soundboards/They_Hunger/ChesterRockwood_No_BG.png"
     ]
   },
-  "categories": []
+  "categories": [
+    {
+      "name": "Monsters",
+      "clips": [
+        {
+          "label": "Flesh Creature",
+          "file": "flesh_creature.mp3"
+        },
+        {
+          "label": "So Much Flesh",
+          "file": "so_much_flesh.mp3"
+        },
+        {
+          "label": "Nourish the little ones",
+          "file": "alert30_nurse.mp3"
+        },
+        {
+          "label": "Mommy's hungry",
+          "file": "idle3.mp3"
+        },
+        {
+          "label": "Zombie Lady Moan",
+          "file": "zombie_lady_moan.mp3"
+        }
+      ]
+    },
+    {
+      "name": "Chester Rockwood",
+      "clips": [
+        {
+          "label": "Rayward",
+          "file": "rayward.mp3"
+        },
+        {
+          "label": "Cussfranklin",
+          "file": "cussfranklin.mp3"
+        }
+      ]
+    }
+  ]
 }
