@@ -1,22 +1,33 @@
 #!/usr/bin/env python3
 """
-Soundboard Admin GUI — visual tool for managing soundboard data.
-Launch:  python soundboard-admin-gui.py
+Alan's Brain — Admin GUI
+
+Unified Tkinter management interface with sidebar navigation.
+Each section is a self-contained panel — add new ones by subclassing
+AdminPanel and registering in PANELS.
+
+Launch:
+  python admin-gui.py
+  python admin.py gui
 """
 
 import json
 import os
 import re
 import shutil
+import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(SCRIPT_DIR, "data", "soundboards")
 AUDIO_DIR = os.path.join(SCRIPT_DIR, "audio")
+ICONS_DIR = os.path.join(SCRIPT_DIR, "img", "Icons", "Soundboards")
 INDEX_FILE = os.path.join(DATA_DIR, "index.json")
+IMG_DIR = os.path.join(SCRIPT_DIR, "img")
 
-# -- Colors (matching the site's dark theme) --
+# ── Theme colors (matching the site's dark theme) ────────────────────
+
 BG = "#0f1923"
 BG_CARD = "#1a2736"
 BG_INPUT = "#243447"
@@ -29,8 +40,7 @@ RED_HOVER = "#ff6b6b"
 YELLOW = "#f0c040"
 BORDER = "#2a3a4a"
 
-
-# ── Data helpers (same logic as CLI script) ──────────────────────────
+# ── Data helpers ─────────────────────────────────────────────────────
 
 
 def load_json(path):
@@ -96,82 +106,92 @@ def find_category(data, cat_name):
     return None
 
 
-# ── GUI ──────────────────────────────────────────────────────────────
+def fmt_size(n):
+    if n < 1024:
+        return f"{n}B"
+    if n < 1024 * 1024:
+        return f"{n / 1024:.1f}KB"
+    return f"{n / (1024 * 1024):.1f}MB"
 
 
-class SoundboardAdminApp(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Soundboard Admin")
-        self.geometry("960x700")
-        self.configure(bg=BG)
-        self.minsize(800, 550)
+# ── Widget helpers ───────────────────────────────────────────────────
 
-        # State
+
+def make_btn(parent, text, command, color=ACCENT, small=False, side="right"):
+    font = ("Segoe UI", 9) if small else ("Segoe UI", 10, "bold")
+    py = 2 if small else 5
+    px = 8 if small else 14
+    hover = ACCENT_HOVER if color == ACCENT else RED_HOVER if color == RED else color
+    btn = tk.Label(
+        parent, text=text, font=font, bg=color, fg=BG,
+        padx=px, pady=py, cursor="hand2",
+    )
+    btn.pack(side=side, padx=(6, 0))
+    btn.bind("<Button-1>", lambda e: command())
+    btn.bind("<Enter>", lambda e: btn.configure(bg=hover))
+    btn.bind("<Leave>", lambda e: btn.configure(bg=color))
+    return btn
+
+
+# =====================================================================
+#  Soundboards Panel
+# =====================================================================
+
+
+class SoundboardPanel(tk.Frame):
+    """Soundboard management — boards, categories, clips, quotes, icons."""
+
+    LABEL = "Soundboards"
+
+    def __init__(self, parent, set_status):
+        super().__init__(parent, bg=BG)
+        self.set_status = set_status
         self.current_board_id = None
         self.current_category = None
-
-        self._build_ui()
+        self._build()
         self._refresh_boards()
 
-    # ── UI construction ──────────────────────────────────────────────
-
-    def _build_ui(self):
-        # Top bar
-        top = tk.Frame(self, bg=BG_CARD, pady=10, padx=16)
+    def _build(self):
+        # Top toolbar
+        top = tk.Frame(self, bg=BG_CARD, pady=8, padx=12)
         top.pack(fill="x")
         tk.Label(
-            top, text="Soundboard Admin", font=("Segoe UI", 16, "bold"),
+            top, text="Soundboards", font=("Segoe UI", 14, "bold"),
             bg=BG_CARD, fg=ACCENT,
         ).pack(side="left")
+        make_btn(top, "Sync Counts", self._on_sync, FG_DIM)
+        make_btn(top, "+ New Board", self._on_new_board, ACCENT)
 
-        btn_frame = tk.Frame(top, bg=BG_CARD)
-        btn_frame.pack(side="right")
-        self._make_btn(btn_frame, "+ New Board", self._on_new_board, ACCENT)
-        self._make_btn(btn_frame, "Sync Counts", self._on_sync, FG_DIM)
-
-        # Main paned layout: left (boards+categories) | right (clips)
+        # Paned: left (boards + categories) | right (clips)
         paned = tk.PanedWindow(
             self, orient="horizontal", bg=BG, sashwidth=4, sashrelief="flat",
         )
-        paned.pack(fill="both", expand=True, padx=8, pady=8)
+        paned.pack(fill="both", expand=True, padx=6, pady=6)
 
-        # ── Left panel ───────────────────────────────────────────────
-        left = tk.Frame(paned, bg=BG, width=280)
-        paned.add(left, minsize=220)
+        # Left
+        left = tk.Frame(paned, bg=BG, width=260)
+        paned.add(left, minsize=200)
 
-        # Boards list
-        lbl_boards = tk.Label(
-            left, text="BOARDS", font=("Segoe UI", 10, "bold"),
-            bg=BG, fg=FG_DIM, anchor="w",
-        )
-        lbl_boards.pack(fill="x", padx=4, pady=(0, 4))
-
+        tk.Label(left, text="BOARDS", font=("Segoe UI", 10, "bold"),
+                 bg=BG, fg=FG_DIM, anchor="w").pack(fill="x", padx=4, pady=(0, 4))
         self.boards_frame = tk.Frame(left, bg=BG)
         self.boards_frame.pack(fill="x", padx=4)
 
-        # Separator
         tk.Frame(left, bg=BORDER, height=1).pack(fill="x", padx=4, pady=10)
 
-        # Categories list
         cat_header = tk.Frame(left, bg=BG)
         cat_header.pack(fill="x", padx=4)
-        tk.Label(
-            cat_header, text="CATEGORIES", font=("Segoe UI", 10, "bold"),
-            bg=BG, fg=FG_DIM, anchor="w",
-        ).pack(side="left")
-        self.btn_new_cat = self._make_btn(
-            cat_header, "+ Add", self._on_new_category, ACCENT, small=True,
-        )
+        tk.Label(cat_header, text="CATEGORIES", font=("Segoe UI", 10, "bold"),
+                 bg=BG, fg=FG_DIM, anchor="w").pack(side="left")
+        make_btn(cat_header, "+ Add", self._on_new_category, ACCENT, small=True)
 
         self.cats_frame = tk.Frame(left, bg=BG)
         self.cats_frame.pack(fill="both", expand=True, padx=4, pady=(4, 0))
 
-        # ── Right panel (clips) ──────────────────────────────────────
+        # Right (clips)
         right = tk.Frame(paned, bg=BG)
-        paned.add(right, minsize=400)
+        paned.add(right, minsize=380)
 
-        # Clips header
         clips_header = tk.Frame(right, bg=BG)
         clips_header.pack(fill="x", padx=4, pady=(0, 6))
         self.clips_title = tk.Label(
@@ -179,25 +199,18 @@ class SoundboardAdminApp(tk.Tk):
             font=("Segoe UI", 12, "bold"), bg=BG, fg=FG, anchor="w",
         )
         self.clips_title.pack(side="left")
-        self.btn_add_clips = self._make_btn(
-            clips_header, "+ Add Sounds", self._on_add_clips, ACCENT,
-        )
+        make_btn(clips_header, "+ Add Sounds", self._on_add_clips, ACCENT)
 
-        # Scrollable clip list
         canvas_frame = tk.Frame(right, bg=BG)
         canvas_frame.pack(fill="both", expand=True)
 
         self.clips_canvas = tk.Canvas(canvas_frame, bg=BG, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(
-            canvas_frame, orient="vertical", command=self.clips_canvas.yview,
-        )
+        scrollbar = ttk.Scrollbar(canvas_frame, orient="vertical", command=self.clips_canvas.yview)
         self.clips_inner = tk.Frame(self.clips_canvas, bg=BG)
 
         self.clips_inner.bind(
             "<Configure>",
-            lambda e: self.clips_canvas.configure(
-                scrollregion=self.clips_canvas.bbox("all")
-            ),
+            lambda e: self.clips_canvas.configure(scrollregion=self.clips_canvas.bbox("all")),
         )
         self.clips_canvas.create_window((0, 0), window=self.clips_inner, anchor="nw")
         self.clips_canvas.configure(yscrollcommand=scrollbar.set)
@@ -205,46 +218,17 @@ class SoundboardAdminApp(tk.Tk):
         self.clips_canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # Mouse wheel scrolling
         self.clips_canvas.bind_all(
             "<MouseWheel>",
             lambda e: self.clips_canvas.yview_scroll(-1 * (e.delta // 120), "units"),
         )
 
-        # Status bar
-        self.status = tk.Label(
-            self, text="Ready", font=("Segoe UI", 9),
-            bg=BG_CARD, fg=FG_DIM, anchor="w", padx=12, pady=4,
-        )
-        self.status.pack(fill="x", side="bottom")
-
-    # ── Widget helpers ───────────────────────────────────────────────
-
-    def _make_btn(self, parent, text, command, color, small=False):
-        font = ("Segoe UI", 9) if small else ("Segoe UI", 10, "bold")
-        py = 2 if small else 5
-        px = 8 if small else 14
-        btn = tk.Label(
-            parent, text=text, font=font, bg=color, fg=BG,
-            padx=px, pady=py, cursor="hand2",
-        )
-        btn.pack(side="right" if not small else "right", padx=(6, 0))
-        btn.bind("<Button-1>", lambda e: command())
-        btn.bind("<Enter>", lambda e: btn.configure(bg=ACCENT_HOVER if color == ACCENT else RED_HOVER if color == RED else color))
-        btn.bind("<Leave>", lambda e: btn.configure(bg=color))
-        return btn
-
-    def _set_status(self, msg):
-        self.status.configure(text=msg)
-
-    # ── Refresh functions ────────────────────────────────────────────
+    # ── Refresh ──────────────────────────────────────────────────────
 
     def _refresh_boards(self):
         for w in self.boards_frame.winfo_children():
             w.destroy()
-
-        index = load_index()
-        for b in index:
+        for b in load_index():
             bid = b["id"]
             is_active = bid == self.current_board_id
             bg = BG_INPUT if is_active else BG_CARD
@@ -254,15 +238,8 @@ class SoundboardAdminApp(tk.Tk):
             row.pack(fill="x", pady=2)
             row.bind("<Button-1>", lambda e, _id=bid: self._select_board(_id))
 
-            icon_lbl = tk.Label(
-                row, text=b["icon"], font=("Segoe UI Emoji", 14),
-                bg=bg, fg=fg_color,
-            )
-            icon_lbl.pack(side="left")
-            icon_lbl.bind("<Button-1>", lambda e, _id=bid: self._select_board(_id))
-
             info = tk.Frame(row, bg=bg)
-            info.pack(side="left", padx=(8, 0))
+            info.pack(side="left", padx=(0, 0))
             info.bind("<Button-1>", lambda e, _id=bid: self._select_board(_id))
 
             name_lbl = tk.Label(
@@ -282,14 +259,11 @@ class SoundboardAdminApp(tk.Tk):
     def _refresh_categories(self):
         for w in self.cats_frame.winfo_children():
             w.destroy()
-
         if not self.current_board_id:
             return
-
         data = load_board(self.current_board_id)
         if not data:
             return
-
         for cat in data.get("categories", []):
             cname = cat["name"]
             count = len(cat["clips"])
@@ -301,30 +275,19 @@ class SoundboardAdminApp(tk.Tk):
             row.pack(fill="x", pady=2)
             row.bind("<Button-1>", lambda e, _c=cname: self._select_category(_c))
 
-            tk.Label(
-                row, text=cname, font=("Segoe UI", 10, "bold"),
-                bg=bg, fg=fg_color,
-            ).pack(side="left")
-            for child in row.winfo_children():
-                child.bind("<Button-1>", lambda e, _c=cname: self._select_category(_c))
+            lbl = tk.Label(row, text=cname, font=("Segoe UI", 10, "bold"), bg=bg, fg=fg_color)
+            lbl.pack(side="left")
+            lbl.bind("<Button-1>", lambda e, _c=cname: self._select_category(_c))
 
-            tk.Label(
-                row, text=f"({count})", font=("Segoe UI", 9),
-                bg=bg, fg=FG_DIM,
-            ).pack(side="left", padx=(6, 0))
+            tk.Label(row, text=f"({count})", font=("Segoe UI", 9), bg=bg, fg=FG_DIM).pack(side="left", padx=(6, 0))
 
-            # Delete category button
-            del_lbl = tk.Label(
-                row, text="x", font=("Segoe UI", 9, "bold"),
-                bg=bg, fg=RED, cursor="hand2", padx=4,
-            )
+            del_lbl = tk.Label(row, text="x", font=("Segoe UI", 9, "bold"), bg=bg, fg=RED, cursor="hand2", padx=4)
             del_lbl.pack(side="right")
             del_lbl.bind("<Button-1>", lambda e, _c=cname: self._on_delete_category(_c))
 
     def _refresh_clips(self):
         for w in self.clips_inner.winfo_children():
             w.destroy()
-
         if not self.current_board_id or not self.current_category:
             self.clips_title.configure(text="Select a board and category")
             return
@@ -351,7 +314,6 @@ class SoundboardAdminApp(tk.Tk):
             ).pack()
             return
 
-        # Column headers
         header = tk.Frame(self.clips_inner, bg=BG, pady=4)
         header.pack(fill="x", padx=4)
         tk.Label(header, text="LABEL", font=("Segoe UI", 9, "bold"), bg=BG, fg=FG_DIM, width=28, anchor="w").pack(side="left")
@@ -363,7 +325,6 @@ class SoundboardAdminApp(tk.Tk):
             row = tk.Frame(self.clips_inner, bg=stripe_bg, pady=6, padx=8)
             row.pack(fill="x", padx=4, pady=1)
 
-            # Editable label
             lbl = tk.Label(
                 row, text=clip["label"], font=("Segoe UI", 10),
                 bg=stripe_bg, fg=FG, width=28, anchor="w", cursor="hand2",
@@ -371,20 +332,17 @@ class SoundboardAdminApp(tk.Tk):
             lbl.pack(side="left")
             lbl.bind("<Double-Button-1>", lambda e, _c=clip, _cat=cat["name"]: self._on_edit_label(_c, _cat))
 
-            # Filename
             tk.Label(
                 row, text=clip["file"], font=("Consolas", 9),
                 bg=stripe_bg, fg=FG_DIM, width=24, anchor="w",
             ).pack(side="left")
 
-            # File exists indicator
             audio_path = os.path.join(AUDIO_DIR, self.current_board_id, clip["file"])
             if os.path.exists(audio_path):
                 tk.Label(row, text="OK", font=("Segoe UI", 9, "bold"), bg=stripe_bg, fg=ACCENT, width=10, anchor="w").pack(side="left")
             else:
                 tk.Label(row, text="MISSING", font=("Segoe UI", 9, "bold"), bg=stripe_bg, fg=RED, width=10, anchor="w").pack(side="left")
 
-            # Delete button
             del_btn = tk.Label(
                 row, text="Remove", font=("Segoe UI", 9),
                 bg=stripe_bg, fg=RED, cursor="hand2", padx=6,
@@ -395,31 +353,29 @@ class SoundboardAdminApp(tk.Tk):
                 lambda e, _f=clip["file"], _cat=cat["name"]: self._on_remove_clip(_f, _cat),
             )
 
-    # ── Selection handlers ───────────────────────────────────────────
+    # ── Selection ────────────────────────────────────────────────────
 
     def _select_board(self, board_id):
         self.current_board_id = board_id
         self.current_category = None
-
         data = load_board(board_id)
         if data and data.get("categories"):
             self.current_category = data["categories"][0]["name"]
-
         self._refresh_boards()
         self._refresh_categories()
         self._refresh_clips()
-        self._set_status(f"Board: {board_id}")
+        self.set_status(f"Board: {board_id}")
 
     def _select_category(self, cat_name):
         self.current_category = cat_name
         self._refresh_categories()
         self._refresh_clips()
 
-    # ── Action handlers ──────────────────────────────────────────────
+    # ── Actions ──────────────────────────────────────────────────────
 
     def _on_new_board(self):
         dlg = _NewBoardDialog(self)
-        self.wait_window(dlg)
+        self.winfo_toplevel().wait_window(dlg)
         if dlg.result:
             bid, name, icon = dlg.result
             index = load_index()
@@ -434,16 +390,13 @@ class SoundboardAdminApp(tk.Tk):
             os.makedirs(os.path.join(AUDIO_DIR, bid), exist_ok=True)
             self._refresh_boards()
             self._select_board(bid)
-            self._set_status(f"Created board: {name}")
+            self.set_status(f"Created board: {name}")
 
     def _on_new_category(self):
         if not self.current_board_id:
             messagebox.showinfo("Info", "Select a board first.")
             return
-        name = simpledialog.askstring(
-            "New Category", "Category name:",
-            parent=self,
-        )
+        name = simpledialog.askstring("New Category", "Category name:", parent=self.winfo_toplevel())
         if not name or not name.strip():
             return
         name = name.strip()
@@ -455,7 +408,7 @@ class SoundboardAdminApp(tk.Tk):
         save_board(self.current_board_id, data)
         self._select_category(name)
         self._refresh_categories()
-        self._set_status(f"Added category: {name}")
+        self.set_status(f"Added category: {name}")
 
     def _on_delete_category(self, cat_name):
         data = load_board(self.current_board_id)
@@ -475,19 +428,15 @@ class SoundboardAdminApp(tk.Tk):
         self._refresh_categories()
         self._refresh_clips()
         self._refresh_boards()
-        self._set_status(f"Deleted category: {cat_name}")
+        self.set_status(f"Deleted category: {cat_name}")
 
     def _on_add_clips(self):
         if not self.current_board_id or not self.current_category:
             messagebox.showinfo("Info", "Select a board and category first.")
             return
-
         files = filedialog.askopenfilenames(
             title="Select sound files to add",
-            filetypes=[
-                ("Audio files", "*.wav *.mp3 *.ogg *.flac *.m4a *.aac"),
-                ("All files", "*.*"),
-            ],
+            filetypes=[("Audio files", "*.wav *.mp3 *.ogg *.flac *.m4a *.aac"), ("All files", "*.*")],
         )
         if not files:
             return
@@ -505,12 +454,9 @@ class SoundboardAdminApp(tk.Tk):
             if filename in existing:
                 skipped.append(filename)
                 continue
-
-            # Copy the audio file into the board's audio folder
             dest = os.path.join(dest_dir, filename)
             if not os.path.exists(dest):
                 shutil.copy2(filepath, dest)
-
             label = label_from_filename(filename)
             cat["clips"].append({"label": label, "file": filename})
             existing.add(filename)
@@ -525,7 +471,7 @@ class SoundboardAdminApp(tk.Tk):
         msg = f"Added {added} clip(s)"
         if skipped:
             msg += f", skipped {len(skipped)} duplicate(s)"
-        self._set_status(msg)
+        self.set_status(msg)
 
     def _on_remove_clip(self, filename, cat_name):
         if not messagebox.askyesno("Confirm", f"Remove '{filename}' from {cat_name}?"):
@@ -538,12 +484,12 @@ class SoundboardAdminApp(tk.Tk):
         self._refresh_clips()
         self._refresh_boards()
         self._refresh_categories()
-        self._set_status(f"Removed: {filename}")
+        self.set_status(f"Removed: {filename}")
 
     def _on_edit_label(self, clip, cat_name):
         new_label = simpledialog.askstring(
             "Edit Label", "New label:", initialvalue=clip["label"],
-            parent=self,
+            parent=self.winfo_toplevel(),
         )
         if not new_label or new_label.strip() == clip["label"]:
             return
@@ -555,12 +501,12 @@ class SoundboardAdminApp(tk.Tk):
                 break
         save_board(self.current_board_id, data)
         self._refresh_clips()
-        self._set_status(f"Renamed to: {new_label.strip()}")
+        self.set_status(f"Renamed to: {new_label.strip()}")
 
     def _on_sync(self):
         sync_clip_counts()
         self._refresh_boards()
-        self._set_status("Clip counts synced.")
+        self.set_status("Clip counts synced.")
 
 
 # ── New Board dialog ─────────────────────────────────────────────────
@@ -568,7 +514,7 @@ class SoundboardAdminApp(tk.Tk):
 
 class _NewBoardDialog(tk.Toplevel):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__(parent.winfo_toplevel())
         self.title("New Soundboard")
         self.configure(bg=BG_CARD)
         self.geometry("380x240")
@@ -584,7 +530,7 @@ class _NewBoardDialog(tk.Toplevel):
         self.e_name = tk.Entry(self, bg=BG_INPUT, fg=FG, font=("Segoe UI", 11), insertbackground=FG)
         self.e_name.pack(fill="x", padx=16, pady=(2, 0))
 
-        tk.Label(self, text="Icon (emoji):", bg=BG_CARD, fg=FG, font=("Segoe UI", 10)).pack(anchor="w", **pad)
+        tk.Label(self, text="Icon (emoji or image path):", bg=BG_CARD, fg=FG, font=("Segoe UI", 10)).pack(anchor="w", **pad)
         self.e_icon = tk.Entry(self, bg=BG_INPUT, fg=FG, font=("Segoe UI Emoji", 14), insertbackground=FG, width=4)
         self.e_icon.pack(anchor="w", padx=16, pady=(2, 0))
 
@@ -606,11 +552,202 @@ class _NewBoardDialog(tk.Toplevel):
             messagebox.showerror("Error", "ID and Name are required.", parent=self)
             return
         if not icon:
-            icon = "🔊"
+            icon = "img/Icons/icons/Audio_Related/speaker.png"
         self.result = (bid, name, icon)
         self.destroy()
 
 
+# =====================================================================
+#  Media Panel
+# =====================================================================
+
+
+class MediaPanel(tk.Frame):
+    """Media optimization — compress images, generate WebP, convert audio."""
+
+    LABEL = "Media"
+
+    def __init__(self, parent, set_status):
+        super().__init__(parent, bg=BG)
+        self.set_status = set_status
+        self._build()
+
+    def _build(self):
+        top = tk.Frame(self, bg=BG_CARD, pady=8, padx=12)
+        top.pack(fill="x")
+        tk.Label(
+            top, text="Media Optimization", font=("Segoe UI", 14, "bold"),
+            bg=BG_CARD, fg=ACCENT,
+        ).pack(side="left")
+
+        # Command buttons
+        btn_frame = tk.Frame(self, bg=BG, pady=10, padx=12)
+        btn_frame.pack(fill="x")
+
+        commands = [
+            ("Art", "art"),
+            ("YouTube", "youtube"),
+            ("Icons", "icons"),
+            ("Soundboards", "soundboards"),
+            ("Audio", "audio"),
+            ("All", "all"),
+            ("Report", "report"),
+        ]
+
+        for label, cmd in commands:
+            btn = tk.Label(
+                btn_frame, text=label, font=("Segoe UI", 10, "bold"),
+                bg=ACCENT, fg=BG, padx=14, pady=6, cursor="hand2",
+            )
+            btn.pack(side="left", padx=(0, 8))
+            btn.bind("<Button-1>", lambda e, _c=cmd: self._run_command(_c))
+            btn.bind("<Enter>", lambda e, b=btn: b.configure(bg=ACCENT_HOVER))
+            btn.bind("<Leave>", lambda e, b=btn: b.configure(bg=ACCENT))
+
+        # Dry-run checkbox
+        self.dry_run_var = tk.BooleanVar(value=False)
+        cb = tk.Checkbutton(
+            btn_frame, text="Dry Run", variable=self.dry_run_var,
+            bg=BG, fg=FG, selectcolor=BG_INPUT, activebackground=BG,
+            activeforeground=FG, font=("Segoe UI", 10),
+        )
+        cb.pack(side="left", padx=(12, 0))
+
+        # Output log
+        log_frame = tk.Frame(self, bg=BG, padx=12, pady=(0, 12))
+        log_frame.pack(fill="both", expand=True)
+
+        self.log = tk.Text(
+            log_frame, bg=BG_INPUT, fg=FG, font=("Consolas", 10),
+            wrap="word", state="disabled", highlightthickness=0,
+            insertbackground=FG,
+        )
+        scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log.yview)
+        self.log.configure(yscrollcommand=scrollbar.set)
+        self.log.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+    def _append_log(self, text):
+        self.log.configure(state="normal")
+        self.log.insert("end", text + "\n")
+        self.log.see("end")
+        self.log.configure(state="disabled")
+
+    def _run_command(self, cmd):
+        import subprocess
+        import sys
+
+        self.log.configure(state="normal")
+        self.log.delete("1.0", "end")
+        self.log.configure(state="disabled")
+
+        dry_flag = " --dry-run" if self.dry_run_var.get() else ""
+        self._append_log(f"$ admin.py media {cmd}{dry_flag}\n")
+        self.set_status(f"Running: media {cmd}...")
+
+        def _worker():
+            try:
+                script = os.path.join(SCRIPT_DIR, "admin.py")
+                args = [sys.executable, script, "media", cmd]
+                if self.dry_run_var.get():
+                    args.append("--dry-run")
+                proc = subprocess.Popen(
+                    args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    text=True, encoding="utf-8", errors="replace",
+                )
+                for line in proc.stdout:
+                    self.after(0, self._append_log, line.rstrip())
+                proc.wait()
+                self.after(0, self.set_status, f"Done: media {cmd} (exit {proc.returncode})")
+            except Exception as exc:
+                self.after(0, self._append_log, f"ERROR: {exc}")
+                self.after(0, self.set_status, f"Error running media {cmd}")
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+
+# =====================================================================
+#  Main App — sidebar + panel area
+# =====================================================================
+
+# Panel registry — add new panels here
+PANELS = [SoundboardPanel, MediaPanel]
+
+
+class AdminApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Alan's Brain — Admin")
+        self.geometry("1020x720")
+        self.configure(bg=BG)
+        self.minsize(800, 550)
+
+        self.panels = {}
+        self.active_panel = None
+
+        self._build()
+        # Select first panel
+        if PANELS:
+            self._select_panel(PANELS[0].LABEL)
+
+    def _build(self):
+        # Sidebar
+        self.sidebar = tk.Frame(self, bg=BG_CARD, width=160)
+        self.sidebar.pack(side="left", fill="y")
+        self.sidebar.pack_propagate(False)
+
+        tk.Label(
+            self.sidebar, text="Admin", font=("Segoe UI", 14, "bold"),
+            bg=BG_CARD, fg=ACCENT, pady=12,
+        ).pack(fill="x")
+
+        tk.Frame(self.sidebar, bg=BORDER, height=1).pack(fill="x", padx=8)
+
+        self.nav_labels = {}
+        for panel_cls in PANELS:
+            label = panel_cls.LABEL
+            lbl = tk.Label(
+                self.sidebar, text=label, font=("Segoe UI", 11),
+                bg=BG_CARD, fg=FG, pady=10, padx=16, anchor="w", cursor="hand2",
+            )
+            lbl.pack(fill="x")
+            lbl.bind("<Button-1>", lambda e, _l=label: self._select_panel(_l))
+            self.nav_labels[label] = lbl
+
+        # Main content area
+        self.content = tk.Frame(self, bg=BG)
+        self.content.pack(side="left", fill="both", expand=True)
+
+        # Status bar
+        self.status = tk.Label(
+            self, text="Ready", font=("Segoe UI", 9),
+            bg=BG_CARD, fg=FG_DIM, anchor="w", padx=12, pady=4,
+        )
+        self.status.pack(fill="x", side="bottom")
+
+        # Create all panels (hidden)
+        for panel_cls in PANELS:
+            panel = panel_cls(self.content, self._set_status)
+            self.panels[panel_cls.LABEL] = panel
+
+    def _set_status(self, msg):
+        self.status.configure(text=msg)
+
+    def _select_panel(self, label):
+        if self.active_panel:
+            self.panels[self.active_panel].pack_forget()
+
+        # Update sidebar highlighting
+        for nav_label, lbl in self.nav_labels.items():
+            if nav_label == label:
+                lbl.configure(bg=BG_INPUT, fg=ACCENT)
+            else:
+                lbl.configure(bg=BG_CARD, fg=FG)
+
+        self.panels[label].pack(fill="both", expand=True)
+        self.active_panel = label
+
+
 if __name__ == "__main__":
-    app = SoundboardAdminApp()
+    app = AdminApp()
     app.mainloop()
