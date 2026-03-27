@@ -15,6 +15,8 @@ import json
 import os
 import re
 import shutil
+import subprocess
+import sys
 import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
@@ -112,6 +114,68 @@ def fmt_size(n):
     if n < 1024 * 1024:
         return f"{n / 1024:.1f}KB"
     return f"{n / (1024 * 1024):.1f}MB"
+
+
+# ── Audio playback helper ────────────────────────────────────────────
+
+_player_proc = None  # track the subprocess so we can stop it
+
+
+def play_audio(filepath, on_done=None):
+    """Play an audio file. Tries pygame, falls back to ffplay, then os.startfile."""
+    global _player_proc
+    stop_audio()
+
+    def _worker():
+        global _player_proc
+        try:
+            # Try pygame first
+            import pygame
+            pygame.mixer.init()
+            pygame.mixer.music.load(filepath)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.wait(100)
+            if on_done:
+                on_done()
+            return
+        except Exception:
+            pass
+
+        # Try ffplay (silent, no window)
+        try:
+            _player_proc = subprocess.Popen(
+                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", filepath],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            _player_proc.wait()
+            _player_proc = None
+            if on_done:
+                on_done()
+            return
+        except FileNotFoundError:
+            pass
+
+        # Last resort: OS default player
+        if sys.platform == "win32":
+            os.startfile(filepath)
+        if on_done:
+            on_done()
+
+    threading.Thread(target=_worker, daemon=True).start()
+
+
+def stop_audio():
+    global _player_proc
+    try:
+        import pygame
+        if pygame.mixer.get_init():
+            pygame.mixer.music.stop()
+    except Exception:
+        pass
+    if _player_proc and _player_proc.poll() is None:
+        _player_proc.terminate()
+        _player_proc = None
 
 
 # ── Widget helpers ───────────────────────────────────────────────────
@@ -290,6 +354,7 @@ class SoundboardPanel(tk.Frame):
             w.destroy()
         if not self.current_board_id or not self.current_category:
             self.clips_title.configure(text="Select a board and category")
+            self._render_quotes_section()
             return
 
         data = load_board(self.current_board_id)
@@ -312,13 +377,14 @@ class SoundboardPanel(tk.Frame):
                 self.clips_inner, text='No clips yet. Click "+ Add Sounds" to get started.',
                 font=("Segoe UI", 11), bg=BG, fg=FG_DIM, pady=30,
             ).pack()
+            self._render_quotes_section()
             return
 
         header = tk.Frame(self.clips_inner, bg=BG, pady=4)
         header.pack(fill="x", padx=4)
-        tk.Label(header, text="LABEL", font=("Segoe UI", 9, "bold"), bg=BG, fg=FG_DIM, width=28, anchor="w").pack(side="left")
-        tk.Label(header, text="FILE", font=("Segoe UI", 9, "bold"), bg=BG, fg=FG_DIM, width=24, anchor="w").pack(side="left")
-        tk.Label(header, text="STATUS", font=("Segoe UI", 9, "bold"), bg=BG, fg=FG_DIM, width=10, anchor="w").pack(side="left")
+        tk.Label(header, text="LABEL", font=("Segoe UI", 9, "bold"), bg=BG, fg=FG_DIM, width=24, anchor="w").pack(side="left")
+        tk.Label(header, text="FILE", font=("Segoe UI", 9, "bold"), bg=BG, fg=FG_DIM, width=22, anchor="w").pack(side="left")
+        tk.Label(header, text="STATUS", font=("Segoe UI", 9, "bold"), bg=BG, fg=FG_DIM, width=8, anchor="w").pack(side="left")
 
         for i, clip in enumerate(cat["clips"]):
             stripe_bg = BG_CARD if i % 2 == 0 else BG
@@ -327,22 +393,24 @@ class SoundboardPanel(tk.Frame):
 
             lbl = tk.Label(
                 row, text=clip["label"], font=("Segoe UI", 10),
-                bg=stripe_bg, fg=FG, width=28, anchor="w", cursor="hand2",
+                bg=stripe_bg, fg=FG, width=24, anchor="w", cursor="hand2",
             )
             lbl.pack(side="left")
             lbl.bind("<Double-Button-1>", lambda e, _c=clip, _cat=cat["name"]: self._on_edit_label(_c, _cat))
 
-            tk.Label(
+            file_lbl = tk.Label(
                 row, text=clip["file"], font=("Consolas", 9),
-                bg=stripe_bg, fg=FG_DIM, width=24, anchor="w",
-            ).pack(side="left")
+                bg=stripe_bg, fg=FG_DIM, width=22, anchor="w",
+            )
+            file_lbl.pack(side="left")
 
             audio_path = os.path.join(AUDIO_DIR, self.current_board_id, clip["file"])
             if os.path.exists(audio_path):
-                tk.Label(row, text="OK", font=("Segoe UI", 9, "bold"), bg=stripe_bg, fg=ACCENT, width=10, anchor="w").pack(side="left")
+                tk.Label(row, text="OK", font=("Segoe UI", 9, "bold"), bg=stripe_bg, fg=ACCENT, width=8, anchor="w").pack(side="left")
             else:
-                tk.Label(row, text="MISSING", font=("Segoe UI", 9, "bold"), bg=stripe_bg, fg=RED, width=10, anchor="w").pack(side="left")
+                tk.Label(row, text="MISSING", font=("Segoe UI", 9, "bold"), bg=stripe_bg, fg=RED, width=8, anchor="w").pack(side="left")
 
+            # Action buttons (right side, right-to-left)
             del_btn = tk.Label(
                 row, text="Remove", font=("Segoe UI", 9),
                 bg=stripe_bg, fg=RED, cursor="hand2", padx=6,
@@ -352,6 +420,126 @@ class SoundboardPanel(tk.Frame):
                 "<Button-1>",
                 lambda e, _f=clip["file"], _cat=cat["name"]: self._on_remove_clip(_f, _cat),
             )
+
+            rename_btn = tk.Label(
+                row, text="Rename", font=("Segoe UI", 9),
+                bg=stripe_bg, fg=YELLOW, cursor="hand2", padx=4,
+            )
+            rename_btn.pack(side="right")
+            rename_btn.bind(
+                "<Button-1>",
+                lambda e, _c=clip, _cat=cat["name"]: self._on_rename_file(_c, _cat),
+            )
+
+            play_btn = tk.Label(
+                row, text="\u25b6", font=("Segoe UI", 10),
+                bg=stripe_bg, fg=ACCENT, cursor="hand2", padx=4,
+            )
+            play_btn.pack(side="right")
+            play_btn.bind(
+                "<Button-1>",
+                lambda e, _path=audio_path, _lbl=clip["label"]: self._on_play(_path, _lbl),
+            )
+
+        self._render_quotes_section()
+
+    # ── Quotes / Subtitles ──────────────────────────────────────────
+
+    def _render_quotes_section(self):
+        """Render the subtitles/quotes editor below clips for the current board."""
+        if not self.current_board_id:
+            return
+
+        data = load_board(self.current_board_id)
+        if not data:
+            return
+        quotes = data.get("quotes", [])
+
+        # Separator
+        tk.Frame(self.clips_inner, bg=BORDER, height=1).pack(fill="x", padx=4, pady=12)
+
+        header = tk.Frame(self.clips_inner, bg=BG)
+        header.pack(fill="x", padx=4, pady=(0, 6))
+
+        board_name = self.current_board_id
+        for b in load_index():
+            if b["id"] == self.current_board_id:
+                board_name = b["name"]
+                break
+
+        tk.Label(
+            header, text=f"Subtitles \u2014 {board_name}  ({len(quotes)})",
+            font=("Segoe UI", 11, "bold"), bg=BG, fg=FG, anchor="w",
+        ).pack(side="left")
+        make_btn(header, "+ Add", self._on_add_quote, ACCENT, small=True)
+
+        if not quotes:
+            tk.Label(
+                self.clips_inner, text="No subtitles yet. These cycle randomly on the soundboard page.",
+                font=("Segoe UI", 10), bg=BG, fg=FG_DIM, pady=8,
+            ).pack(padx=8, anchor="w")
+            return
+
+        for i, quote in enumerate(quotes):
+            stripe_bg = BG_CARD if i % 2 == 0 else BG
+            row = tk.Frame(self.clips_inner, bg=stripe_bg, pady=4, padx=8)
+            row.pack(fill="x", padx=4, pady=1)
+
+            lbl = tk.Label(
+                row, text=quote, font=("Segoe UI", 10),
+                bg=stripe_bg, fg=FG, anchor="w", wraplength=400, justify="left",
+                cursor="hand2",
+            )
+            lbl.pack(side="left", fill="x", expand=True)
+            lbl.bind("<Double-Button-1>", lambda e, _i=i: self._on_edit_quote(_i))
+
+            del_lbl = tk.Label(
+                row, text="x", font=("Segoe UI", 9, "bold"),
+                bg=stripe_bg, fg=RED, cursor="hand2", padx=6,
+            )
+            del_lbl.pack(side="right")
+            del_lbl.bind("<Button-1>", lambda e, _i=i: self._on_delete_quote(_i))
+
+    def _on_add_quote(self):
+        text = simpledialog.askstring(
+            "Add Subtitle", "Enter subtitle text:",
+            parent=self.winfo_toplevel(),
+        )
+        if not text or not text.strip():
+            return
+        data = load_board(self.current_board_id)
+        if "quotes" not in data:
+            data["quotes"] = []
+        data["quotes"].append(text.strip())
+        save_board(self.current_board_id, data)
+        self._refresh_clips()
+        self.set_status(f"Added subtitle: {text.strip()[:40]}...")
+
+    def _on_edit_quote(self, index):
+        data = load_board(self.current_board_id)
+        quotes = data.get("quotes", [])
+        if index >= len(quotes):
+            return
+        new_text = simpledialog.askstring(
+            "Edit Subtitle", "Edit subtitle text:",
+            initialvalue=quotes[index], parent=self.winfo_toplevel(),
+        )
+        if not new_text or new_text.strip() == quotes[index]:
+            return
+        data["quotes"][index] = new_text.strip()
+        save_board(self.current_board_id, data)
+        self._refresh_clips()
+        self.set_status(f"Updated subtitle #{index + 1}")
+
+    def _on_delete_quote(self, index):
+        data = load_board(self.current_board_id)
+        quotes = data.get("quotes", [])
+        if index >= len(quotes):
+            return
+        removed = quotes.pop(index)
+        save_board(self.current_board_id, data)
+        self._refresh_clips()
+        self.set_status(f"Removed subtitle: {removed[:40]}...")
 
     # ── Selection ────────────────────────────────────────────────────
 
@@ -502,6 +690,46 @@ class SoundboardPanel(tk.Frame):
         save_board(self.current_board_id, data)
         self._refresh_clips()
         self.set_status(f"Renamed to: {new_label.strip()}")
+
+    def _on_play(self, audio_path, label):
+        if not os.path.exists(audio_path):
+            self.set_status(f"File missing: {os.path.basename(audio_path)}")
+            return
+        self.set_status(f"Playing: {label}")
+        play_audio(audio_path, on_done=lambda: self.after(0, self.set_status, "Ready"))
+
+    def _on_rename_file(self, clip, cat_name):
+        old_name = clip["file"]
+        ext = os.path.splitext(old_name)[1]
+        new_name = simpledialog.askstring(
+            "Rename File", f"New filename (include extension like {ext}):",
+            initialvalue=old_name, parent=self.winfo_toplevel(),
+        )
+        if not new_name or new_name.strip() == old_name:
+            return
+        new_name = new_name.strip()
+
+        src = os.path.join(AUDIO_DIR, self.current_board_id, old_name)
+        dst = os.path.join(AUDIO_DIR, self.current_board_id, new_name)
+
+        if os.path.exists(dst) and dst != src:
+            messagebox.showerror("Error", f"File '{new_name}' already exists.")
+            return
+
+        # Rename on disk
+        if os.path.exists(src):
+            os.rename(src, dst)
+
+        # Update all references in this board's JSON
+        data = load_board(self.current_board_id)
+        for cat in data.get("categories", []):
+            for c in cat["clips"]:
+                if c["file"] == old_name:
+                    c["file"] = new_name
+        save_board(self.current_board_id, data)
+
+        self._refresh_clips()
+        self.set_status(f"Renamed: {old_name} -> {new_name}")
 
     def _on_sync(self):
         sync_clip_counts()
