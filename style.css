@@ -1521,7 +1521,9 @@ nav {
   box-shadow: none;
 }
 .audio-btn.playing {
-  border-color: var(--teal);
+  /* No border-color change — box-shadow provides the ring + glow and fades
+     smoothly via the 0.6s ease-out transition. A border-color change would
+     snap back at 0.15s, leaving a visible outline after the glow is gone. */
   box-shadow: 0 0 0 3px var(--teal-glow), 0 0 20px var(--teal-glow);
   animation: audioPulse 1s ease-in-out infinite;
 }
