@@ -614,8 +614,8 @@ class MediaPanel(tk.Frame):
         cb.pack(side="left", padx=(12, 0))
 
         # Output log
-        log_frame = tk.Frame(self, bg=BG, padx=12, pady=(0, 12))
-        log_frame.pack(fill="both", expand=True)
+        log_frame = tk.Frame(self, bg=BG)
+        log_frame.pack(fill="both", expand=True, padx=12, pady=(0, 12))
 
         self.log = tk.Text(
             log_frame, bg=BG_INPUT, fg=FG, font=("Consolas", 10),
