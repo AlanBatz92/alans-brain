@@ -366,6 +366,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (engine.isPlaying(src)) {
       engine.stop(src);
       btn.classList.remove('playing');
+      // Reset the progress bar immediately (no transition) so next play starts clean
+      var stopProgress = btn.querySelector('.clip-progress');
+      if (stopProgress) {
+        stopProgress.style.transition = 'none';
+        stopProgress.style.width = '0';
+      }
       btn.blur();
       updateCombo();
       return;

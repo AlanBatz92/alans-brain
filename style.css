@@ -1479,10 +1479,16 @@ nav {
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s;
+  /* Explicit properties instead of 'all' — prevents the pulse animation from
+     freeze-framing its glow mid-cycle when .playing is removed, which caused
+     a lingering green outline after manually stopping a clip. */
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent; /* suppress iOS/Android tap residue */
+  outline: none;
   text-align: center;
   overflow-wrap: break-word;
   word-break: break-word;
+  position: relative;
   overflow: hidden;
 }
 .audio-btn:hover {
@@ -1491,6 +1497,11 @@ nav {
 }
 .audio-btn:active {
   transform: scale(0.95);
+}
+.audio-btn:focus,
+.audio-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 .audio-btn.playing {
   border-color: var(--teal);
@@ -1502,10 +1513,6 @@ nav {
   50% { box-shadow: 0 0 0 5px var(--teal-glow), 0 0 30px var(--teal-glow); }
 }
 /* Audio clip progress sweep */
-.audio-btn {
-  position: relative;
-  overflow: hidden;
-}
 .audio-btn .clip-progress {
   position: absolute;
   left: 0;
@@ -1519,11 +1526,6 @@ nav {
 }
 .audio-btn.playing .clip-progress {
   opacity: 1;
-}
-.audio-btn:focus:not(.playing) {
-  outline: none;
-  box-shadow: none;
-  border-color: var(--border);
 }
 
 /* Soundboard category header images */

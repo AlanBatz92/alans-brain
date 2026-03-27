@@ -20,8 +20,10 @@ function SoundEngine() {
     audio.volume = self.volume;
     self.active[url] = audio;
 
-    // Trigger progress bar once audio actually starts playing
-    audio.addEventListener('play', function() {
+    // Trigger progress bar when metadata is loaded — duration is guaranteed
+    // reliable here. The 'play' event fires slightly earlier but duration
+    // is often NaN at that point, causing the progress animation to be skipped.
+    audio.addEventListener('loadedmetadata', function() {
       if (onStart) onStart(isFinite(audio.duration) ? audio.duration : 0);
     }, { once: true });
 
