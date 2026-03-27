@@ -2,31 +2,48 @@
   {
     "id": "theyhunger",
     "name": "They Hunger",
-    "icon": "img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.webp",
+    "icons": [
+      "img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.webp",
+      "img/Icons/Soundboards/They_Hunger/ChesterRockwood_No_BG.webp"
+    ],
     "clipCount": 7
   },
   {
     "id": "halflife",
     "name": "Half-Life",
-    "icon": "img/Icons/Soundboards/Half-Life/Scientist_No_BG.png",
+    "icons": [
+      "img/Icons/Soundboards/Half-Life/Scientist_1_No_BG.webp",
+      "img/Icons/Soundboards/Half-Life/Scientist_2_No_BG.webp",
+      "img/Icons/Soundboards/Half-Life/Scientist_3_No_BG.webp",
+      "img/Icons/Soundboards/Half-Life/G-Man_No_BG.webp"
+    ],
     "clipCount": 20
   },
   {
     "id": "maxpayne",
     "name": "Max Payne",
-    "icon": "img/Icons/Soundboards/Max_Payne/Max_Payne_No_BG.png",
+    "icons": [
+      "img/Icons/Soundboards/Max_Payne/Max_Payne_No_BG.webp"
+    ],
     "clipCount": 0
   },
   {
     "id": "quake2",
     "name": "Quake 2",
-    "icon": "img/Icons/Soundboards/Quake2/Bitterman_No_BG.png",
+    "icons": [
+      "img/Icons/Soundboards/Quake2/Bitterman_No_BG.webp"
+    ],
     "clipCount": 0
   },
   {
     "id": "rlm",
     "name": "Red Letter Media",
-    "icon": "img/Icons/Soundboards/RLM/Mike_Stoklasa_No_BG.png",
+    "icons": [
+      "img/Icons/Soundboards/RLM/Mike_Stoklasa_No_BG.webp",
+      "img/Icons/Soundboards/RLM/Jay_RLM_No_BG.webp",
+      "img/Icons/Soundboards/RLM/Rich_No_BG.webp",
+      "img/Icons/Soundboards/RLM/Rich_2_No_BG.webp"
+    ],
     "clipCount": 0
   }
 ]

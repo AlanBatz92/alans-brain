@@ -230,11 +230,16 @@ document.addEventListener('DOMContentLoaded', function() {
   function renderBoardSelector() {
     var html = '';
     boards.forEach(function(b) {
-      var iconHtml = b.icon.indexOf('/') !== -1
-        ? '<img class="nav-mobile-icon" src="' + esc(b.icon) + '" alt="" style="width:24px;height:24px">'
-        : b.icon;
+      // Support "icons" array (weighted random) or legacy "icon" string
+      var iconList = Array.isArray(b.icons) ? b.icons : (b.icon ? [b.icon] : []);
+      var pickedIcon = iconList.length > 1
+        ? pickWeighted(iconList, 'sb_board_icon_' + b.id)
+        : (iconList.length === 1 ? iconList[0] : null);
+      var iconHtml = pickedIcon
+        ? '<img class="sb-board-icon" src="' + esc(pickedIcon) + '" alt="">'
+        : '';
       html += '<button class="tag-pill sb-board-btn" data-id="' + esc(b.id) + '" data-name="' + esc(b.name) + '">' +
-        iconHtml + ' ' + esc(b.name) +
+        iconHtml + esc(b.name) +
         (b.clipCount > 0 ? ' <span style="font-family:var(--font-mono);font-size:0.65rem;opacity:0.6">(' + b.clipCount + ')</span>' : '') +
       '</button>';
     });
