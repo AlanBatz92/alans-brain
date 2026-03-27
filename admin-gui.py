@@ -393,14 +393,21 @@ class SoundboardPanel(tk.Frame):
 
             lbl = tk.Label(
                 row, text=clip["label"], font=("Segoe UI", 10),
-                bg=stripe_bg, fg=FG, width=24, anchor="w", cursor="hand2",
+                bg=stripe_bg, fg=FG, width=22, anchor="w", cursor="hand2",
             )
             lbl.pack(side="left")
             lbl.bind("<Double-Button-1>", lambda e, _c=clip, _cat=cat["name"]: self._on_edit_label(_c, _cat))
 
+            edit_lbl = tk.Label(
+                row, text="edit", font=("Segoe UI", 8),
+                bg=stripe_bg, fg=FG_DIM, cursor="hand2",
+            )
+            edit_lbl.pack(side="left", padx=(0, 6))
+            edit_lbl.bind("<Button-1>", lambda e, _c=clip, _cat=cat["name"]: self._on_edit_label(_c, _cat))
+
             file_lbl = tk.Label(
                 row, text=clip["file"], font=("Consolas", 9),
-                bg=stripe_bg, fg=FG_DIM, width=22, anchor="w",
+                bg=stripe_bg, fg=FG_DIM, width=20, anchor="w",
             )
             file_lbl.pack(side="left")
 
@@ -662,17 +669,43 @@ class SoundboardPanel(tk.Frame):
         self.set_status(msg)
 
     def _on_remove_clip(self, filename, cat_name):
-        if not messagebox.askyesno("Confirm", f"Remove '{filename}' from {cat_name}?"):
-            return
+        # Ask whether to also delete the file from disk
+        audio_path = os.path.join(AUDIO_DIR, self.current_board_id, filename)
+        file_exists = os.path.exists(audio_path)
+
+        if file_exists:
+            answer = messagebox.askyesnocancel(
+                "Remove Clip",
+                f"Remove '{filename}' from {cat_name}.\n\n"
+                "Also delete the audio file from disk?\n\n"
+                "Yes = remove from board AND delete file\n"
+                "No = remove from board, keep file\n"
+                "Cancel = do nothing",
+            )
+            if answer is None:  # Cancel
+                return
+            delete_file = answer
+        else:
+            if not messagebox.askyesno("Confirm", f"Remove '{filename}' from {cat_name}?"):
+                return
+            delete_file = False
+
         data = load_board(self.current_board_id)
         cat = find_category(data, cat_name)
         cat["clips"] = [c for c in cat["clips"] if c["file"] != filename]
         save_board(self.current_board_id, data)
+
+        if delete_file:
+            os.remove(audio_path)
+
         sync_clip_counts()
         self._refresh_clips()
         self._refresh_boards()
         self._refresh_categories()
-        self.set_status(f"Removed: {filename}")
+        msg = f"Removed: {filename}"
+        if delete_file:
+            msg += " (file deleted)"
+        self.set_status(msg)
 
     def _on_edit_label(self, clip, cat_name):
         new_label = simpledialog.askstring(
