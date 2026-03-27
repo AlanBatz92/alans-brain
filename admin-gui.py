@@ -721,12 +721,32 @@ class SoundboardPanel(tk.Frame):
             os.rename(src, dst)
 
         # Update all references in this board's JSON
+        new_label = label_from_filename(new_name)
         data = load_board(self.current_board_id)
         for cat in data.get("categories", []):
             for c in cat["clips"]:
                 if c["file"] == old_name:
                     c["file"] = new_name
+                    # Auto-update label if it still matches the old filename's label
+                    old_label = label_from_filename(old_name)
+                    if c["label"] == old_label:
+                        c["label"] = new_label
         save_board(self.current_board_id, data)
+
+        # Offer to edit the label if it wasn't auto-updated
+        if clip["label"] != label_from_filename(old_name):
+            if messagebox.askyesno(
+                "Update Label?",
+                f"Current label: \"{clip['label']}\"\n"
+                f"Suggested from new filename: \"{new_label}\"\n\n"
+                "Update the label to match?",
+            ):
+                data = load_board(self.current_board_id)
+                for cat in data.get("categories", []):
+                    for c in cat["clips"]:
+                        if c["file"] == new_name:
+                            c["label"] = new_label
+                save_board(self.current_board_id, data)
 
         self._refresh_clips()
         self.set_status(f"Renamed: {old_name} -> {new_name}")
