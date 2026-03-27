@@ -19,6 +19,15 @@ function SoundEngine() {
     self.gainNode = self.ctx.createGain();
     self.gainNode.gain.value = self.volume;
     self.gainNode.connect(self.ctx.destination);
+    // iOS Safari fix: playing a silent <audio> element within the user gesture
+    // promotes the audio session to "playback" category, so sound plays even
+    // when the ringer/silent switch is off (matches Android behavior).
+    try {
+      var silence = document.createElement('audio');
+      silence.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+      silence.setAttribute('playsinline', '');
+      silence.play().catch(function(){});
+    } catch(e) {}
   };
 
   // Load and decode an audio file, cache the buffer

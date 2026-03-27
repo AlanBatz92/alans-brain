@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
       html += '<span class="section-title" style="font-size:0.85rem">' + esc(cat.name) + '</span>' +
         '<div class="section-line" style="flex:1"></div>' +
       '</div>';
-      html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:8px">';
+      html += '<div class="sb-clip-grid">';
       cat.clips.forEach(function(clip) {
         var audioPath = 'audio/' + activeBoard + '/' + clip.file;
         html += '<button class="audio-btn" data-src="' + esc(audioPath) + '" title="' + esc(clip.label) + '">' +

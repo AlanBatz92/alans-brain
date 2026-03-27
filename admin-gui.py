@@ -377,6 +377,7 @@ class SoundboardPanel(tk.Frame):
                 self.clips_inner, text='No clips yet. Click "+ Add Sounds" to get started.',
                 font=("Segoe UI", 11), bg=BG, fg=FG_DIM, pady=30,
             ).pack()
+            self._render_icons_section()
             self._render_quotes_section()
             return
 
@@ -448,6 +449,7 @@ class SoundboardPanel(tk.Frame):
                 lambda e, _path=audio_path, _lbl=clip["label"]: self._on_play(_path, _lbl),
             )
 
+        self._render_icons_section()
         self._render_quotes_section()
 
     # ── Quotes / Subtitles ──────────────────────────────────────────
@@ -547,6 +549,121 @@ class SoundboardPanel(tk.Frame):
         save_board(self.current_board_id, data)
         self._refresh_clips()
         self.set_status(f"Removed subtitle: {removed[:40]}...")
+
+    # ── Category Icons ───────────────────────────────────────────────
+
+    def _render_icons_section(self):
+        """Render rotating image editor for the current category."""
+        if not self.current_board_id or not self.current_category:
+            return
+
+        data = load_board(self.current_board_id)
+        if not data:
+            return
+
+        icons_map = data.get("icons", {})
+        cat_name = self.current_category
+        raw = icons_map.get(cat_name, [])
+        cat_icons = [raw] if isinstance(raw, str) and raw else (raw if isinstance(raw, list) else [])
+
+        # Separator
+        tk.Frame(self.clips_inner, bg=BORDER, height=1).pack(fill="x", padx=4, pady=12)
+
+        header = tk.Frame(self.clips_inner, bg=BG)
+        header.pack(fill="x", padx=4, pady=(0, 6))
+
+        tk.Label(
+            header,
+            text=f"Rotating Images \u2014 {cat_name}  ({len(cat_icons)})",
+            font=("Segoe UI", 11, "bold"), bg=BG, fg=FG, anchor="w",
+        ).pack(side="left")
+        make_btn(header, "+ Add Image", self._on_add_icon, ACCENT, small=True)
+
+        if not cat_icons:
+            tk.Label(
+                self.clips_inner,
+                text="No images assigned. Add images to rotate in this category\u2019s header.",
+                font=("Segoe UI", 10), bg=BG, fg=FG_DIM, pady=4,
+            ).pack(padx=8, anchor="w")
+            default_raw = icons_map.get("default", [])
+            default_icons = [default_raw] if isinstance(default_raw, str) and default_raw else (default_raw if isinstance(default_raw, list) else [])
+            if default_icons:
+                tk.Label(
+                    self.clips_inner,
+                    text=f"(Falls back to board default: {len(default_icons)} image(s))",
+                    font=("Segoe UI", 9), bg=BG, fg=FG_DIM, pady=2,
+                ).pack(padx=8, anchor="w")
+            return
+
+        for i, icon_path in enumerate(cat_icons):
+            stripe_bg = BG_CARD if i % 2 == 0 else BG
+            row = tk.Frame(self.clips_inner, bg=stripe_bg, pady=4, padx=8)
+            row.pack(fill="x", padx=4, pady=1)
+
+            tk.Label(
+                row, text=os.path.basename(icon_path), font=("Consolas", 9),
+                bg=stripe_bg, fg=FG, anchor="w",
+            ).pack(side="left", fill="x", expand=True)
+
+            del_lbl = tk.Label(
+                row, text="x", font=("Segoe UI", 9, "bold"),
+                bg=stripe_bg, fg=RED, cursor="hand2", padx=6,
+            )
+            del_lbl.pack(side="right")
+            del_lbl.bind("<Button-1>", lambda e, _i=i: self._on_remove_icon(_i))
+
+    def _on_add_icon(self):
+        if not self.current_board_id or not self.current_category:
+            messagebox.showinfo("Info", "Select a board and category first.")
+            return
+        filepath = filedialog.askopenfilename(
+            title="Select image for category icon rotation",
+            initialdir=os.path.join(SCRIPT_DIR, "img", "Icons", "Soundboards"),
+            filetypes=[("Image files", "*.png *.jpg *.jpeg *.webp *.gif"), ("All files", "*.*")],
+        )
+        if not filepath:
+            return
+
+        try:
+            rel = os.path.relpath(filepath, SCRIPT_DIR).replace("\\", "/")
+        except ValueError:
+            rel = filepath.replace("\\", "/")
+
+        data = load_board(self.current_board_id)
+        if "icons" not in data:
+            data["icons"] = {}
+        raw = data["icons"].get(self.current_category, [])
+        existing = [raw] if isinstance(raw, str) and raw else (raw if isinstance(raw, list) else [])
+
+        if rel in existing:
+            self.set_status(f"Already assigned: {os.path.basename(rel)}")
+            return
+
+        existing.append(rel)
+        data["icons"][self.current_category] = existing[0] if len(existing) == 1 else existing
+        save_board(self.current_board_id, data)
+        self._refresh_clips()
+        self.set_status(f"Added icon: {os.path.basename(rel)}")
+
+    def _on_remove_icon(self, index):
+        data = load_board(self.current_board_id)
+        icons_map = data.get("icons", {})
+        raw = icons_map.get(self.current_category, [])
+        existing = [raw] if isinstance(raw, str) and raw else (raw if isinstance(raw, list) else [])
+
+        if index >= len(existing):
+            return
+        removed = existing.pop(index)
+
+        if not existing:
+            del icons_map[self.current_category]
+        else:
+            icons_map[self.current_category] = existing[0] if len(existing) == 1 else existing
+
+        data["icons"] = icons_map
+        save_board(self.current_board_id, data)
+        self._refresh_clips()
+        self.set_status(f"Removed icon: {os.path.basename(removed)}")
 
     # ── Selection ────────────────────────────────────────────────────
 

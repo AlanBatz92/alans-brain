@@ -1481,9 +1481,9 @@ nav {
   cursor: pointer;
   transition: all 0.15s;
   text-align: center;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 .audio-btn:hover {
   background: var(--surface-hover);
@@ -1540,6 +1540,19 @@ nav {
   object-fit: cover;
   object-position: top center;
   border-radius: 6px;
+}
+
+/* Soundboard clip grid */
+.sb-clip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+@media (max-width: 600px) {
+  .sb-clip-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* Soundboard rotating quote */
