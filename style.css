@@ -1396,12 +1396,14 @@ nav {
   gap: 8px;
   padding: 6px 14px 6px 8px !important;
 }
-/* Board selector character icons — tall enough to actually see the character */
+/* Board selector character icons — same crop logic as .sb-category-img so
+   all characters appear at a consistent head/upper-body size across boards */
 .sb-board-icon {
+  width: 44px;
   height: 44px;
-  width: auto;
-  object-fit: contain;
+  object-fit: cover;
   object-position: top center;
+  border-radius: 6px;
   flex-shrink: 0;
   display: block;
 }
