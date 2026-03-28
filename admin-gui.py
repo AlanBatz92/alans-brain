@@ -624,10 +624,17 @@ class SoundboardPanel(tk.Frame):
         if not filepath:
             return
 
+        # If the file is outside the project, copy it into the board's icons folder
         try:
             rel = os.path.relpath(filepath, SCRIPT_DIR).replace("\\", "/")
         except ValueError:
-            rel = filepath.replace("\\", "/")
+            rel = None
+        if rel is None or rel.startswith(".."):
+            board_icons_dir = os.path.join(ICONS_DIR, self.current_board_id.replace("-", "_").title())
+            os.makedirs(board_icons_dir, exist_ok=True)
+            dest = os.path.join(board_icons_dir, os.path.basename(filepath))
+            shutil.copy2(filepath, dest)
+            rel = os.path.relpath(dest, SCRIPT_DIR).replace("\\", "/")
 
         data = load_board(self.current_board_id)
         if "icons" not in data:
