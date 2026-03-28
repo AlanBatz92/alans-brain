@@ -183,7 +183,10 @@
       "Bash(git rm:*)",
       "Bash(python -c \":*)",
       "Bash(git check-ignore:*)",
-      "Bash(python -c \"import py_compile; py_compile.compile\\(''admin-gui.py'', doraise=True\\)\")"
+      "Bash(python -c \"import py_compile; py_compile.compile\\(''admin-gui.py'', doraise=True\\)\")",
+      "Bash(rm -f \"data/ufo-cases.json\" \"img/Icons/icons/Photo_Gallery/old-camera-.png\" \"img/Icons/icons/Photo_Gallery/old-camera-.webp\" \"img/Icons/icons/Photo_Gallery/old-camera.png\" \"img/Icons/icons/Photo_Gallery/old-camera.webp\" \"audio/halflife/misc_02.wav\" \"audio/halflife/misc_02.ogg\" \"audio/halflife/misc_03.wav\" \"audio/halflife/misc_03.ogg\" \"audio/halflife/misc_04.wav\" \"audio/halflife/misc_04.ogg\" \"audio/halflife/rise_shine.wav\" \"audio/halflife/rise_shine.ogg\")",
+      "Bash(rm -rf \"./C:Users505maDocumentsGitHubalans-brain\")",
+      "Bash(python -c \"import json; d=json.load\\(open\\(''data/soundboards/index.json''\\)\\); [print\\(b[''id''], b.get\\(''icons'', b.get\\(''icon''\\)\\)\\) for b in d]\")"
     ]
   }
 }

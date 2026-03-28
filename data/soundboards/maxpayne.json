@@ -1,7 +1,44 @@
 {
-  "quotes": [],
+  "quotes": [
+    "Wack the sucker!"
+  ],
   "icons": {
-    "default": "img/Icons/Soundboards/Max_Payne/Max_Payne_No_BG.png"
+    "default": "img/Icons/Soundboards/Max_Payne/Max_Payne_No_BG.png",
+    "Goons": [
+      "../../../Downloads/Goon_1_no_bg.png",
+      "../../../Downloads/villain_1.png",
+      "../../../Downloads/trenchcoat_villain_no_bg.png"
+    ]
   },
-  "categories": []
+  "categories": [
+    {
+      "name": "Goons",
+      "clips": [
+        {
+          "label": "Death 01",
+          "file": "death_01.wav"
+        },
+        {
+          "label": "Death 02",
+          "file": "death_02.wav"
+        },
+        {
+          "label": "Death 03",
+          "file": "death_03.wav"
+        },
+        {
+          "label": "Death 06",
+          "file": "death_06.wav"
+        },
+        {
+          "label": "Death 08",
+          "file": "death_08.wav"
+        },
+        {
+          "label": "Wack The Sucker",
+          "file": "wack_the_sucker.wav"
+        }
+      ]
+    }
+  ]
 }
