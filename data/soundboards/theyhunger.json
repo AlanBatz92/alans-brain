@@ -9,7 +9,8 @@
     "default": [
       "img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.webp",
       "img/Icons/Soundboards/They_Hunger/ChesterRockwood_No_BG.png"
-    ]
+    ],
+    "Dr. Franklin": "img/Icons/Soundboards/Theyhunger/Dr._Franklin-removebg-preview.png"
   },
   "categories": [
     {
@@ -34,6 +35,14 @@
         {
           "label": "Zombie Lady Moan",
           "file": "zombie_lady_moan.mp3"
+        },
+        {
+          "label": "Who Goes There",
+          "file": "Who_goes_there.wav"
+        },
+        {
+          "label": "Baby Flesh Creature",
+          "file": "baby_flesh_creature.mp3"
         }
       ]
     },
@@ -47,6 +56,27 @@
         {
           "label": "Cussfranklin",
           "file": "cussfranklin.mp3"
+        },
+        {
+          "label": "Sui",
+          "file": "suicide.wav"
+        },
+        {
+          "label": "Aint Got Time",
+          "file": "aint_got_time.mp3"
+        },
+        {
+          "label": "Im The Law",
+          "file": "im_the_law.mp3"
+        }
+      ]
+    },
+    {
+      "name": "Dr. Franklin",
+      "clips": [
+        {
+          "label": "I Understand It Now",
+          "file": "I_Understand_It_Now.mp3"
         }
       ]
     }

@@ -8,6 +8,10 @@
       "img/Icons/Soundboards/Maxpayne/Goon_1_no_bg.png",
       "img/Icons/Soundboards/Maxpayne/villain_1.png",
       "img/Icons/Soundboards/Maxpayne/trenchcoat_villain_no_bg.png"
+    ],
+    "Max": [
+      "img/Icons/Soundboards/Maxpayne/Max_Payne_1_no_bg.png",
+      "img/Icons/Soundboards/Maxpayne/Max_Payne_2_no_bg.png"
     ]
   },
   "categories": [
@@ -37,6 +41,15 @@
         {
           "label": "Wack The Sucker",
           "file": "wack_the_sucker.wav"
+        }
+      ]
+    },
+    {
+      "name": "Max",
+      "clips": [
+        {
+          "label": "Beretta Stirred Nervously",
+          "file": "Beretta_Stirred_Nervously.wav"
         }
       ]
     }

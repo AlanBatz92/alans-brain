@@ -5,7 +5,8 @@
     "Gordon Freeman in the flesh...",
     "Have you seen my coffee cup?",
     "Calhoun!",
-    "Do you smell something burning?"
+    "Do you smell something burning?",
+    "With your brains and my brawn, we'll make an excellent team."
   ],
   "icons": {
     "Scientists": [
@@ -82,6 +83,10 @@
         {
           "label": "What are you doing?",
           "file": "whatyoudoing.wav"
+        },
+        {
+          "label": "Brains Brawn",
+          "file": "brains_brawn.mp3"
         }
       ]
     },
@@ -107,6 +112,10 @@
         {
           "label": "Suit",
           "file": "suit.wav"
+        },
+        {
+          "label": "Recommend Employers",
+          "file": "recommend_employers.mp3"
         }
       ]
     }

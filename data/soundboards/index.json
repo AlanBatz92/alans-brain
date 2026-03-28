@@ -6,7 +6,7 @@
       "img/Icons/Soundboards/They_Hunger/They_Hunger_Boy_No_BG.webp",
       "img/Icons/Soundboards/They_Hunger/ChesterRockwood_No_BG.webp"
     ],
-    "clipCount": 7
+    "clipCount": 13
   },
   {
     "id": "halflife",
@@ -17,7 +17,7 @@
       "img/Icons/Soundboards/Half-Life/Scientist_3_No_BG.webp",
       "img/Icons/Soundboards/Half-Life/G-Man_No_BG.webp"
     ],
-    "clipCount": 20
+    "clipCount": 22
   },
   {
     "id": "maxpayne",
@@ -25,7 +25,7 @@
     "icons": [
       "img/Icons/Soundboards/Max_Payne/Max_Payne_No_BG.webp"
     ],
-    "clipCount": 6
+    "clipCount": 7
   },
   {
     "id": "quake2",
