@@ -14,7 +14,9 @@
       "img/Icons/Soundboards/Half-Life/Scientist_3_No_BG.png"
     ],
     "G-Man": [
-      "img/Icons/Soundboards/Half-Life/G-Man_No_BG.png"
+      "img/Icons/Soundboards/Half-Life/G-Man_No_BG.png",
+      "img/Icons/Soundboards/Halflife/G-man_1_no_bg.png",
+      "img/Icons/Soundboards/Halflife/G-man_2_no_bg.png"
     ]
   },
   "categories": [

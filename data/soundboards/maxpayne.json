@@ -3,7 +3,12 @@
     "Wack the sucker!"
   ],
   "icons": {
-    "default": "img/Icons/Soundboards/Max_Payne/Max_Payne_No_BG.png"
+    "default": "img/Icons/Soundboards/Max_Payne/Max_Payne_No_BG.png",
+    "Goons": [
+      "img/Icons/Soundboards/Maxpayne/Goon_1_no_bg.png",
+      "img/Icons/Soundboards/Maxpayne/villain_1.png",
+      "img/Icons/Soundboards/Maxpayne/trenchcoat_villain_no_bg.png"
+    ]
   },
   "categories": [
     {
