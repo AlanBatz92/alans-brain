@@ -70,7 +70,7 @@ The write PIN is **never** in any client-side file. It exists only as a JavaScri
 - `closeDrawer()` — slides drawer away
 - `submitDrawer()` — validates inputs, calls `markTaskDone()`, handles all error states
 - `markTaskDone(taskName, category, person, writeKey)` — POSTs to Apps Script
-- `getPersonList()` — dynamic person list from API `people` array, falls back to `weeklyStats` keys, then hardcoded list
+- `getPersonList()` — dynamic person list from API `people` array, falls back to `weeklyStats` keys, then hardcoded list (`['Alan', 'Takyra', 'Cassie', 'Zion']`)
 
 **Modified:**
 - `renderTasks()` — task cards now get `data-task`, `data-category` attributes and `tappable` class
@@ -100,6 +100,7 @@ Added inside `#protectedContent`, between `#tWeekly` and the footer:
 - Success flash: `@keyframes taskSuccess` — green inset box-shadow pulse on the task card
 - `max-width: 520px` on drawer matches page content width
 - Safe area padding for notched phones
+- Scroll lock: `body.overflow = 'hidden'` when drawer is open, `touch-action: none` on backdrop, `overscroll-behavior: contain` on drawer — prevents background scroll on both desktop and mobile
 
 ### `auth.js` — No Changes
 

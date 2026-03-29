@@ -19,7 +19,7 @@ var EXTRA_COLORS = ['#fbbf24', '#f43f5e', '#8b5cf6', '#06b6d4', '#84cc16'];
 var PERSON_COLORS = ['#2dd4bf', '#38bdf8', '#a78bfa', '#f472b6', '#fbbf24'];
 
 // Fallback person list if the API hasn't returned any yet
-var FALLBACK_PEOPLE = ['Alan', 'Takyra'];
+var FALLBACK_PEOPLE = ['Alan', 'Takyra', 'Cassie', 'Zion'];
 
 var currentFilter = 'all';
 var cachedData = null;
@@ -286,7 +286,8 @@ function openDrawer(taskName, category, cardEl) {
   btn.disabled = false;
   btn.textContent = 'Done ✓';
 
-  // Open
+  // Open — lock page scroll
+  document.body.style.overflow = 'hidden';
   document.getElementById('drawerBackdrop').classList.add('open');
   document.getElementById('drawer').classList.add('open');
 
@@ -297,6 +298,7 @@ function openDrawer(taskName, category, cardEl) {
 }
 
 function closeDrawer() {
+  document.body.style.overflow = '';
   document.getElementById('drawerBackdrop').classList.remove('open');
   document.getElementById('drawer').classList.remove('open');
   _activeCard = null;

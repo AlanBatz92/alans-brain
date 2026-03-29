@@ -1213,6 +1213,7 @@ nav {
 .drawer-backdrop.open {
   opacity: 1;
   pointer-events: auto;
+  touch-action: none;
 }
 .drawer {
   position: fixed;
@@ -1228,6 +1229,7 @@ nav {
   margin: 0 auto;
   max-height: 85vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .drawer.open {
   transform: translateY(0);
