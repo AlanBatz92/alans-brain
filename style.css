@@ -1198,6 +1198,163 @@ nav {
   display: none;
 }
 
+/* ── Completion Drawer ── */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 26, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 900;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.drawer-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.drawer {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 24px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  z-index: 901;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  max-width: 520px;
+  margin: 0 auto;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.drawer.open {
+  transform: translateY(0);
+}
+.drawer-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.drawer-task-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  line-height: 1.35;
+}
+.drawer-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.drawer-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.drawer-person {
+  padding: 10px 18px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-appearance: none;
+}
+.drawer-person.selected {
+  background: var(--teal);
+  color: var(--bg-deep);
+  border-color: var(--teal);
+}
+.drawer-person:active {
+  transform: scale(0.96);
+}
+.drawer-pin-wrap {
+  margin-bottom: 20px;
+}
+.drawer-pin {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.drawer-pin:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px var(--teal-glow);
+}
+.drawer-pin.shake {
+  animation: inputShake 0.5s ease;
+  border-color: var(--red);
+  box-shadow: 0 0 0 4px var(--red-bg);
+}
+.drawer-done-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--blue) 100%);
+  border: none;
+  border-radius: 14px;
+  color: var(--bg-deep);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+}
+.drawer-done-btn:hover {
+  box-shadow: 0 4px 20px var(--teal-glow);
+}
+.drawer-done-btn:active {
+  transform: scale(0.97);
+}
+.drawer-done-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.drawer-error {
+  margin-top: 14px;
+  font-size: 0.82rem;
+  color: var(--red);
+  font-weight: 700;
+  text-align: center;
+  min-height: 1.2em;
+}
+
+/* Task card tap affordance */
+.t-card.tappable {
+  cursor: pointer;
+}
+
+/* Success flash on task card */
+@keyframes taskSuccess {
+  0% { box-shadow: inset 0 0 0 0 var(--green-bg); }
+  30% { box-shadow: inset 0 0 0 100px var(--green-bg); border-color: var(--green-border); }
+  100% { box-shadow: inset 0 0 0 0 transparent; }
+}
+.t-card.success-flash {
+  animation: taskSuccess 1.2s ease forwards;
+}
+
 /* ═══════════════════════════════════
    SHARED COMPONENTS — New Pages
    ═══════════════════════════════════ */

@@ -18,8 +18,15 @@ var CATEGORY_COLORS = {
 var EXTRA_COLORS = ['#fbbf24', '#f43f5e', '#8b5cf6', '#06b6d4', '#84cc16'];
 var PERSON_COLORS = ['#2dd4bf', '#38bdf8', '#a78bfa', '#f472b6', '#fbbf24'];
 
+// Fallback person list if the API hasn't returned any yet
+var FALLBACK_PEOPLE = ['Alan', 'Takyra'];
+
 var currentFilter = 'all';
 var cachedData = null;
+
+// Write-back session state
+var sessionWriteKey = null;
+var lastPerson = null;
 
 function initTaskTracker() {
   // Filter clicks
@@ -32,11 +39,40 @@ function initTaskTracker() {
     if (cachedData) renderTasks(cachedData);
   });
 
-  // Category collapse
+  // Category collapse + task card tap (event delegation on #tList)
   document.getElementById('tList').addEventListener('click', function(e) {
+    // Category collapse
     var h = e.target.closest('.t-cat-header');
-    if (!h) return;
-    h.closest('.t-category').classList.toggle('collapsed');
+    if (h) {
+      h.closest('.t-category').classList.toggle('collapsed');
+      return;
+    }
+    // Task card tap — open drawer
+    var card = e.target.closest('.t-card');
+    if (card && card.dataset.task) {
+      openDrawer(card.dataset.task, card.dataset.category, card);
+    }
+  });
+
+  // Drawer: backdrop close
+  document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
+
+  // Drawer: person picker
+  document.getElementById('drawerPeople').addEventListener('click', function(e) {
+    var chip = e.target.closest('.drawer-person');
+    if (!chip) return;
+    document.querySelectorAll('.drawer-person').forEach(function(c) { c.classList.remove('selected'); });
+    chip.classList.add('selected');
+  });
+
+  // Drawer: done button
+  document.getElementById('drawerDoneBtn').addEventListener('click', submitDrawer);
+
+  // Drawer: Enter key on PIN field
+  document.getElementById('drawerPin').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') submitDrawer();
+    // Clear error when typing
+    document.getElementById('drawerError').textContent = '';
   });
 
   // Initial load + auto-refresh
@@ -155,8 +191,10 @@ function renderTasks(data) {
     var container = sec.querySelector('.t-cat-tasks');
     ct.forEach(function(t) {
       var card = document.createElement('div');
-      card.className = 't-card s-'+t.status+' anim';
+      card.className = 't-card s-'+t.status+' tappable anim';
       card.style.animationDelay = delay + 'ms';
+      card.setAttribute('data-task', t.task);
+      card.setAttribute('data-category', t.category);
       delay += 25;
 
       var bc = 'b-'+t.status;
@@ -201,6 +239,171 @@ function renderTasks(data) {
       '</div>';
   });
 }
+
+// ── Drawer Logic ──
+
+var _activeCard = null;
+
+function getPersonList() {
+  // Use API-provided people list if available, fall back to weeklyStats keys, then hardcoded
+  if (cachedData && cachedData.people && cachedData.people.length > 0) {
+    return cachedData.people;
+  }
+  if (cachedData && cachedData.weeklyStats) {
+    var fromStats = Object.keys(cachedData.weeklyStats).filter(function(n) { return n !== 'Unknown'; });
+    if (fromStats.length > 0) return fromStats;
+  }
+  return FALLBACK_PEOPLE;
+}
+
+function openDrawer(taskName, category, cardEl) {
+  _activeCard = cardEl;
+  document.getElementById('drawerTaskName').textContent = taskName;
+  document.getElementById('drawer').setAttribute('data-task', taskName);
+  document.getElementById('drawer').setAttribute('data-category', category);
+  document.getElementById('drawerError').textContent = '';
+
+  // Person picker
+  var people = getPersonList();
+  var peopleHtml = '';
+  people.forEach(function(name) {
+    var sel = (name === lastPerson) ? ' selected' : '';
+    peopleHtml += '<button class="drawer-person' + sel + '" data-person="' + esc(name) + '">' + esc(name) + '</button>';
+  });
+  document.getElementById('drawerPeople').innerHTML = peopleHtml;
+
+  // PIN field: hide if already stored this session
+  var pinWrap = document.getElementById('drawerPinWrap');
+  if (sessionWriteKey) {
+    pinWrap.style.display = 'none';
+  } else {
+    pinWrap.style.display = '';
+    document.getElementById('drawerPin').value = '';
+  }
+
+  // Reset button
+  var btn = document.getElementById('drawerDoneBtn');
+  btn.disabled = false;
+  btn.textContent = 'Done ✓';
+
+  // Open
+  document.getElementById('drawerBackdrop').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+
+  // Focus PIN if needed, otherwise leave it
+  if (!sessionWriteKey) {
+    setTimeout(function() { document.getElementById('drawerPin').focus(); }, 350);
+  }
+}
+
+function closeDrawer() {
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  _activeCard = null;
+}
+
+function submitDrawer() {
+  var btn = document.getElementById('drawerDoneBtn');
+  var errorEl = document.getElementById('drawerError');
+
+  // Get selected person
+  var selectedChip = document.querySelector('.drawer-person.selected');
+  if (!selectedChip) {
+    errorEl.textContent = 'Pick a person first';
+    return;
+  }
+  var person = selectedChip.getAttribute('data-person');
+
+  // Get PIN
+  var writeKey = sessionWriteKey;
+  if (!writeKey) {
+    writeKey = document.getElementById('drawerPin').value.trim();
+    if (!writeKey) {
+      errorEl.textContent = 'Enter the write PIN';
+      document.getElementById('drawerPin').focus();
+      return;
+    }
+  }
+
+  var taskName = document.getElementById('drawer').getAttribute('data-task');
+  var category = document.getElementById('drawer').getAttribute('data-category');
+
+  // Disable button to prevent double-tap
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  errorEl.textContent = '';
+
+  markTaskDone(taskName, category, person, writeKey)
+    .then(function(result) {
+      if (result.error === 'wrong-pin') {
+        // Clear stored key if it was from session (it's now invalid)
+        sessionWriteKey = null;
+        document.getElementById('drawerPinWrap').style.display = '';
+        document.getElementById('drawerPin').value = '';
+        var pinInput = document.getElementById('drawerPin');
+        pinInput.classList.add('shake');
+        setTimeout(function() { pinInput.classList.remove('shake'); }, 600);
+        errorEl.textContent = 'Wrong PIN';
+        btn.disabled = false;
+        btn.textContent = 'Done ✓';
+        pinInput.focus();
+        return;
+      }
+      if (result.error === 'task-not-found') {
+        errorEl.textContent = 'Task not found in sheet — was it renamed?';
+        btn.disabled = false;
+        btn.textContent = 'Done ✓';
+        return;
+      }
+      if (result.error) {
+        errorEl.textContent = 'Error: ' + result.error;
+        btn.disabled = false;
+        btn.textContent = 'Done ✓';
+        return;
+      }
+
+      // Success
+      sessionWriteKey = writeKey;
+      lastPerson = person;
+      closeDrawer();
+
+      // Flash the card green
+      if (_activeCard) {
+        _activeCard.classList.add('success-flash');
+        setTimeout(function() {
+          if (_activeCard) _activeCard.classList.remove('success-flash');
+        }, 1200);
+      }
+
+      // Refresh data
+      loadTasks();
+    })
+    .catch(function() {
+      errorEl.textContent = "Couldn't reach the server";
+      btn.disabled = false;
+      btn.textContent = 'Done ✓';
+    });
+}
+
+function markTaskDone(taskName, category, person, writeKey) {
+  var payload = {
+    action: 'markDone',
+    task: taskName,
+    category: category,
+    person: person,
+    writeKey: writeKey,
+    key: API_KEY
+  };
+
+  return fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+    redirect: 'follow'
+  }).then(function(r) { return r.json(); });
+}
+
+// ── Helpers ──
 
 function stat(n,l,c) {
   return '<div class="t-stat"><div class="t-stat-num" style="color:'+c+'">'+n+'</div><div class="t-stat-label">'+l+'</div></div>';
