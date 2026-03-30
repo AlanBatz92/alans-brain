@@ -245,15 +245,26 @@ function renderTasks(data) {
 var _activeCard = null;
 
 function getPersonList() {
-  // Use API-provided people list if available, fall back to weeklyStats keys, then hardcoded
-  if (cachedData && cachedData.people && cachedData.people.length > 0) {
-    return cachedData.people;
+  // Merge API people, weeklyStats names, and fallback list — deduplicated, order preserved
+  var seen = {};
+  var result = [];
+  function add(name) {
+    if (name && name !== 'Unknown' && !seen[name]) {
+      seen[name] = true;
+      result.push(name);
+    }
   }
+  // API-provided people first
+  if (cachedData && cachedData.people) {
+    cachedData.people.forEach(add);
+  }
+  // Then weekly stats names
   if (cachedData && cachedData.weeklyStats) {
-    var fromStats = Object.keys(cachedData.weeklyStats).filter(function(n) { return n !== 'Unknown'; });
-    if (fromStats.length > 0) return fromStats;
+    Object.keys(cachedData.weeklyStats).forEach(add);
   }
-  return FALLBACK_PEOPLE;
+  // Always include the full household
+  FALLBACK_PEOPLE.forEach(add);
+  return result;
 }
 
 function openDrawer(taskName, category, cardEl) {
