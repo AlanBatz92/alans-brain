@@ -322,7 +322,8 @@ document.addEventListener('DOMContentLoaded', function() {
       html += '<div class="sb-clip-grid">';
       cat.clips.forEach(function(clip) {
         var audioPath = 'audio/' + activeBoard + '/' + clip.file;
-        html += '<button class="audio-btn" data-src="' + esc(audioPath) + '" title="' + esc(clip.label) + '">' +
+        var iconAttr = clip.icon ? ' data-clip-icon="' + esc(clip.icon) + '"' : '';
+        html += '<button class="audio-btn" data-src="' + esc(audioPath) + '"' + iconAttr + ' title="' + esc(clip.label) + '">' +
           '<span class="clip-progress"></span>' + esc(clip.label) + '</button>';
       });
       html += '</div>';
@@ -366,6 +367,21 @@ document.addEventListener('DOMContentLoaded', function() {
     var btn = e.target.closest('.audio-btn');
     if (!btn) return;
     var src = btn.dataset.src;
+
+    // If clip has a specific icon, swap the category header image
+    var clipIcon = btn.dataset.clipIcon;
+    if (clipIcon) {
+      var catGrid = btn.closest('.sb-clip-grid');
+      if (catGrid) {
+        var catHeader = catGrid.previousElementSibling;
+        if (catHeader && catHeader.classList.contains('sb-category-header')) {
+          var headerImg = catHeader.querySelector('.sb-category-img');
+          if (headerImg) {
+            headerImg.src = clipIcon;
+          }
+        }
+      }
+    }
 
     // Toggle off if already playing
     if (engine.isPlaying(src)) {

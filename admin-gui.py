@@ -418,6 +418,17 @@ class SoundboardPanel(tk.Frame):
             else:
                 tk.Label(row, text="MISSING", font=("Segoe UI", 9, "bold"), bg=stripe_bg, fg=RED, width=8, anchor="w").pack(side="left")
 
+            # Clip icon indicator
+            if clip.get("icon"):
+                icon_indicator = tk.Label(
+                    row, text="\U0001f5bc", font=("Segoe UI", 9),
+                    bg=stripe_bg, fg=ACCENT, padx=2,
+                )
+                icon_indicator.pack(side="left")
+                _tip = os.path.basename(clip["icon"])
+                icon_indicator.bind("<Enter>", lambda e, _t=_tip, _w=icon_indicator: _w.configure(text=f"\U0001f5bc {_t}"))
+                icon_indicator.bind("<Leave>", lambda e, _w=icon_indicator: _w.configure(text="\U0001f5bc"))
+
             # Action buttons (right side, right-to-left)
             del_btn = tk.Label(
                 row, text="Remove", font=("Segoe UI", 9),
@@ -438,6 +449,28 @@ class SoundboardPanel(tk.Frame):
                 "<Button-1>",
                 lambda e, _c=clip, _cat=cat["name"]: self._on_rename_file(_c, _cat),
             )
+
+            # Clip icon button
+            if clip.get("icon"):
+                clear_icon_btn = tk.Label(
+                    row, text="Clear Icon", font=("Segoe UI", 9),
+                    bg=stripe_bg, fg=FG_DIM, cursor="hand2", padx=4,
+                )
+                clear_icon_btn.pack(side="right")
+                clear_icon_btn.bind(
+                    "<Button-1>",
+                    lambda e, _c=clip, _cat=cat["name"]: self._on_clear_clip_icon(_c, _cat),
+                )
+            else:
+                set_icon_btn = tk.Label(
+                    row, text="Set Icon", font=("Segoe UI", 9),
+                    bg=stripe_bg, fg=FG_DIM, cursor="hand2", padx=4,
+                )
+                set_icon_btn.pack(side="right")
+                set_icon_btn.bind(
+                    "<Button-1>",
+                    lambda e, _c=clip, _cat=cat["name"]: self._on_set_clip_icon(_c, _cat),
+                )
 
             play_btn = tk.Label(
                 row, text="\u25b6", font=("Segoe UI", 10),
@@ -907,6 +940,50 @@ class SoundboardPanel(tk.Frame):
 
         self._refresh_clips()
         self.set_status(f"Renamed: {old_name} -> {new_name}")
+
+    def _on_set_clip_icon(self, clip, cat_name):
+        """Assign an icon image to a specific clip."""
+        filepath = filedialog.askopenfilename(
+            title=f"Select icon for clip: {clip['label']}",
+            initialdir=os.path.join(SCRIPT_DIR, "img", "Icons", "Soundboards"),
+            filetypes=[("Image files", "*.png *.jpg *.jpeg *.webp *.gif"), ("All files", "*.*")],
+        )
+        if not filepath:
+            return
+
+        # If the file is outside the project, copy it into the board's icons folder
+        try:
+            rel = os.path.relpath(filepath, SCRIPT_DIR).replace("\\", "/")
+        except ValueError:
+            rel = None
+        if rel is None or rel.startswith(".."):
+            board_icons_dir = os.path.join(ICONS_DIR, self.current_board_id.replace("-", "_").title())
+            os.makedirs(board_icons_dir, exist_ok=True)
+            dest = os.path.join(board_icons_dir, os.path.basename(filepath))
+            shutil.copy2(filepath, dest)
+            rel = os.path.relpath(dest, SCRIPT_DIR).replace("\\", "/")
+
+        data = load_board(self.current_board_id)
+        cat = find_category(data, cat_name)
+        for c in cat["clips"]:
+            if c["file"] == clip["file"]:
+                c["icon"] = rel
+                break
+        save_board(self.current_board_id, data)
+        self._refresh_clips()
+        self.set_status(f"Set icon for '{clip['label']}': {os.path.basename(rel)}")
+
+    def _on_clear_clip_icon(self, clip, cat_name):
+        """Remove the icon from a specific clip."""
+        data = load_board(self.current_board_id)
+        cat = find_category(data, cat_name)
+        for c in cat["clips"]:
+            if c["file"] == clip["file"]:
+                c.pop("icon", None)
+                break
+        save_board(self.current_board_id, data)
+        self._refresh_clips()
+        self.set_status(f"Cleared icon for '{clip['label']}'")
 
     def _on_sync(self):
         sync_clip_counts()
