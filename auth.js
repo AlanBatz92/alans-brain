@@ -65,6 +65,28 @@ function initAuthGate(gateId, protectedId, onUnlock) {
     return;
   }
 
+  // Check for passphrase in URL parameter (?p=yourpassphrase)
+  var urlParams = new URLSearchParams(window.location.search);
+  var urlPass = urlParams.get('p');
+  if (urlPass) {
+    // Clean the passphrase out of the address bar immediately
+    urlParams.delete('p');
+    var cleanUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '') + window.location.hash;
+    history.replaceState(null, '', cleanUrl);
+
+    // Hash and verify
+    hashPassphrase(urlPass).then(function(hash) {
+      if (hash === PASSPHRASE_HASH) {
+        sessionStorage.setItem(AUTH_SESSION_KEY, PASSPHRASE_HASH);
+        if (gate) gate.remove();
+        if (protectedContent) protectedContent.style.display = '';
+        if (onUnlock) onUnlock();
+      }
+      // If wrong, just show the normal gate (don't reveal the error — they might have a typo in the URL)
+    });
+    return;
+  }
+
   // Show gate, hide protected content
   if (protectedContent) protectedContent.style.display = 'none';
 
