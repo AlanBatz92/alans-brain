@@ -65,6 +65,17 @@ function initTaskTracker() {
     chip.classList.add('selected');
   });
 
+  // Drawer: when toggle
+  document.querySelector('.drawer-when-options').addEventListener('click', function(e) {
+    var opt = e.target.closest('.drawer-when-opt');
+    if (!opt) return;
+    var when = opt.getAttribute('data-when');
+    document.querySelectorAll('.drawer-when-opt').forEach(function(b) {
+      b.classList.toggle('selected', b.getAttribute('data-when') === when);
+    });
+    document.getElementById('drawerDateRow').classList.toggle('visible', when === 'earlier');
+  });
+
   // Drawer: done button
   document.getElementById('drawerDoneBtn').addEventListener('click', submitDrawer);
 
@@ -283,6 +294,16 @@ function openDrawer(taskName, category, cardEl) {
   });
   document.getElementById('drawerPeople').innerHTML = peopleHtml;
 
+  // Reset when-toggle
+  document.querySelectorAll('.drawer-when-opt').forEach(function(b) {
+    b.classList.toggle('selected', b.getAttribute('data-when') === 'now');
+  });
+  document.getElementById('drawerDateRow').classList.remove('visible');
+  var yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  document.getElementById('drawerDate').value = yesterday.toISOString().split('T')[0];
+  document.getElementById('drawerTime').value = '12:00';
+
   // PIN field: hide if already stored this session
   var pinWrap = document.getElementById('drawerPinWrap');
   if (sessionWriteKey) {
@@ -346,7 +367,16 @@ function submitDrawer() {
   btn.textContent = 'Saving...';
   errorEl.textContent = '';
 
-  markTaskDone(taskName, category, person, writeKey)
+  // Check for backdated completion
+  var completedAt = null;
+  var whenSelected = document.querySelector('.drawer-when-opt.selected');
+  if (whenSelected && whenSelected.getAttribute('data-when') === 'earlier') {
+    var d = document.getElementById('drawerDate').value;
+    var t = document.getElementById('drawerTime').value || '12:00';
+    if (d) completedAt = new Date(d + 'T' + t).toISOString();
+  }
+
+  markTaskDone(taskName, category, person, writeKey, completedAt)
     .then(function(result) {
       if (result.error === 'wrong-pin') {
         // Clear stored key if it was from session (it's now invalid)
@@ -398,7 +428,7 @@ function submitDrawer() {
     });
 }
 
-function markTaskDone(taskName, category, person, writeKey) {
+function markTaskDone(taskName, category, person, writeKey, completedAt) {
   var payload = {
     action: 'markDone',
     task: taskName,
@@ -407,6 +437,7 @@ function markTaskDone(taskName, category, person, writeKey) {
     writeKey: writeKey,
     key: API_KEY
   };
+  if (completedAt) payload.completedAt = completedAt;
 
   return fetch(API_URL, {
     method: 'POST',

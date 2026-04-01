@@ -1282,6 +1282,57 @@ nav {
 .drawer-person:active {
   transform: scale(0.96);
 }
+.drawer-when {
+  margin-bottom: 20px;
+}
+.drawer-when-options {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.drawer-when-opt {
+  padding: 10px 18px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.drawer-when-opt.selected {
+  background: var(--text);
+  color: var(--bg-deep);
+  border-color: var(--text);
+}
+.drawer-when-opt:active {
+  transform: scale(0.96);
+}
+.drawer-date-row {
+  display: none;
+  gap: 8px;
+}
+.drawer-date-row.visible {
+  display: flex;
+}
+.drawer-date-input {
+  flex: 1;
+  padding: 12px 14px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  color-scheme: dark;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.drawer-date-input:focus {
+  border-color: var(--teal);
+}
 .drawer-pin-wrap {
   margin-bottom: 20px;
 }
