@@ -22,6 +22,9 @@ var PERSON_COLORS = ['#2dd4bf', '#38bdf8', '#a78bfa', '#f472b6', '#fbbf24'];
 var FALLBACK_PEOPLE = ['Alan', 'Takyra', 'Cassie', 'Zion'];
 
 var currentFilter = 'all';
+var currentArea = 'all';
+var fadeEnabled = localStorage.getItem('t_fade') === 'true';
+var fadeReverse = localStorage.getItem('t_fade_reverse') === 'true';
 var cachedData = null;
 
 // Write-back session state
@@ -29,13 +32,43 @@ var sessionWriteKey = null;
 var lastPerson = null;
 
 function initTaskTracker() {
-  // Filter clicks
+  // Status filter clicks
   document.getElementById('tFilters').addEventListener('click', function(e) {
     var btn = e.target.closest('.t-filter');
     if (!btn) return;
-    document.querySelectorAll('.t-filter').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('#tFilters .t-filter').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     currentFilter = btn.getAttribute('data-filter');
+    if (cachedData) renderTasks(cachedData);
+  });
+
+  // Area filter clicks
+  document.getElementById('tAreaFilters').addEventListener('click', function(e) {
+    var btn = e.target.closest('.t-area-filter');
+    if (!btn) return;
+    document.querySelectorAll('.t-area-filter').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentArea = btn.getAttribute('data-area');
+    if (cachedData) renderTasks(cachedData);
+  });
+
+  // Fade toggle
+  var fadeToggle = document.getElementById('tFadeToggle');
+  var reverseToggle = document.getElementById('tReverseToggle');
+  var reverseWrap = document.getElementById('tReverseWrap');
+  fadeToggle.checked = fadeEnabled;
+  reverseToggle.checked = fadeReverse;
+  reverseWrap.style.display = fadeEnabled ? '' : 'none';
+
+  fadeToggle.addEventListener('change', function() {
+    fadeEnabled = this.checked;
+    localStorage.setItem('t_fade', fadeEnabled);
+    reverseWrap.style.display = fadeEnabled ? '' : 'none';
+    if (cachedData) renderTasks(cachedData);
+  });
+  reverseToggle.addEventListener('change', function() {
+    fadeReverse = this.checked;
+    localStorage.setItem('t_fade_reverse', fadeReverse);
     if (cachedData) renderTasks(cachedData);
   });
 
@@ -160,10 +193,24 @@ function renderTasks(data) {
     stat(okC,'On Track','var(--green)') +
     stat(nC,'Not Done','var(--gray)');
 
-  // Filter
+  // Build area filter pills (from all tasks, not filtered)
+  var allCats = {};
+  tasks.forEach(function(t) { allCats[t.category] = true; });
+  var areaBar = document.getElementById('tAreaFilters');
+  var areaHtml = '<button class="t-filter t-area-filter' + (currentArea === 'all' ? ' active' : '') + '" data-area="all">All Areas</button>';
+  Object.keys(allCats).sort().forEach(function(cat) {
+    areaHtml += '<button class="t-filter t-area-filter' + (currentArea === cat ? ' active' : '') + '" data-area="' + esc(cat) + '">' + esc(cat) + '</button>';
+  });
+  areaBar.innerHTML = areaHtml;
+
+  // Filter by status
   var filtered = tasks;
   if (currentFilter !== 'all') {
     filtered = tasks.filter(function(t){return t.status === currentFilter});
+  }
+  // Filter by area
+  if (currentArea !== 'all') {
+    filtered = filtered.filter(function(t){return t.category === currentArea});
   }
 
   // Group
@@ -211,15 +258,33 @@ function renderTasks(data) {
       var bc = 'b-'+t.status;
       var bt = '';
       if (t.status==='overdue') bt = t.daysOverdue+'d over';
-      else if (t.status==='due-soon') bt = t.hoursLeft+'h left';
+      else if (t.status==='due-soon') bt = Math.max(1, Math.round(t.hoursLeft/24))+'d left';
       else if (t.status==='ok') bt = '✓ '+Math.round(t.hoursLeft/24)+'d';
       else bt = 'Not done';
+
+      // Progress fade: compute fill percentage (0% = just done, 100% = due now)
+      var fadeStyle = '';
+      if (fadeEnabled && t.status !== 'never') {
+        var pct = 0;
+        if (t.status === 'overdue') {
+          pct = 100;
+        } else if (t.hoursLeft != null && t.cycleDays) {
+          var totalH = t.cycleDays * 24;
+          var elapsed = totalH - t.hoursLeft;
+          pct = Math.max(0, Math.min(100, Math.round((elapsed / totalH) * 100)));
+        }
+        if (fadeReverse) pct = 100 - pct;
+        var fadeHex = t.status === 'overdue' ? '#fb718522' :
+                      t.status === 'due-soon' ? '#fbbf2422' : '#34d39922';
+        fadeStyle = 'background:linear-gradient(to right, ' + fadeHex + ' 0%, ' + fadeHex + ' ' + pct + '%, transparent ' + pct + '%, transparent 100%);';
+      }
 
       var mp = ['Every '+t.cycleDays+'d'];
       if (t.lastPerson && t.status!=='never') mp.push('✓ '+esc(t.lastPerson));
       if (t.lastDone) mp.push(timeAgo(new Date(t.lastDone)));
 
       card.innerHTML =
+        (fadeStyle ? '<div class="t-card-fade" style="' + fadeStyle + '"></div>' : '') +
         '<div class="t-card-top">' +
           '<div class="t-card-name">'+esc(t.task)+'</div>' +
           '<div class="t-badge '+bc+'">'+bt+'</div>' +

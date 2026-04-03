@@ -997,6 +997,59 @@ nav {
 }
 .t-filter:active { transform: scale(0.96); }
 
+/* View options (fade toggle row) */
+.t-view-options {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.t-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.t-toggle-label input { display: none; }
+.t-toggle-switch {
+  width: 34px;
+  height: 20px;
+  background: var(--border);
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.t-toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 14px; height: 14px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+.t-toggle-label input:checked + .t-toggle-switch {
+  background: var(--teal);
+}
+.t-toggle-label input:checked + .t-toggle-switch::after {
+  transform: translateX(14px);
+  background: var(--bg-deep);
+}
+
+/* Task card progress fade overlay */
+.t-card-fade {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  transition: background 0.3s;
+}
+
 /* Category */
 .t-category {
   margin-bottom: 18px;

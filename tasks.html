@@ -124,6 +124,23 @@
         <button class="t-filter" data-filter="never">Not Started</button>
       </div>
 
+      <div class="t-filters" id="tAreaFilters">
+        <button class="t-filter t-area-filter active" data-area="all">All Areas</button>
+      </div>
+
+      <div class="t-view-options" id="tViewOptions">
+        <label class="t-toggle-label">
+          <input type="checkbox" id="tFadeToggle">
+          <span class="t-toggle-switch"></span>
+          <span>Progress fade</span>
+        </label>
+        <label class="t-toggle-label t-reverse-label" id="tReverseWrap" style="display:none">
+          <input type="checkbox" id="tReverseToggle">
+          <span class="t-toggle-switch"></span>
+          <span>Reverse (drain)</span>
+        </label>
+      </div>
+
       <!-- Task data loads here -->
       <div id="tLoading" class="t-loading">
         <div class="t-loading-dots">
