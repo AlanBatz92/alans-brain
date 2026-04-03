@@ -162,6 +162,12 @@
         <div class="t-weekly-bars" id="tWeeklyBars"></div>
       </div>
 
+      <!-- ══════ SCROLL NAV ══════ -->
+      <div class="scroll-nav" id="scrollNav">
+        <button class="scroll-nav-btn" id="scrollTopBtn" title="Jump to top">↑</button>
+        <button class="scroll-nav-btn" id="scrollBottomBtn" title="Jump to bottom">↓</button>
+      </div>
+
       <!-- ══════ FOOTER ══════ -->
       <footer class="site-footer">
         <div class="footer-stamp">Handcrafted by Alan <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/UFO/ufo.png" alt=""></div>
@@ -219,6 +225,24 @@
     // Initialize the gate — when unlocked, start the task tracker
     initAuthGate('authGate', 'protectedContent', function() {
       initTaskTracker();
+
+      /* Scroll nav */
+      (function() {
+        var nav = document.getElementById('scrollNav');
+        var topBtn = document.getElementById('scrollTopBtn');
+        var botBtn = document.getElementById('scrollBottomBtn');
+
+        window.addEventListener('scroll', function() {
+          nav.classList.toggle('visible', window.scrollY > 200);
+        });
+
+        topBtn.addEventListener('click', function() {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        botBtn.addEventListener('click', function() {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        });
+      })();
 
       /* Explore dropdown toggle */
       var dropdown = document.querySelector('.nav-dropdown');
