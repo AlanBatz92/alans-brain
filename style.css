@@ -997,12 +997,46 @@ nav {
 }
 .t-filter:active { transform: scale(0.96); }
 
-/* View options (fade toggle row) */
+/* View options (area dropdown + fade toggles) */
 .t-view-options {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 14px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+}
+.t-area-select-wrap {
+  flex-shrink: 0;
+}
+.t-area-select {
+  padding: 8px 30px 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.t-area-select:focus {
+  border-color: var(--teal);
+}
+.t-area-select option {
+  background: var(--surface);
+  color: var(--text);
+}
+.t-view-toggles {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 .t-toggle-label {
   display: flex;

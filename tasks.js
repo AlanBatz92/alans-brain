@@ -42,13 +42,9 @@ function initTaskTracker() {
     if (cachedData) renderTasks(cachedData);
   });
 
-  // Area filter clicks
-  document.getElementById('tAreaFilters').addEventListener('click', function(e) {
-    var btn = e.target.closest('.t-area-filter');
-    if (!btn) return;
-    document.querySelectorAll('.t-area-filter').forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-    currentArea = btn.getAttribute('data-area');
+  // Area filter dropdown
+  document.getElementById('tAreaSelect').addEventListener('change', function() {
+    currentArea = this.value;
     if (cachedData) renderTasks(cachedData);
   });
 
@@ -193,15 +189,16 @@ function renderTasks(data) {
     stat(okC,'On Track','var(--green)') +
     stat(nC,'Not Done','var(--gray)');
 
-  // Build area filter pills (from all tasks, not filtered)
+  // Build area filter dropdown (from all tasks, not filtered)
   var allCats = {};
   tasks.forEach(function(t) { allCats[t.category] = true; });
-  var areaBar = document.getElementById('tAreaFilters');
-  var areaHtml = '<button class="t-filter t-area-filter' + (currentArea === 'all' ? ' active' : '') + '" data-area="all">All Areas</button>';
+  var areaSel = document.getElementById('tAreaSelect');
+  var areaHtml = '<option value="all">All Areas</option>';
   Object.keys(allCats).sort().forEach(function(cat) {
-    areaHtml += '<button class="t-filter t-area-filter' + (currentArea === cat ? ' active' : '') + '" data-area="' + esc(cat) + '">' + esc(cat) + '</button>';
+    areaHtml += '<option value="' + esc(cat) + '"' + (currentArea === cat ? ' selected' : '') + '>' + esc(cat) + '</option>';
   });
-  areaBar.innerHTML = areaHtml;
+  areaSel.innerHTML = areaHtml;
+  areaSel.value = currentArea;
 
   // Filter by status
   var filtered = tasks;
