@@ -4,12 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a0e1a">
-  <title>Household Tasks — Alan's Brain</title>
+  <title>My Week — Alan's Brain</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <script>
-    // Apply saved theme immediately to prevent flash of default theme
     (function() {
       var t = localStorage.getItem('ab_theme');
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
@@ -28,26 +27,24 @@
 
   <!-- ══════════════════════════════════════
        PASSPHRASE GATE
-       Covers the entire page until unlocked.
        ══════════════════════════════════════ -->
   <div class="auth-gate" id="authGate">
     <div class="auth-card">
       <div class="auth-icon">🔒</div>
-      <div class="auth-title"><span class="gradient-text">Taskland</span></div> 
+      <div class="auth-title"><span class="gradient-text">My Week</span></div>
       <div class="auth-input-wrap">
         <input type="password" class="auth-input" placeholder="Enter passphrase..." autocomplete="off" spellcheck="false">
       </div>
       <button class="auth-btn">Unlock</button>
       <div class="auth-error">That's not it — try again</div>
       <div class="auth-hint">
-        Don't have the passphrase? <a href="index.html">← Back to the main site</a>
+        Don't have the passphrase? <a href="index.html">&larr; Back to the main site</a>
       </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════
        PROTECTED CONTENT
-       Hidden until passphrase is verified.
        ══════════════════════════════════════ -->
   <div id="protectedContent" style="display:none">
 
@@ -57,11 +54,11 @@
         <a href="index.html" class="nav-logo">Alan's Brain <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Alan's_Brain/world-creativity-and-innovation-day.png" alt=""></a>
         <div class="nav-links">
           <a href="index.html">Home</a>
-          <a href="weather.html">My Week</a>
-          <a href="tasks.html" class="active">Tasks</a>
+          <a href="weather.html" class="active">My Week</a>
+          <a href="tasks.html">Tasks</a>
           <div class="nav-dropdown">
             <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
-              Explore <span class="nav-dropdown-arrow">▼</span>
+              Explore <span class="nav-dropdown-arrow">&#9660;</span>
             </button>
             <div class="nav-dropdown-menu">
               <a href="youtube.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
@@ -85,8 +82,8 @@
     <!-- Mobile menu overlay -->
     <div class="nav-mobile-overlay">
       <a href="index.html">Home</a>
-      <a href="weather.html">My Week</a>
-      <a href="tasks.html" class="active">Tasks</a>
+      <a href="weather.html" class="active">My Week</a>
+      <a href="tasks.html">Tasks</a>
       <span class="mobile-section-label">Explore</span>
       <a href="youtube.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
       <a href="transart.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
@@ -99,75 +96,51 @@
 
     <div class="page">
 
-      <!-- ══════ TASK TRACKER ══════ -->
-      <div class="section-header" id="tasks" style="margin-top:30px">
-        <span class="section-icon"><img src="img/Icons/icons/Tasks/407_Home_Icon.png" alt="" style="width:72px;height:72px"></span>
-        <span class="section-title">Household Tasks</span>
+      <!-- ══════ MY WEEK HEADER ══════ -->
+      <div class="section-header" style="margin-top:30px">
+        <span class="section-icon" style="font-size:2.5rem">🌤</span>
+        <span class="section-title">My Week</span>
         <div class="section-line"></div>
       </div>
 
       <div class="tracker-controls">
-        <span class="tracker-updated" id="tUpdated">Loading...</span>
-        <button class="tracker-refresh" id="tRefresh" onclick="manualRefresh()" aria-label="Refresh">↻</button>
+        <span class="tracker-updated" id="wUpdated">Loading...</span>
+        <button class="tracker-refresh" onclick="manualWeatherRefresh()" aria-label="Refresh">&#8635;</button>
       </div>
 
-      <div class="t-alert" id="tAlert">
-        <div class="t-alert-title">⚠ Needs Attention</div>
-        <div class="t-alert-text" id="tAlertText"></div>
-      </div>
+      <div id="wError" class="w-error" style="display:none"></div>
 
-      <div class="tracker-stats" id="tStats"></div>
-
-      <div class="t-filters" id="tFilters">
-        <button class="t-filter active" data-filter="all">All</button>
-        <button class="t-filter" data-filter="overdue">Overdue</button>
-        <button class="t-filter" data-filter="due-soon">Due Soon</button>
-        <button class="t-filter" data-filter="ok">On Track</button>
-        <button class="t-filter" data-filter="never">Not Started</button>
-      </div>
-
-      <div class="t-view-options" id="tViewOptions">
-        <div class="t-area-select-wrap">
-          <select class="t-area-select" id="tAreaSelect">
-            <option value="all">All Areas</option>
-          </select>
-        </div>
-        <div class="t-view-toggles">
-          <label class="t-toggle-label">
-            <input type="checkbox" id="tFadeToggle">
-            <span class="t-toggle-switch"></span>
-            <span>Fade</span>
-          </label>
-          <label class="t-toggle-label" id="tReverseWrap" style="display:none">
-            <input type="checkbox" id="tReverseToggle">
-            <span class="t-toggle-switch"></span>
-            <span>Drain</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Task data loads here -->
-      <div id="tLoading" class="t-loading">
+      <!-- Loading state -->
+      <div id="wLoading" class="t-loading">
         <div class="t-loading-dots">
           <div class="t-loading-dot"></div>
           <div class="t-loading-dot"></div>
           <div class="t-loading-dot"></div>
         </div>
-        <div>Loading tasks...</div>
+        <div>Checking the skies...</div>
       </div>
 
-      <div id="tList"></div>
-      <div id="tEmpty" class="t-empty">✨ No tasks match this filter</div>
-
-      <div id="tWeekly" class="t-weekly" style="display:none">
-        <div class="t-weekly-title">📊 This Week</div>
-        <div class="t-weekly-bars" id="tWeeklyBars"></div>
+      <!-- ── RUNNING SECTION ── -->
+      <div class="w-section">
+        <div class="w-section-label">🏃 Running This Week</div>
+        <div class="w-summary" id="wRunSummary"></div>
+        <div class="w-strip" id="wRunStrip"></div>
       </div>
 
-      <!-- ══════ SCROLL NAV ══════ -->
-      <div class="scroll-nav" id="scrollNav">
-        <button class="scroll-nav-btn" id="scrollTopBtn" title="Jump to top">↑</button>
-        <button class="scroll-nav-btn" id="scrollBottomBtn" title="Jump to bottom">↓</button>
+      <!-- ── DRONE SECTION ── -->
+      <div class="w-section">
+        <div class="w-section-label">🛸 Drone Flying</div>
+        <div class="w-summary" id="wDroneSummary"></div>
+        <div class="w-strip" id="wDroneStrip"></div>
+      </div>
+
+      <!-- ── LEGEND ── -->
+      <div class="w-legend">
+        <span class="w-legend-item"><span class="w-rating-dot perfect"></span> Perfect</span>
+        <span class="w-legend-item"><span class="w-rating-dot good"></span> Good</span>
+        <span class="w-legend-item"><span class="w-rating-dot fair"></span> Fair</span>
+        <span class="w-legend-item"><span class="w-rating-dot poor"></span> Poor</span>
+        <span class="w-legend-tap">Tap a day for details</span>
       </div>
 
       <!-- ══════ FOOTER ══════ -->
@@ -175,7 +148,7 @@
         <div class="footer-stamp">Handcrafted by Alan <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/UFO/ufo.png" alt=""></div>
         <div class="footer-text">
           Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. Just a human on the internet.<br>
-          Built with HTML, CSS, and JS — the way the web was meant to be.
+          Built with HTML, CSS, and JS &mdash; the way the web was meant to be.
         </div>
         <div class="footer-buttons">
           <span class="footer-btn">HTML</span>
@@ -193,58 +166,12 @@
 
   </div><!-- /#protectedContent -->
 
-  <!-- ══════ COMPLETION DRAWER ══════ -->
-  <!-- Direct child of <body> — no ancestor transforms to break position:fixed on mobile -->
-  <div class="drawer-backdrop" id="drawerBackdrop"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-handle"></div>
-    <div class="drawer-task-name" id="drawerTaskName"></div>
-    <div class="drawer-label">Who did it?</div>
-    <div class="drawer-people" id="drawerPeople"></div>
-    <div class="drawer-when">
-      <div class="drawer-label">When?</div>
-      <div class="drawer-when-options">
-        <button class="drawer-when-opt selected" data-when="now">Just now</button>
-        <button class="drawer-when-opt" data-when="earlier">Earlier…</button>
-      </div>
-      <div class="drawer-date-row" id="drawerDateRow">
-        <input type="date" class="drawer-date-input" id="drawerDate">
-        <input type="time" class="drawer-date-input" id="drawerTime" value="12:00">
-      </div>
-    </div>
-    <div class="drawer-pin-wrap" id="drawerPinWrap">
-      <div class="drawer-label">PIN</div>
-      <input type="password" inputmode="numeric" maxlength="10" class="drawer-pin" id="drawerPin" placeholder="Enter write PIN" autocomplete="off">
-    </div>
-    <button class="drawer-done-btn" id="drawerDoneBtn">Done ✓</button>
-    <div class="drawer-error" id="drawerError"></div>
-  </div>
-
-  <!-- Scripts: auth gate first, then tracker -->
+  <!-- Scripts -->
   <script src="auth.js"></script>
-  <script src="tasks.js"></script>
+  <script src="weather.js"></script>
   <script>
-    // Initialize the gate — when unlocked, start the task tracker
     initAuthGate('authGate', 'protectedContent', function() {
-      initTaskTracker();
-
-      /* Scroll nav */
-      (function() {
-        var nav = document.getElementById('scrollNav');
-        var topBtn = document.getElementById('scrollTopBtn');
-        var botBtn = document.getElementById('scrollBottomBtn');
-
-        window.addEventListener('scroll', function() {
-          nav.classList.toggle('visible', window.scrollY > 200);
-        });
-
-        topBtn.addEventListener('click', function() {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-        botBtn.addEventListener('click', function() {
-          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        });
-      })();
+      initWeather();
 
       /* Explore dropdown toggle */
       var dropdown = document.querySelector('.nav-dropdown');
