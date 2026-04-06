@@ -379,32 +379,39 @@ function renderWeather(data) {
   showLoading(false);
 }
 
+// Store rendered day data for drawer access
+var renderedDays = {};
+
+function isMobile() {
+  return window.innerWidth <= 600;
+}
+
 function renderStrip(containerId, days, hourly, todayDate, dayScoreFn, hourScoreFn, type, detailFn) {
   var el = document.getElementById(containerId);
   var html = '';
+  var dayData = [];
   for (var i = 0; i < days.length; i++) {
     var day = days[i];
     var d = new Date(day.dt * 1000);
     var isToday = d.toDateString() === todayDate;
     var dayName = isToday ? 'Today' : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+    var fullDayName = isToday ? 'Today' : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
     var dateStr = (d.getMonth() + 1) + '/' + d.getDate();
     var result = dayScoreFn(day);
     var icon = weatherIcon(day.weather[0].id);
 
     // Optimal time window
     var hours = getHoursForDay(hourly, day.dt);
-    var window = null;
+    var win = null;
     var windowHTML = '';
     if (hours.length >= 4) {
-      // We have hourly data for this day
-      window = findOptimalWindow(hours, hourScoreFn, day.sunrise, day.sunset);
-      if (window) {
-        windowHTML = '<div class="w-day-window ' + window.rating + '">'
-          + formatHour(window.startHour) + '–' + formatHour(window.endHour)
+      win = findOptimalWindow(hours, hourScoreFn, day.sunrise, day.sunset);
+      if (win) {
+        windowHTML = '<div class="w-day-window ' + win.rating + '">'
+          + formatHour(win.startHour) + '–' + formatHour(win.endHour)
           + '</div>';
       }
     } else {
-      // Beyond hourly range — estimate
       var est = estimateWindow(day, type);
       if (result.rating !== 'poor') {
         windowHTML = '<div class="w-day-window estimated">'
@@ -412,6 +419,9 @@ function renderStrip(containerId, days, hourly, todayDate, dayScoreFn, hourScore
           + '</div>';
       }
     }
+
+    // Store for drawer
+    dayData.push({ day: day, result: result, win: win, dayName: dayName, fullDayName: fullDayName, dateStr: dateStr, icon: icon, type: type, detailFn: detailFn, hours: hours });
 
     html += '<div class="w-day' + (isToday ? ' today' : '') + '" data-idx="' + i + '">'
       + '<div class="w-day-name">' + dayName + '</div>'
@@ -425,18 +435,127 @@ function renderStrip(containerId, days, hourly, todayDate, dayScoreFn, hourScore
       + windowHTML
       + '<div class="w-day-wind">' + Math.round(day.wind_speed) + ' mph</div>'
       + '<div class="w-detail" id="detail-' + containerId + '-' + i + '">'
-        + detailFn(result, day, window)
+        + detailFn(result, day, win)
       + '</div>'
       + '</div>';
   }
   el.innerHTML = html;
+  renderedDays[containerId] = dayData;
 
-  // Tap to expand detail
+  // Click handler — drawer on mobile, inline expand on desktop
   el.querySelectorAll('.w-day').forEach(function(card) {
     card.addEventListener('click', function() {
-      card.classList.toggle('expanded');
+      var idx = parseInt(card.getAttribute('data-idx'), 10);
+      if (isMobile()) {
+        openWeatherDrawer(containerId, idx);
+      } else {
+        card.classList.toggle('expanded');
+      }
     });
   });
+}
+
+/* ── WEATHER DETAIL DRAWER ────────────── */
+
+function openWeatherDrawer(containerId, idx) {
+  var data = renderedDays[containerId][idx];
+  var day = data.day;
+  var result = data.result;
+  var win = data.win;
+  var typeLabel = data.type === 'run' ? '🏃 Running' : '🛸 Drone';
+
+  // Build header
+  var headerHTML = '<div class="w-drawer-day-row">'
+    + '<div class="w-drawer-icon">' + data.icon + '</div>'
+    + '<div class="w-drawer-title">'
+      + '<div class="w-drawer-day-name">' + data.fullDayName + ' <span class="w-drawer-date">' + data.dateStr + '</span></div>'
+      + '<div class="w-drawer-type">' + typeLabel + '</div>'
+    + '</div>'
+    + '<div class="w-drawer-rating-wrap">'
+      + '<div class="w-rating ' + result.rating + '" style="font-size:0.8rem;padding:4px 12px">'
+        + '<span class="w-rating-icon">' + RATING_ICONS[result.rating] + '</span> '
+        + RATING_LABELS[result.rating]
+      + '</div>'
+    + '</div>'
+    + '</div>';
+
+  // Optimal window
+  if (win) {
+    headerHTML += '<div class="w-drawer-window ' + win.rating + '">'
+      + 'Best window: <strong>' + formatHour(win.startHour) + '–' + formatHour(win.endHour) + '</strong>'
+      + '</div>';
+  }
+
+  // Summary from API
+  if (day.summary) {
+    headerHTML += '<div class="w-drawer-summary">' + day.summary + '</div>';
+  }
+
+  document.getElementById('wDrawerHeader').innerHTML = headerHTML;
+
+  // Build body with detail rows + hourly chart
+  var bodyHTML = '';
+
+  // Hourly bar chart (bigger version for drawer)
+  if (win && win.hourScores) {
+    bodyHTML += '<div class="w-drawer-section-label">Hour-by-hour</div>';
+    bodyHTML += renderDrawerHourly(win.hourScores);
+  }
+
+  // Temp range
+  bodyHTML += '<div class="w-drawer-section-label">Conditions</div>';
+  bodyHTML += '<div class="w-drawer-temp-range">'
+    + '<span class="w-drawer-temp-lo">' + Math.round(day.temp.min) + '°</span>'
+    + '<span class="w-drawer-temp-arrow">→</span>'
+    + '<span class="w-drawer-temp-hi">' + Math.round(day.temp.max) + '°</span>'
+    + '</div>';
+
+  // Factor rows
+  if (data.type === 'run') {
+    bodyHTML += drawerRow('Feels like', result.factors.feels + '°F')
+      + drawerRow('Wind', result.factors.wind + ' mph')
+      + drawerRow('Rain chance', result.factors.pop + '%')
+      + drawerRow('Humidity', result.factors.humidity + '%')
+      + drawerRow('UV Index', result.factors.uvi)
+      + drawerRow('Score', result.score + ' / 100');
+  } else {
+    bodyHTML += drawerRow('Wind', result.factors.wind + ' mph')
+      + drawerRow('Gusts', result.factors.gust + ' mph')
+      + drawerRow('Rain chance', result.factors.pop + '%')
+      + drawerRow('Temp', result.factors.temp + '°F')
+      + drawerRow('Daylight', result.factors.daylight + ' hrs')
+      + drawerRow('Score', result.score + ' / 100');
+  }
+
+  document.getElementById('wDrawerBody').innerHTML = bodyHTML;
+
+  // Open
+  document.getElementById('wDrawerBackdrop').classList.add('open');
+  document.getElementById('wDrawer').classList.add('open');
+}
+
+function closeWeatherDrawer() {
+  document.getElementById('wDrawerBackdrop').classList.remove('open');
+  document.getElementById('wDrawer').classList.remove('open');
+}
+
+function drawerRow(label, value) {
+  return '<div class="w-drawer-row"><span>' + label + '</span><span>' + value + '</span></div>';
+}
+
+function renderDrawerHourly(hourScores) {
+  var html = '<div class="w-drawer-hourly">';
+  for (var i = 0; i < hourScores.length; i++) {
+    var s = hourScores[i];
+    var rating = scoreToRating(s.score);
+    var height = Math.max(6, Math.round(s.score / 100 * 48));
+    html += '<div class="w-drawer-bar-wrap">'
+      + '<div class="w-drawer-bar ' + rating + '" style="height:' + height + 'px"></div>'
+      + '<div class="w-drawer-bar-label">' + formatHour(s.hour) + '</div>'
+      + '</div>';
+  }
+  html += '</div>';
+  return html;
 }
 
 function renderRunDetail(result, day, window) {
@@ -528,4 +647,11 @@ function summaryHTML(best, type, daily, hourly) {
 function initWeather() {
   probeIcons();
   fetchWeather(false);
+
+  // Drawer close handlers
+  document.getElementById('wDrawerBackdrop').addEventListener('click', closeWeatherDrawer);
+  document.getElementById('wDrawer').addEventListener('click', function(e) {
+    // Close if tapping the handle
+    if (e.target.classList.contains('drawer-handle')) closeWeatherDrawer();
+  });
 }
