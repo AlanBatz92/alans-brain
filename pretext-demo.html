@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>PreText Playground — Alan's Brain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      var t = localStorage.getItem('ab_theme');
+      if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Page-specific overrides ── */
+    .page { max-width: 1000px; }
+
+    .pretext-hero {
+      text-align: center;
+      padding: 2rem 0 1rem;
+    }
+    .pretext-hero h1 {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      background: linear-gradient(135deg, var(--teal), var(--blue), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.3rem;
+    }
+    .pretext-hero p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .pretext-hero .tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--teal);
+      background: var(--teal-glow);
+      border: 1px solid rgba(45, 212, 191, 0.25);
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Canvas container ── */
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: crosshair;
+      margin-bottom: 1.5rem;
+    }
+    .canvas-wrap canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .controls button {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .controls button:hover {
+      color: var(--text);
+      background: var(--surface-hover);
+      border-color: var(--teal);
+    }
+    .controls button.active {
+      color: var(--teal);
+      border-color: var(--teal);
+      background: var(--teal-glow);
+    }
+
+    /* ── Info cards ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.2rem;
+    }
+    .info-card h3 {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--teal);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .info-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .info-card code {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--purple);
+      background: rgba(167,139,250,0.1);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+    .stats-bar span {
+      color: var(--blue);
+    }
+
+    /* ── Loading overlay ── */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-deep);
+      z-index: 10;
+      transition: opacity 0.5s;
+    }
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loading-text {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--teal);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    /* ── Footer note ── */
+    .pretext-footer {
+      text-align: center;
+      padding: 1.5rem 0 2.5rem;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+    .pretext-footer a {
+      color: var(--teal);
+      text-decoration: none;
+    }
+    .pretext-footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Alan's Brain <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Alan's_Brain/world-creativity-and-innovation-day.png" alt=""></a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+            Explore <span class="nav-dropdown-arrow">&#9660;</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="youtube.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
+            <a href="transart.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
+            <a href="soundboards.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
+            <a href="tools.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""> Great & Free</a>
+            <a href="photos.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
+            <a href="art.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
+            <a href="paranormal.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
+          </div>
+        </div>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <div class="nav-hamburger-lines">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="nav-mobile-overlay">
+    <a href="index.html">Home</a>
+    <span class="mobile-section-label">Explore</span>
+    <a href="youtube.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
+    <a href="transart.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
+    <a href="soundboards.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
+    <a href="tools.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""> Great & Free</a>
+    <a href="photos.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
+    <a href="art.html"><img class="nav-mobile-icon" width="24" height="24" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
+    <a href="paranormal.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
+  </div>
+
+  <div class="page">
+
+    <section class="pretext-hero anim" style="animation-delay:0.1s">
+      <h1>&lt;PreText/&gt;</h1>
+      <p>Interactive text-as-pixels playground powered by chenglou's PreText library. Move your mouse. Click to ripple. Play with text like it's matter.</p>
+      <div class="tag">Powered by @chenglou/pretext</div>
+    </section>
+
+    <div class="stats-bar">
+      <div>grid: <span id="stat-grid">--</span></div>
+      <div>chars: <span id="stat-chars">--</span></div>
+      <div>fps: <span id="stat-fps">--</span></div>
+      <div>mode: <span id="stat-mode">ripple</span></div>
+    </div>
+
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="textCanvas"></canvas>
+      <div class="loading-overlay" id="loading">
+        <div class="loading-text">preparing text grid...</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="active" data-mode="ripple">Ripple</button>
+      <button data-mode="gravity">Gravity Well</button>
+      <button data-mode="wave">Wave</button>
+      <button data-mode="reveal">Spotlight</button>
+      <button data-mode="matrix">Matrix Rain</button>
+      <button data-mode="webcam">Webcam</button>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card anim" style="animation-delay:0.2s">
+        <h3>What is PreText?</h3>
+        <p>A pure-TypeScript text measurement library by <strong>chenglou</strong> (ex-React core team, Midjourney). It measures text dimensions <em>without touching the DOM</em> — no reflows, no layout thrashing. The <code>prepare()</code> call caches segment widths via canvas, then <code>layout()</code> is pure arithmetic.</p>
+      </div>
+      <div class="info-card anim" style="animation-delay:0.3s">
+        <h3>What's happening here?</h3>
+        <p>The transcript text is measured by PreText to build a precise character grid. Each frame, mouse position or webcam brightness drives which characters glow. The grid layout is computed once; only the visual effect runs per-frame — exactly the kind of separation PreText enables.</p>
+      </div>
+      <div class="info-card anim" style="animation-delay:0.4s">
+        <h3>Why does this matter?</h3>
+        <p>Normally, measuring text = expensive DOM reflows. PreText decouples measurement from rendering. This means virtualized lists, masonry layouts, and wild visual effects like this one become fast and jank-free. One <code>prepare()</code>, infinite <code>layout()</code> calls at ~0.0002ms each.</p>
+      </div>
+    </div>
+
+    <div class="pretext-footer">
+      Built with <a href="https://github.com/chenglou/pretext" target="_blank" rel="noopener">@chenglou/pretext</a> ·
+      Transcript source: <a href="https://www.youtube.com/@Fireship" target="_blank" rel="noopener">Fireship</a> ·
+      A project by <a href="index.html">Alan's Brain</a>
+    </div>
+
+  </div>
+
+  <script src="theme-switcher.js"></script>
+  <script src="pretext-demo.js" type="module"></script>
+</body>
+</html>

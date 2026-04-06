@@ -6,8 +6,8 @@
 // ⚡ CONFIGURATION
 var WEATHER_CONFIG = {
   apiKey: '9eb0ce0243cfaab90e67250e1a55863e',
-  lat: 40.0,                             // <-- Your latitude
-  lon: -83.0,                            // <-- Your longitude
+  lat: 40.539543,                             // <-- Your latitude
+  lon: -75.496849,                            // <-- Your longitude
   units: 'imperial',                     // 'imperial' (°F, mph) or 'metric' (°C, m/s)
   cacheTTL: 2 * 60 * 60 * 1000          // 2 hours in ms
 };
