@@ -3109,6 +3109,84 @@ nav {
   white-space: nowrap;
 }
 
+/* ── Location selector ── */
+.w-location-select {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.w-location-select:hover,
+.w-location-select:focus {
+  border-color: var(--teal);
+}
+
+/* ── Unified day card: dual ratings ── */
+.w-day-ratings {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 4px;
+}
+.w-day-activity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.w-activity-label {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+/* ── Yesterday comparison chip ── */
+.w-yesterday {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+.w-yesterday.warmer {
+  color: var(--yellow);
+}
+.w-yesterday.cooler {
+  color: var(--blue);
+}
+
+/* ── Summary line (both run + drone on one row) ── */
+.w-summary-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 16px;
+  white-space: nowrap;
+}
+
+/* ── Drawer activity header ── */
+.w-drawer-activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.w-drawer-temp-range-inline {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
 /* ═══════════════════════════════════
    REDUCED MOTION
    ═══════════════════════════════════ */

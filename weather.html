@@ -105,6 +105,7 @@
 
       <div class="tracker-controls">
         <span class="tracker-updated" id="wUpdated">Loading...</span>
+        <select class="w-location-select" id="wLocationSelect" aria-label="Location"></select>
         <button class="tracker-refresh" onclick="manualWeatherRefresh()" aria-label="Refresh">&#8635;</button>
       </div>
 
@@ -120,18 +121,10 @@
         <div>Checking the skies...</div>
       </div>
 
-      <!-- ── RUNNING SECTION ── -->
+      <!-- ── UNIFIED WEATHER SECTION ── -->
       <div class="w-section">
-        <div class="w-section-label">🏃 Running This Week</div>
-        <div class="w-summary" id="wRunSummary"></div>
-        <div class="w-strip" id="wRunStrip"></div>
-      </div>
-
-      <!-- ── DRONE SECTION ── -->
-      <div class="w-section">
-        <div class="w-section-label">🛸 Drone Flying</div>
-        <div class="w-summary" id="wDroneSummary"></div>
-        <div class="w-strip" id="wDroneStrip"></div>
+        <div class="w-summary" id="wSummary"></div>
+        <div class="w-strip" id="wStrip"></div>
       </div>
 
       <!-- ── LEGEND ── -->
