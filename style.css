@@ -3188,6 +3188,405 @@ nav {
 }
 
 /* ═══════════════════════════════════
+   PROJECT CARDS — ADDITIONS
+   ═══════════════════════════════════ */
+
+.card-green {
+  --card-accent: var(--green);
+}
+
+.card-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  justify-content: center;
+}
+.card-tag {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* ═══════════════════════════════════
+   SETLIST TO SPOTIFY APP
+   ═══════════════════════════════════ */
+
+.sl-app {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.sl-step {
+  margin-bottom: 20px;
+}
+
+.sl-step-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+/* ── Inputs ── */
+.sl-search-row {
+  display: flex;
+  gap: 8px;
+}
+.sl-input {
+  flex: 1;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.sl-input:focus {
+  border-color: var(--teal);
+}
+.sl-input::placeholder {
+  color: var(--text-dim);
+}
+.sl-input-sm {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+}
+
+/* ── Buttons ── */
+.sl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 10px 20px;
+  transition: background 0.2s, transform 0.1s;
+}
+.sl-btn:active {
+  transform: scale(0.97);
+}
+
+.sl-btn-primary {
+  background: var(--teal);
+  color: var(--bg);
+}
+.sl-btn-primary:hover {
+  background: var(--green);
+}
+
+.sl-btn-spotify {
+  background: #1DB954;
+  color: #fff;
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.sl-btn-spotify:hover {
+  background: #1ed760;
+}
+.sl-btn-spotify:disabled {
+  background: var(--text-dim);
+  cursor: not-allowed;
+}
+
+.sl-btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.sl-btn-ghost:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.sl-btn-sm {
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  border-radius: 6px;
+}
+
+/* ── Error / Empty ── */
+.sl-error {
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+  color: var(--red);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  margin-top: 10px;
+}
+
+.sl-empty {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 16px 0;
+  text-align: center;
+}
+
+/* ── Result cards ── */
+.sl-results {
+  margin-top: 12px;
+}
+
+.sl-result-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  transition: border-color 0.2s, background 0.2s;
+}
+.sl-result-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--teal);
+}
+
+.sl-result-name {
+  font-weight: 700;
+}
+.sl-artist-dis {
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+/* ── Setlist cards ── */
+.sl-setlist-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 2px 12px;
+  align-items: center;
+}
+.sl-setlist-date {
+  grid-row: 1 / 3;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--teal);
+  white-space: nowrap;
+}
+.sl-setlist-venue {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.sl-setlist-location {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+.sl-setlist-count {
+  grid-row: 1 / 3;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+/* ── Artist chosen banner ── */
+.sl-artist-chosen {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.sl-chosen-name {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+/* ── Setlist info header ── */
+.sl-setlist-info {
+  margin-bottom: 16px;
+}
+.sl-setlist-info-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sl-setlist-info-header strong {
+  font-size: 1rem;
+}
+.sl-setlist-info-date {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--teal);
+}
+.sl-setlist-info-venue {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+/* ── Song list ── */
+.sl-song-list {
+  margin-bottom: 12px;
+}
+.sl-song-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+.sl-song-status {
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.sl-song-status.matched {
+  color: var(--green);
+}
+.sl-song-status.unmatched {
+  color: var(--red);
+}
+.sl-song-name {
+  flex: 1;
+}
+.sl-song-cover {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ── Match summary ── */
+.sl-match-summary {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  padding: 8px 0;
+}
+.sl-match-found {
+  font-weight: 700;
+  color: var(--green);
+}
+.sl-match-total {
+  font-weight: 700;
+  color: var(--text);
+}
+.sl-match-note {
+  font-style: italic;
+  color: var(--text-dim);
+}
+
+/* ── Actions ── */
+.sl-actions {
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* ── Success ── */
+.sl-success {
+  text-align: center;
+  padding: 24px 0;
+}
+.sl-success-icon {
+  font-size: 2.5rem;
+  color: var(--green);
+  margin-bottom: 8px;
+}
+.sl-success-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.sl-success-detail {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+/* ── Start over ── */
+.sl-start-over {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* ── Loading overlay ── */
+.sl-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 26, 0.85);
+  border-radius: 12px;
+  z-index: 5;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── Setup section ── */
+.sl-setup {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 32px;
+}
+.sl-setup-desc {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.sl-setup-row {
+  margin-bottom: 10px;
+}
+.sl-setup-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.sl-setup-status {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-left: 10px;
+}
+.sl-setup-status.saved {
+  color: var(--green);
+}
+.sl-setup-status.partial {
+  color: var(--yellow);
+}
+
+/* ═══════════════════════════════════
    REDUCED MOTION
    ═══════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
