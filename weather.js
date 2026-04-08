@@ -314,6 +314,9 @@ function scoreRunningHour(hr) {
   var weatherId = hr.weather[0].id;
   var isRaining = weatherId < 700;
 
+  // Guard rails: below freezing or above 90 → always poor
+  if (feels < 32 || feels > 90) return Math.min(feels < 32 ? 10 : 5, 20);
+
   var score = 0;
   score += scoreRange(feels, THRESHOLDS.run_feelsLike);
   score += scoreRange(wind, THRESHOLDS.run_wind);
@@ -339,6 +342,9 @@ function scoreTanningHour(hr) {
   var pop = (hr.pop || 0) * 100;
   var weatherId = hr.weather[0].id;
   var isRaining = weatherId < 700;
+
+  // Below 70°F → always poor for tanning
+  if (temp < 70) return 0;
 
   var score = 0;
   score += scoreRange(temp, THRESHOLDS.tan_temp);
@@ -476,6 +482,16 @@ function scoreRunning(day) {
   var weatherId = day.weather[0].id;
   var isRaining = weatherId < 700;
 
+  // Guard rails: below freezing or above 90 → always poor
+  if (feels < 32 || feels > 90) {
+    var capScore = feels < 32 ? 10 : 5;
+    return {
+      score: capScore,
+      rating: 'poor',
+      factors: { feels: Math.round(feels), wind: Math.round(wind), pop: Math.round(pop), humidity: humidity, uvi: uvi }
+    };
+  }
+
   var score = 0;
   score += scoreRange(feels, THRESHOLDS.run_feelsLike);
   score += scoreRange(wind, THRESHOLDS.run_wind);
@@ -506,6 +522,15 @@ function scoreTanning(day) {
   var pop = (day.pop || 0) * 100;
   var weatherId = day.weather[0].id;
   var isRaining = weatherId < 700;
+
+  // Below 70°F → always poor for tanning
+  if (temp < 70) {
+    return {
+      score: 0,
+      rating: 'poor',
+      factors: { temp: Math.round(temp), uvi: uvi, clouds: clouds, wind: Math.round(wind), pop: Math.round(pop) }
+    };
+  }
 
   var score = 0;
   score += scoreRange(temp, THRESHOLDS.tan_temp);
@@ -579,6 +604,61 @@ function scoreToRating(score) {
 
 var RATING_LABELS = { perfect: 'Perfect', good: 'Good', fair: 'Fair', poor: 'Poor' };
 var RATING_ICONS = { perfect: '◆', good: '●', fair: '▲', poor: '✕' };
+
+/* ── UV INDEX INFO ───────────────────── */
+
+var UV_LEVELS = [
+  { min: 0,  max: 2,  label: 'Low',       color: '#4ade80', advice: 'Minimal risk. Sunscreen optional for most people.' },
+  { min: 3,  max: 5,  label: 'Moderate',   color: '#facc15', advice: 'Wear sunscreen SPF 30+. Seek shade during midday.' },
+  { min: 6,  max: 7,  label: 'High',       color: '#f97316', advice: 'Sunburn risk in 15–25 min. SPF 30+, hat, and sunglasses recommended.' },
+  { min: 8,  max: 10, label: 'Very High',  color: '#ef4444', advice: 'Burn risk in under 15 min. Limit midday sun. SPF 50+, protective clothing.' },
+  { min: 11, max: 20, label: 'Extreme',    color: '#c084fc', advice: 'Burn possible in minutes. Avoid sun 10am–4pm. Full protection essential.' }
+];
+
+function uvLevelFor(uvi) {
+  var rounded = Math.round(uvi);
+  for (var i = 0; i < UV_LEVELS.length; i++) {
+    if (rounded >= UV_LEVELS[i].min && rounded <= UV_LEVELS[i].max) return UV_LEVELS[i];
+  }
+  return UV_LEVELS[UV_LEVELS.length - 1];
+}
+
+function uvExpandableHTML(uvi) {
+  var current = uvLevelFor(uvi);
+  var html = '<div class="w-uv-expandable" onclick="toggleUvDetails(this)">'
+    + '<div class="w-drawer-row" style="border-bottom:0;padding-bottom:0">'
+      + '<span>UV Index <span class="w-uv-badge" style="background:' + current.color + '">' + current.label + '</span>'
+      + ' <span class="w-score-hint">(tap for info)</span></span>'
+      + '<span>' + uvi + '</span>'
+    + '</div>'
+    + '<div class="w-uv-details" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.3s ease;padding:0">';
+
+  for (var i = 0; i < UV_LEVELS.length; i++) {
+    var lvl = UV_LEVELS[i];
+    var isCurrent = lvl.label === current.label;
+    html += '<div class="w-uv-level' + (isCurrent ? ' current' : '') + '">'
+      + '<span class="w-uv-dot" style="background:' + lvl.color + '"></span>'
+      + '<span class="w-uv-range">' + lvl.min + '–' + lvl.max + '</span>'
+      + '<span class="w-uv-label">' + lvl.label + '</span>'
+      + '<span class="w-uv-advice">' + lvl.advice + '</span>'
+      + '</div>';
+  }
+
+  html += '</div></div>';
+  return html;
+}
+
+function toggleUvDetails(el) {
+  var details = el.querySelector('.w-uv-details');
+  var isOpen = details.style.maxHeight !== '0px' && details.style.maxHeight !== '';
+  if (isOpen) {
+    details.style.maxHeight = '0px';
+    details.style.padding = '0';
+  } else {
+    details.style.maxHeight = '300px';
+    details.style.padding = '6px 0 8px';
+  }
+}
 
 /* ── RENDER ────────────────────────────── */
 
@@ -799,9 +879,9 @@ function openWeatherDrawer(idx) {
     [['Feels like', data.runResult.factors.feels + '°F'],
      ['Wind', data.runResult.factors.wind + ' mph'],
      ['Rain chance', data.runResult.factors.pop + '%'],
-     ['Humidity', data.runResult.factors.humidity + '%'],
-     ['UV Index', data.runResult.factors.uvi]],
-    buildScoreBreakdown('run', data.runResult));
+     ['Humidity', data.runResult.factors.humidity + '%']],
+    buildScoreBreakdown('run', data.runResult),
+    data.runResult.factors.uvi);
 
   // Drone
   bodyHTML += renderDrawerActivity('🛸 Drone', data.droneResult, data.droneWin, data.hours, scoreDroneHour, day,
@@ -815,11 +895,11 @@ function openWeatherDrawer(idx) {
   // Tanning
   bodyHTML += renderDrawerActivity('☀️ Tanning', data.tanResult, data.tanWin, data.hours, scoreTanningHour, day,
     [['Temp', data.tanResult.factors.temp + '°F'],
-     ['UV Index', data.tanResult.factors.uvi],
      ['Cloud cover', data.tanResult.factors.clouds + '%'],
      ['Wind', data.tanResult.factors.wind + ' mph'],
      ['Rain chance', data.tanResult.factors.pop + '%']],
-    buildScoreBreakdown('tan', data.tanResult));
+    buildScoreBreakdown('tan', data.tanResult),
+    data.tanResult.factors.uvi);
 
   document.getElementById('wDrawerBody').innerHTML = bodyHTML;
 
@@ -827,7 +907,7 @@ function openWeatherDrawer(idx) {
   document.getElementById('wDrawer').classList.add('open');
 }
 
-function renderDrawerActivity(title, result, win, hours, scoreFn, day, factorRows, breakdownHTML) {
+function renderDrawerActivity(title, result, win, hours, scoreFn, day, factorRows, breakdownHTML, uvValue) {
   var html = '<div class="w-drawer-activity-header" style="margin-top:16px">'
     + '<span>' + title + '</span>'
     + '<span class="w-rating ' + result.rating + '" style="font-size:0.75rem;padding:3px 10px">'
@@ -849,6 +929,11 @@ function renderDrawerActivity(title, result, win, hours, scoreFn, day, factorRow
 
   for (var i = 0; i < factorRows.length; i++) {
     html += drawerRow(factorRows[i][0], factorRows[i][1]);
+  }
+
+  // UV Index expandable (if this activity uses UV)
+  if (uvValue !== undefined) {
+    html += uvExpandableHTML(uvValue);
   }
 
   // Tappable score with breakdown
