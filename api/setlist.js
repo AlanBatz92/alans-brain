@@ -12,7 +12,9 @@ export default async function handler(req, res) {
   }
 
   // Build the target URL, forwarding any extra query params
-  const url = new URL(path, SETLIST_BASE + '/');
+  // Use string concatenation — new URL() with an absolute path drops the base path
+  const target = SETLIST_BASE + path;
+  const url = new URL(target);
   // Copy all query params except 'path' itself
   for (const [key, value] of Object.entries(req.query)) {
     if (key !== 'path') url.searchParams.set(key, value);

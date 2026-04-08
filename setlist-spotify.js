@@ -153,6 +153,28 @@ function handleOAuthCallback() {
   });
 }
 
+/* ── SETLIST.FM URL PARSING ──────────── */
+
+function parseSetlistUrl(input) {
+  // Matches URLs like https://www.setlist.fm/setlist/health/2026/vogue-theatre-vancouver-bc-canada-5b76a314.html
+  var match = input.match(/setlist\.fm\/setlist\/[^\/]+\/\d{4}\/[^\/]+-([0-9a-f]+)\.html/i);
+  if (match) return match[1]; // return the setlist ID
+  // Also match short form like setlist.fm/setlist/5b76a314
+  var shortMatch = input.match(/setlist\.fm\/setlist\/([0-9a-f]+)/i);
+  if (shortMatch) return shortMatch[1];
+  return null;
+}
+
+function fetchSetlistById(setlistId) {
+  var proxyUrl = SL_CONFIG.setlistProxyUrl + '?path=' + encodeURIComponent('/setlist/' + setlistId);
+  return fetch(proxyUrl)
+    .then(function(r) {
+      if (r.status === 404) throw new Error('Setlist not found. Check the URL and try again.');
+      if (!r.ok) throw new Error('Could not fetch setlist: ' + r.status);
+      return r.json();
+    });
+}
+
 /* ── SETLIST.FM API ──────────────────── */
 
 function searchArtists(query) {
@@ -665,6 +687,31 @@ function doSearch() {
 
   hideError('slSearchError');
   document.getElementById('slArtistResults').style.display = 'none';
+
+  // Check if the input is a setlist.fm URL
+  var setlistId = parseSetlistUrl(query);
+  if (setlistId) {
+    showLoading('Fetching setlist...');
+    fetchSetlistById(setlistId)
+      .then(function(setlist) {
+        hideLoading();
+        // Extract artist info from the setlist
+        var artist = setlist.artist || {};
+        appState.artist = {
+          mbid: artist.mbid || '',
+          name: artist.name || 'Unknown Artist',
+          disambiguation: artist.disambiguation || ''
+        };
+        // Jump straight to the song review
+        selectSetlist(setlist);
+      })
+      .catch(function(err) {
+        hideLoading();
+        showError('slSearchError', err.message);
+      });
+    return;
+  }
+
   showLoading('Searching artists...');
 
   searchArtists(query)
