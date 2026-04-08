@@ -4,26 +4,30 @@
    ══════════════════════════════════════ */
 
 // ⚡ CONFIGURATION
-// Setlist.fm API key and Spotify Client ID are stored in localStorage.
-// The user enters them in the Setup section on the page.
 
 var SL_CONFIG = {
+  // Setlist.fm API doesn't support CORS — requests go through /api/setlist serverless proxy
+  setlistProxyUrl: '/api/setlist',
   setlistBaseUrl: 'https://api.setlist.fm/rest/1.0',
   spotifyAuthUrl: 'https://accounts.spotify.com/authorize',
   spotifyTokenUrl: 'https://accounts.spotify.com/api/token',
   spotifyApiUrl: 'https://api.spotify.com/v1',
   spotifyScopes: 'playlist-modify-public playlist-modify-private',
-  redirectUri: window.location.origin + window.location.pathname
+  redirectUri: window.location.origin + window.location.pathname,
+
+  // Default API keys — override via the Setup section if needed
+  defaultSetlistKey: 'vyNcQzeLTe_xV5pVtKlrt3EmJo2v8WzCB0xM',
+  defaultSpotifyClientId: '735092c51ee34dd7836615fe4c067edb'
 };
 
 /* ── KEY MANAGEMENT ──────────────────── */
 
 function getSetlistKey() {
-  return localStorage.getItem('ab_setlist_key') || '';
+  return localStorage.getItem('ab_setlist_key') || SL_CONFIG.defaultSetlistKey;
 }
 
 function getSpotifyClientId() {
-  return localStorage.getItem('ab_spotify_client_id') || '';
+  return localStorage.getItem('ab_spotify_client_id') || SL_CONFIG.defaultSpotifyClientId;
 }
 
 function getSpotifyToken() {
@@ -152,18 +156,9 @@ function handleOAuthCallback() {
 /* ── SETLIST.FM API ──────────────────── */
 
 function searchArtists(query) {
-  var key = getSetlistKey();
-  if (!key) {
-    showError('slSearchError', 'Please set your Setlist.fm API key in the Setup section below.');
-    return Promise.reject(new Error('No API key'));
-  }
-
-  return fetch(SL_CONFIG.setlistBaseUrl + '/search/artists?artistName=' + encodeURIComponent(query) + '&p=1&sort=relevance', {
-    headers: {
-      'Accept': 'application/json',
-      'x-api-key': key
-    }
-  })
+  var proxyUrl = SL_CONFIG.setlistProxyUrl + '?path=' + encodeURIComponent('/search/artists')
+    + '&artistName=' + encodeURIComponent(query) + '&p=1&sort=relevance';
+  return fetch(proxyUrl)
   .then(function(r) {
     if (r.status === 403) throw new Error('Invalid Setlist.fm API key');
     if (r.status === 404) return { artist: [] };
@@ -176,13 +171,8 @@ function searchArtists(query) {
 }
 
 function getArtistSetlists(mbid) {
-  var key = getSetlistKey();
-  return fetch(SL_CONFIG.setlistBaseUrl + '/artist/' + mbid + '/setlists?p=1', {
-    headers: {
-      'Accept': 'application/json',
-      'x-api-key': key
-    }
-  })
+  var proxyUrl = SL_CONFIG.setlistProxyUrl + '?path=' + encodeURIComponent('/artist/' + mbid + '/setlists') + '&p=1';
+  return fetch(proxyUrl)
   .then(function(r) {
     if (!r.ok) throw new Error('Could not fetch setlists');
     return r.json();
@@ -599,11 +589,18 @@ function resetApp() {
 /* ── INIT ──────────────────────────────── */
 
 function initSetlistApp() {
-  // Load saved keys into setup fields
+  // Load saved keys (or defaults) into setup fields
   var keyField = document.getElementById('slSetlistKey');
   var idField = document.getElementById('slSpotifyId');
   keyField.value = getSetlistKey();
   idField.value = getSpotifyClientId();
+  // Auto-save defaults if nothing stored yet
+  if (!localStorage.getItem('ab_setlist_key') && SL_CONFIG.defaultSetlistKey) {
+    localStorage.setItem('ab_setlist_key', SL_CONFIG.defaultSetlistKey);
+  }
+  if (!localStorage.getItem('ab_spotify_client_id') && SL_CONFIG.defaultSpotifyClientId) {
+    localStorage.setItem('ab_spotify_client_id', SL_CONFIG.defaultSpotifyClientId);
+  }
   updateKeysStatus();
 
   // Save keys button
