@@ -2888,10 +2888,11 @@ nav {
   padding: 0;
 }
 .w-day.expanded .w-detail {
-  max-height: 300px;
+  max-height: 500px;
   padding-top: 8px;
   border-top: 1px solid var(--border);
   margin-top: 6px;
+  overflow-y: auto;
 }
 
 .w-detail-row {
@@ -3185,6 +3186,109 @@ nav {
   font-size: 0.8rem;
   font-weight: 400;
   color: var(--text-muted);
+}
+
+/* ── Scrollable drawer body ── */
+.w-drawer-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Scrollable hourly chart ── */
+.w-drawer-hourly {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  min-width: 0;
+}
+.w-drawer-hourly::-webkit-scrollbar { height: 3px; }
+.w-drawer-hourly::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.w-drawer-bar-wrap {
+  min-width: 24px;
+}
+
+/* ── Window metrics (inline in best-window box) ── */
+.w-window-metrics {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.w-window-metrics span {
+  white-space: nowrap;
+}
+
+/* ── Tappable score breakdown ── */
+.w-score-row {
+  cursor: pointer;
+  user-select: none;
+}
+.w-score-hint {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  font-style: italic;
+  font-weight: 400;
+}
+.w-score-row.open + .w-score-breakdown {
+  max-height: 300px;
+  padding: 8px 0;
+}
+.w-score-breakdown {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: 0;
+}
+.w-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  padding: 3px 0;
+}
+.w-breakdown-row.penalty {
+  color: var(--red);
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+.w-breakdown-label {
+  width: 90px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+.w-breakdown-val {
+  width: 50px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-align: right;
+}
+.w-breakdown-bar-bg {
+  flex: 1;
+  height: 6px;
+  background: var(--surface);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.w-breakdown-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.w-breakdown-bar.high { background: var(--green); }
+.w-breakdown-bar.mid  { background: var(--yellow); }
+.w-breakdown-bar.low  { background: var(--red); }
+.w-breakdown-pts {
+  width: 40px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-align: right;
 }
 
 /* ═══════════════════════════════════

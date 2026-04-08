@@ -23,13 +23,22 @@ var WEATHER_LOCATIONS = [
 // Each array entry: [min, max, points]  (higher points = better conditions)
 var THRESHOLDS = {
 
-  // ── Running ──
-  run_feelsLike: [[45, 65, 20], [35, 44, 15], [66, 75, 15], [25, 34, 8], [76, 85, 8]],
+  // ── Running ──  (sweet spot 50-75°F; drops sharply above 80 especially with humidity)
+  run_feelsLike: [[50, 75, 20], [40, 49, 14], [76, 80, 10], [30, 39, 6], [81, 85, 4], [86, 95, 1]],
   run_wind:      [[0, 8, 20],   [9, 15, 14],  [16, 22, 6]],
   run_pop:       [[0, 10, 20],  [11, 30, 14],  [31, 60, 6]],   // precipitation %
-  run_humidity:  [[30, 60, 20], [20, 29, 14],  [61, 75, 14], [76, 85, 6]],
+  run_humidity:  [[30, 55, 20], [20, 29, 14],  [56, 70, 12], [71, 80, 6], [81, 90, 2]],
   run_uvi:       [[0, 5, 20],   [6, 7, 14],    [8, 9, 6]],     // UV index
   run_rainCap:   35,            // max score if actively raining
+  run_heatHumidPenalty: true,   // extra penalty when hot + humid together
+
+  // ── Tanning ──  (80-90°F ideal, clear skies, good UV)
+  tan_temp:      [[80, 90, 20], [75, 79, 14], [91, 95, 14], [70, 74, 8], [96, 100, 6]],
+  tan_uvi:       [[5, 7, 25],   [3, 4, 15],   [8, 9, 12], [10, 15, 6]],  // moderate-high UV best
+  tan_clouds:    [[0, 10, 25],  [11, 25, 18],  [26, 50, 10], [51, 75, 4]],  // cloud cover %
+  tan_wind:      [[0, 10, 15],  [11, 18, 10],  [19, 25, 5]],   // light breeze ideal
+  tan_pop:       [[0, 5, 15],   [6, 15, 10],   [16, 30, 4]],   // precipitation %
+  tan_rainCap:   15,
 
   // ── Drone ──
   drone_wind:    [[0, 8, 20],   [9, 15, 14],   [16, 20, 6]],
@@ -312,7 +321,33 @@ function scoreRunningHour(hr) {
   score += scoreRange(humidity, THRESHOLDS.run_humidity);
   score += scoreInverse(uvi, THRESHOLDS.run_uvi);
 
+  // Heat + humidity combo penalty
+  if (THRESHOLDS.run_heatHumidPenalty && feels > 80 && humidity > 65) {
+    var penalty = Math.round((feels - 80) * 0.5 + (humidity - 65) * 0.3);
+    score = Math.max(0, score - penalty);
+  }
+
   if (isRaining) score = Math.min(score, THRESHOLDS.run_rainCap);
+  return score;
+}
+
+function scoreTanningHour(hr) {
+  var temp = hr.temp;
+  var uvi = hr.uvi || 0;
+  var clouds = hr.clouds || 0;
+  var wind = hr.wind_speed;
+  var pop = (hr.pop || 0) * 100;
+  var weatherId = hr.weather[0].id;
+  var isRaining = weatherId < 700;
+
+  var score = 0;
+  score += scoreRange(temp, THRESHOLDS.tan_temp);
+  score += scoreRange(uvi, THRESHOLDS.tan_uvi);
+  score += scoreInverse(clouds, THRESHOLDS.tan_clouds);
+  score += scoreRange(wind, THRESHOLDS.tan_wind);
+  score += scoreInverse(pop, THRESHOLDS.tan_pop);
+
+  if (isRaining) score = Math.min(score, THRESHOLDS.tan_rainCap);
   return score;
 }
 
@@ -448,12 +483,43 @@ function scoreRunning(day) {
   score += scoreRange(humidity, THRESHOLDS.run_humidity);
   score += scoreInverse(uvi, THRESHOLDS.run_uvi);
 
+  // Heat + humidity combo penalty
+  if (THRESHOLDS.run_heatHumidPenalty && feels > 80 && humidity > 65) {
+    var penalty = Math.round((feels - 80) * 0.5 + (humidity - 65) * 0.3);
+    score = Math.max(0, score - penalty);
+  }
+
   if (isRaining) score = Math.min(score, THRESHOLDS.run_rainCap);
 
   return {
     score: score,
     rating: scoreToRating(score),
     factors: { feels: Math.round(feels), wind: Math.round(wind), pop: Math.round(pop), humidity: humidity, uvi: uvi }
+  };
+}
+
+function scoreTanning(day) {
+  var temp = day.temp.day;
+  var uvi = day.uvi || 0;
+  var clouds = day.clouds || 0;
+  var wind = day.wind_speed;
+  var pop = (day.pop || 0) * 100;
+  var weatherId = day.weather[0].id;
+  var isRaining = weatherId < 700;
+
+  var score = 0;
+  score += scoreRange(temp, THRESHOLDS.tan_temp);
+  score += scoreRange(uvi, THRESHOLDS.tan_uvi);
+  score += scoreInverse(clouds, THRESHOLDS.tan_clouds);
+  score += scoreRange(wind, THRESHOLDS.tan_wind);
+  score += scoreInverse(pop, THRESHOLDS.tan_pop);
+
+  if (isRaining) score = Math.min(score, THRESHOLDS.tan_rainCap);
+
+  return {
+    score: score,
+    rating: scoreToRating(score),
+    factors: { temp: Math.round(temp), uvi: uvi, clouds: clouds, wind: Math.round(wind), pop: Math.round(pop) }
   };
 }
 
@@ -527,8 +593,11 @@ function renderWeather(data) {
   // Summary badges
   var runBest = findBestDay(daily, scoreRunning);
   var droneBest = findBestDay(daily, scoreDrone);
+  var tanBest = findBestDay(daily, scoreTanning);
   document.getElementById('wSummary').innerHTML =
-    summaryHTML(runBest, 'run', daily, hourly) + summaryHTML(droneBest, 'drone', daily, hourly);
+    summaryHTML(runBest, 'run', daily, hourly)
+    + summaryHTML(droneBest, 'drone', daily, hourly)
+    + summaryHTML(tanBest, 'tan', daily, hourly);
 
   showLoading(false);
 }
@@ -554,29 +623,37 @@ function renderUnifiedStrip(days, hourly, todayDate, yesterday) {
 
     var runResult = scoreRunning(day);
     var droneResult = scoreDrone(day);
+    var tanResult = scoreTanning(day);
     var icon = weatherIcon(day.weather[0].id);
 
     // Optimal windows
     var hours = getHoursForDay(hourly, day.dt);
     var runWin = null;
     var droneWin = null;
+    var tanWin = null;
     var runWindowHTML = '';
     var droneWindowHTML = '';
+    var tanWindowHTML = '';
 
     if (hours.length >= 4) {
       runWin = findOptimalWindow(hours, scoreRunningHour, day.sunrise, day.sunset);
       droneWin = findOptimalWindow(hours, scoreDroneHour, day.sunrise, day.sunset);
+      tanWin = findOptimalWindow(hours, scoreTanningHour, day.sunrise, day.sunset);
       if (runWin) {
         runWindowHTML = formatHour(runWin.startHour) + '–' + formatHour(runWin.endHour);
       }
       if (droneWin) {
         droneWindowHTML = formatHour(droneWin.startHour) + '–' + formatHour(droneWin.endHour);
       }
+      if (tanWin) {
+        tanWindowHTML = formatHour(tanWin.startHour) + '–' + formatHour(tanWin.endHour);
+      }
     } else {
       var runEst = estimateWindow(day, 'run');
       var droneEst = estimateWindow(day, 'drone');
       if (runResult.rating !== 'poor') runWindowHTML = runEst.label;
       if (droneResult.rating !== 'poor') droneWindowHTML = droneEst.label;
+      if (tanResult.rating !== 'poor') tanWindowHTML = 'Midday';
     }
 
     // Yesterday comparison (only on Today card)
@@ -587,8 +664,8 @@ function renderUnifiedStrip(days, hourly, todayDate, yesterday) {
 
     // Store for drawer
     dayData.push({
-      day: day, runResult: runResult, droneResult: droneResult,
-      runWin: runWin, droneWin: droneWin,
+      day: day, runResult: runResult, droneResult: droneResult, tanResult: tanResult,
+      runWin: runWin, droneWin: droneWin, tanWin: tanWin,
       dayName: dayName, fullDayName: fullDayName, dateStr: dateStr,
       icon: icon, hours: hours, yesterday: isToday ? yesterday : null
     });
@@ -612,10 +689,16 @@ function renderUnifiedStrip(days, hourly, todayDate, yesterday) {
             + RATING_LABELS[droneResult.rating]
           + '</span>'
         + '</div>'
+        + '<div class="w-day-activity">'
+          + '<span class="w-activity-label">☀️</span>'
+          + '<span class="w-rating ' + tanResult.rating + '">'
+            + RATING_LABELS[tanResult.rating]
+          + '</span>'
+        + '</div>'
       + '</div>'
       + '<div class="w-day-wind">' + Math.round(day.wind_speed) + ' mph</div>'
       + '<div class="w-detail" id="detail-wStrip-' + i + '">'
-        + renderUnifiedDetail(runResult, droneResult, day, runWin, droneWin)
+        + renderUnifiedDetail(runResult, droneResult, tanResult, day, runWin, droneWin, tanWin)
       + '</div>'
       + '</div>';
   }
@@ -636,7 +719,7 @@ function renderUnifiedStrip(days, hourly, todayDate, yesterday) {
 
 /* ── UNIFIED DETAIL (inline desktop) ──── */
 
-function renderUnifiedDetail(runResult, droneResult, day, runWin, droneWin) {
+function renderUnifiedDetail(runResult, droneResult, tanResult, day, runWin, droneWin, tanWin) {
   var html = '';
 
   // Running section
@@ -664,6 +747,19 @@ function renderUnifiedDetail(runResult, droneResult, day, runWin, droneWin) {
     + '<div class="w-detail-row"><span>Temp</span><span>' + df.temp + '°F</span></div>'
     + '<div class="w-detail-row"><span>Daylight</span><span>' + df.daylight + ' hrs</span></div>'
     + '<div class="w-detail-row"><span>Score</span><span>' + droneResult.score + '/100</span></div>';
+
+  // Tanning section
+  html += '<div class="w-detail-section" style="margin-top:8px">☀️ Tanning</div>';
+  if (tanWin && tanWin.hourScores) {
+    html += renderHourlyMini(tanWin.hourScores);
+  }
+  var tf = tanResult.factors;
+  html += '<div class="w-detail-row"><span>Temp</span><span>' + tf.temp + '°F</span></div>'
+    + '<div class="w-detail-row"><span>UV Index</span><span>' + tf.uvi + '</span></div>'
+    + '<div class="w-detail-row"><span>Cloud cover</span><span>' + tf.clouds + '%</span></div>'
+    + '<div class="w-detail-row"><span>Wind</span><span>' + tf.wind + ' mph</span></div>'
+    + '<div class="w-detail-row"><span>Rain chance</span><span>' + tf.pop + '%</span></div>'
+    + '<div class="w-detail-row"><span>Score</span><span>' + tanResult.score + '/100</span></div>';
 
   return html;
 }
@@ -695,63 +791,148 @@ function openWeatherDrawer(idx) {
 
   document.getElementById('wDrawerHeader').innerHTML = headerHTML;
 
-  // Build body — both activities in one view
+  // Build body — all activities in one view
   var bodyHTML = '';
 
   // Running
-  bodyHTML += '<div class="w-drawer-activity-header">'
-    + '<span>🏃 Running</span>'
-    + '<span class="w-rating ' + data.runResult.rating + '" style="font-size:0.75rem;padding:3px 10px">'
-      + RATING_LABELS[data.runResult.rating]
-    + '</span>'
-    + '</div>';
-
-  if (data.runWin) {
-    bodyHTML += '<div class="w-drawer-window ' + data.runWin.rating + '">'
-      + 'Best window: <strong>' + formatHour(data.runWin.startHour) + '–' + formatHour(data.runWin.endHour) + '</strong>'
-      + '</div>';
-  }
-  if (data.runWin && data.runWin.hourScores) {
-    bodyHTML += renderDrawerHourly(data.runWin.hourScores);
-  }
-
-  var rf = data.runResult.factors;
-  bodyHTML += drawerRow('Feels like', rf.feels + '°F')
-    + drawerRow('Wind', rf.wind + ' mph')
-    + drawerRow('Rain chance', rf.pop + '%')
-    + drawerRow('Humidity', rf.humidity + '%')
-    + drawerRow('UV Index', rf.uvi)
-    + drawerRow('Score', data.runResult.score + ' / 100');
+  bodyHTML += renderDrawerActivity('🏃 Running', data.runResult, data.runWin, data.hours, scoreRunningHour, day,
+    [['Feels like', data.runResult.factors.feels + '°F'],
+     ['Wind', data.runResult.factors.wind + ' mph'],
+     ['Rain chance', data.runResult.factors.pop + '%'],
+     ['Humidity', data.runResult.factors.humidity + '%'],
+     ['UV Index', data.runResult.factors.uvi]],
+    buildScoreBreakdown('run', data.runResult));
 
   // Drone
-  bodyHTML += '<div class="w-drawer-activity-header" style="margin-top:16px">'
-    + '<span>🛸 Drone</span>'
-    + '<span class="w-rating ' + data.droneResult.rating + '" style="font-size:0.75rem;padding:3px 10px">'
-      + RATING_LABELS[data.droneResult.rating]
-    + '</span>'
-    + '</div>';
+  bodyHTML += renderDrawerActivity('🛸 Drone', data.droneResult, data.droneWin, data.hours, scoreDroneHour, day,
+    [['Wind', data.droneResult.factors.wind + ' mph'],
+     ['Gusts', data.droneResult.factors.gust + ' mph'],
+     ['Rain chance', data.droneResult.factors.pop + '%'],
+     ['Temp', data.droneResult.factors.temp + '°F'],
+     ['Daylight', data.droneResult.factors.daylight + ' hrs']],
+    buildScoreBreakdown('drone', data.droneResult));
 
-  if (data.droneWin) {
-    bodyHTML += '<div class="w-drawer-window ' + data.droneWin.rating + '">'
-      + 'Best window: <strong>' + formatHour(data.droneWin.startHour) + '–' + formatHour(data.droneWin.endHour) + '</strong>'
-      + '</div>';
-  }
-  if (data.droneWin && data.droneWin.hourScores) {
-    bodyHTML += renderDrawerHourly(data.droneWin.hourScores);
-  }
-
-  var df = data.droneResult.factors;
-  bodyHTML += drawerRow('Wind', df.wind + ' mph')
-    + drawerRow('Gusts', df.gust + ' mph')
-    + drawerRow('Rain chance', df.pop + '%')
-    + drawerRow('Temp', df.temp + '°F')
-    + drawerRow('Daylight', df.daylight + ' hrs')
-    + drawerRow('Score', data.droneResult.score + ' / 100');
+  // Tanning
+  bodyHTML += renderDrawerActivity('☀️ Tanning', data.tanResult, data.tanWin, data.hours, scoreTanningHour, day,
+    [['Temp', data.tanResult.factors.temp + '°F'],
+     ['UV Index', data.tanResult.factors.uvi],
+     ['Cloud cover', data.tanResult.factors.clouds + '%'],
+     ['Wind', data.tanResult.factors.wind + ' mph'],
+     ['Rain chance', data.tanResult.factors.pop + '%']],
+    buildScoreBreakdown('tan', data.tanResult));
 
   document.getElementById('wDrawerBody').innerHTML = bodyHTML;
 
   document.getElementById('wDrawerBackdrop').classList.add('open');
   document.getElementById('wDrawer').classList.add('open');
+}
+
+function renderDrawerActivity(title, result, win, hours, scoreFn, day, factorRows, breakdownHTML) {
+  var html = '<div class="w-drawer-activity-header" style="margin-top:16px">'
+    + '<span>' + title + '</span>'
+    + '<span class="w-rating ' + result.rating + '" style="font-size:0.75rem;padding:3px 10px">'
+      + RATING_LABELS[result.rating]
+    + '</span>'
+    + '</div>';
+
+  if (win) {
+    // Window with inline metrics
+    var winMetrics = windowMetrics(hours, win.startHour, win.endHour);
+    html += '<div class="w-drawer-window ' + win.rating + '">'
+      + 'Best window: <strong>' + formatHour(win.startHour) + '–' + formatHour(win.endHour) + '</strong>'
+      + (winMetrics ? '<div class="w-window-metrics">' + winMetrics + '</div>' : '')
+      + '</div>';
+  }
+  if (win && win.hourScores) {
+    html += renderDrawerHourly(win.hourScores);
+  }
+
+  for (var i = 0; i < factorRows.length; i++) {
+    html += drawerRow(factorRows[i][0], factorRows[i][1]);
+  }
+
+  // Tappable score with breakdown
+  html += '<div class="w-drawer-row w-score-row" onclick="this.classList.toggle(\'open\')">'
+    + '<span>Score <span class="w-score-hint">(tap for details)</span></span>'
+    + '<span>' + result.score + ' / 100</span>'
+    + '</div>'
+    + '<div class="w-score-breakdown">' + breakdownHTML + '</div>';
+
+  return html;
+}
+
+function windowMetrics(hours, startHour, endHour) {
+  if (!hours || hours.length === 0) return '';
+  var windowHours = [];
+  for (var i = 0; i < hours.length; i++) {
+    var h = new Date(hours[i].dt * 1000).getHours();
+    // Handle windows that wrap midnight (unlikely but safe)
+    if (startHour < endHour) {
+      if (h >= startHour && h < endHour) windowHours.push(hours[i]);
+    } else {
+      if (h >= startHour || h < endHour) windowHours.push(hours[i]);
+    }
+  }
+  if (windowHours.length === 0) return '';
+
+  var avgTemp = 0, maxWind = 0, maxPop = 0, avgHumidity = 0, avgUvi = 0;
+  for (var j = 0; j < windowHours.length; j++) {
+    var hr = windowHours[j];
+    avgTemp += (hr.feels_like || hr.temp);
+    if (hr.wind_speed > maxWind) maxWind = hr.wind_speed;
+    var pop = (hr.pop || 0) * 100;
+    if (pop > maxPop) maxPop = pop;
+    avgHumidity += (hr.humidity || 0);
+    avgUvi += (hr.uvi || 0);
+  }
+  avgTemp = Math.round(avgTemp / windowHours.length);
+  avgHumidity = Math.round(avgHumidity / windowHours.length);
+  avgUvi = Math.round((avgUvi / windowHours.length) * 10) / 10;
+
+  return '<span>' + avgTemp + '°F</span>'
+    + '<span>💨 ' + Math.round(maxWind) + 'mph</span>'
+    + '<span>🌧 ' + Math.round(maxPop) + '%</span>'
+    + '<span>💧 ' + avgHumidity + '%</span>';
+}
+
+function buildScoreBreakdown(type, result) {
+  var f = result.factors;
+  var lines = [];
+  if (type === 'run') {
+    lines.push(breakdownLine('Feels like', f.feels + '°F', scoreRange(f.feels, THRESHOLDS.run_feelsLike), 20));
+    lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.run_wind), 20));
+    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreInverse(f.pop, THRESHOLDS.run_pop), 20));
+    lines.push(breakdownLine('Humidity', f.humidity + '%', scoreRange(f.humidity, THRESHOLDS.run_humidity), 20));
+    lines.push(breakdownLine('UV Index', f.uvi, scoreInverse(f.uvi, THRESHOLDS.run_uvi), 20));
+    if (THRESHOLDS.run_heatHumidPenalty && f.feels > 80 && f.humidity > 65) {
+      var penalty = Math.round((f.feels - 80) * 0.5 + (f.humidity - 65) * 0.3);
+      lines.push('<div class="w-breakdown-row penalty"><span>Heat+humidity penalty</span><span>-' + penalty + '</span></div>');
+    }
+  } else if (type === 'drone') {
+    lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.drone_wind), 20));
+    lines.push(breakdownLine('Gusts', f.gust + ' mph', scoreRange(f.gust, THRESHOLDS.drone_gust), 20));
+    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreInverse(f.pop, THRESHOLDS.drone_pop), 20));
+    lines.push(breakdownLine('Temp', f.temp + '°F', scoreRange(f.temp, THRESHOLDS.drone_temp), 20));
+    lines.push(breakdownLine('Visibility', '—', 20, 20)); // daily doesn't have vis
+  } else if (type === 'tan') {
+    lines.push(breakdownLine('Temp', f.temp + '°F', scoreRange(f.temp, THRESHOLDS.tan_temp), 20));
+    lines.push(breakdownLine('UV Index', f.uvi, scoreRange(f.uvi, THRESHOLDS.tan_uvi), 25));
+    lines.push(breakdownLine('Cloud cover', f.clouds + '%', scoreInverse(f.clouds, THRESHOLDS.tan_clouds), 25));
+    lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.tan_wind), 15));
+    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreInverse(f.pop, THRESHOLDS.tan_pop), 15));
+  }
+  return lines.join('');
+}
+
+function breakdownLine(label, value, pts, max) {
+  var pct = max > 0 ? Math.round(pts / max * 100) : 0;
+  var cls = pct >= 80 ? 'high' : (pct >= 50 ? 'mid' : 'low');
+  return '<div class="w-breakdown-row">'
+    + '<span class="w-breakdown-label">' + label + '</span>'
+    + '<span class="w-breakdown-val">' + value + '</span>'
+    + '<div class="w-breakdown-bar-bg"><div class="w-breakdown-bar ' + cls + '" style="width:' + pct + '%"></div></div>'
+    + '<span class="w-breakdown-pts">' + pts + '/' + max + '</span>'
+    + '</div>';
 }
 
 function closeWeatherDrawer() {
@@ -811,12 +992,12 @@ function summaryHTML(best, type, daily, hourly) {
   var d = new Date(best.day.dt * 1000);
   var todayStr = new Date().toDateString();
   var dayName = d.toDateString() === todayStr ? 'Today' : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
-  var label = type === 'run' ? '🏃 Best run' : '🛸 Best flight';
+  var label = type === 'run' ? '🏃 Best run' : (type === 'drone' ? '🛸 Best flight' : '☀️ Best tan');
 
   var hours = getHoursForDay(hourly, best.day.dt);
   var windowStr = '';
   if (hours.length >= 4) {
-    var scoreFn = type === 'run' ? scoreRunningHour : scoreDroneHour;
+    var scoreFn = type === 'run' ? scoreRunningHour : (type === 'drone' ? scoreDroneHour : scoreTanningHour);
     var win = findOptimalWindow(hours, scoreFn, best.day.sunrise, best.day.sunset);
     if (win) {
       windowStr = ' <span class="w-summary-window">' + formatHour(win.startHour) + '–' + formatHour(win.endHour) + '</span>';
