@@ -291,7 +291,7 @@ function getSpotifyUserId() {
 
 function createPlaylist(userId, name, description) {
   var token = getSpotifyToken();
-  return fetch(SL_CONFIG.spotifyApiUrl + '/users/' + userId + '/playlists', {
+  return fetch(SL_CONFIG.spotifyApiUrl + '/me/playlists', {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer ' + token,
