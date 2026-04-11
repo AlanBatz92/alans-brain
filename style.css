@@ -3715,6 +3715,44 @@ nav {
   color: var(--text-muted);
 }
 
+/* ── Track links fallback ── */
+.sl-track-links {
+  margin-top: 18px;
+  text-align: left;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.sl-track-links-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+}
+.sl-track-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.sl-track-link {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--teal);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sl-track-link:hover {
+  background: var(--surface);
+}
+
 /* ── Setup section ── */
 .sl-setup {
   background: var(--surface);
