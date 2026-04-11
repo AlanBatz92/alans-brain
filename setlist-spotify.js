@@ -141,6 +141,9 @@ function handleOAuthCallback() {
   .then(function(data) {
     if (data.access_token) {
       saveSpotifyToken(data.access_token, data.expires_in);
+      if (data.scope) {
+        localStorage.setItem('ab_spotify_scope', data.scope);
+      }
       sessionStorage.removeItem('sl_pkce_verifier');
       sessionStorage.removeItem('sl_oauth_state');
       return true;
@@ -604,9 +607,10 @@ function doCreatePlaylist() {
       hideLoading();
       // 403 means the token lacks playlist scopes — clear it and re-auth
       if (err.message && err.message.indexOf('403') !== -1) {
+        var grantedScopes = localStorage.getItem('ab_spotify_scope') || '(none saved)';
         localStorage.removeItem('ab_spotify_token');
         localStorage.removeItem('ab_spotify_token_expiry');
-        showError('slCreateError', 'Spotify permissions need updating — click Create again to re-authorize.');
+        showError('slCreateError', 'Spotify 403 Forbidden. Granted scopes: ' + grantedScopes);
         return;
       }
       showError('slCreateError', 'Failed to create playlist: ' + err.message);
