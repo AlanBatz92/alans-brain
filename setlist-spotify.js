@@ -612,15 +612,7 @@ function doCreatePlaylist() {
     })
     .catch(function(err) {
       hideLoading();
-      // 403 means the token lacks playlist scopes — clear it and re-auth
-      if (err.message && err.message.indexOf('403') !== -1) {
-        var grantedScopes = localStorage.getItem('ab_spotify_scope') || '(none saved)';
-        localStorage.removeItem('ab_spotify_token');
-        localStorage.removeItem('ab_spotify_token_expiry');
-        showError('slCreateError', 'Spotify 403 Forbidden. Granted scopes: ' + grantedScopes);
-        return;
-      }
-      showError('slCreateError', 'Failed to create playlist: ' + err.message);
+      showError('slCreateError', err.message);
     });
 }
 
