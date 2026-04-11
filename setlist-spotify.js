@@ -291,7 +291,7 @@ function getSpotifyUserId() {
 
 function createPlaylist(userId, name, description) {
   var token = getSpotifyToken();
-  return fetch(SL_CONFIG.spotifyApiUrl + '/me/playlists', {
+  return fetch('/api/spotify-proxy?endpoint=' + encodeURIComponent('/me/playlists'), {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer ' + token,
@@ -323,8 +323,9 @@ function addTracksToPlaylist(playlistId, uris) {
 
   function addBatch(idx) {
     if (idx >= batches.length) return Promise.resolve();
-    return fetch(SL_CONFIG.spotifyApiUrl + '/playlists/' + playlistId + '/tracks', {
-      method: 'PUT',
+    var endpoint = '/playlists/' + playlistId + '/tracks';
+    return fetch('/api/spotify-proxy?endpoint=' + encodeURIComponent(endpoint), {
+      method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + token,
         'Content-Type': 'application/json'
