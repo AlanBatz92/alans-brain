@@ -323,13 +323,12 @@ function addTracksToPlaylist(playlistId, uris) {
 
   function addBatch(idx) {
     if (idx >= batches.length) return Promise.resolve();
-    return fetch(SL_CONFIG.spotifyApiUrl + '/playlists/' + playlistId + '/tracks', {
+    var uriParam = batches[idx].join(',');
+    return fetch(SL_CONFIG.spotifyApiUrl + '/playlists/' + playlistId + '/tracks?uris=' + encodeURIComponent(uriParam), {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ uris: batches[idx] })
+        'Authorization': 'Bearer ' + token
+      }
     }).then(function(r) {
       if (!r.ok) {
         return r.text().then(function(body) {
