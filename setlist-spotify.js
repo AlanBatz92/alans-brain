@@ -601,6 +601,13 @@ function doCreatePlaylist() {
     })
     .catch(function(err) {
       hideLoading();
+      // 403 means the token lacks playlist scopes — clear it and re-auth
+      if (err.message && err.message.indexOf('403') !== -1) {
+        localStorage.removeItem('ab_spotify_token');
+        localStorage.removeItem('ab_spotify_token_expiry');
+        showError('slCreateError', 'Spotify permissions need updating — click Create again to re-authorize.');
+        return;
+      }
       showError('slCreateError', 'Failed to create playlist: ' + err.message);
     });
 }
