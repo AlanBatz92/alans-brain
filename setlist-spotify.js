@@ -330,7 +330,14 @@ function addTracksToPlaylist(playlistId, uris) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ uris: batches[idx] })
-    }).then(function() { return addBatch(idx + 1); });
+    }).then(function(r) {
+      if (!r.ok) {
+        return r.text().then(function(body) {
+          throw new Error('Failed to add tracks (' + r.status + '): ' + body);
+        });
+      }
+      return addBatch(idx + 1);
+    });
   }
 
   return addBatch(0);
