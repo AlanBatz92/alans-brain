@@ -300,7 +300,7 @@ function createPlaylist(userId, name, description) {
     body: JSON.stringify({
       name: name,
       description: description,
-      public: false
+      public: true
     })
   })
   .then(function(r) {
@@ -591,7 +591,9 @@ function doCreatePlaylist() {
       return createPlaylist(userId, playlistName, description);
     })
     .then(function(playlist) {
-      return addTracksToPlaylist(playlist.id, uris).then(function() { return playlist; });
+      return addTracksToPlaylist(playlist.id, uris).catch(function(trackErr) {
+        throw new Error(trackErr.message + ' | playlist=' + playlist.id + ' | tracks=' + uris.length);
+      }).then(function() { return playlist; });
     })
     .then(function(playlist) {
       hideLoading();
