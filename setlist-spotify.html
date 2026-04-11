@@ -143,12 +143,12 @@
     </div>
 
     <!-- ══════ SETUP SECTION ══════ -->
-    <div class="sl-setup anim" style="animation-delay:0.6s" id="slSetup">
-      <div class="sl-step-label">Setup</div>
-      <p class="sl-setup-desc">This app needs two API keys to work. They're stored in your browser only &mdash; never sent anywhere except to the APIs themselves.</p>
+    <details class="sl-setup anim" style="animation-delay:0.6s" id="slSetup">
+      <summary class="sl-step-label sl-setup-toggle">Advanced Setup</summary>
+      <p class="sl-setup-desc">API keys are pre-configured. Only change these if you want to use your own keys.</p>
       <div class="sl-setup-row">
         <label class="sl-setup-label" for="slSetlistKey">Setlist.fm API Key</label>
-        <input type="text" class="sl-input sl-input-sm" id="slSetlistKey" placeholder="Get one free at setlist.fm/settings/api" autocomplete="off" spellcheck="false">
+        <input type="password" class="sl-input sl-input-sm" id="slSetlistKey" placeholder="Get one free at setlist.fm/settings/api" autocomplete="off" spellcheck="false">
       </div>
       <div class="sl-setup-row">
         <label class="sl-setup-label" for="slSpotifyId">Spotify Client ID</label>
@@ -158,7 +158,7 @@
         <button class="sl-btn sl-btn-primary" id="slSaveKeysBtn">Save Keys</button>
         <span class="sl-setup-status" id="slKeysStatus"></span>
       </div>
-    </div>
+    </details>
 
     <!-- ══════ BACK LINK ══════ -->
     <div style="text-align:center;margin:32px 0 16px">

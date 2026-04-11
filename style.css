@@ -3722,6 +3722,22 @@ nav {
   border-radius: 12px;
   padding: 20px;
   margin-top: 32px;
+  cursor: default;
+}
+.sl-setup-toggle {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.sl-setup-toggle::-webkit-details-marker { display: none; }
+.sl-setup-toggle::after {
+  content: '\25B8';
+  float: right;
+  transition: transform 0.2s;
+  color: var(--text-dim);
+}
+.sl-setup[open] .sl-setup-toggle::after {
+  transform: rotate(90deg);
 }
 .sl-setup-desc {
   font-size: 0.82rem;

@@ -275,7 +275,11 @@ function getSpotifyUserId() {
     headers: { 'Authorization': 'Bearer ' + token }
   })
   .then(function(r) {
-    if (!r.ok) throw new Error('Could not get Spotify user');
+    if (!r.ok) {
+      return r.text().then(function(body) {
+        throw new Error('Spotify /me failed (' + r.status + '): ' + body);
+      });
+    }
     return r.json();
   })
   .then(function(data) { return data.id; });
@@ -296,7 +300,11 @@ function createPlaylist(userId, name, description) {
     })
   })
   .then(function(r) {
-    if (!r.ok) throw new Error('Could not create playlist');
+    if (!r.ok) {
+      return r.text().then(function(body) {
+        throw new Error('Spotify error (' + r.status + '): ' + body);
+      });
+    }
     return r.json();
   });
 }
@@ -667,16 +675,30 @@ function initSetlistApp() {
 }
 
 function rebuildAndCreate() {
-  // Rebuild the UI to step 3, then auto-create
-  selectSetlist(appState.setlist);
-  // Wait for matching to complete, then create
+  // Rebuild the UI to step 3 without triggering a duplicate match
+  // (selectSetlist would also start matching if a token exists)
+  appState.songs = extractSongs(appState.setlist);
+
+  var date = formatSetlistDate(appState.setlist.eventDate);
+  var venue = appState.setlist.venue ? appState.setlist.venue.name : 'Unknown venue';
+  var city = (appState.setlist.venue && appState.setlist.venue.city) ? appState.setlist.venue.city.name : '';
+  document.getElementById('slSetlistInfo').innerHTML =
+    '<div class="sl-setlist-info-header">'
+    + '<strong>' + appState.artist.name + '</strong>'
+    + '<span class="sl-setlist-info-date">' + date + '</span>'
+    + '</div>'
+    + '<div class="sl-setlist-info-venue">' + venue + (city ? ', ' + city : '') + '</div>';
+
+  showStep(3);
+  hideError('slCreateError');
+  renderSongList(appState.songs);
+
   showLoading('Matching songs on Spotify...');
   matchAllSongs(appState.songs, appState.artist.name)
     .then(function(results) {
       appState.matched = results;
       hideLoading();
       renderMatchSummary(results);
-      // Auto-create
       doCreatePlaylist();
     });
 }
