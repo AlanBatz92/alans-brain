@@ -3740,17 +3740,19 @@ nav {
 }
 .sl-track-link {
   display: block;
-  padding: 6px 8px;
+  padding: 8px 10px;
   border-radius: 6px;
-  font-size: 0.8rem;
-  color: var(--teal);
+  font-size: 0.82rem;
+  color: var(--text);
   text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  border-bottom: 1px solid var(--border);
+}
+.sl-track-link:last-child {
+  border-bottom: none;
 }
 .sl-track-link:hover {
   background: var(--surface);
+  color: var(--teal);
 }
 
 /* ── Setup section ── */
