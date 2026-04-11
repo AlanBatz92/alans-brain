@@ -43,6 +43,23 @@ export default async function handler(req, res) {
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
+
+    // On error, include debug info
+    if (!response.ok) {
+      const debugHeaders = {};
+      response.headers.forEach((value, key) => {
+        debugHeaders[key] = value;
+      });
+      return res.status(response.status).send(JSON.stringify({
+        spotifyStatus: response.status,
+        spotifyBody: data,
+        spotifyHeaders: debugHeaders,
+        requestUrl: url,
+        requestMethod: fetchOptions.method,
+        bodyPreview: fetchOptions.body ? fetchOptions.body.substring(0, 200) : null
+      }));
+    }
+
     res.status(response.status).send(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
