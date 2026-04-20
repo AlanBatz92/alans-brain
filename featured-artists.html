@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a0e1a">
-  <title>Setlist to Spotify — Alan's Brain</title>
+  <title>Featured Artist Playlist — Alan's Brain</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -73,111 +73,92 @@
 
     <!-- ══════ PAGE HERO ══════ -->
     <section class="page-hero">
-      <div class="page-hero-icon anim" style="animation-delay:0.1s"><span style="font-size:72px;line-height:1">🎵</span></div>
+      <div class="page-hero-icon anim" style="animation-delay:0.1s"><span style="font-size:72px;line-height:1">🎤</span></div>
       <h1 class="anim" style="animation-delay:0.2s">
-        <span class="gradient-text">Setlist to Spotify</span>
+        <span class="gradient-text">Featured Artist Playlist</span>
       </h1>
-      <div class="page-hero-tagline anim" style="animation-delay:0.35s">turn any concert setlist into a playlist</div>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">discover every artist on a track, album, or playlist</div>
       <div class="page-hero-desc anim" style="animation-delay:0.45s">
-        Search for an artist, pick a setlist from setlist.fm, and create a Spotify playlist with one click.
+        Paste any Spotify link and this tool finds all featured artists, then builds a playlist of their top 5 songs each.
       </div>
     </section>
 
     <!-- ══════ APP ══════ -->
     <div class="sl-app anim" style="animation-delay:0.5s">
 
-      <!-- Mode toggle -->
-      <div class="sl-mode-toggle" id="slModeToggle">
-        <button class="sl-mode-btn active" id="slModeSingle">Single Setlist</button>
-        <button class="sl-mode-btn" id="slModeCombine">Combine Setlists</button>
+      <!-- Step 1: URL Input -->
+      <div class="sl-step" id="faStep1">
+        <div class="sl-step-label">1. Paste a Spotify link</div>
+        <div class="sl-search-row">
+          <input type="text" class="sl-input" id="faUrlInput" placeholder="Paste a Spotify track, album, or playlist link..." autocomplete="off" spellcheck="false">
+          <button class="sl-btn sl-btn-primary" id="faAnalyzeBtn">Analyze</button>
+        </div>
+        <div class="sl-error" id="faStep1Error" style="display:none"></div>
       </div>
 
-      <!-- Step 1: Artist Search -->
-      <div class="sl-step" id="slStep1">
-        <div id="slSingleMode">
-          <div class="sl-step-label">1. Search for an artist or paste a setlist.fm link</div>
-          <div class="sl-search-row">
-            <input type="text" class="sl-input" id="slArtistInput" placeholder="E.g.; Carbomb, Sanguisugabogg, or paste a setlist.fm URL..." autocomplete="off" spellcheck="false">
-            <button class="sl-btn sl-btn-primary" id="slSearchBtn">Search</button>
-          </div>
-          <div class="sl-error" id="slSearchError" style="display:none"></div>
-          <div class="sl-results" id="slArtistResults" style="display:none"></div>
-        </div>
-        <div id="slCombineMode" style="display:none">
-          <div class="sl-step-label">1. Add two or more setlists to combine</div>
-          <div id="slCombineSlots"></div>
-          <div class="sl-combine-actions" id="slCombineActions">
-            <button class="sl-btn sl-btn-ghost" id="slAddSlotBtn">+ Add Another Setlist</button>
-            <button class="sl-btn sl-btn-primary" id="slCombineReviewBtn" disabled>Review Combined Songs →</button>
-          </div>
-          <div class="sl-error" id="slCombineError" style="display:none"></div>
+      <!-- Step 2: Artist Selection -->
+      <div class="sl-step" id="faStep2" style="display:none">
+        <div class="sl-step-label">2. Select featured artists</div>
+        <div id="faSourceInfo"></div>
+        <div class="fa-no-features" id="faNoFeatures" style="display:none"></div>
+        <div class="fa-artist-list" id="faArtistList"></div>
+        <div class="sl-error" id="faStep2Error" style="display:none"></div>
+        <div class="sl-actions">
+          <button class="sl-btn sl-btn-primary" id="faStep2ContinueBtn">Load Top Tracks &rarr;</button>
         </div>
       </div>
 
-      <!-- Step 2: Pick a Setlist -->
-      <div class="sl-step" id="slStep2" style="display:none">
-        <div class="sl-step-label">2. Pick a setlist</div>
-        <div class="sl-artist-chosen" id="slArtistChosen"></div>
-        <div class="sl-results" id="slSetlistResults"></div>
-        <div class="sl-error" id="slSetlistError" style="display:none"></div>
-      </div>
-
-      <!-- Step 3: Song List + Spotify Match -->
-      <div class="sl-step" id="slStep3" style="display:none">
-        <div class="sl-step-label">3. Review songs</div>
-        <div class="sl-setlist-info" id="slSetlistInfo"></div>
-        <div class="sl-dedup-row" id="slDedupRow" style="display:none">
-          <input type="checkbox" id="slDedupCheck" checked>
-          <label for="slDedupCheck">Remove duplicate songs across setlists</label>
+      <!-- Step 3: Track Preview + Create -->
+      <div class="sl-step" id="faStep3" style="display:none">
+        <div class="sl-step-label">3. Preview &amp; create playlist</div>
+        <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px" id="faTrackCount"></div>
+        <div class="sl-song-list" id="faTrackPreview"></div>
+        <div style="margin:16px 0 8px">
+          <label class="sl-setup-label" for="faPlaylistNameInput">Playlist name</label>
+          <input type="text" class="sl-input" id="faPlaylistNameInput" autocomplete="off" spellcheck="false">
         </div>
-        <div class="sl-song-list" id="slSongList"></div>
-        <div class="sl-match-summary" id="slMatchSummary"></div>
-        <div class="sl-actions" id="slActions">
-          <button class="sl-btn sl-btn-spotify" id="slCreateBtn">
+        <div class="sl-error" id="faStep3Error" style="display:none"></div>
+        <div class="sl-actions">
+          <button class="sl-btn sl-btn-spotify" id="faStep3CreateBtn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:6px"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
             Create Spotify Playlist
           </button>
         </div>
-        <div class="sl-error" id="slCreateError" style="display:none"></div>
       </div>
 
       <!-- Step 4: Success -->
-      <div class="sl-step" id="slStep4" style="display:none">
-        <div class="sl-success" id="slSuccess"></div>
+      <div class="sl-step" id="faStep4" style="display:none">
+        <div class="sl-success" id="faSuccess"></div>
       </div>
 
       <!-- Loading overlay -->
-      <div class="sl-loading" id="slLoading" style="display:none">
+      <div class="sl-loading" id="faLoading" style="display:none">
         <div class="t-loading-dots">
           <div class="t-loading-dot"></div>
           <div class="t-loading-dot"></div>
           <div class="t-loading-dot"></div>
         </div>
-        <div id="slLoadingText">Searching...</div>
+        <div id="faLoadingText">Loading...</div>
       </div>
 
     </div>
 
     <!-- ══════ START OVER ══════ -->
-    <div class="sl-start-over" id="slStartOver" style="display:none">
-      <button class="sl-btn sl-btn-ghost" id="slResetBtn">Start Over</button>
+    <div class="sl-start-over" id="faStartOver" style="display:none">
+      <button class="sl-btn sl-btn-ghost" id="faResetBtn">Start Over</button>
     </div>
 
     <!-- ══════ SETUP SECTION ══════ -->
-    <details class="sl-setup anim" style="animation-delay:0.6s" id="slSetup">
+    <details class="sl-setup anim" style="animation-delay:0.6s">
       <summary class="sl-step-label sl-setup-toggle">Advanced Setup</summary>
-      <p class="sl-setup-desc">API keys are pre-configured. Only change these if you want to use your own keys.</p>
+      <p class="sl-setup-desc">API key is pre-configured. Only change this if you want to use your own Spotify app.</p>
       <div class="sl-setup-row">
-        <label class="sl-setup-label" for="slSetlistKey">Setlist.fm API Key</label>
-        <input type="password" class="sl-input sl-input-sm" id="slSetlistKey" placeholder="Get one free at setlist.fm/settings/api" autocomplete="off" spellcheck="false">
+        <label class="sl-setup-label" for="faSpotifyId">Spotify Client ID</label>
+        <input type="text" class="sl-input sl-input-sm" id="faSpotifyId" placeholder="Create an app at developer.spotify.com" autocomplete="off" spellcheck="false">
       </div>
       <div class="sl-setup-row">
-        <label class="sl-setup-label" for="slSpotifyId">Spotify Client ID</label>
-        <input type="text" class="sl-input sl-input-sm" id="slSpotifyId" placeholder="Create an app at developer.spotify.com" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="sl-setup-row">
-        <button class="sl-btn sl-btn-primary" id="slSaveKeysBtn">Save Keys</button>
-        <span class="sl-setup-status" id="slKeysStatus"></span>
+        <button class="sl-btn sl-btn-primary" id="faSaveKeyBtn">Save Key</button>
+        <span class="sl-setup-status" id="faKeysStatus"></span>
       </div>
     </details>
 
@@ -207,9 +188,9 @@
 
   </div><!-- /.page -->
 
-  <script src="setlist-spotify.js"></script>
+  <script src="featured-artists.js"></script>
   <script>
-    initSetlistApp();
+    initFeaturedArtistsApp();
 
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');
@@ -252,10 +233,7 @@
     var revealEls = document.querySelectorAll('.reveal');
     var revealObs = new IntersectionObserver(function(entries) {
       entries.forEach(function(e) {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible');
-          revealObs.unobserve(e.target);
-        }
+        if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }
       });
     }, { threshold: 0.1 });
     revealEls.forEach(function(el) { revealObs.observe(el); });

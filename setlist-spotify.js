@@ -347,10 +347,12 @@ function addTracksToPlaylist(playlistId, uris) {
 /* ── APP STATE ───────────────────────── */
 
 var appState = {
+  mode: 'single',     // 'single' | 'combine'
   artist: null,       // { mbid, name, disambiguation }
   setlist: null,      // full setlist object from setlist.fm
   songs: [],          // extracted song list
-  matched: []         // [{ song, track }]
+  matched: [],        // [{ song, track }]
+  combineSlots: []    // combine mode: [{id, artist, setlist, songs}]
 };
 
 /* ── UI HELPERS ──────────────────────── */
@@ -546,6 +548,7 @@ function selectSetlist(setlist) {
 
   showStep(3);
   hideError('slCreateError');
+  document.getElementById('slDedupRow').style.display = 'none';
   renderSongList(appState.songs);
 
   // If we have a Spotify token, match songs immediately
@@ -583,10 +586,20 @@ function doCreatePlaylist() {
   hideError('slCreateError');
   showLoading('Creating playlist...');
 
-  var date = formatSetlistDate(appState.setlist.eventDate);
-  var venue = appState.setlist.venue ? appState.setlist.venue.name : '';
-  var playlistName = appState.artist.name + ' — ' + date;
-  var description = 'Setlist from ' + venue + ' on ' + date + '. Built with Setlist to Spotify (Alan\'s Brain).';
+  var playlistName, description;
+  if (appState.mode === 'combine' && appState.combineSlots.length > 0) {
+    var artistNames = appState.combineSlots.map(function(s) { return s.artist.name; });
+    var firstDate = formatSetlistDate(appState.combineSlots[0].setlist.eventDate);
+    playlistName = artistNames.join(' & ') + ' — ' + firstDate;
+    description = 'Combined setlist: ' + appState.combineSlots.map(function(s) {
+      return s.artist.name + ' (' + formatSetlistDate(s.setlist.eventDate) + ')';
+    }).join(', ') + '. Built with Setlist to Spotify (Alan\'s Brain).';
+  } else {
+    var date = formatSetlistDate(appState.setlist.eventDate);
+    var venue = appState.setlist.venue ? appState.setlist.venue.name : '';
+    playlistName = appState.artist.name + ' — ' + date;
+    description = 'Setlist from ' + venue + ' on ' + date + '. Built with Setlist to Spotify (Alan\'s Brain).';
+  }
 
   getSpotifyUserId()
     .then(function(userId) {
@@ -666,11 +679,17 @@ function doCreatePlaylist() {
 }
 
 function resetApp() {
-  appState = { artist: null, setlist: null, songs: [], matched: [] };
+  var mode = appState.mode;
+  appState = { mode: mode, artist: null, setlist: null, songs: [], matched: [], combineSlots: [] };
   showStep(1);
-  document.getElementById('slArtistInput').value = '';
-  document.getElementById('slArtistResults').style.display = 'none';
-  hideError('slSearchError');
+  if (mode === 'single') {
+    document.getElementById('slArtistInput').value = '';
+    document.getElementById('slArtistResults').style.display = 'none';
+    hideError('slSearchError');
+  } else {
+    initCombineSlots();
+    hideError('slCombineError');
+  }
   hideError('slSetlistError');
   hideError('slCreateError');
   document.getElementById('slCreateBtn').disabled = false;
@@ -712,6 +731,56 @@ function initSetlistApp() {
   // Reset button
   document.getElementById('slResetBtn').addEventListener('click', resetApp);
 
+  // Combine mode actions
+  document.getElementById('slAddSlotBtn').addEventListener('click', function() {
+    if (appState.combineSlots.length < 5) {
+      appState.combineSlots.push(makeCombineSlot());
+      renderCombineSlots();
+    }
+  });
+  document.getElementById('slCombineReviewBtn').addEventListener('click', doCombineReview);
+
+  // Dedup checkbox rebuilds song list on change
+  document.getElementById('slDedupCheck').addEventListener('change', function() {
+    if (appState.mode === 'combine') {
+      var dedup = this.checked;
+      var groups = buildCombinedSongs(dedup);
+      appState.songs = [];
+      groups.forEach(function(g) { appState.songs = appState.songs.concat(g.songs); });
+      var songListEl = document.getElementById('slSongList');
+      var html = '';
+      var globalIdx = 0;
+      groups.forEach(function(group) {
+        html += '<div class="sl-group-header">' + group.label + '</div>';
+        group.songs.forEach(function(song) {
+          var coverNote = song.cover ? ' <span class="sl-song-cover">' + song.cover + ' cover</span>' : '';
+          html += '<div class="sl-song-row" id="slSong' + globalIdx + '">'
+            + '<span class="sl-song-status">&#8987;</span>'
+            + '<span class="sl-song-name">' + song.name + coverNote + '</span>'
+            + '</div>';
+          globalIdx++;
+        });
+      });
+      songListEl.innerHTML = html;
+      appState.matched = [];
+      document.getElementById('slMatchSummary').innerHTML = '';
+      var token = getSpotifyToken();
+      if (token) {
+        showLoading('Matching songs on Spotify...');
+        matchAllSongs(appState.songs, appState.combineSlots[0].artist.name)
+          .then(function(results) {
+            appState.matched = results;
+            hideLoading();
+            renderMatchSummary(results);
+          });
+      }
+    }
+  });
+
+  // Mode toggle
+  document.getElementById('slModeSingle').addEventListener('click', function() { setMode('single'); });
+  document.getElementById('slModeCombine').addEventListener('click', function() { setMode('combine'); });
+
   // Handle OAuth callback
   var params = new URLSearchParams(window.location.search);
   if (params.has('code') || params.has('error')) {
@@ -721,10 +790,13 @@ function initSetlistApp() {
         var saved = sessionStorage.getItem('sl_pending_state');
         if (saved) {
           try {
-            appState = JSON.parse(saved);
+            var restored = JSON.parse(saved);
+            appState = restored;
             sessionStorage.removeItem('sl_pending_state');
-            if (appState.setlist && appState.songs.length > 0) {
-              // Rebuild UI and immediately create the playlist
+            if (appState.mode === 'combine') {
+              setMode('combine');
+              rebuildAndCreateCombine();
+            } else if (appState.setlist && appState.songs.length > 0) {
               rebuildAndCreate();
             }
           } catch (e) { /* ignore */ }
@@ -804,6 +876,332 @@ function doSearch() {
     .catch(function(err) {
       hideLoading();
       showError('slSearchError', err.message);
+    });
+}
+
+/* ── COMBINE MODE ────────────────────── */
+
+function setMode(mode) {
+  appState.mode = mode;
+  document.getElementById('slModeSingle').classList.toggle('active', mode === 'single');
+  document.getElementById('slModeCombine').classList.toggle('active', mode === 'combine');
+  document.getElementById('slSingleMode').style.display = mode === 'single' ? 'block' : 'none';
+  document.getElementById('slCombineMode').style.display = mode === 'combine' ? 'block' : 'none';
+  if (mode === 'combine' && appState.combineSlots.length === 0) {
+    initCombineSlots();
+  }
+  showStep(1);
+}
+
+function initCombineSlots() {
+  appState.combineSlots = [];
+  // Start with 2 empty slots
+  appState.combineSlots.push(makeCombineSlot());
+  appState.combineSlots.push(makeCombineSlot());
+  renderCombineSlots();
+}
+
+function makeCombineSlot() {
+  return { id: Date.now() + Math.random(), phase: 'search', query: '', artistResults: [], setlistResults: [], artist: null, setlist: null, songs: [] };
+}
+
+function renderCombineSlots() {
+  var container = document.getElementById('slCombineSlots');
+  var html = '';
+  appState.combineSlots.forEach(function(slot, idx) {
+    html += '<div class="sl-slot" id="slSlot_' + slot.id + '">';
+    html += '<div class="sl-slot-header">';
+    html += '<span class="sl-slot-label">Setlist ' + (idx + 1) + '</span>';
+    if (appState.combineSlots.length > 2) {
+      html += '<button class="sl-slot-remove" data-slot-remove="' + slot.id + '">Remove</button>';
+    }
+    html += '</div>';
+
+    if (slot.phase === 'done') {
+      var date = formatSetlistDate(slot.setlist.eventDate);
+      var venue = slot.setlist.venue ? slot.setlist.venue.name : '';
+      var city = (slot.setlist.venue && slot.setlist.venue.city) ? slot.setlist.venue.city.name : '';
+      html += '<div class="sl-slot-confirmed">';
+      html += '<div class="sl-slot-confirmed-info">';
+      html += '<strong>' + slot.artist.name + '</strong>';
+      html += '<div class="sl-slot-confirmed-meta">' + date + (venue ? ' &mdash; ' + venue : '') + (city ? ', ' + city : '') + '</div>';
+      html += '</div>';
+      html += '<button class="sl-btn sl-btn-ghost sl-btn-sm" data-slot-change="' + slot.id + '">Change</button>';
+      html += '</div>';
+    } else if (slot.phase === 'picking-setlists') {
+      html += '<div class="sl-step-label" style="font-size:0.72rem;margin-bottom:8px">Pick a setlist for ' + slot.artist.name + '</div>';
+      html += renderCombineSetlistList(slot);
+    } else if (slot.phase === 'picking-artists') {
+      html += '<div class="sl-search-row">';
+      html += '<input type="text" class="sl-input" data-slot-input="' + slot.id + '" value="' + escHtml(slot.query) + '" placeholder="Artist name or setlist.fm URL..." autocomplete="off" spellcheck="false">';
+      html += '<button class="sl-btn sl-btn-primary" data-slot-search="' + slot.id + '">Search</button>';
+      html += '</div>';
+      html += renderCombineArtistList(slot);
+    } else {
+      html += '<div class="sl-search-row">';
+      html += '<input type="text" class="sl-input" data-slot-input="' + slot.id + '" value="' + escHtml(slot.query) + '" placeholder="Artist name or setlist.fm URL..." autocomplete="off" spellcheck="false">';
+      html += '<button class="sl-btn sl-btn-primary" data-slot-search="' + slot.id + '">Search</button>';
+      html += '</div>';
+    }
+
+    html += '</div>';
+  });
+  container.innerHTML = html;
+
+  // Update action buttons
+  var doneCount = appState.combineSlots.filter(function(s) { return s.phase === 'done'; }).length;
+  document.getElementById('slCombineReviewBtn').disabled = doneCount < 2;
+  document.getElementById('slAddSlotBtn').style.display = appState.combineSlots.length >= 5 ? 'none' : '';
+
+  // Wire up event delegation on container
+  container.onclick = null;
+  container.addEventListener('click', handleCombineClick);
+  container.querySelectorAll('input[data-slot-input]').forEach(function(input) {
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        var slotId = input.getAttribute('data-slot-input');
+        doCombineSearch(parseFloat(slotId));
+      }
+    });
+  });
+}
+
+function renderCombineArtistList(slot) {
+  if (!slot.artistResults || slot.artistResults.length === 0) return '';
+  var html = '<div class="sl-results" style="margin-top:8px">';
+  slot.artistResults.slice(0, 8).forEach(function(a, i) {
+    var dis = a.disambiguation ? ' <span class="sl-artist-dis">' + a.disambiguation + '</span>' : '';
+    html += '<button class="sl-result-card" data-slot-artist="' + slot.id + '" data-artist-idx="' + i + '">'
+      + '<span class="sl-result-name">' + a.name + dis + '</span>'
+      + '</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderCombineSetlistList(slot) {
+  if (!slot.setlistResults || slot.setlistResults.length === 0) {
+    return '<div class="sl-empty">No setlists found for this artist.</div>';
+  }
+  var html = '<div class="sl-results" style="margin-top:8px">';
+  slot.setlistResults.slice(0, 10).forEach(function(s, i) {
+    var date = formatSetlistDate(s.eventDate);
+    var venue = s.venue ? s.venue.name : 'Unknown venue';
+    var city = (s.venue && s.venue.city) ? s.venue.city.name : '';
+    var songCount = 0;
+    if (s.sets && s.sets.set) s.sets.set.forEach(function(set) { if (set.song) songCount += set.song.length; });
+    html += '<button class="sl-result-card sl-setlist-card" data-slot-setlist="' + slot.id + '" data-setlist-idx="' + i + '">'
+      + '<div class="sl-setlist-date">' + date + '</div>'
+      + '<div class="sl-setlist-venue">' + venue + '</div>'
+      + '<div class="sl-setlist-location">' + city + '</div>'
+      + '<div class="sl-setlist-count">' + songCount + ' songs</div>'
+      + '</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function handleCombineClick(e) {
+  var removeBtn = e.target.closest('[data-slot-remove]');
+  if (removeBtn) {
+    var id = parseFloat(removeBtn.getAttribute('data-slot-remove'));
+    appState.combineSlots = appState.combineSlots.filter(function(s) { return s.id !== id; });
+    renderCombineSlots();
+    return;
+  }
+  var changeBtn = e.target.closest('[data-slot-change]');
+  if (changeBtn) {
+    var id = parseFloat(changeBtn.getAttribute('data-slot-change'));
+    var slot = appState.combineSlots.find(function(s) { return s.id === id; });
+    if (slot) { slot.phase = 'search'; slot.artist = null; slot.setlist = null; slot.songs = []; slot.artistResults = []; slot.setlistResults = []; }
+    renderCombineSlots();
+    return;
+  }
+  var searchBtn = e.target.closest('[data-slot-search]');
+  if (searchBtn) {
+    var id = parseFloat(searchBtn.getAttribute('data-slot-search'));
+    doCombineSearch(id);
+    return;
+  }
+  var artistBtn = e.target.closest('[data-slot-artist]');
+  if (artistBtn) {
+    var id = parseFloat(artistBtn.getAttribute('data-slot-artist'));
+    var idx = parseInt(artistBtn.getAttribute('data-artist-idx'), 10);
+    var slot = appState.combineSlots.find(function(s) { return s.id === id; });
+    if (slot) selectCombineArtist(slot, slot.artistResults[idx]);
+    return;
+  }
+  var setlistBtn = e.target.closest('[data-slot-setlist]');
+  if (setlistBtn) {
+    var id = parseFloat(setlistBtn.getAttribute('data-slot-setlist'));
+    var idx = parseInt(setlistBtn.getAttribute('data-setlist-idx'), 10);
+    var slot = appState.combineSlots.find(function(s) { return s.id === id; });
+    if (slot) selectCombineSetlist(slot, slot.setlistResults[idx]);
+    return;
+  }
+}
+
+function doCombineSearch(slotId) {
+  var slot = appState.combineSlots.find(function(s) { return s.id === slotId; });
+  if (!slot) return;
+  var inputEl = document.querySelector('[data-slot-input="' + slotId + '"]');
+  var query = inputEl ? inputEl.value.trim() : slot.query;
+  if (!query) return;
+  slot.query = query;
+  hideError('slCombineError');
+
+  var setlistId = parseSetlistUrl(query);
+  if (setlistId) {
+    showLoading('Fetching setlist...');
+    fetchSetlistById(setlistId)
+      .then(function(setlist) {
+        hideLoading();
+        var a = setlist.artist || {};
+        slot.artist = { mbid: a.mbid || '', name: a.name || 'Unknown Artist', disambiguation: '' };
+        selectCombineSetlist(slot, setlist);
+      })
+      .catch(function(err) { hideLoading(); showError('slCombineError', err.message); });
+    return;
+  }
+
+  showLoading('Searching...');
+  searchArtists(query)
+    .then(function(artists) {
+      hideLoading();
+      slot.artistResults = artists;
+      slot.phase = 'picking-artists';
+      renderCombineSlots();
+    })
+    .catch(function(err) { hideLoading(); showError('slCombineError', err.message); });
+}
+
+function selectCombineArtist(slot, artist) {
+  slot.artist = artist;
+  slot.phase = 'picking-setlists';
+  showLoading('Finding setlists...');
+  getArtistSetlists(artist.mbid)
+    .then(function(setlists) {
+      hideLoading();
+      slot.setlistResults = setlists;
+      renderCombineSlots();
+    })
+    .catch(function(err) { hideLoading(); showError('slCombineError', err.message); });
+}
+
+function selectCombineSetlist(slot, setlist) {
+  slot.setlist = setlist;
+  slot.songs = extractSongs(setlist);
+  slot.phase = 'done';
+  renderCombineSlots();
+}
+
+function normalizeSongName(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function buildCombinedSongs(dedup) {
+  var allGroups = appState.combineSlots.map(function(slot) {
+    return { label: slot.artist.name + ' — ' + formatSetlistDate(slot.setlist.eventDate), songs: slot.songs };
+  });
+  if (!dedup) return allGroups;
+  var seen = {};
+  return allGroups.map(function(group) {
+    return {
+      label: group.label,
+      songs: group.songs.filter(function(song) {
+        var key = normalizeSongName(song.name);
+        if (seen[key]) return false;
+        seen[key] = true;
+        return true;
+      })
+    };
+  });
+}
+
+function doCombineReview() {
+  var doneSlots = appState.combineSlots.filter(function(s) { return s.phase === 'done'; });
+  if (doneSlots.length < 2) {
+    showError('slCombineError', 'Please select at least 2 setlists.');
+    return;
+  }
+  hideError('slCombineError');
+
+  var dedup = document.getElementById('slDedupCheck') ? document.getElementById('slDedupCheck').checked : true;
+  var groups = buildCombinedSongs(dedup);
+
+  appState.songs = [];
+  groups.forEach(function(g) { appState.songs = appState.songs.concat(g.songs); });
+
+  // Build header info for step 3
+  var infoHtml = '<div class="sl-setlist-info-header"><strong>Combined Setlist</strong></div>'
+    + '<div class="sl-setlist-info-venue">' + doneSlots.map(function(s) { return s.artist.name; }).join(' &amp; ') + '</div>';
+  document.getElementById('slSetlistInfo').innerHTML = infoHtml;
+
+  // Show dedup toggle
+  document.getElementById('slDedupRow').style.display = 'flex';
+  document.getElementById('slDedupCheck').checked = dedup;
+
+  // Render song list with group headers
+  var songListEl = document.getElementById('slSongList');
+  var html = '';
+  var globalIdx = 0;
+  groups.forEach(function(group) {
+    html += '<div class="sl-group-header">' + group.label + '</div>';
+    group.songs.forEach(function(song) {
+      var coverNote = song.cover ? ' <span class="sl-song-cover">' + song.cover + ' cover</span>' : '';
+      html += '<div class="sl-song-row" id="slSong' + globalIdx + '">'
+        + '<span class="sl-song-status">&#8987;</span>'
+        + '<span class="sl-song-name">' + song.name + coverNote + '</span>'
+        + '</div>';
+      globalIdx++;
+    });
+  });
+  songListEl.innerHTML = html;
+
+  showStep(3);
+  hideError('slCreateError');
+
+  var token = getSpotifyToken();
+  var primaryArtistName = doneSlots[0].artist.name;
+  if (token) {
+    showLoading('Matching songs on Spotify...');
+    matchAllSongs(appState.songs, primaryArtistName)
+      .then(function(results) {
+        appState.matched = results;
+        hideLoading();
+        renderMatchSummary(results);
+      });
+  } else {
+    document.getElementById('slMatchSummary').innerHTML =
+      '<span class="sl-match-note">Connect to Spotify to match songs and create a playlist</span>';
+  }
+}
+
+function rebuildAndCreateCombine() {
+  // After OAuth redirect, rebuild combine review and create playlist
+  var doneSlots = appState.combineSlots.filter(function(s) { return s.phase === 'done'; });
+  if (doneSlots.length < 2 || appState.songs.length === 0) return;
+
+  var infoHtml = '<div class="sl-setlist-info-header"><strong>Combined Setlist</strong></div>'
+    + '<div class="sl-setlist-info-venue">' + doneSlots.map(function(s) { return s.artist.name; }).join(' &amp; ') + '</div>';
+  document.getElementById('slSetlistInfo').innerHTML = infoHtml;
+
+  document.getElementById('slDedupRow').style.display = 'flex';
+  renderSongList(appState.songs);
+  showStep(3);
+  hideError('slCreateError');
+
+  showLoading('Matching songs on Spotify...');
+  matchAllSongs(appState.songs, doneSlots[0].artist.name)
+    .then(function(results) {
+      appState.matched = results;
+      hideLoading();
+      renderMatchSummary(results);
+      doCreatePlaylist();
     });
 }
 
