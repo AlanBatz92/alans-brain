@@ -213,16 +213,19 @@ function getArtistSetlists(mbid) {
   });
 }
 
-function extractSongs(setlist) {
+function extractSongs(setlist, artistName) {
   var songs = [];
   if (!setlist.sets || !setlist.sets.set) return songs;
+  // Default to the setlist.fm artist on the setlist if none was passed in
+  var defaultArtist = artistName || (setlist.artist && setlist.artist.name) || '';
   setlist.sets.set.forEach(function(set) {
     if (set.song) {
       set.song.forEach(function(song) {
         if (song.name && !song.tape) {
           songs.push({
             name: song.name,
-            cover: song.cover ? song.cover.name : null
+            cover: song.cover ? song.cover.name : null,
+            artist: defaultArtist
           });
         }
       });
@@ -233,11 +236,21 @@ function extractSongs(setlist) {
 
 /* ── SPOTIFY API ─────────────────────── */
 
-function spotifySearch(songName, artistName) {
+// Strip parens / brackets / dashed suffixes that often break Spotify's
+// strict "track:" filter even when the song exists on Spotify under a
+// slightly different rendering (remasters, live versions, deluxe tags).
+function cleanForSearch(name) {
+  return String(name || '')
+    .replace(/\s*[\(\[][^\)\]]*[\)\]]/g, '')   // drop "(...)" / "[...]"
+    .replace(/\s*[-–—]\s*(remaster(ed)?|live|version|edit|mix|radio|demo|acoustic|deluxe|bonus).*/gi, '')
+    .replace(/\s+\/\s+.*/, '')                  // drop " / second title"
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function spotifySearchOnce(query) {
   var token = getSpotifyToken();
   if (!token) return Promise.resolve(null);
-
-  var query = 'track:' + songName + ' artist:' + artistName;
   return fetch(SL_CONFIG.spotifyApiUrl + '/search?q=' + encodeURIComponent(query) + '&type=track&limit=3', {
     headers: { 'Authorization': 'Bearer ' + token }
   })
@@ -252,7 +265,30 @@ function spotifySearch(songName, artistName) {
   .catch(function() { return null; });
 }
 
-function matchAllSongs(songs, artistName) {
+function spotifySearch(songName, artistName) {
+  // Try progressively looser queries until one returns a track.
+  var cleaned = cleanForSearch(songName);
+  var attempts = [
+    'track:' + songName + ' artist:' + artistName,
+    'track:' + cleaned + ' artist:' + artistName,
+    cleaned + ' ' + artistName,
+    songName + ' ' + artistName
+  ];
+  // De-dup attempts (cleaned can equal raw)
+  var seen = {};
+  attempts = attempts.filter(function(q) { if (seen[q]) return false; seen[q] = true; return true; });
+
+  function tryNext(i) {
+    if (i >= attempts.length) return Promise.resolve(null);
+    return spotifySearchOnce(attempts[i]).then(function(track) {
+      if (track) return track;
+      return tryNext(i + 1);
+    });
+  }
+  return tryNext(0);
+}
+
+function matchAllSongs(songs, fallbackArtistName) {
   // Sequential to respect rate limits
   var results = [];
   var index = 0;
@@ -260,7 +296,9 @@ function matchAllSongs(songs, artistName) {
   function next() {
     if (index >= songs.length) return Promise.resolve(results);
     var song = songs[index];
-    var searchArtist = song.cover || artistName;
+    // Prefer the cover artist (for cover songs) > the song's own tagged
+    // artist (combine mode keeps each song's source artist) > caller fallback
+    var searchArtist = song.cover || song.artist || fallbackArtistName;
     index++;
     return spotifySearch(song.name, searchArtist)
       .then(function(track) {
@@ -536,7 +574,7 @@ function selectArtist(artist) {
 
 function selectSetlist(setlist) {
   appState.setlist = setlist;
-  appState.songs = extractSongs(setlist);
+  appState.songs = extractSongs(setlist, appState.artist && appState.artist.name);
 
   var date = formatSetlistDate(setlist.eventDate);
   var venue = setlist.venue ? setlist.venue.name : 'Unknown venue';
@@ -811,7 +849,7 @@ function initSetlistApp() {
 function rebuildAndCreate() {
   // Rebuild the UI to step 3 without triggering a duplicate match
   // (selectSetlist would also start matching if a token exists)
-  appState.songs = extractSongs(appState.setlist);
+  appState.songs = extractSongs(appState.setlist, appState.artist && appState.artist.name);
 
   var date = formatSetlistDate(appState.setlist.eventDate);
   var venue = appState.setlist.venue ? appState.setlist.venue.name : 'Unknown venue';
@@ -1098,7 +1136,7 @@ function selectCombineArtist(slot, artist) {
 
 function selectCombineSetlist(slot, setlist) {
   slot.setlist = setlist;
-  slot.songs = extractSongs(setlist);
+  slot.songs = extractSongs(setlist, slot.artist && slot.artist.name);
   slot.phase = 'done';
   renderCombineSlots();
 }
