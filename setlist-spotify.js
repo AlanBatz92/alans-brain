@@ -321,9 +321,11 @@ function addTracksToPlaylist(playlistId, uris) {
     batches.push(uris.slice(i, i + 100));
   }
 
+  // Use /items (the post-Feb-2026 endpoint). The legacy /tracks endpoint
+  // returns 403 in Dev Mode for personal apps.
   function addBatch(idx) {
     if (idx >= batches.length) return Promise.resolve();
-    var endpoint = '/playlists/' + playlistId + '/tracks';
+    var endpoint = '/playlists/' + playlistId + '/items';
     return fetch('/api/spotify-proxy?endpoint=' + encodeURIComponent(endpoint), {
       method: 'POST',
       headers: {

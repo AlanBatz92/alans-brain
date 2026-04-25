@@ -14,10 +14,8 @@ A personal indie web project. Built with HTML, CSS, and JS — no frameworks, no
 | **Photo Gallery** (`photos.html`) | Masonry photo grid |
 | **Paranormal** (`paranormal.html`) | Curated paranormal media grid |
 | **Pride and Identity** (`transart.html`) | Art, polyamory, and resources tabs |
-| **Personal Projects** (`projects.html`) | Hub for the Spotify / setlist.fm tools below |
+| **Personal Projects** (`projects.html`) | Hub for the Spotify / setlist.fm tool below |
 | **Setlist to Spotify** (`setlist-spotify.html`) | Turn one or more concert setlists into a Spotify playlist |
-| **Featured Artist Playlist** (`featured-artists.html`) | Build a playlist of every featured artist's top 5 tracks from a Spotify track / album / playlist |
-| **Live Play Stats** (`live-play-stats.html`) | See how often each Spotify song has been played live, with last venue and date |
 | **My Week** (`weather.html`) | Personal weather outlook with running and drone scoring |
 | **Household Task Tracker** (`tasks.html`) | Unlisted, passphrase-gated tracker that reads / writes a Google Sheet |
 

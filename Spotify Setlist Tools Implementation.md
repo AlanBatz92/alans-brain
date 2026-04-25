@@ -1,24 +1,22 @@
-# Spotify / Setlist.fm Tool Suite — Implementation Details
+# Spotify / Setlist.fm Tool — Implementation Details
 
-*Three tools live on the Personal Projects page, all built on the same vanilla-JS + Vercel-proxy stack.*
+*One tool lives on the Personal Projects page, built on a vanilla-JS + Vercel-proxy stack.*
 
 Implemented: April 2026. Audited and hardened: April 2026.
 
-Original spec: `PLAN-spotify-setlist-tools.md`.
+Original spec: `PLAN-spotify-setlist-tools.md` (also covered two extra tools — see the "Removed tools" section below for why they're gone).
 
 -----
 
 ## Overview
 
-The Personal Projects page (`projects.html`) is a hub for three small Spotify /
-setlist.fm tools. They share the Spotify PKCE auth flow, a serverless setlist.fm
+The Personal Projects page (`projects.html`) is a hub for one small Spotify /
+setlist.fm tool. It uses the Spotify PKCE auth flow, a serverless setlist.fm
 proxy (`api/setlist.js`), and a serverless Spotify write proxy (`api/spotify-proxy.js`).
 
 | Tool | File | APIs | Creates Playlist |
 |---|---|---|---|
 | Setlist to Spotify | `setlist-spotify.html` + `.js` | setlist.fm + Spotify | Yes |
-| Featured Artist Playlist | `featured-artists.html` + `.js` | Spotify only | Yes |
-| Live Play Stats | `live-play-stats.html` + `.js` | Spotify + setlist.fm | No |
 
 -----
 
@@ -41,7 +39,7 @@ Browser ── PKCE auth ──▶ accounts.spotify.com
 
 -----
 
-## Tool 1: Setlist to Spotify (`setlist-spotify.html`)
+## Setlist to Spotify (`setlist-spotify.html`)
 
 ### Two modes
 
@@ -81,112 +79,61 @@ via `sessionStorage`.
 
 -----
 
-## Tool 2: Featured Artist Playlist (`featured-artists.html`)
-
-### Flow
-
-1. Paste a Spotify track / album / playlist URL.
-2. Tool detects type and fetches:
-   - **Track:** `artists[1..]` are the features (`artists[0]` is primary).
-   - **Album:** every track's artists, minus the album's primary artists.
-   - **Playlist:** every unique artist across every track (no concept of
-     "primary" for a playlist), capped at 20.
-3. User unchecks any artists they don't want.
-4. Tool fetches each selected artist's top 5 tracks via
-   `/artists/{id}/top-tracks?market=US`.
-5. Preview the playlist; edit the name; create it.
-
-### "No features" handling
-
-- Solo track: "{Track} has only one credited artist — no features found."
-- Solo album: "No featured artists found on this album."
-- Empty playlist: "No artists found in this playlist."
-
------
-
-## Tool 3: Live Play Stats (`live-play-stats.html`)
-
-### Flow
-
-1. Paste a Spotify track / album / playlist URL.
-2. Tool fetches all tracks from Spotify and extracts `(songName, artistName)`.
-3. For each song, calls `/search/setlists?songName=&artistName=` on setlist.fm
-   via the proxy.
-4. Renders a sortable table: Song, Times Played, Last Played, Last Venue.
-5. CSV export available once the run finishes.
-
-### Song name cleaning
-
-Strips Spotify-style suffixes before querying setlist.fm so the search isn't
-defeated by "(Remastered 2011)" or "- Live at Wembley":
-
-```javascript
-.replace(/\s*[\(\[](remaster(ed)?|live|version|edit|mix|radio|demo|acoustic|deluxe|bonus|feat\.?[^\)\]]*)[^\)\]]*[\)\]]/gi, '')
-.replace(/\s*[-–]\s*(remaster(ed)?|live|version|edit|mix|radio|demo|acoustic).*/gi, '')
-```
-
------
-
 ## April 2026 Audit & Fixes
 
-After the initial implementation shipped, I audited the three tools end-to-end
-and fixed the following:
-
-### Live Play Stats
-
-| Issue | Fix |
-|---|---|
-| OAuth errors (denial, state mismatch, token failure) failed silently — user left at a blank page | Errors now surface in the step-1 error block |
-| HTTP 429 from setlist.fm was treated as "song not found" | `lpsSearchSong` now retries up to twice with a 1.5s backoff on 429 |
-| Sequential queries fired as fast as the network allowed, often tripping setlist.fm's ~2 req/sec limit | Added a 250ms throttle between songs |
-| Clicking "Start Over" mid-lookup crashed with `Cannot set property 'stats' of undefined` (in-flight `.then` writing into a freshly-emptied `rows` array) | Added a `runId` cancellation pattern; in-flight callbacks check `myRun !== lpsState.runId` before writing |
-
-### Featured Artist Playlist
-
-| Issue | Fix |
-|---|---|
-| OAuth errors failed silently | Errors now surface in the step-1 error block |
-| Unused `defaultName` variable | Removed |
+After the initial implementation shipped, I audited everything end-to-end and
+fixed the following.
 
 ### Setlist to Spotify
 
 | Issue | Fix |
 |---|---|
+| `addTracksToPlaylist` hit `POST /v1/playlists/{id}/tracks`, which returns 403 in Dev Mode for personal apps after the Feb 2026 API change. The "Spotify Dev Mode blocked tracks" fallback was firing for every successful run. | Switched to `POST /v1/playlists/{id}/items` (the post-Feb-2026 endpoint). Tracks now actually get added to the playlist. |
 | Single-mode renderers (`renderArtistResults`, `renderSetlistResults`, `renderSongList`, `selectArtist`, `selectSetlist`, `rebuildAndCreate`, success / fallback messages) interpolated artist, venue, song, and city names into HTML without escaping. Combine mode already used `escHtml`. | All single-mode renders now use `escHtml`. Eliminates display breakage on names containing `<`, `&`, or `"` and removes the XSS surface. |
 | Combine-mode setlist picker hid the country code that single-mode showed | Combine picker now shows `City, US` like the single-mode version |
 
 ### What I checked and left alone
 
 - `api/setlist.js` and `api/spotify-proxy.js` proxies — both correct.
-- PKCE flow + `sessionStorage` round-trip across the OAuth redirect — works in
-  all three tools (single-mode setlist, combine-mode setlist, FA, LPS).
+- PKCE flow + `sessionStorage` round-trip across the OAuth redirect — works.
 - "Spotify Dev Mode blocked tracks" fallback in `setlist-spotify.js` — the
   catch-all is broad (network errors also trigger it) but the user still gets
   a list of Spotify track links and an open-playlist button, so it's the right
-  behavior for a fallback.
+  behavior for a fallback. With the `/items` switch this branch should rarely
+  fire now.
 - Default API keys baked into the JS — these are intentionally public so the
-  tools work for anyone visiting the site without setup. Users with their own
+  tool works for anyone visiting the site without setup. Users with their own
   Spotify app can override in the Advanced Setup section.
+
+-----
+
+## Removed Tools
+
+The original `PLAN-spotify-setlist-tools.md` scoped two extra tools alongside
+Setlist to Spotify:
+
+- **Featured Artist Playlist** (`featured-artists.html` + `.js`)
+- **Live Play Stats** (`live-play-stats.html` + `.js`)
+
+Both shipped initially but were removed after a real-world OAuth roadblock:
+Spotify's free developer plan only allows **one app per developer account**, and
+that app's allow-listed redirect URIs were registered against
+`setlist-spotify.html`. Adding `/featured-artists.html` and
+`/live-play-stats.html` would have required either a second Spotify app (not
+possible on the free plan) or refactoring all three tools to share a single
+redirect-callback page. Given the new tools were a "nice to have" and Setlist
+to Spotify is the primary use case, the simpler call was to delete them.
+
+If they ever come back, the right design is a single `auth-callback.html` that
+restores the originating tool's state from `sessionStorage` and bounces back —
+that gives Spotify a single redirect URI to allow-list per host.
 
 -----
 
 ## What Stays the Same
 
-- The Personal Projects page itself (`projects.html`) — no changes needed.
-- All three tools' OAuth flow.
+- The Personal Projects page (`projects.html`) — still the entry point.
+- The Setlist to Spotify OAuth flow.
 - Both serverless proxies (`api/setlist.js`, `api/spotify-proxy.js`).
 - Default API keys — `setlist.fm` key + Spotify Client ID baked in for one-tap
   use; users can override via Advanced Setup.
-
------
-
-## Future Enhancements (Not Implemented)
-
-- Pull stats for **multiple albums at once** in Live Play Stats (currently one
-  Spotify URL per run).
-- "Build a playlist from these results" button on Live Play Stats — Tool 2
-  already creates playlists; could share the same code path.
-- Cache setlist.fm responses per `(songName, artistName)` in `localStorage` so
-  re-running a playlist is fast and rate-limit-friendly.
-- Surface Spotify rate-limit (429) handling in Featured Artist top-track fetches
-  the same way we now handle setlist.fm 429s.
