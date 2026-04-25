@@ -14,6 +14,12 @@ A personal indie web project. Built with HTML, CSS, and JS — no frameworks, no
 | **Photo Gallery** (`photos.html`) | Masonry photo grid |
 | **Paranormal** (`paranormal.html`) | Curated paranormal media grid |
 | **Pride and Identity** (`transart.html`) | Art, polyamory, and resources tabs |
+| **Personal Projects** (`projects.html`) | Hub for the Spotify / setlist.fm tools below |
+| **Setlist to Spotify** (`setlist-spotify.html`) | Turn one or more concert setlists into a Spotify playlist |
+| **Featured Artist Playlist** (`featured-artists.html`) | Build a playlist of every featured artist's top 5 tracks from a Spotify track / album / playlist |
+| **Live Play Stats** (`live-play-stats.html`) | See how often each Spotify song has been played live, with last venue and date |
+| **My Week** (`weather.html`) | Personal weather outlook with running and drone scoring |
+| **Household Task Tracker** (`tasks.html`) | Unlisted, passphrase-gated tracker that reads / writes a Google Sheet |
 
 ## Running Locally
 
@@ -64,3 +70,13 @@ Color themes swap via CSS custom properties. Current themes: **Deep Space** (def
 - GoatCounter for privacy-friendly analytics
 - `<audio>` elements for iOS silent-switch compatibility
 - Weighted random rotation for soundboard icons and quotes
+- Vercel serverless functions in `api/` proxy the setlist.fm and Spotify write APIs (CORS workaround)
+- Spotify auth uses PKCE — no client secret in the browser
+
+## Build History
+
+| Doc | Covers |
+|---|---|
+| `PLAN-spotify-setlist-tools.md` | Original design plan for the three Spotify / setlist.fm tools |
+| `Spotify Setlist Tools Implementation.md` | What shipped, deviations from the plan, the April 2026 audit and fixes |
+| `Task Tracker Write-Back Implementation.md` | Household task tracker upgrade (read-only → mark-as-done) |
