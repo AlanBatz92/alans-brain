@@ -88,8 +88,15 @@ function lpsHandleOAuth() {
   var state = params.get('state');
   var error = params.get('error');
   window.history.replaceState({}, '', window.location.pathname);
-  if (error || !code) return Promise.resolve(false);
-  if (state !== sessionStorage.getItem('lps_oauth_state')) return Promise.resolve(false);
+  if (error) {
+    lpsShowError('lpsError', 'Spotify authorization was denied or failed.');
+    return Promise.resolve(false);
+  }
+  if (!code) return Promise.resolve(false);
+  if (state !== sessionStorage.getItem('lps_oauth_state')) {
+    lpsShowError('lpsError', 'Spotify auth state mismatch — please try again.');
+    return Promise.resolve(false);
+  }
   var verifier = sessionStorage.getItem('lps_pkce_verifier');
   return fetch(LPS_CONFIG.spotifyTokenUrl, {
     method: 'POST',
@@ -109,9 +116,13 @@ function lpsHandleOAuth() {
       sessionStorage.removeItem('lps_oauth_state');
       return true;
     }
+    lpsShowError('lpsError', 'Spotify token exchange failed: ' + (data.error_description || data.error || 'unknown error'));
     return false;
   })
-  .catch(function() { return false; });
+  .catch(function(err) {
+    lpsShowError('lpsError', 'Spotify token exchange error: ' + err.message);
+    return false;
+  });
 }
 
 /* ── SPOTIFY URL PARSING ─────────────── */
@@ -190,7 +201,8 @@ function lpsCleanSongName(name) {
 
 /* ── SETLIST.FM QUERY ────────────────── */
 
-function lpsSearchSong(songName, artistName) {
+function lpsSearchSong(songName, artistName, retriesLeft) {
+  if (retriesLeft === undefined) retriesLeft = 2;
   var cleaned = lpsCleanSongName(songName);
   var url = LPS_CONFIG.setlistProxyUrl
     + '?path=' + encodeURIComponent('/search/setlists')
@@ -198,8 +210,19 @@ function lpsSearchSong(songName, artistName) {
     + '&artistName=' + encodeURIComponent(artistName)
     + '&p=1';
   return fetch(url)
-    .then(function(r) { if (!r.ok) return { total: 0, setlist: [] }; return r.json(); })
+    .then(function(r) {
+      // setlist.fm rate limit — back off and retry
+      if (r.status === 429 && retriesLeft > 0) {
+        return new Promise(function(resolve) { setTimeout(resolve, 1500); })
+          .then(function() { return lpsSearchSong(songName, artistName, retriesLeft - 1); });
+      }
+      if (r.status === 404) return { total: 0, setlist: [] };
+      if (!r.ok) return { total: 0, setlist: [] };
+      return r.json();
+    })
     .then(function(data) {
+      // If we already resolved into a normalized shape via retry, pass it through
+      if (data && typeof data.total === 'number' && !('setlist' in data) && !('lastDate' in data)) return data;
       var total = data.total || 0;
       var first = (data.setlist || [])[0] || null;
       return {
@@ -229,7 +252,8 @@ function lpsFormatDate(dateStr) {
 
 var lpsState = {
   songs: [],    // [{name, artist}]
-  rows: []      // [{song, stats}] populated as queries complete
+  rows: [],     // [{song, stats}] populated as queries complete
+  runId: 0      // increments on reset; in-flight queries check this to abort
 };
 
 var lpsSort = { col: 'count', dir: 'desc' };
@@ -392,12 +416,15 @@ function lpsDoLookup() {
 function lpsRunQueries() {
   var idx = 0;
   var total = lpsState.songs.length;
+  var myRun = ++lpsState.runId;
 
   document.getElementById('lpsTableWrap').style.display = 'block';
   document.getElementById('lpsProgress').style.display = 'block';
+  document.getElementById('lpsExportRow').style.display = 'none';
   lpsRenderTable();
 
   function next() {
+    if (myRun !== lpsState.runId) return; // user reset — abort
     if (idx >= total) {
       document.getElementById('lpsProgress').style.display = 'none';
       document.getElementById('lpsExportRow').style.display = 'flex';
@@ -407,19 +434,23 @@ function lpsRunQueries() {
     var song = lpsState.songs[idx];
     document.getElementById('lpsProgressText').textContent =
       'Looking up ' + (idx + 1) + ' of ' + total + ': ' + song.name + '...';
+    var rowIdx = idx;
     idx++;
     lpsSearchSong(song.name, song.artist)
       .then(function(stats) {
-        lpsState.rows[idx - 1].stats = stats;
+        if (myRun !== lpsState.runId) return; // user reset — abort write
+        if (!lpsState.rows[rowIdx]) return;
+        lpsState.rows[rowIdx].stats = stats;
         lpsRenderTable();
-        next();
+        // Throttle gently to stay under setlist.fm's ~2 req/sec limit
+        setTimeout(next, 250);
       });
   }
   next();
 }
 
 function lpsReset() {
-  lpsState = { songs: [], rows: [] };
+  lpsState = { songs: [], rows: [], runId: lpsState.runId + 1 };
   document.getElementById('lpsUrlInput').value = '';
   lpsHideError('lpsError');
   document.getElementById('lpsTableWrap').style.display = 'none';
