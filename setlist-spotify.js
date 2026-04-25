@@ -397,9 +397,9 @@ function renderArtistResults(artists) {
   var shown = artists.slice(0, 8);
   for (var i = 0; i < shown.length; i++) {
     var a = shown[i];
-    var dis = a.disambiguation ? ' <span class="sl-artist-dis">' + a.disambiguation + '</span>' : '';
+    var dis = a.disambiguation ? ' <span class="sl-artist-dis">' + escHtml(a.disambiguation) + '</span>' : '';
     html += '<button class="sl-result-card" data-idx="' + i + '">'
-      + '<span class="sl-result-name">' + a.name + dis + '</span>'
+      + '<span class="sl-result-name">' + escHtml(a.name) + dis + '</span>'
       + '</button>';
   }
   el.innerHTML = html;
@@ -437,9 +437,9 @@ function renderSetlistResults(setlists) {
     var locationStr = city + (country ? ', ' + country : '');
 
     html += '<button class="sl-result-card sl-setlist-card" data-idx="' + i + '">'
-      + '<div class="sl-setlist-date">' + date + '</div>'
-      + '<div class="sl-setlist-venue">' + venue + '</div>'
-      + '<div class="sl-setlist-location">' + locationStr + '</div>'
+      + '<div class="sl-setlist-date">' + escHtml(date) + '</div>'
+      + '<div class="sl-setlist-venue">' + escHtml(venue) + '</div>'
+      + '<div class="sl-setlist-location">' + escHtml(locationStr) + '</div>'
       + '<div class="sl-setlist-count">' + songCount + ' songs</div>'
       + '</button>';
   }
@@ -469,10 +469,10 @@ function renderSongList(songs) {
   var html = '';
   for (var i = 0; i < songs.length; i++) {
     var song = songs[i];
-    var coverNote = song.cover ? ' <span class="sl-song-cover">' + song.cover + ' cover</span>' : '';
+    var coverNote = song.cover ? ' <span class="sl-song-cover">' + escHtml(song.cover) + ' cover</span>' : '';
     html += '<div class="sl-song-row" id="slSong' + i + '">'
       + '<span class="sl-song-status">&#8987;</span>'
-      + '<span class="sl-song-name">' + song.name + coverNote + '</span>'
+      + '<span class="sl-song-name">' + escHtml(song.name) + coverNote + '</span>'
       + '</div>';
   }
   el.innerHTML = html;
@@ -507,7 +507,7 @@ function renderMatchSummary(matched) {
 function selectArtist(artist) {
   appState.artist = artist;
   document.getElementById('slArtistChosen').innerHTML =
-    '<span class="sl-chosen-name">' + artist.name + '</span>'
+    '<span class="sl-chosen-name">' + escHtml(artist.name) + '</span>'
     + '<button class="sl-btn sl-btn-ghost sl-btn-sm" id="slChangeArtist">Change</button>';
   document.getElementById('slChangeArtist').addEventListener('click', function() {
     appState.artist = null;
@@ -541,10 +541,10 @@ function selectSetlist(setlist) {
   var city = (setlist.venue && setlist.venue.city) ? setlist.venue.city.name : '';
   document.getElementById('slSetlistInfo').innerHTML =
     '<div class="sl-setlist-info-header">'
-    + '<strong>' + appState.artist.name + '</strong>'
-    + '<span class="sl-setlist-info-date">' + date + '</span>'
+    + '<strong>' + escHtml(appState.artist.name) + '</strong>'
+    + '<span class="sl-setlist-info-date">' + escHtml(date) + '</span>'
     + '</div>'
-    + '<div class="sl-setlist-info-venue">' + venue + (city ? ', ' + city : '') + '</div>';
+    + '<div class="sl-setlist-info-venue">' + escHtml(venue) + (city ? ', ' + escHtml(city) : '') + '</div>';
 
   showStep(3);
   hideError('slCreateError');
@@ -616,7 +616,7 @@ function doCreatePlaylist() {
             '<div class="sl-success-icon">&#10003;</div>'
             + '<div class="sl-success-title">Playlist Created!</div>'
             + '<div class="sl-success-detail">'
-              + '<strong>' + playlistName + '</strong><br>'
+              + '<strong>' + escHtml(playlistName) + '</strong><br>'
               + matched + ' tracks added'
             + '</div>'
             + '<a class="sl-btn sl-btn-spotify" href="' + playlist.external_urls.spotify + '" target="_blank" rel="noopener">'
@@ -644,7 +644,7 @@ function doCreatePlaylist() {
             '<div class="sl-success-icon" style="color:var(--yellow)">&#9888;</div>'
             + '<div class="sl-success-title">Playlist Created (Empty)</div>'
             + '<div class="sl-success-detail">'
-              + '<strong>' + playlistName + '</strong><br>'
+              + '<strong>' + escHtml(playlistName) + '</strong><br>'
               + 'Spotify\'s Development Mode blocked adding tracks automatically.<br>'
               + 'Use the links below to add them manually.'
             + '</div>'
@@ -659,8 +659,8 @@ function doCreatePlaylist() {
               + '</div>'
               + '<div class="sl-track-links-list">'
                 + trackLinks.map(function(url, i) {
-                    return '<a href="' + url + '" target="_blank" rel="noopener" class="sl-track-link">'
-                      + searchLinks[i] + '</a>';
+                    return '<a href="' + escHtml(url) + '" target="_blank" rel="noopener" class="sl-track-link">'
+                      + escHtml(searchLinks[i]) + '</a>';
                   }).join('')
               + '</div>'
             + '</div>';
@@ -751,12 +751,12 @@ function initSetlistApp() {
       var html = '';
       var globalIdx = 0;
       groups.forEach(function(group) {
-        html += '<div class="sl-group-header">' + group.label + '</div>';
+        html += '<div class="sl-group-header">' + escHtml(group.label) + '</div>';
         group.songs.forEach(function(song) {
-          var coverNote = song.cover ? ' <span class="sl-song-cover">' + song.cover + ' cover</span>' : '';
+          var coverNote = song.cover ? ' <span class="sl-song-cover">' + escHtml(song.cover) + ' cover</span>' : '';
           html += '<div class="sl-song-row" id="slSong' + globalIdx + '">'
             + '<span class="sl-song-status">&#8987;</span>'
-            + '<span class="sl-song-name">' + song.name + coverNote + '</span>'
+            + '<span class="sl-song-name">' + escHtml(song.name) + coverNote + '</span>'
             + '</div>';
           globalIdx++;
         });
@@ -816,10 +816,10 @@ function rebuildAndCreate() {
   var city = (appState.setlist.venue && appState.setlist.venue.city) ? appState.setlist.venue.city.name : '';
   document.getElementById('slSetlistInfo').innerHTML =
     '<div class="sl-setlist-info-header">'
-    + '<strong>' + appState.artist.name + '</strong>'
-    + '<span class="sl-setlist-info-date">' + date + '</span>'
+    + '<strong>' + escHtml(appState.artist.name) + '</strong>'
+    + '<span class="sl-setlist-info-date">' + escHtml(date) + '</span>'
     + '</div>'
-    + '<div class="sl-setlist-info-venue">' + venue + (city ? ', ' + city : '') + '</div>';
+    + '<div class="sl-setlist-info-venue">' + escHtml(venue) + (city ? ', ' + escHtml(city) : '') + '</div>';
 
   showStep(3);
   hideError('slCreateError');
@@ -923,13 +923,13 @@ function renderCombineSlots() {
       var city = (slot.setlist.venue && slot.setlist.venue.city) ? slot.setlist.venue.city.name : '';
       html += '<div class="sl-slot-confirmed">';
       html += '<div class="sl-slot-confirmed-info">';
-      html += '<strong>' + slot.artist.name + '</strong>';
-      html += '<div class="sl-slot-confirmed-meta">' + date + (venue ? ' &mdash; ' + venue : '') + (city ? ', ' + city : '') + '</div>';
+      html += '<strong>' + escHtml(slot.artist.name) + '</strong>';
+      html += '<div class="sl-slot-confirmed-meta">' + escHtml(date) + (venue ? ' &mdash; ' + escHtml(venue) : '') + (city ? ', ' + escHtml(city) : '') + '</div>';
       html += '</div>';
       html += '<button class="sl-btn sl-btn-ghost sl-btn-sm" data-slot-change="' + slot.id + '">Change</button>';
       html += '</div>';
     } else if (slot.phase === 'picking-setlists') {
-      html += '<div class="sl-step-label" style="font-size:0.72rem;margin-bottom:8px">Pick a setlist for ' + slot.artist.name + '</div>';
+      html += '<div class="sl-step-label" style="font-size:0.72rem;margin-bottom:8px">Pick a setlist for ' + escHtml(slot.artist.name) + '</div>';
       html += renderCombineSetlistList(slot);
     } else if (slot.phase === 'picking-artists') {
       html += '<div class="sl-search-row">';
@@ -970,9 +970,9 @@ function renderCombineArtistList(slot) {
   if (!slot.artistResults || slot.artistResults.length === 0) return '';
   var html = '<div class="sl-results" style="margin-top:8px">';
   slot.artistResults.slice(0, 8).forEach(function(a, i) {
-    var dis = a.disambiguation ? ' <span class="sl-artist-dis">' + a.disambiguation + '</span>' : '';
+    var dis = a.disambiguation ? ' <span class="sl-artist-dis">' + escHtml(a.disambiguation) + '</span>' : '';
     html += '<button class="sl-result-card" data-slot-artist="' + slot.id + '" data-artist-idx="' + i + '">'
-      + '<span class="sl-result-name">' + a.name + dis + '</span>'
+      + '<span class="sl-result-name">' + escHtml(a.name) + dis + '</span>'
       + '</button>';
   });
   html += '</div>';
@@ -988,12 +988,14 @@ function renderCombineSetlistList(slot) {
     var date = formatSetlistDate(s.eventDate);
     var venue = s.venue ? s.venue.name : 'Unknown venue';
     var city = (s.venue && s.venue.city) ? s.venue.city.name : '';
+    var country = (s.venue && s.venue.city && s.venue.city.country) ? s.venue.city.country.code : '';
+    var locationStr = city + (country ? ', ' + country : '');
     var songCount = 0;
     if (s.sets && s.sets.set) s.sets.set.forEach(function(set) { if (set.song) songCount += set.song.length; });
     html += '<button class="sl-result-card sl-setlist-card" data-slot-setlist="' + slot.id + '" data-setlist-idx="' + i + '">'
-      + '<div class="sl-setlist-date">' + date + '</div>'
-      + '<div class="sl-setlist-venue">' + venue + '</div>'
-      + '<div class="sl-setlist-location">' + city + '</div>'
+      + '<div class="sl-setlist-date">' + escHtml(date) + '</div>'
+      + '<div class="sl-setlist-venue">' + escHtml(venue) + '</div>'
+      + '<div class="sl-setlist-location">' + escHtml(locationStr) + '</div>'
       + '<div class="sl-setlist-count">' + songCount + ' songs</div>'
       + '</button>';
   });
@@ -1138,7 +1140,7 @@ function doCombineReview() {
 
   // Build header info for step 3
   var infoHtml = '<div class="sl-setlist-info-header"><strong>Combined Setlist</strong></div>'
-    + '<div class="sl-setlist-info-venue">' + doneSlots.map(function(s) { return s.artist.name; }).join(' &amp; ') + '</div>';
+    + '<div class="sl-setlist-info-venue">' + doneSlots.map(function(s) { return escHtml(s.artist.name); }).join(' &amp; ') + '</div>';
   document.getElementById('slSetlistInfo').innerHTML = infoHtml;
 
   // Show dedup toggle
@@ -1150,12 +1152,12 @@ function doCombineReview() {
   var html = '';
   var globalIdx = 0;
   groups.forEach(function(group) {
-    html += '<div class="sl-group-header">' + group.label + '</div>';
+    html += '<div class="sl-group-header">' + escHtml(group.label) + '</div>';
     group.songs.forEach(function(song) {
-      var coverNote = song.cover ? ' <span class="sl-song-cover">' + song.cover + ' cover</span>' : '';
+      var coverNote = song.cover ? ' <span class="sl-song-cover">' + escHtml(song.cover) + ' cover</span>' : '';
       html += '<div class="sl-song-row" id="slSong' + globalIdx + '">'
         + '<span class="sl-song-status">&#8987;</span>'
-        + '<span class="sl-song-name">' + song.name + coverNote + '</span>'
+        + '<span class="sl-song-name">' + escHtml(song.name) + coverNote + '</span>'
         + '</div>';
       globalIdx++;
     });
@@ -1187,7 +1189,7 @@ function rebuildAndCreateCombine() {
   if (doneSlots.length < 2 || appState.songs.length === 0) return;
 
   var infoHtml = '<div class="sl-setlist-info-header"><strong>Combined Setlist</strong></div>'
-    + '<div class="sl-setlist-info-venue">' + doneSlots.map(function(s) { return s.artist.name; }).join(' &amp; ') + '</div>';
+    + '<div class="sl-setlist-info-venue">' + doneSlots.map(function(s) { return escHtml(s.artist.name); }).join(' &amp; ') + '</div>';
   document.getElementById('slSetlistInfo').innerHTML = infoHtml;
 
   document.getElementById('slDedupRow').style.display = 'flex';

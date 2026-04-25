@@ -82,8 +82,15 @@ function faHandleOAuth() {
   var state = params.get('state');
   var error = params.get('error');
   window.history.replaceState({}, '', window.location.pathname);
-  if (error || !code) return Promise.resolve(false);
-  if (state !== sessionStorage.getItem('fa_oauth_state')) return Promise.resolve(false);
+  if (error) {
+    faShowError('faStep1Error', 'Spotify authorization was denied or failed.');
+    return Promise.resolve(false);
+  }
+  if (!code) return Promise.resolve(false);
+  if (state !== sessionStorage.getItem('fa_oauth_state')) {
+    faShowError('faStep1Error', 'Spotify auth state mismatch — please try again.');
+    return Promise.resolve(false);
+  }
   var verifier = sessionStorage.getItem('fa_pkce_verifier');
   return fetch(FA_CONFIG.spotifyTokenUrl, {
     method: 'POST',
@@ -103,9 +110,13 @@ function faHandleOAuth() {
       sessionStorage.removeItem('fa_oauth_state');
       return true;
     }
+    faShowError('faStep1Error', 'Spotify token exchange failed: ' + (data.error_description || data.error || 'unknown error'));
     return false;
   })
-  .catch(function() { return false; });
+  .catch(function(err) {
+    faShowError('faStep1Error', 'Spotify token exchange error: ' + err.message);
+    return false;
+  });
 }
 
 /* ── SPOTIFY URL PARSING ─────────────── */
@@ -365,7 +376,6 @@ function faRenderStep3(tracksMap) {
   var total = Object.keys(tracksMap).reduce(function(sum, k) { return sum + tracksMap[k].length; }, 0);
   document.getElementById('faTrackCount').textContent = total + ' tracks across ' + faState.selectedArtists.length + ' artists';
 
-  var defaultName = 'Featured Artists — ' + faEsc(faState.sourceInfo.source.name);
   document.getElementById('faPlaylistNameInput').value = 'Featured Artists — ' + faState.sourceInfo.source.name;
   faShowStep(3);
 }
