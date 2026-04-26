@@ -213,11 +213,12 @@ function getArtistSetlists(mbid) {
   });
 }
 
-function extractSongs(setlist, artistName) {
+function extractSongs(setlist, artistName, artistMbid) {
   var songs = [];
   if (!setlist.sets || !setlist.sets.set) return songs;
   // Default to the setlist.fm artist on the setlist if none was passed in
   var defaultArtist = artistName || (setlist.artist && setlist.artist.name) || '';
+  var defaultMbid = artistMbid || (setlist.artist && setlist.artist.mbid) || '';
   setlist.sets.set.forEach(function(set) {
     if (set.song) {
       set.song.forEach(function(song) {
@@ -225,13 +226,219 @@ function extractSongs(setlist, artistName) {
           songs.push({
             name: song.name,
             cover: song.cover ? song.cover.name : null,
-            artist: defaultArtist
+            artist: defaultArtist,
+            mbid: defaultMbid
           });
         }
       });
     }
   });
   return songs;
+}
+
+/* ── SONG STATISTICS (Setlist.fm) ────── */
+
+// Cache aggregated stats per artist mbid so we don't refetch on dedup toggles
+var statsCache = {};
+
+function fetchSetlistsPage(mbid, page) {
+  var proxyUrl = SL_CONFIG.setlistProxyUrl + '?path=' + encodeURIComponent('/artist/' + mbid + '/setlists') + '&p=' + page;
+  return fetch(proxyUrl).then(function(r) {
+    if (!r.ok) return null;
+    return r.json();
+  }).catch(function() { return null; });
+}
+
+// Aggregate song stats from multiple pages of setlists.
+// Default 5 pages = up to 100 recent shows — enough for meaningful stats
+// without hammering the setlist.fm rate limit.
+function buildSongStats(mbid, pages) {
+  if (!mbid) return Promise.resolve(null);
+  if (statsCache[mbid]) return Promise.resolve(statsCache[mbid]);
+
+  var pageCount = pages || 5;
+  var promises = [];
+  for (var p = 1; p <= pageCount; p++) promises.push(fetchSetlistsPage(mbid, p));
+
+  return Promise.all(promises).then(function(pagesData) {
+    var stats = {};
+    var totalShows = 0;
+
+    pagesData.forEach(function(data) {
+      if (!data || !data.setlist) return;
+      data.setlist.forEach(function(sl) {
+        if (!sl.sets || !sl.sets.set) return;
+        var hasSongs = sl.sets.set.some(function(set) { return set.song && set.song.length > 0; });
+        if (!hasSongs) return;
+        totalShows++;
+
+        var date = sl.eventDate || ''; // dd-MM-yyyy
+        var sortable = date.split('-').reverse().join('-'); // yyyy-MM-dd for comparison
+        var venue = sl.venue ? sl.venue.name : '';
+        var city = (sl.venue && sl.venue.city) ? sl.venue.city.name : '';
+        var country = (sl.venue && sl.venue.city && sl.venue.city.country) ? sl.venue.city.country.code : '';
+        var info = { date: date, sortable: sortable, venue: venue, city: city, country: country };
+
+        sl.sets.set.forEach(function(set) {
+          if (!set.song) return;
+          set.song.forEach(function(song) {
+            if (!song.name || song.tape) return;
+            var key = normalizeSongName(song.name);
+            if (!stats[key]) stats[key] = { name: song.name, count: 0, lastPlayed: null, firstPlayed: null };
+            stats[key].count++;
+            if (!stats[key].lastPlayed || sortable > stats[key].lastPlayed.sortable) stats[key].lastPlayed = info;
+            if (!stats[key].firstPlayed || sortable < stats[key].firstPlayed.sortable) stats[key].firstPlayed = info;
+          });
+        });
+      });
+    });
+
+    var result = { totalShows: totalShows, songs: stats };
+    statsCache[mbid] = result;
+    return result;
+  });
+}
+
+// Walk every rendered song row and stamp it with stats data attributes
+// so that the popover handler can read them on click/hover.
+function applyStatsToRows(songs) {
+  for (var i = 0; i < songs.length; i++) {
+    var song = songs[i];
+    var row = document.getElementById('slSong' + i);
+    if (!row) continue;
+    var btn = row.querySelector('.sl-stats-btn');
+    if (!btn) continue;
+
+    var bucket = song.mbid && statsCache[song.mbid];
+    if (!bucket) {
+      // Stats request still pending or failed — leave as loading
+      continue;
+    }
+
+    var key = normalizeSongName(song.name);
+    var entry = bucket.songs[key];
+    btn.classList.remove('loading');
+    btn.removeAttribute('disabled');
+    btn.setAttribute('data-total-shows', bucket.totalShows);
+    if (entry) {
+      btn.setAttribute('data-count', entry.count);
+      if (entry.lastPlayed) {
+        btn.setAttribute('data-last-date', entry.lastPlayed.date);
+        btn.setAttribute('data-last-venue', entry.lastPlayed.venue || '');
+        btn.setAttribute('data-last-city', entry.lastPlayed.city || '');
+        btn.setAttribute('data-last-country', entry.lastPlayed.country || '');
+      }
+      if (entry.firstPlayed) {
+        btn.setAttribute('data-first-date', entry.firstPlayed.date);
+        btn.setAttribute('data-first-venue', entry.firstPlayed.venue || '');
+        btn.setAttribute('data-first-city', entry.firstPlayed.city || '');
+      }
+    } else {
+      btn.setAttribute('data-count', '0');
+    }
+  }
+}
+
+function loadStatsForArtist(mbid, songs) {
+  if (!mbid) return;
+  buildSongStats(mbid).then(function() {
+    applyStatsToRows(songs);
+  });
+}
+
+function loadStatsForCombine(songs) {
+  // Fetch each unique mbid once, then re-apply when each finishes
+  var seen = {};
+  songs.forEach(function(s) {
+    if (s.mbid && !seen[s.mbid]) {
+      seen[s.mbid] = true;
+      buildSongStats(s.mbid).then(function() { applyStatsToRows(songs); });
+    }
+  });
+}
+
+function statsButtonHtml() {
+  return '<button class="sl-stats-btn loading" type="button" aria-label="Show song statistics" disabled>'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + '<path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="5"/><rect x="12" y="9" width="3" height="9"/><rect x="17" y="5" width="3" height="13"/>'
+    + '</svg>'
+    + '</button>';
+}
+
+function formatStatDate(ddmmyyyy) {
+  if (!ddmmyyyy) return '';
+  var parts = ddmmyyyy.split('-');
+  if (parts.length !== 3) return ddmmyyyy;
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return months[parseInt(parts[1], 10) - 1] + ' ' + parseInt(parts[0], 10) + ', ' + parts[2];
+}
+
+function buildStatsPopoverHtml(btn) {
+  var totalShows = parseInt(btn.getAttribute('data-total-shows') || '0', 10);
+  var count = parseInt(btn.getAttribute('data-count') || '0', 10);
+  if (totalShows === 0) {
+    return '<div class="sl-stats-empty">No play history available.</div>';
+  }
+  if (count === 0) {
+    return '<div class="sl-stats-empty">Not played in the last ' + totalShows + ' shows.</div>'
+      + '<div class="sl-stats-foot">Stats from setlist.fm</div>';
+  }
+
+  var pct = Math.round((count / totalShows) * 100);
+  var lastDate = btn.getAttribute('data-last-date');
+  var lastVenue = btn.getAttribute('data-last-venue');
+  var lastCity = btn.getAttribute('data-last-city');
+  var firstDate = btn.getAttribute('data-first-date');
+  var firstVenue = btn.getAttribute('data-first-venue');
+  var firstCity = btn.getAttribute('data-first-city');
+
+  var html = '<div class="sl-stats-row"><span class="sl-stats-label">Times played</span>'
+    + '<span class="sl-stats-value">' + count + ' / ' + totalShows + ' shows <span class="sl-stats-pct">(' + pct + '%)</span></span></div>';
+
+  if (lastDate) {
+    var lastWhere = [lastVenue, lastCity].filter(Boolean).join(', ');
+    html += '<div class="sl-stats-row"><span class="sl-stats-label">Last played</span>'
+      + '<span class="sl-stats-value">' + escHtml(formatStatDate(lastDate))
+      + (lastWhere ? '<br><span class="sl-stats-sub">' + escHtml(lastWhere) + '</span>' : '')
+      + '</span></div>';
+  }
+  if (firstDate && firstDate !== lastDate) {
+    var firstWhere = [firstVenue, firstCity].filter(Boolean).join(', ');
+    html += '<div class="sl-stats-row"><span class="sl-stats-label">First (in window)</span>'
+      + '<span class="sl-stats-value">' + escHtml(formatStatDate(firstDate))
+      + (firstWhere ? '<br><span class="sl-stats-sub">' + escHtml(firstWhere) + '</span>' : '')
+      + '</span></div>';
+  }
+  html += '<div class="sl-stats-foot">Across ' + totalShows + ' recent setlist.fm shows</div>';
+  return html;
+}
+
+function showStatsPopover(btn) {
+  hideStatsPopover();
+  if (btn.classList.contains('loading') || btn.hasAttribute('disabled')) return;
+  var popover = document.createElement('div');
+  popover.className = 'sl-stats-tooltip show';
+  popover.setAttribute('role', 'tooltip');
+  popover.innerHTML = buildStatsPopoverHtml(btn);
+  btn.appendChild(popover);
+  btn.classList.add('open');
+}
+
+function hideStatsPopover() {
+  var open = document.querySelectorAll('.sl-stats-btn.open');
+  open.forEach(function(b) {
+    b.classList.remove('open');
+    var t = b.querySelector('.sl-stats-tooltip');
+    if (t) t.remove();
+  });
+}
+
+function toggleStatsPopover(btn) {
+  if (btn.classList.contains('open')) {
+    hideStatsPopover();
+  } else {
+    showStatsPopover(btn);
+  }
 }
 
 /* ── SPOTIFY API ─────────────────────── */
@@ -513,6 +720,7 @@ function renderSongList(songs) {
     html += '<div class="sl-song-row" id="slSong' + i + '">'
       + '<span class="sl-song-status">&#8987;</span>'
       + '<span class="sl-song-name">' + escHtml(song.name) + coverNote + '</span>'
+      + statsButtonHtml()
       + '</div>';
   }
   el.innerHTML = html;
@@ -574,7 +782,7 @@ function selectArtist(artist) {
 
 function selectSetlist(setlist) {
   appState.setlist = setlist;
-  appState.songs = extractSongs(setlist, appState.artist && appState.artist.name);
+  appState.songs = extractSongs(setlist, appState.artist && appState.artist.name, appState.artist && appState.artist.mbid);
 
   var date = formatSetlistDate(setlist.eventDate);
   var venue = setlist.venue ? setlist.venue.name : 'Unknown venue';
@@ -590,6 +798,7 @@ function selectSetlist(setlist) {
   hideError('slCreateError');
   document.getElementById('slDedupRow').style.display = 'none';
   renderSongList(appState.songs);
+  loadStatsForArtist(appState.artist && appState.artist.mbid, appState.songs);
 
   // If we have a Spotify token, match songs immediately
   var token = getSpotifyToken();
@@ -797,11 +1006,13 @@ function initSetlistApp() {
           html += '<div class="sl-song-row" id="slSong' + globalIdx + '">'
             + '<span class="sl-song-status">&#8987;</span>'
             + '<span class="sl-song-name">' + escHtml(song.name) + coverNote + '</span>'
+            + statsButtonHtml()
             + '</div>';
           globalIdx++;
         });
       });
       songListEl.innerHTML = html;
+      loadStatsForCombine(appState.songs);
       appState.matched = [];
       document.getElementById('slMatchSummary').innerHTML = '';
       var token = getSpotifyToken();
@@ -820,6 +1031,43 @@ function initSetlistApp() {
   // Mode toggle
   document.getElementById('slModeSingle').addEventListener('click', function() { setMode('single'); });
   document.getElementById('slModeCombine').addEventListener('click', function() { setMode('combine'); });
+
+  // Stats popover: click toggles, outside-click and Escape close it.
+  // Desktop also gets hover-to-preview on the song list.
+  var songListEl = document.getElementById('slSongList');
+  if (songListEl) {
+    songListEl.addEventListener('click', function(e) {
+      // Clicks inside the open popover shouldn't toggle it closed
+      if (e.target.closest('.sl-stats-tooltip')) {
+        e.stopPropagation();
+        return;
+      }
+      var btn = e.target.closest('.sl-stats-btn');
+      if (!btn) return;
+      e.stopPropagation();
+      toggleStatsPopover(btn);
+    });
+    var hoverSupported = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+    if (hoverSupported) {
+      songListEl.addEventListener('mouseover', function(e) {
+        var btn = e.target.closest && e.target.closest('.sl-stats-btn');
+        if (btn && !btn.classList.contains('open')) showStatsPopover(btn);
+      });
+      songListEl.addEventListener('mouseout', function(e) {
+        var btn = e.target.closest && e.target.closest('.sl-stats-btn');
+        if (!btn) return;
+        var to = e.relatedTarget;
+        if (to && btn.contains(to)) return; // moved within button/popover
+        hideStatsPopover();
+      });
+    }
+  }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.sl-stats-btn')) hideStatsPopover();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') hideStatsPopover();
+  });
 
   // Handle OAuth callback
   var params = new URLSearchParams(window.location.search);
@@ -849,7 +1097,7 @@ function initSetlistApp() {
 function rebuildAndCreate() {
   // Rebuild the UI to step 3 without triggering a duplicate match
   // (selectSetlist would also start matching if a token exists)
-  appState.songs = extractSongs(appState.setlist, appState.artist && appState.artist.name);
+  appState.songs = extractSongs(appState.setlist, appState.artist && appState.artist.name, appState.artist && appState.artist.mbid);
 
   var date = formatSetlistDate(appState.setlist.eventDate);
   var venue = appState.setlist.venue ? appState.setlist.venue.name : 'Unknown venue';
@@ -864,6 +1112,7 @@ function rebuildAndCreate() {
   showStep(3);
   hideError('slCreateError');
   renderSongList(appState.songs);
+  loadStatsForArtist(appState.artist && appState.artist.mbid, appState.songs);
 
   showLoading('Matching songs on Spotify...');
   matchAllSongs(appState.songs, appState.artist.name)
@@ -1136,7 +1385,7 @@ function selectCombineArtist(slot, artist) {
 
 function selectCombineSetlist(slot, setlist) {
   slot.setlist = setlist;
-  slot.songs = extractSongs(setlist, slot.artist && slot.artist.name);
+  slot.songs = extractSongs(setlist, slot.artist && slot.artist.name, slot.artist && slot.artist.mbid);
   slot.phase = 'done';
   renderCombineSlots();
 }
@@ -1198,11 +1447,13 @@ function doCombineReview() {
       html += '<div class="sl-song-row" id="slSong' + globalIdx + '">'
         + '<span class="sl-song-status">&#8987;</span>'
         + '<span class="sl-song-name">' + escHtml(song.name) + coverNote + '</span>'
+        + statsButtonHtml()
         + '</div>';
       globalIdx++;
     });
   });
   songListEl.innerHTML = html;
+  loadStatsForCombine(appState.songs);
 
   showStep(3);
   hideError('slCreateError');
@@ -1234,6 +1485,7 @@ function rebuildAndCreateCombine() {
 
   document.getElementById('slDedupRow').style.display = 'flex';
   renderSongList(appState.songs);
+  loadStatsForCombine(appState.songs);
   showStep(3);
   hideError('slCreateError');
 
