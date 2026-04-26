@@ -3645,6 +3645,138 @@ nav {
   font-style: italic;
 }
 
+/* ── Song stats button + popover ── */
+.sl-song-row {
+  position: relative;
+}
+.sl-stats-btn {
+  flex-shrink: 0;
+  position: relative;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.sl-stats-btn:hover:not([disabled]),
+.sl-stats-btn.open {
+  color: var(--text);
+  background: var(--surface-hover);
+  border-color: var(--border);
+}
+.sl-stats-btn[disabled],
+.sl-stats-btn.loading {
+  cursor: default;
+  opacity: 0.35;
+}
+.sl-stats-btn.loading svg {
+  animation: sl-stats-pulse 1.4s ease-in-out infinite;
+}
+@keyframes sl-stats-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.sl-stats-tooltip {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 6px;
+  z-index: 50;
+  min-width: 240px;
+  max-width: 300px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text);
+  text-align: left;
+  cursor: default;
+  white-space: normal;
+}
+/* Invisible bridge so hover doesn't drop between button and popover */
+.sl-stats-tooltip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -8px;
+  height: 8px;
+}
+.sl-stats-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+.sl-stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.sl-stats-row:last-of-type {
+  border-bottom: none;
+}
+.sl-stats-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  align-self: center;
+}
+.sl-stats-value {
+  text-align: right;
+  font-weight: 600;
+}
+.sl-stats-pct {
+  color: var(--green);
+  font-weight: 700;
+  margin-left: 2px;
+}
+.sl-stats-sub {
+  display: block;
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.sl-stats-foot {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+.sl-stats-empty {
+  color: var(--text-dim);
+  font-style: italic;
+  text-align: center;
+  padding: 4px 0;
+}
+@media (max-width: 520px) {
+  .sl-stats-tooltip {
+    min-width: 200px;
+    max-width: calc(100vw - 60px);
+  }
+}
+
 /* ── Match summary ── */
 .sl-match-summary {
   font-size: 0.85rem;
