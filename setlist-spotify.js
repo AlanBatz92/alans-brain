@@ -251,7 +251,9 @@ function fetchSetlistsPage(mbid, page) {
 
 // Aggregate song stats from multiple pages of setlists.
 // Default 5 pages = up to 100 recent shows — enough for meaningful stats
-// without hammering the setlist.fm rate limit.
+// without hammering the setlist.fm rate limit. We also capture `total`
+// (lifetime setlist count from the API) so we can tell whether the
+// fetched window covers the artist's full history.
 function buildSongStats(mbid, pages) {
   if (!mbid) return Promise.resolve(null);
   if (statsCache[mbid]) return Promise.resolve(statsCache[mbid]);
@@ -262,10 +264,19 @@ function buildSongStats(mbid, pages) {
 
   return Promise.all(promises).then(function(pagesData) {
     var stats = {};
-    var totalShows = 0;
+    var totalShows = 0;        // shows actually scanned (with songs)
+    var lifetimeTotal = null;  // setlist.fm's reported total for this artist
+    var itemsPerPage = 20;
 
     pagesData.forEach(function(data) {
-      if (!data || !data.setlist) return;
+      if (!data) return;
+      if (lifetimeTotal === null && typeof data.total === 'number') {
+        lifetimeTotal = data.total;
+        if (typeof data.itemsPerPage === 'number' && data.itemsPerPage > 0) {
+          itemsPerPage = data.itemsPerPage;
+        }
+      }
+      if (!data.setlist) return;
       data.setlist.forEach(function(sl) {
         if (!sl.sets || !sl.sets.set) return;
         var hasSongs = sl.sets.set.some(function(set) { return set.song && set.song.length > 0; });
@@ -293,7 +304,16 @@ function buildSongStats(mbid, pages) {
       });
     });
 
-    var result = { totalShows: totalShows, songs: stats };
+    // Complete history = our fetched window covers every setlist the API has on file.
+    // Fall back to false if the API didn't tell us a total.
+    var complete = (lifetimeTotal !== null) && (lifetimeTotal <= pageCount * itemsPerPage);
+
+    var result = {
+      totalShows: totalShows,
+      lifetimeTotal: lifetimeTotal,
+      complete: complete,
+      songs: stats
+    };
     statsCache[mbid] = result;
     return result;
   });
@@ -320,6 +340,10 @@ function applyStatsToRows(songs) {
     btn.classList.remove('loading');
     btn.removeAttribute('disabled');
     btn.setAttribute('data-total-shows', bucket.totalShows);
+    btn.setAttribute('data-complete', bucket.complete ? '1' : '0');
+    if (bucket.lifetimeTotal !== null && bucket.lifetimeTotal !== undefined) {
+      btn.setAttribute('data-lifetime-total', bucket.lifetimeTotal);
+    }
     if (entry) {
       btn.setAttribute('data-count', entry.count);
       if (entry.lastPlayed) {
@@ -328,7 +352,8 @@ function applyStatsToRows(songs) {
         btn.setAttribute('data-last-city', entry.lastPlayed.city || '');
         btn.setAttribute('data-last-country', entry.lastPlayed.country || '');
       }
-      if (entry.firstPlayed) {
+      if (bucket.complete && entry.firstPlayed) {
+        // Only expose first-played when our window covers the artist's full history
         btn.setAttribute('data-first-date', entry.firstPlayed.date);
         btn.setAttribute('data-first-venue', entry.firstPlayed.venue || '');
         btn.setAttribute('data-first-city', entry.firstPlayed.city || '');
@@ -376,12 +401,22 @@ function formatStatDate(ddmmyyyy) {
 function buildStatsPopoverHtml(btn) {
   var totalShows = parseInt(btn.getAttribute('data-total-shows') || '0', 10);
   var count = parseInt(btn.getAttribute('data-count') || '0', 10);
+  var complete = btn.getAttribute('data-complete') === '1';
+  var lifetimeTotal = parseInt(btn.getAttribute('data-lifetime-total') || '0', 10);
+
+  // Wording reflects whether we have full history or only a recent window
+  var windowLabel = complete ? 'all ' + totalShows + ' shows' : 'last ' + totalShows + ' shows';
+  var footer = complete
+    ? 'Across all ' + totalShows + ' setlist.fm shows for this artist'
+    : 'Sampled from the ' + totalShows + ' most recent setlist.fm shows'
+      + (lifetimeTotal ? ' (of ' + lifetimeTotal + ' on file)' : '');
+
   if (totalShows === 0) {
-    return '<div class="sl-stats-empty">No play history available.</div>';
+    return '<div class="sl-stats-empty">No play history available on setlist.fm.</div>';
   }
   if (count === 0) {
-    return '<div class="sl-stats-empty">Not played in the last ' + totalShows + ' shows.</div>'
-      + '<div class="sl-stats-foot">Stats from setlist.fm</div>';
+    return '<div class="sl-stats-empty">Not played in the ' + windowLabel + '.</div>'
+      + '<div class="sl-stats-foot">' + footer + '</div>';
   }
 
   var pct = Math.round((count / totalShows) * 100);
@@ -392,7 +427,8 @@ function buildStatsPopoverHtml(btn) {
   var firstVenue = btn.getAttribute('data-first-venue');
   var firstCity = btn.getAttribute('data-first-city');
 
-  var html = '<div class="sl-stats-row"><span class="sl-stats-label">Times played</span>'
+  var playedLabel = complete ? 'Times played' : 'Recent plays';
+  var html = '<div class="sl-stats-row"><span class="sl-stats-label">' + playedLabel + '</span>'
     + '<span class="sl-stats-value">' + count + ' / ' + totalShows + ' shows <span class="sl-stats-pct">(' + pct + '%)</span></span></div>';
 
   if (lastDate) {
@@ -402,14 +438,16 @@ function buildStatsPopoverHtml(btn) {
       + (lastWhere ? '<br><span class="sl-stats-sub">' + escHtml(lastWhere) + '</span>' : '')
       + '</span></div>';
   }
+  // First played is only honest when our window covers the artist's full history.
+  // applyStatsToRows refuses to set data-first-date unless bucket.complete is true.
   if (firstDate && firstDate !== lastDate) {
     var firstWhere = [firstVenue, firstCity].filter(Boolean).join(', ');
-    html += '<div class="sl-stats-row"><span class="sl-stats-label">First (in window)</span>'
+    html += '<div class="sl-stats-row"><span class="sl-stats-label">First played</span>'
       + '<span class="sl-stats-value">' + escHtml(formatStatDate(firstDate))
       + (firstWhere ? '<br><span class="sl-stats-sub">' + escHtml(firstWhere) + '</span>' : '')
       + '</span></div>';
   }
-  html += '<div class="sl-stats-foot">Across ' + totalShows + ' recent setlist.fm shows</div>';
+  html += '<div class="sl-stats-foot">' + footer + '</div>';
   return html;
 }
 
