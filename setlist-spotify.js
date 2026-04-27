@@ -249,74 +249,109 @@ function fetchSetlistsPage(mbid, page) {
   }).catch(function() { return null; });
 }
 
-// Aggregate song stats from multiple pages of setlists.
-// Default 5 pages = up to 100 recent shows — enough for meaningful stats
-// without hammering the setlist.fm rate limit. We also capture `total`
-// (lifetime setlist count from the API) so we can tell whether the
-// fetched window covers the artist's full history.
-function buildSongStats(mbid, pages) {
+// Default cap: 25 pages × 20 items = 500 most recent shows. Anything more
+// risks rate-limit pushback from setlist.fm and the song list lingers in
+// the loading state too long. Most artists' lifetime fits inside this.
+var SL_STATS_PAGE_CAP = 25;
+var SL_STATS_BATCH_SIZE = 5; // fetch this many pages in parallel per batch
+
+// Sequential batches keep us well under setlist.fm's published 2 req/s
+// limit while still being faster than fully sequential.
+function fetchPagesInBatches(mbid, startPage, endPage) {
+  if (startPage > endPage) return Promise.resolve([]);
+  var collected = [];
+  function nextBatch(start) {
+    if (start > endPage) return Promise.resolve();
+    var batchEnd = Math.min(start + SL_STATS_BATCH_SIZE - 1, endPage);
+    var promises = [];
+    for (var p = start; p <= batchEnd; p++) promises.push(fetchSetlistsPage(mbid, p));
+    return Promise.all(promises).then(function(batchResults) {
+      collected = collected.concat(batchResults);
+      return nextBatch(batchEnd + 1);
+    });
+  }
+  return nextBatch(startPage).then(function() { return collected; });
+}
+
+// Aggregate song stats from setlist.fm's paginated /artist/{mbid}/setlists.
+// We fetch page 1 first to learn `total`, then only fetch as many more
+// pages as we actually need (capped). `complete` is true when the cap was
+// large enough to cover the artist's entire history.
+function buildSongStats(mbid, maxPages) {
   if (!mbid) return Promise.resolve(null);
   if (statsCache[mbid]) return Promise.resolve(statsCache[mbid]);
 
-  var pageCount = pages || 5;
-  var promises = [];
-  for (var p = 1; p <= pageCount; p++) promises.push(fetchSetlistsPage(mbid, p));
+  var cap = maxPages || SL_STATS_PAGE_CAP;
 
-  return Promise.all(promises).then(function(pagesData) {
-    var stats = {};
-    var totalShows = 0;        // shows actually scanned (with songs)
-    var lifetimeTotal = null;  // setlist.fm's reported total for this artist
-    var itemsPerPage = 20;
+  return fetchSetlistsPage(mbid, 1).then(function(firstPage) {
+    if (!firstPage) {
+      var empty = { totalShows: 0, lifetimeTotal: null, complete: false, songs: {} };
+      statsCache[mbid] = empty;
+      return empty;
+    }
 
-    pagesData.forEach(function(data) {
-      if (!data) return;
-      if (lifetimeTotal === null && typeof data.total === 'number') {
-        lifetimeTotal = data.total;
-        if (typeof data.itemsPerPage === 'number' && data.itemsPerPage > 0) {
-          itemsPerPage = data.itemsPerPage;
-        }
-      }
-      if (!data.setlist) return;
-      data.setlist.forEach(function(sl) {
-        if (!sl.sets || !sl.sets.set) return;
-        var hasSongs = sl.sets.set.some(function(set) { return set.song && set.song.length > 0; });
-        if (!hasSongs) return;
-        totalShows++;
+    var lifetimeTotal = (typeof firstPage.total === 'number') ? firstPage.total : null;
+    var itemsPerPage = (typeof firstPage.itemsPerPage === 'number' && firstPage.itemsPerPage > 0)
+      ? firstPage.itemsPerPage : 20;
+    var neededPages = (lifetimeTotal !== null) ? Math.ceil(lifetimeTotal / itemsPerPage) : cap;
+    var pageCount = Math.min(neededPages, cap);
 
-        var date = sl.eventDate || ''; // dd-MM-yyyy
-        var sortable = date.split('-').reverse().join('-'); // yyyy-MM-dd for comparison
-        var venue = sl.venue ? sl.venue.name : '';
-        var city = (sl.venue && sl.venue.city) ? sl.venue.city.name : '';
-        var country = (sl.venue && sl.venue.city && sl.venue.city.country) ? sl.venue.city.country.code : '';
-        var info = { date: date, sortable: sortable, venue: venue, city: city, country: country };
+    var restPromise = (pageCount > 1)
+      ? fetchPagesInBatches(mbid, 2, pageCount)
+      : Promise.resolve([]);
 
-        sl.sets.set.forEach(function(set) {
-          if (!set.song) return;
-          set.song.forEach(function(song) {
-            if (!song.name || song.tape) return;
-            var key = normalizeSongName(song.name);
-            if (!stats[key]) stats[key] = { name: song.name, count: 0, lastPlayed: null, firstPlayed: null };
-            stats[key].count++;
-            if (!stats[key].lastPlayed || sortable > stats[key].lastPlayed.sortable) stats[key].lastPlayed = info;
-            if (!stats[key].firstPlayed || sortable < stats[key].firstPlayed.sortable) stats[key].firstPlayed = info;
-          });
+    return restPromise.then(function(restPages) {
+      var allPages = [firstPage].concat(restPages);
+      var result = aggregateStatsPages(allPages, pageCount, itemsPerPage);
+      statsCache[mbid] = result;
+      return result;
+    });
+  });
+}
+
+function aggregateStatsPages(pages, pagesFetched, itemsPerPage) {
+  var stats = {};
+  var totalShows = 0;
+  var lifetimeTotal = null;
+
+  pages.forEach(function(data) {
+    if (!data) return;
+    if (lifetimeTotal === null && typeof data.total === 'number') lifetimeTotal = data.total;
+    if (!data.setlist) return;
+    data.setlist.forEach(function(sl) {
+      if (!sl.sets || !sl.sets.set) return;
+      var hasSongs = sl.sets.set.some(function(set) { return set.song && set.song.length > 0; });
+      if (!hasSongs) return;
+      totalShows++;
+
+      var date = sl.eventDate || '';
+      var sortable = date.split('-').reverse().join('-');
+      var venue = sl.venue ? sl.venue.name : '';
+      var city = (sl.venue && sl.venue.city) ? sl.venue.city.name : '';
+      var country = (sl.venue && sl.venue.city && sl.venue.city.country) ? sl.venue.city.country.code : '';
+      var info = { date: date, sortable: sortable, venue: venue, city: city, country: country };
+
+      sl.sets.set.forEach(function(set) {
+        if (!set.song) return;
+        set.song.forEach(function(song) {
+          if (!song.name || song.tape) return;
+          var key = normalizeSongName(song.name);
+          if (!stats[key]) stats[key] = { name: song.name, count: 0, lastPlayed: null, firstPlayed: null };
+          stats[key].count++;
+          if (!stats[key].lastPlayed || sortable > stats[key].lastPlayed.sortable) stats[key].lastPlayed = info;
+          if (!stats[key].firstPlayed || sortable < stats[key].firstPlayed.sortable) stats[key].firstPlayed = info;
         });
       });
     });
-
-    // Complete history = our fetched window covers every setlist the API has on file.
-    // Fall back to false if the API didn't tell us a total.
-    var complete = (lifetimeTotal !== null) && (lifetimeTotal <= pageCount * itemsPerPage);
-
-    var result = {
-      totalShows: totalShows,
-      lifetimeTotal: lifetimeTotal,
-      complete: complete,
-      songs: stats
-    };
-    statsCache[mbid] = result;
-    return result;
   });
+
+  var complete = (lifetimeTotal !== null) && (lifetimeTotal <= pagesFetched * itemsPerPage);
+  return {
+    totalShows: totalShows,
+    lifetimeTotal: lifetimeTotal,
+    complete: complete,
+    songs: stats
+  };
 }
 
 // Walk every rendered song row and stamp it with stats data attributes
@@ -339,6 +374,7 @@ function applyStatsToRows(songs) {
     var entry = bucket.songs[key];
     btn.classList.remove('loading');
     btn.removeAttribute('disabled');
+    btn.setAttribute('aria-label', 'Show song statistics');
     btn.setAttribute('data-total-shows', bucket.totalShows);
     btn.setAttribute('data-complete', bucket.complete ? '1' : '0');
     if (bucket.lifetimeTotal !== null && bucket.lifetimeTotal !== undefined) {
@@ -360,6 +396,13 @@ function applyStatsToRows(songs) {
       }
     } else {
       btn.setAttribute('data-count', '0');
+    }
+
+    // If the popover for this row is already open (user was watching the
+    // loading state), swap in the real content now that data has landed.
+    if (btn.classList.contains('open')) {
+      var existing = btn.querySelector('.sl-stats-tooltip');
+      if (existing) existing.innerHTML = buildStatsPopoverHtml(btn);
     }
   }
 }
@@ -383,7 +426,10 @@ function loadStatsForCombine(songs) {
 }
 
 function statsButtonHtml() {
-  return '<button class="sl-stats-btn loading" type="button" aria-label="Show song statistics" disabled>'
+  // No `disabled` attribute — we want hover/tap to surface a "Loading..."
+  // popover so users know stats are on the way (the deeper fetch can take
+  // several seconds).
+  return '<button class="sl-stats-btn loading" type="button" aria-label="Loading song statistics from setlist.fm">'
     + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
     + '<path d="M3 3v18h18"/><rect x="7" y="13" width="3" height="5"/><rect x="12" y="9" width="3" height="9"/><rect x="17" y="5" width="3" height="13"/>'
     + '</svg>'
@@ -453,11 +499,13 @@ function buildStatsPopoverHtml(btn) {
 
 function showStatsPopover(btn) {
   hideStatsPopover();
-  if (btn.classList.contains('loading') || btn.hasAttribute('disabled')) return;
   var popover = document.createElement('div');
   popover.className = 'sl-stats-tooltip show';
   popover.setAttribute('role', 'tooltip');
-  popover.innerHTML = buildStatsPopoverHtml(btn);
+  popover.innerHTML = btn.classList.contains('loading')
+    ? '<div class="sl-stats-empty">Loading stats from setlist.fm…</div>'
+      + '<div class="sl-stats-foot">Fetching up to ' + (SL_STATS_PAGE_CAP * 20) + ' recent shows for accurate first-played dates</div>'
+    : buildStatsPopoverHtml(btn);
   btn.appendChild(popover);
   btn.classList.add('open');
 }
