@@ -4107,7 +4107,11 @@ nav {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+.pulse-src:hover { border-color: var(--teal); }
+.pulse-src-active { box-shadow: 0 0 0 2px var(--teal); }
 .pulse-src-dot {
   width: 7px;
   height: 7px;
@@ -4120,6 +4124,53 @@ nav {
 .pulse-src-err { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
 .pulse-src-err .pulse-src-dot { background: var(--red); }
 .pulse-src-meta { opacity: 0.65; }
+
+/* Filter + search toolbar */
+.pulse-toolbar {
+  max-width: 760px;
+  margin: 0 auto 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.pulse-search {
+  width: 100%;
+  max-width: 420px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.pulse-search:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+.pulse-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: center;
+}
+.pulse-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.pulse-chip:hover { border-color: var(--teal); color: var(--text); }
+.pulse-chip-active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--bg);
+}
 
 /* Feed list */
 .pulse-list {
@@ -4153,6 +4204,24 @@ nav {
   line-height: 1.35;
 }
 .pulse-item:hover .pulse-item-title { color: var(--teal); }
+.pulse-item-summary {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+.pulse-cat {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--teal);
+  color: var(--teal);
+  white-space: nowrap;
+}
 .pulse-item-meta {
   display: flex;
   flex-direction: column;
