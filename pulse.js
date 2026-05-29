@@ -17,7 +17,7 @@ const PULSE_SOURCES = [
   { key: 'lehighvalleynews', label: 'LehighValleyNews',  url: 'https://www.lehighvalleynews.com/index.rss' },
   { key: 'lehighvalleylive', label: 'lehighvalleylive',  url: 'https://www.lehighvalleylive.com/arc/outboundfeeds/rss/?outputType=xml' },
   { key: 'wfmz',             label: 'WFMZ 69 News',       url: 'https://www.wfmz.com/search/?f=rss&t=article&c=news&l=50&s=start_time&sd=desc' },
-  { key: 'morningcall',      label: 'The Morning Call',   url: 'https://www.mcall.com/feed/' },
+  { key: 'morningcall',      label: 'The Morning Call',   url: 'https://www.mcall.com/arc/outboundfeeds/rss/?outputType=xml' },
   { key: 'pa-governor',      label: 'PA Governor',        url: 'https://www.governor.pa.gov/feed/' },
   { key: 'fema-pa',          label: 'FEMA',               url: 'https://www.fema.gov/about/news-multimedia/press-releases/rss' }
 ];
