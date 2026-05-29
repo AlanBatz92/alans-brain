@@ -17,7 +17,11 @@ const PULSE_SOURCES = [
   { key: 'lehighvalleynews', label: 'LehighValleyNews',  url: 'https://www.lehighvalleynews.com/index.rss' },
   { key: 'lehighvalleylive', label: 'lehighvalleylive',  url: 'https://www.lehighvalleylive.com/arc/outboundfeeds/rss/?outputType=xml' },
   { key: 'wfmz',             label: 'WFMZ 69 News',       url: 'https://www.wfmz.com/search/?f=rss&t=article&c=news&l=50&s=start_time&sd=desc' },
-  { key: 'morningcall',      label: 'The Morning Call',   url: 'https://www.mcall.com/arc/outboundfeeds/rss/?outputType=xml' },
+  // The Morning Call's WAF 403s every server-side fetch (even its Arc feed),
+  // so we route it through Google News RSS — fetched from Google, not mcall,
+  // which sidesteps the block. Same technique works for any source lacking a
+  // usable feed: query `site:<domain>`.
+  { key: 'morningcall',      label: 'The Morning Call',   url: 'https://news.google.com/rss/search?q=site:mcall.com&hl=en-US&gl=US&ceid=US:en' },
   { key: 'pa-governor',      label: 'PA Governor',        url: 'https://www.governor.pa.gov/feed/' },
   { key: 'fema-pa',          label: 'FEMA',               url: 'https://www.fema.gov/about/news-multimedia/press-releases/rss' }
 ];

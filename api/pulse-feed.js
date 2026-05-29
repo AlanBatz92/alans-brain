@@ -17,7 +17,8 @@ const ALLOWED_HOSTS = [
   'governor.pa.gov',
   'fema.gov',
   'feedburner.com',
-  'feeds.feedburner.com'
+  'feeds.feedburner.com',
+  'news.google.com'
 ];
 
 function hostAllowed(hostname) {
