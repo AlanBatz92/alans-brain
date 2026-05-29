@@ -40,8 +40,11 @@ async function fetchSource(source) {
   const text = await resp.text();
   const doc = new DOMParser().parseFromString(text, 'application/xml');
 
+  // Diagnostic: when XML is malformed (often an HTML page or redirect),
+  // surface a snippet so we can see what the endpoint actually returned.
   if (doc.querySelector('parsererror')) {
-    throw new Error('Could not parse feed (not valid XML)');
+    const snippet = text.slice(0, 80).replace(/\s+/g, ' ').trim();
+    throw new Error('Not valid XML — got: "' + snippet + '…"');
   }
 
   // RSS uses <item>; Atom uses <entry>.
@@ -49,7 +52,13 @@ async function fetchSource(source) {
   const isAtom = nodes.length === 0;
   if (isAtom) nodes = Array.from(doc.querySelectorAll('entry'));
 
-  if (nodes.length === 0) throw new Error('Feed had no items');
+  // Diagnostic: report the root element so an empty result tells us whether
+  // it's a real-but-empty feed (<rss>/<feed>), a wrong path (<html>), or a
+  // feed index (<opml>).
+  if (nodes.length === 0) {
+    const root = doc.documentElement ? doc.documentElement.nodeName : '(none)';
+    throw new Error('No items (root: <' + root + '>)');
+  }
 
   return nodes.map((node) => parseItem(node, isAtom, source));
 }
