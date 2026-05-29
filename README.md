@@ -7,6 +7,7 @@ A personal indie web project. Built with HTML, CSS, and JS — no frameworks, no
 | Page | Description |
 |---|---|
 | **Home** (`index.html`) | Landing page with Explore cards |
+| **Pulse** (`pulse.html`) | Live Lehigh Valley news feed pulled from local RSS sources |
 | **YouTube Channels** (`youtube.html`) | 114 curated channels with profile images |
 | **Great & Free** (`tools.html`) | 40 tools + 25 websites across searchable categories |
 | **Soundboards** (`soundboards.html`) | 5 boards with categorized audio clips, rotating character icons |
