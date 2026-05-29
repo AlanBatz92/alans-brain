@@ -4088,6 +4088,44 @@ nav {
    ══════════════════════════════════════ */
 
 /* Source health strip (web equivalent of `manage.py list-sources`) */
+/* Morning Brief card */
+.pulse-brief {
+  max-width: 760px;
+  margin: 8px auto 0;
+  padding: 22px 26px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.pulse-brief-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.pulse-brief-lead {
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text);
+  margin: 0 0 16px;
+}
+.pulse-brief-section { margin-top: 14px; }
+.pulse-brief-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--teal);
+  margin: 0 0 4px;
+}
+.pulse-brief-body {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin: 0;
+}
+
 .pulse-status {
   display: flex;
   flex-wrap: wrap;

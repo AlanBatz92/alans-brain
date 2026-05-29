@@ -16,6 +16,7 @@
    ────────────────────────────────────────────────────────────── */
 
 const FEED_URL = 'https://birds.alansbrain.com/api/feed?limit=200';
+const DIGEST_URL = 'https://birds.alansbrain.com/api/digest';
 const MAX_ITEMS = 120;
 
 // Canonical category order (mirrors birdstation's pulse_enrich.py taxonomy)
@@ -187,9 +188,44 @@ async function loadPulse() {
   renderArticles();
 }
 
+/* ── Daily AI brief (independent of the feed) ── */
+async function loadDigest() {
+  const card = document.getElementById('pulse-brief');
+  if (!card) return;
+
+  let d;
+  try {
+    const resp = await fetch(DIGEST_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    d = await resp.json();
+  } catch (err) {
+    card.hidden = true;   // no brief yet, or box offline — just don't show it
+    return;
+  }
+
+  if (!d || !d.headline || !Array.isArray(d.sections) || d.sections.length === 0) {
+    card.hidden = true;
+    return;
+  }
+
+  const sections = d.sections.map((s) =>
+    '<div class="pulse-brief-section">' +
+      '<h3 class="pulse-brief-heading">' + escapeHtml(s.heading) + '</h3>' +
+      '<p class="pulse-brief-body">' + escapeHtml(s.body) + '</p>' +
+    '</div>'
+  ).join('');
+
+  card.innerHTML =
+    '<div class="pulse-brief-label">📰 Morning Brief' +
+      (d.date ? ' · ' + escapeHtml(d.date) : '') + '</div>' +
+    '<p class="pulse-brief-lead">' + escapeHtml(d.headline) + '</p>' +
+    sections;
+  card.hidden = false;
+}
+
 function initPulse() {
   const btn = document.getElementById('pulse-refresh');
-  if (btn) btn.addEventListener('click', loadPulse);
+  if (btn) btn.addEventListener('click', () => { loadPulse(); loadDigest(); });
 
   const search = document.getElementById('pulse-search');
   if (search) {
@@ -200,6 +236,7 @@ function initPulse() {
   }
 
   loadPulse();
+  loadDigest();
 }
 
 document.addEventListener('DOMContentLoaded', initPulse);
