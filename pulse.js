@@ -1,100 +1,21 @@
 /* ──────────────────────────────────────────────────────────────
-   Pulse — Lehigh Valley news feed (Phase 0)
+   Pulse — Lehigh Valley news feed
 
-   Live client-side fetch: for each source we hit the api/pulse-feed
-   proxy (CORS workaround), parse the RSS/Atom XML with DOMParser,
-   normalize to a common shape, merge, sort newest-first, and render.
+   Thin reader. birdstation (https://birds.alansbrain.com) fetches,
+   dedupes, and stores every source on a systemd timer, then serves
+   the merged result from a single endpoint. This page just reads it:
+   one fetch, render the items, render per-source health.
 
-   No storage, no AI yet — this phase just proves the pipeline and
-   surfaces which feeds are healthy (per-source status, the web
-   equivalent of the runbook's `manage.py list-sources`).
+   The health strip comes from the API's `sources` array — the web
+   surface of the runbook's `manage.py list-sources` (each source's
+   last_status / last_count / last_fetch).
 
-   To add a source: add an entry here AND allow-list its host in
-   api/pulse-feed.js.
+   To add or remove a source you no longer touch this file: it's a row
+   in birdstation's `feed_sources` table.
    ────────────────────────────────────────────────────────────── */
 
-const PULSE_SOURCES = [
-  { key: 'lehighvalleynews', label: 'LehighValleyNews',  url: 'https://www.lehighvalleynews.com/index.rss' },
-  { key: 'lehighvalleylive', label: 'lehighvalleylive',  url: 'https://www.lehighvalleylive.com/arc/outboundfeeds/rss/?outputType=xml' },
-  { key: 'wfmz',             label: 'WFMZ 69 News',       url: 'https://www.wfmz.com/search/?f=rss&t=article&c=news&l=50&s=start_time&sd=desc' },
-  // The Morning Call's WAF 403s every server-side fetch (even its Arc feed),
-  // so we route it through Google News RSS — fetched from Google, not mcall,
-  // which sidesteps the block. Same technique works for any source lacking a
-  // usable feed: query `site:<domain>`.
-  { key: 'morningcall',      label: 'The Morning Call',   url: 'https://news.google.com/rss/search?q=site:mcall.com&hl=en-US&gl=US&ceid=US:en' },
-  { key: 'pa-governor',      label: 'PA Governor',        url: 'https://www.governor.pa.gov/feed/' },
-  { key: 'fema-pa',          label: 'FEMA',               url: 'https://www.fema.gov/about/news-multimedia/press-releases/rss' }
-];
-
-const PROXY = '/api/pulse-feed?url=';
+const FEED_URL = 'https://birds.alansbrain.com/api/feed';
 const MAX_ITEMS = 80;
-
-/* ── Fetch + parse one source ── */
-async function fetchSource(source) {
-  const resp = await fetch(PROXY + encodeURIComponent(source.url));
-  if (!resp.ok) {
-    let detail = 'HTTP ' + resp.status;
-    try {
-      const j = await resp.json();
-      if (j && j.error) detail = j.error;
-    } catch (e) { /* not JSON, keep the status */ }
-    throw new Error(detail);
-  }
-
-  const text = await resp.text();
-  const doc = new DOMParser().parseFromString(text, 'application/xml');
-
-  // Diagnostic: when XML is malformed (often an HTML page or redirect),
-  // surface a snippet so we can see what the endpoint actually returned.
-  if (doc.querySelector('parsererror')) {
-    const snippet = text.slice(0, 80).replace(/\s+/g, ' ').trim();
-    throw new Error('Not valid XML — got: "' + snippet + '…"');
-  }
-
-  // RSS uses <item>; Atom uses <entry>.
-  let nodes = Array.from(doc.querySelectorAll('item'));
-  const isAtom = nodes.length === 0;
-  if (isAtom) nodes = Array.from(doc.querySelectorAll('entry'));
-
-  // Diagnostic: report the root element so an empty result tells us whether
-  // it's a real-but-empty feed (<rss>/<feed>), a wrong path (<html>), or a
-  // feed index (<opml>).
-  if (nodes.length === 0) {
-    const root = doc.documentElement ? doc.documentElement.nodeName : '(none)';
-    throw new Error('No items (root: <' + root + '>)');
-  }
-
-  return nodes.map((node) => parseItem(node, isAtom, source));
-}
-
-function text(node, selector) {
-  const el = node.querySelector(selector);
-  return el ? el.textContent.trim() : '';
-}
-
-function parseItem(node, isAtom, source) {
-  const title = text(node, 'title') || '(untitled)';
-
-  // Atom links live in <link href="...">; RSS links are text content.
-  let link = '';
-  if (isAtom) {
-    const linkEl = node.querySelector('link[rel="alternate"]') || node.querySelector('link');
-    link = linkEl ? (linkEl.getAttribute('href') || linkEl.textContent.trim()) : '';
-  } else {
-    link = text(node, 'link');
-  }
-
-  const rawDate = text(node, 'pubDate') || text(node, 'published') || text(node, 'updated') || text(node, 'date');
-  const ts = rawDate ? Date.parse(rawDate) : NaN;
-
-  return {
-    title: title,
-    link: link,
-    source: source.label,
-    sourceKey: source.key,
-    published: isNaN(ts) ? null : ts
-  };
-}
 
 /* ── Relative time ── */
 function relativeTime(ts) {
@@ -112,29 +33,31 @@ function relativeTime(ts) {
 
 function escapeHtml(s) {
   const d = document.createElement('div');
-  d.textContent = s;
+  d.textContent = s == null ? '' : s;
   return d.innerHTML;
 }
 
-/* ── Render ── */
-function renderStatus(results) {
+/* ── Render per-source health ── */
+function renderStatus(sources) {
   const strip = document.getElementById('pulse-status');
-  strip.innerHTML = results.map((r) => {
-    const ok = r.status === 'ok';
+  if (!strip) return;
+  strip.innerHTML = sources.map((s) => {
+    const ok = s.last_status === 'ok';
     const cls = ok ? 'pulse-src-ok' : 'pulse-src-err';
-    const detail = ok ? (r.count + ' items') : r.error;
+    const detail = ok ? ((s.last_count || 0) + ' items') : (s.last_status || 'no data yet');
     return '<span class="pulse-src ' + cls + '" title="' + escapeHtml(detail) + '">' +
-             '<span class="pulse-src-dot"></span>' + escapeHtml(r.source.label) +
+             '<span class="pulse-src-dot"></span>' + escapeHtml(s.label) +
              ' <span class="pulse-src-meta">' + escapeHtml(detail) + '</span>' +
            '</span>';
   }).join('');
 }
 
+/* ── Render articles ── */
 function renderArticles(items) {
   const list = document.getElementById('pulse-list');
   if (items.length === 0) {
     list.innerHTML = '<div class="pulse-empty">No headlines yet — check the source status above. ' +
-                     'Feeds with errors need their URL fixed or removed.</div>';
+                     'Feeds with errors need their URL fixed or removed in birdstation.</div>';
     return;
   }
   list.innerHTML = items.slice(0, MAX_ITEMS).map((it) => {
@@ -159,27 +82,26 @@ async function loadPulse() {
   updated.textContent = 'Loading…';
   list.innerHTML = '<div class="pulse-loading">Reading the wires…</div>';
 
-  const settled = await Promise.all(PULSE_SOURCES.map(async (source) => {
-    try {
-      const items = await fetchSource(source);
-      return { source: source, status: 'ok', count: items.length, items: items };
-    } catch (err) {
-      return { source: source, status: 'error', error: err.message, items: [] };
-    }
-  }));
+  let data;
+  try {
+    const resp = await fetch(FEED_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    data = await resp.json();
+  } catch (err) {
+    list.innerHTML = '<div class="pulse-empty">Couldn’t reach the feed service — ' +
+                     escapeHtml(err.message) + '. The birdstation box may be offline.</div>';
+    updated.textContent = 'Offline';
+    return;
+  }
 
-  renderStatus(settled);
+  const items = data.items || [];
+  const sources = data.sources || [];
 
-  const all = [];
-  settled.forEach((r) => { if (r.status === 'ok') all.push.apply(all, r.items); });
+  renderStatus(sources);
+  renderArticles(items);
 
-  // Newest first; undated items sink to the bottom.
-  all.sort((a, b) => (b.published || 0) - (a.published || 0));
-
-  renderArticles(all);
-
-  const okCount = settled.filter((r) => r.status === 'ok').length;
-  updated.textContent = all.length + ' headlines · ' + okCount + '/' + settled.length +
+  const okCount = sources.filter((s) => s.last_status === 'ok').length;
+  updated.textContent = items.length + ' headlines · ' + okCount + '/' + sources.length +
                         ' sources · ' + new Date().toLocaleTimeString();
 }
 
