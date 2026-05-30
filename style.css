@@ -4125,6 +4125,42 @@ nav {
   color: var(--text-muted);
   margin: 0;
 }
+.pulse-brief-sources {
+  margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.pulse-cite {
+  color: var(--teal);
+  text-decoration: none;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.pulse-cite:hover { text-decoration: underline; }
+.pulse-brief-citations {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.pulse-citation-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pulse-citation {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+.pulse-citation a { color: var(--teal); text-decoration: none; }
+.pulse-citation a:hover { text-decoration: underline; }
+.pulse-cite-n {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-dim);
+}
+.pulse-cite-src { color: var(--text-dim); }
 
 .pulse-status {
   display: flex;

@@ -212,6 +212,7 @@ async function loadDigest() {
     '<div class="pulse-brief-section">' +
       '<h3 class="pulse-brief-heading">' + escapeHtml(s.heading) + '</h3>' +
       '<p class="pulse-brief-body">' + escapeHtml(s.body) + '</p>' +
+      renderSectionSources(s.citations) +
     '</div>'
   ).join('');
 
@@ -219,8 +220,40 @@ async function loadDigest() {
     '<div class="pulse-brief-label">📰 Morning Brief' +
       (d.date ? ' · ' + escapeHtml(d.date) : '') + '</div>' +
     '<p class="pulse-brief-lead">' + escapeHtml(d.headline) + '</p>' +
-    sections;
+    sections +
+    renderCitations(d.citations);
   card.hidden = false;
+}
+
+// Per-section "Sources:" line — compact numbered links to the cited articles.
+// citations: [{n, title, url, source}]; absent on pre-citation briefs → nothing.
+function renderSectionSources(citations) {
+  if (!Array.isArray(citations) || citations.length === 0) return '';
+  const links = citations.map((c) =>
+    '<a class="pulse-cite" href="' + (c.url ? escapeHtml(c.url) : '#') + '"' +
+      (c.url ? ' target="_blank" rel="noopener"' : '') +
+      ' title="' + escapeHtml(c.title) + '">[' + c.n + '] ' +
+      escapeHtml(c.source || c.title) + '</a>'
+  ).join('');
+  return '<div class="pulse-brief-sources">Sources: ' + links + '</div>';
+}
+
+// Full numbered citations list at the foot of the brief.
+function renderCitations(citations) {
+  if (!Array.isArray(citations) || citations.length === 0) return '';
+  const items = citations.map((c) =>
+    '<li class="pulse-citation"><span class="pulse-cite-n">[' + c.n + ']</span> ' +
+      (c.url
+        ? '<a href="' + escapeHtml(c.url) + '" target="_blank" rel="noopener">' +
+            escapeHtml(c.title) + '</a>'
+        : escapeHtml(c.title)) +
+      (c.source ? ' <span class="pulse-cite-src">— ' + escapeHtml(c.source) + '</span>' : '') +
+    '</li>'
+  ).join('');
+  return '<div class="pulse-brief-citations">' +
+           '<h3 class="pulse-brief-heading">Citations</h3>' +
+           '<ol class="pulse-citation-list">' + items + '</ol>' +
+         '</div>';
 }
 
 function initPulse() {
