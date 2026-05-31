@@ -28,6 +28,20 @@ Added source attribution to the daily brief.
   woven into the prose — robust (no need to assign numbers pre-generation),
   with inline markers left as a possible follow-up.
 
+## 2026-05-30 — Fix: BirdNET detections silently dropped (CSV delimiter)
+
+`birdnet_pipeline.py`'s `parse_and_log()` read BirdNET's CSV output with
+`delimiter="\t"` (tab), but BirdNET emits **comma**-separated CSV — so every row
+failed to parse into fields and no detection was ever written to the DB. Changed
+the delimiter to `","`. First detection on restart: Gray Catbird, 77%. (BirdNET
+detection itself was always working — American Robin 56%, Chipping Sparrow 47%
+in manual tests — results were just discarded before the DB write.)
+
+NOTE: `birdnet_pipeline.py` is the bird-detection *writer* and is **not yet in
+this repo** (only the Pulse/API files were imported). This fix currently lives
+only on the box. Pending decision: bring the observatory pipeline under
+git-deploy too, or keep this repo scoped to the website + Pulse.
+
 ## 2026-05-30 — birdstation imported into the repo (git-deploy, run-from-clone)
 
 Brought the home server's code under version control and switched to a
