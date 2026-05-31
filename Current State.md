@@ -63,18 +63,30 @@ AI enrichment, and the daily digest; the website just reads JSON and renders.
 - Category filter order mirrors birdstation's taxonomy via the `TAXONOMY` const in `pulse.js`.
 - **To add/remove a news source you do NOT touch the front-end** — it's a row in birdstation's `feed_sources` table.
 
-### birdstation (home server — code currently lives on the box, not in this repo)
+### birdstation (home server — code mirrored in this repo under `birdstation/`)
 
-- **Storage:** SQLite at `~/birdnet.db`.
-  - `feed_sources` — one row per source (`key`, `name`/label, `url`, `active`, …). The fetcher reads this each run.
-  - `feed_items` — fetched/deduped articles; AI-enriched with `category` + `ai_summary` (`enriched_at` set when done). Columns include `id`, `title`, `source`, `link`, `published`, `fetched_at`, `category`, `ai_summary`, `enriched_at`.
-  - `feed_digests` — one row per local date: `date` (PK), `generated_at`, `headline`, `sections_json`, `citations_json`, `model`, `item_count`.
+birdstation is primarily an **Emmaus Bird Observatory** (BirdNET acoustic
+detections + a train-noise detector; a solar telemetry node is wired but
+disabled). Pulse is a tenant on the same box — it shares `~/birdnet.db` and the
+same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
+`birdstation/` and deploys via `git pull` (see `birdstation/README.md`).
+
+- **API service:** `bird_api.py` — **FastAPI via uvicorn on `:8080`**, fronted at
+  `https://birds.alansbrain.com`. CORS allows `alansbrain.com` / `www.alansbrain.com`.
+  Pulse uses `/api/feed` and `/api/digest`; the rest serve bird/train data
+  (`/api/detections`, `/api/today`, `/api/lifetime`, `/api/stats`, `/api/trains/*`).
+  Write routes (train verdicts) are guarded by `BIRD_API_KEY` via an `X-API-Key` header.
+- **Storage:** SQLite at `~/birdnet.db` (full schema in `birdstation/schema.sql`).
+  Bird/observatory tables: `detections`, `lifetime`, `train_events`, `solar_telemetry`.
+  Pulse tables:
+  - `feed_sources` — `key` (PK), `label`, `url`, `enabled`, `last_status`, `last_count`, `last_fetch`.
+  - `feed_items` — **PK is `url`** (no integer id/link column; code uses `rowid AS id`). Columns: `title`, `source_key`, `source`, `published` (INTEGER), `fetched_at`, `summary`, `category`, `ai_summary`, `enriched_at`, `enrich_attempts`.
+  - `feed_digests` — `date` (PK), `generated_at`, `headline`, `sections_json`, `model`, `item_count`. (`citations_json` lands with the citations backend.)
 - **Jobs (systemd timers):**
-  - `pulse_fetch.py` — pulls every active source on a timer, dedupes, stores.
-  - `pulse_enrich.py` — AI tagging + one-sentence summaries (Haiku-class; high volume).
-  - `pulse_digest.py` — daily ~6 AM (`pulse-digest.timer`): reads the last 24h of enriched items, writes a sectioned "Morning Brief" **with citations** via `claude-sonnet-4-6` + adaptive thinking, structured output through `messages.parse()` (Pydantic `Digest{headline, sections[{heading, body, citation_ids}]}`). Skips days with <3 items.
-- **API service:** `bird_api.py` exposes `/api/feed`, `/api/digest` (and is the place new read endpoints go). Restart after edits.
-- **Secrets:** `ANTHROPIC_API_KEY` provided via systemd `Environment=`/`EnvironmentFile=` (chmod 600). Not in the repo.
+  - `pulse_fetcher.py` — `pulse-fetch.timer`, every 15 min: pulls every enabled source, dedupes, stores. *(File still being imported into the repo.)*
+  - `pulse_enrich.py` — `pulse-enrich.timer`: batched (20/run) AI tagging + one-sentence summaries via **`claude-haiku-4-5`**, prompt-cached system prompt, retried up to `enrich_attempts` 3.
+  - `pulse_digest.py` — `pulse-digest.timer`, daily ~6 AM: reads the last 24h of enriched items, writes a sectioned "Morning Brief" via **`claude-sonnet-4-6`** + adaptive thinking, structured output through `messages.parse()`. Skips days with <3 items.
+- **Secrets:** `ANTHROPIC_API_KEY` and `BIRD_API_KEY` live only on the box, moving to `/etc/birdstation.env` (chmod 600) referenced by `EnvironmentFile=`. Never committed; `.gitignore` blocks `*.env`/`*.db`.
 
 ### Digest + citations (current behavior)
 
@@ -92,4 +104,5 @@ AI enrichment, and the daily digest; the website just reads JSON and renders.
 - **RSS URL rot** is the #1 source-health risk; broken feeds surface as a per-source error in the strip rather than breaking the page.
 - birdstation is a home box — if it's offline, Pulse shows an offline state and the digest card simply hides.
 - The two old local planning docs (`Task Tracker Write-Back Feature Plan.md`, `New Pages Plan.md`) remain gitignored.
-- **birdstation code is not yet in this repo** — changes are currently applied via paste-blocks. See `Build History.md` (2026-05-30) for the proposed git-deploy approach to fix this.
+- **birdstation code now lives in `birdstation/`** and deploys via `git pull` + service restart (`birdstation/README.md`). The fetcher (`pulse_fetcher.py`) and the enrich/digest systemd units are still being imported; once in, the repo fully mirrors the box.
+- **Citations backend** (per-section + bottom citations) is built on the front-end but **not yet on the box** — the `feed_digests.citations_json` column and the digest/API changes ship in the next git-deploy commit.
