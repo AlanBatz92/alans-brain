@@ -28,6 +28,31 @@ Added source attribution to the daily brief.
   woven into the prose — robust (no need to assign numbers pre-generation),
   with inline markers left as a possible follow-up.
 
+## 2026-05-30 — birdstation imported into the repo (git-deploy, run-from-clone)
+
+Brought the home server's code under version control and switched to a
+`git pull` deploy model.
+
+- **Imported verbatim** into `birdstation/`: `pulse_fetcher.py`, `pulse_enrich.py`,
+  `pulse_digest.py`, `bird_api.py`, and `schema.sql` (full `birdnet.db` schema).
+- **Templated systemd units** under `birdstation/systemd/` for **run-from-clone**
+  (units point at `~/alans-brain/birdstation/*.py`) using
+  `EnvironmentFile=/etc/birdstation.env` — no inline keys. One-time cutover guide
+  in `birdstation/README.md`.
+- **Citations backend** shipped *through* the new pipeline (first real
+  git-deploy change): `pulse_digest.py` now feeds Claude each item's `rowid` as
+  `id`, takes `citation_ids` per section, and resolves them to globally-numbered
+  `{n, title, url, source}` (no model-emitted URLs); `feed_digests` gains
+  `citations_json`; `/api/digest` returns per-section + top-level citations.
+  Written against the **real schema** — importing-first caught that `feed_items`
+  has no `id`/`link` column (PK is `url`, code uses `rowid`), which the earlier
+  paste-block had wrong.
+- **Decisions:** run-from-clone over copy-on-deploy (no drift); keys move to
+  `/etc/birdstation.env`.
+- **Security:** `BIRD_API_KEY` was exposed in chat during the unit dump (the
+  redaction only caught `ANTHROPIC_API_KEY`) — flagged for rotation at cutover.
+- **Pending:** confirm the real `pulse-enrich.timer` schedule; run the cutover.
+
 ## 2026-05-30 — Memory system committed; git-deploy proposed for birdstation
 
 - Un-gitignored and committed `Current State.md` + `Build History.md` so **every**

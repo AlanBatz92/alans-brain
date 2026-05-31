@@ -267,7 +267,7 @@ def set_verdict(event_id: int, body: dict):
 def get_digest():
     conn = get_db()
     row = conn.execute(
-        """SELECT date, generated_at, headline, sections_json
+        """SELECT date, generated_at, headline, sections_json, citations_json
            FROM feed_digests ORDER BY date DESC LIMIT 1"""
     ).fetchone()
     conn.close()
@@ -278,4 +278,5 @@ def get_digest():
         "generated_at": row["generated_at"],
         "headline":     row["headline"],
         "sections":     json.loads(row["sections_json"]),
+        "citations":    json.loads(row["citations_json"]) if row["citations_json"] else [],
     }

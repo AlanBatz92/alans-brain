@@ -75,9 +75,14 @@ CREATE TABLE feed_digests (
     generated_at  TEXT NOT NULL,
     headline      TEXT NOT NULL,
     sections_json TEXT NOT NULL,
+    citations_json TEXT,              -- global numbered citation list (added 2026-05-30)
     model         TEXT,
     item_count    INTEGER
 );
 
 -- ── Migrations ──────────────────────────────────────────────
--- (none yet; the citations column lands in the next commit)
+-- Apply each block once against the live ~/birdnet.db, then leave it here as a
+-- record. A fresh DB built from the CREATE statements above is already current.
+
+-- migration 2026-05-30: citations on digests
+-- ALTER TABLE feed_digests ADD COLUMN citations_json TEXT;
