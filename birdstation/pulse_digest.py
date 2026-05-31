@@ -86,7 +86,7 @@ def main():
     client = anthropic.Anthropic()
     message = client.messages.parse(
         model=MODEL,
-        max_tokens=4000,
+        max_tokens=16000,   # headroom for adaptive thinking + the citations output
         thinking={"type": "adaptive"},
         system=SYSTEM_PROMPT,
         messages=[{"role": "user",
@@ -94,6 +94,11 @@ def main():
         output_format=Digest,
     )
     digest = message.parsed_output
+    if digest is None:
+        raise RuntimeError(
+            f"digest parse returned None (stop_reason={message.stop_reason}); "
+            "likely truncated — raise max_tokens, or check for a refusal"
+        )
 
     # Resolve citation ids → globally-numbered links, first-seen order.
     order, num = [], {}

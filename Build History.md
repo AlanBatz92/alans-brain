@@ -39,6 +39,20 @@ in manual tests — results were just discarded before the DB write.)
 
 Imported into the repo on 2026-05-30 (see entry below) with the fix in place.
 
+## 2026-05-31 — Cutover to run-from-clone; digest max_tokens fix
+
+Ran the full birdstation cutover (clone at `~/alans-brain`, `/etc/birdstation.env`,
+units installed from the repo, `traindetect.service` removed, `BIRD_API_KEY`
+rotated). All services came up active on the clone'd code; pulse-fetch and the
+observatory pipelines verified healthy.
+
+First-run bug in the citations digest: `messages.parse()` returned
+`parsed_output=None` because `max_tokens=4000` was too tight — adaptive thinking
+plus the larger citations output truncated the JSON mid-stream (crashed on
+`digest.sections`). Raised `max_tokens` to 16000 and added a `None` guard that
+raises a clear error (with `stop_reason`) instead of an `AttributeError`.
+Shipped via git-deploy (first real bugfix through the new pipeline).
+
 ## 2026-05-30 — Train detector: single-instance lock + duplicate unit disabled
 
 The box had `train_detector.service` **and** `traindetect.service` both enabled
