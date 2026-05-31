@@ -50,13 +50,23 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
-// Detections write a local ISO timestamp (no offset); train events write a
-// UTC ISO timestamp (with offset). new Date() handles both — return ms or null.
+// The box runs on UTC and writes *naive* ISO timestamps (no offset) for bird
+// detections; train events carry an explicit offset. If a value has no timezone
+// marker we treat it as UTC, otherwise it'd be parsed as the viewer's local
+// time and read ~4h off. Returns epoch ms, or null.
 function parseTime(s) {
   if (!s) return null;
-  const t = new Date(s).getTime();
+  let str = String(s);
+  const hasTime = /\d{2}:\d{2}/.test(str);
+  const hasTz = /[zZ]$|[+\-]\d{2}:?\d{2}$/.test(str);
+  if (hasTime && !hasTz) str = str.replace(' ', 'T') + 'Z';
+  const t = new Date(str).getTime();
   return isNaN(t) ? null : t;
 }
+
+// The observatory lives in Emmaus, PA — render all clock/date values in Eastern
+// so the page is correct regardless of the viewer's own timezone.
+const OBS_TZ = 'America/New_York';
 
 function relativeTime(ms) {
   if (ms == null) return '';
@@ -73,12 +83,12 @@ function relativeTime(ms) {
 
 function clockTime(ms) {
   if (ms == null) return '';
-  return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', timeZone: OBS_TZ });
 }
 
 function shortDate(ms) {
   if (ms == null) return '';
-  return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric', timeZone: OBS_TZ });
 }
 
 // Confidence (0–1) → bucket class. 0.70 is the page's "confident" floor, so
@@ -99,7 +109,8 @@ function renderStats(el, cards) {
   if (!el) return;
   el.innerHTML = cards.map((c) =>
     '<div class="obs-stat">' +
-      '<div class="obs-stat-value">' + escapeHtml(String(c.value)) + '</div>' +
+      '<div class="obs-stat-value' + (c.small ? ' obs-stat-value-sm' : '') + '">' +
+        escapeHtml(String(c.value)) + '</div>' +
       '<div class="obs-stat-label">' + escapeHtml(c.label) + '</div>' +
     '</div>'
   ).join('');
@@ -127,7 +138,7 @@ function renderBirdStats() {
     { label: 'Heard today',   value: todayN.toLocaleString() },
     { label: 'Species today', value: speciesToday },
     { label: 'Life list',     value: state.life.length },
-    { label: 'Latest',        value: latest ? latest.common_name : '—' },
+    { label: 'Latest',        value: latest ? latest.common_name : '—', small: true },
   ]);
 }
 
