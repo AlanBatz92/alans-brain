@@ -11,22 +11,7 @@
 
 ## ▶ Next
 
-### 1. Bird & Train Observatory — proof-of-concept front end
-A new page on the website (e.g. `observatory.html` / `observatory.js`) that reads
-the birdstation API and gives the BirdNET + train data a real home. Worth its own
-focused session.
-- **Data already available** (all GET, `https://birds.alansbrain.com`):
-  `/api/stats`, `/api/today`, `/api/detections?limit=`, `/api/lifetime`,
-  `/api/trains/stats`, `/api/trains/recent`, `/api/trains/today`,
-  `/api/trains/clips`, and clip audio at `/api/trains/clip/{file}`.
-- **POC sections (first cut):** a live "today" detections feed (species, time,
-  confidence), the life list, headline stats (total detections/species/today,
-  latest), and a train-events list with **playable WAV clips** + train stats.
-- **Build for iteration:** modular renderers, vanilla + `pulse-`-style patterns,
-  theme variables, graceful offline/empty states (mirror `pulse.js`).
-- **Open questions to settle at kickoff:** one combined page vs. separate
-  Birds/Trains pages; whether it's linked from the home Explore cards or unlisted;
-  how much "live" polling vs. load-once.
+_(Observatory POC shipped 2026-05-31 — see Done. Pick the next item from Soon.)_
 
 ---
 
@@ -74,6 +59,12 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-05-31** — Bird & Train Observatory POC front end (`observatory.html` /
+  `observatory.js`): combined two-tab page, load-once + refresh, now linked
+  from the home Explore grid + site-wide nav dropdown. Follow-ups when ready:
+  possibly split Birds/Trains; richer views (per-species history, hourly charts,
+  train clip review). Note: `/api/detections?limit=`, `/api/trains/today`,
+  `/api/trains/clips` remain available but unused by the POC.
 - **2026-05-31** — Citations UI polish: wrapping `Sources:` lines, collapsible
   Citations block.
 - **2026-05-31** — Life-list confidence gate (0.70).

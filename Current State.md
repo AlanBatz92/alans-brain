@@ -33,6 +33,7 @@ a Google Sheet, and a home server called **birdstation**).
 | Setlist to Spotify | `setlist-spotify.html` / `setlist-spotify.js` | Setlists → Spotify playlist |
 | My Week | `weather.html` / `weather.js` | Weather outlook + running/drone scoring |
 | Household Task Tracker | `tasks.html` / `tasks.js` | Passphrase-gated, reads/writes a Google Sheet |
+| Observatory | `observatory.html` / `observatory.js` | BirdNET + train detections from birdstation. Linked from the home Explore grid + nav dropdown. |
 
 Shared front-end: `style.css` (theme variables + all component styles),
 `theme-switcher.js`, `auth.js`, `visit-ticker.js`.
@@ -62,6 +63,24 @@ AI enrichment, and the daily digest; the website just reads JSON and renders.
 - `escapeHtml()` is the shared sanitizer; all rendered strings go through it.
 - Category filter order mirrors birdstation's taxonomy via the `TAXONOMY` const in `pulse.js`.
 - **To add/remove a news source you do NOT touch the front-end** — it's a row in birdstation's `feed_sources` table.
+
+### Observatory front-end (`observatory.html`, `observatory.js`, `.obs-*` in `style.css`)
+
+A second thin reader over birdstation (like Pulse), giving the BirdNET +
+train data a home. ID/class prefix: **`obs-`**.
+
+- **One combined page, two tabs** (🐦 Birds / 🚂 Trains); linked from the home
+  Explore card grid + the site-wide Explore dropdown / mobile overlay;
+  **load-once + manual ↻ refresh** (no auto-polling).
+- Reads, all GET on `https://birds.alansbrain.com`: Birds → `/api/stats`,
+  `/api/today`, `/api/lifetime`; Trains → `/api/trains/stats`,
+  `/api/trains/recent` (+ inline `<audio>` clips at `/api/trains/clip/{file}`,
+  filename = basename of `clip_path`).
+- **Every section fetches independently** (`Promise.allSettled`), so one
+  endpoint failing — or the box being offline — degrades only that section to
+  an offline/empty state. Confidence pill bands at 0.70 (high) / 0.50 (mid).
+- Modular per-section renderers — built to iterate (easy to split Birds/Trains
+  into separate pages later).
 
 ### birdstation (home server — code mirrored in this repo under `birdstation/`)
 

@@ -10,6 +10,36 @@
 
 ---
 
+## 2026-05-31 — Bird & Train Observatory — POC front end
+
+Gave the BirdNET + train data its first home on the website: a new
+`observatory.html` / `observatory.js` page that reads the birdstation GET
+endpoints and renders them. Vanilla, `pulse-`-style patterns, `obs-` prefix.
+
+- **One combined page, two tabs** (🐦 Birds / 🚂 Trains), kicked off by
+  settling the roadmap's three open questions: combined (not split) page and
+  **load-once + manual ↻ refresh** (no auto-polling — light on the home box).
+  Shipped unlisted, then **wired in** the same session: a home Explore card
+  (after Pulse) plus an Observatory entry in the site-wide Explore dropdown +
+  mobile overlay across all 15 pages (scripted insert before "Personal
+  Projects", active state on its own page).
+- **Birds tab:** headline stat cards (`/api/stats` — total detections, life
+  species, today, latest), today's detections feed (`/api/today` — species,
+  scientific name, a color-coded confidence pill, clock time), and the life
+  list (`/api/lifetime` — name, ×count, "since" date).
+- **Trains tab:** event stat cards (`/api/trains/stats`) and recent events
+  (`/api/trains/recent`) each with an inline **playable WAV clip**
+  (`<audio preload="none">` → `/api/trains/clip/{file}`, filename derived from
+  `clip_path` basename) and a review-verdict badge when present.
+- **Resilience (mirrors pulse.js):** every section fetches independently via
+  `Promise.allSettled`, so one endpoint failing — or the whole box being
+  offline — degrades just that section to an offline/empty state. Confidence
+  pill threshold reuses the pipeline's 0.70 "confident" gate.
+- **Decisions:** confidence pill bands at 0.70 / 0.50; train timestamps are
+  UTC-ISO (with offset) and detections are local-ISO (no offset) — `new Date()`
+  handles both, so no manual TZ math. Built for iteration: modular per-section
+  renderers, easy to split into separate Birds/Trains pages later.
+
 ## 2026-05-30 — Pulse: citations in the morning brief
 
 Added source attribution to the daily brief.
