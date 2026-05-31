@@ -6,28 +6,41 @@
    detector. This page reads the box's GET endpoints once on load and
    renders two tabs:
 
-     🐦 Birds  — headline stats, today's detections, the life list.
+     🐦 Birds  — headline stats, today's species (grouped), the life list.
      🚂 Trains — event stats and recent events with playable WAV clips.
 
-   Every section fetches independently: one endpoint failing (or the
-   box being offline) degrades that section to an offline/empty state
-   without taking down the others. Same spirit as pulse.js.
+   Confidence gate: the BirdNET pipeline *logs* everything ≥ 0.35 (lots of
+   low-confidence noise), but only birds at or above MIN_CONFIDENCE land on
+   this page — the same 0.70 gate the life list already uses on the box. We
+   pass ?min_confidence to the API (honored once birdstation is redeployed
+   with the param; harmlessly ignored before that) AND filter client-side,
+   so the page is correct in both states.
+
+   Every section fetches independently: one endpoint failing (or the box
+   being offline) degrades that section to an offline/empty state without
+   taking down the others.
 
    POC: load-once with a manual ↻ refresh, no auto-polling.
    ────────────────────────────────────────────────────────────── */
 
 const API_BASE = 'https://birds.alansbrain.com';
 
+// Only birds at/above this confidence land on the page. Matches the box's
+// LIFE_LIST_MIN_CONFIDENCE so the feed and the life list agree.
+const MIN_CONFIDENCE = 0.70;
+
 const EP = {
-  birdStats:    API_BASE + '/api/stats',
-  today:        API_BASE + '/api/today',
+  today:        API_BASE + '/api/today?min_confidence=' + MIN_CONFIDENCE,
   lifetime:     API_BASE + '/api/lifetime',
   trainStats:   API_BASE + '/api/trains/stats',
   trainsRecent: API_BASE + '/api/trains/recent?limit=30',
 };
 
-const MAX_TODAY  = 200;   // today's feed is already a single day; cap defensively
-const MAX_TRAINS = 30;    // matches the recent-events query limit
+const MAX_TRAINS = 30;   // matches the recent-events query limit
+
+// Cross-section bird state — stats are derived from today + life together,
+// so we stash both and recompute the stat cards as each arrives.
+const state = { today: [], life: [] };
 
 /* ── Helpers ── */
 
@@ -68,18 +81,22 @@ function shortDate(ms) {
   return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
-// Confidence (0–1) → a colored pill. The pipeline logs ≥ 0.35 and only lifes
-// a species at ≥ 0.70, so 0.70 is the natural "confident" threshold here.
+// Confidence (0–1) → bucket class. 0.70 is the page's "confident" floor, so
+// everything shown is at least mid; we still grade high vs. mid for color.
+function confClass(conf) {
+  if (conf >= 0.85) return 'obs-conf-high';
+  if (conf >= 0.70) return 'obs-conf-mid';
+  return 'obs-conf-low';
+}
+
 function confPill(conf) {
-  const pct = Math.round((conf || 0) * 100);
-  let cls = 'obs-conf-low';
-  if (conf >= 0.70) cls = 'obs-conf-high';
-  else if (conf >= 0.50) cls = 'obs-conf-mid';
-  return '<span class="obs-conf ' + cls + '">' + pct + '%</span>';
+  return '<span class="obs-conf ' + confClass(conf) + '">' +
+           Math.round((conf || 0) * 100) + '%</span>';
 }
 
 // Render a row of stat cards from [{label, value}] into a container.
 function renderStats(el, cards) {
+  if (!el) return;
   el.innerHTML = cards.map((c) =>
     '<div class="obs-stat">' +
       '<div class="obs-stat-value">' + escapeHtml(String(c.value)) + '</div>' +
@@ -88,36 +105,33 @@ function renderStats(el, cards) {
   ).join('');
 }
 
-// Shared loading / empty / offline messaging for a section container.
 function setMsg(el, cls, text) {
+  if (!el) return;
   el.innerHTML = '<div class="' + cls + '">' + escapeHtml(text) + '</div>';
 }
 
-// Fetch JSON with a friendly error. Throws on non-2xx or network failure.
 async function fetchJson(url) {
   const resp = await fetch(url);
   if (!resp.ok) throw new Error('HTTP ' + resp.status);
   return resp.json();
 }
 
-/* ── Birds: headline stats ── */
-async function loadBirdStats() {
+/* ── Birds: headline stats (derived from today + life list) ── */
+function renderBirdStats() {
   const el = document.getElementById('obs-bird-stats');
-  try {
-    const d = await fetchJson(EP.birdStats);
-    const latest = d.latest_detection;
-    renderStats(el, [
-      { label: 'Detections',     value: (d.total_detections || 0).toLocaleString() },
-      { label: 'Species (life)', value: d.total_species || 0 },
-      { label: 'Today',          value: d.detections_today || 0 },
-      { label: 'Latest',         value: latest ? latest.common_name : '—' },
-    ]);
-  } catch (err) {
-    setMsg(el, 'obs-empty', 'Stats unavailable — the box may be offline.');
-  }
+  if (!el) return;
+  const todayN = state.today.length;
+  const speciesToday = new Set(state.today.map((r) => r.common_name)).size;
+  const latest = state.today[0];   // today is ordered newest-first
+  renderStats(el, [
+    { label: 'Heard today',   value: todayN.toLocaleString() },
+    { label: 'Species today', value: speciesToday },
+    { label: 'Life list',     value: state.life.length },
+    { label: 'Latest',        value: latest ? latest.common_name : '—' },
+  ]);
 }
 
-/* ── Birds: today's detections ── */
+/* ── Birds: today's detections, grouped by species ── */
 async function loadToday() {
   const el = document.getElementById('obs-today');
   setMsg(el, 'obs-loading', 'Listening…');
@@ -128,28 +142,57 @@ async function loadToday() {
     setMsg(el, 'obs-empty', 'Couldn’t reach the observatory — it may be offline.');
     return;
   }
-  const rows = (d.detections || []).slice(0, MAX_TODAY);
-  if (rows.length === 0) {
-    setMsg(el, 'obs-empty', 'No detections yet today — quiet skies so far.');
+  // Defensive client-side gate (in case the box hasn't been redeployed with
+  // the ?min_confidence param yet), still newest-first.
+  state.today = (d.detections || []).filter((r) => (r.confidence || 0) >= MIN_CONFIDENCE);
+  renderBirdStats();
+  renderToday();
+}
+
+function renderToday() {
+  const el = document.getElementById('obs-today');
+  if (state.today.length === 0) {
+    setMsg(el, 'obs-empty', 'No confident detections yet today — quiet skies so far.');
     return;
   }
-  el.innerHTML = rows.map((r) => {
+  // Group by species: count, best confidence, most-recent time.
+  const groups = new Map();
+  state.today.forEach((r) => {
     const ms = parseTime(r.timestamp);
-    return '<div class="obs-row">' +
-        '<div class="obs-row-main">' +
-          '<span class="obs-species">' + escapeHtml(r.common_name) + '</span>' +
-          (r.scientific_name ? '<span class="obs-sci">' + escapeHtml(r.scientific_name) + '</span>' : '') +
+    let g = groups.get(r.common_name);
+    if (!g) {
+      g = { name: r.common_name, sci: r.scientific_name, count: 0, best: 0, lastMs: ms };
+      groups.set(r.common_name, g);
+    }
+    g.count += 1;
+    if ((r.confidence || 0) > g.best) g.best = r.confidence || 0;
+    if (ms != null && (g.lastMs == null || ms > g.lastMs)) g.lastMs = ms;
+  });
+  const species = [...groups.values()].sort((a, b) => (b.lastMs || 0) - (a.lastMs || 0));
+
+  el.innerHTML = species.map((g) => {
+    const pct = Math.round((g.best || 0) * 100);
+    return '<div class="obs-species">' +
+        '<div class="obs-species-top">' +
+          '<span class="obs-species-name">' + escapeHtml(g.name) + '</span>' +
+          '<span class="obs-species-count">×' + g.count + '</span>' +
         '</div>' +
-        '<div class="obs-row-meta">' +
-          confPill(r.confidence) +
-          (ms != null ? '<span class="obs-time" title="' + escapeHtml(relativeTime(ms)) + '">' + escapeHtml(clockTime(ms)) + '</span>' : '') +
+        (g.sci ? '<div class="obs-species-sci">' + escapeHtml(g.sci) + '</div>' : '') +
+        '<div class="obs-bar"><div class="obs-bar-fill ' + confClass(g.best) +
+          '-bar" style="width:' + pct + '%"></div></div>' +
+        '<div class="obs-species-foot">' +
+          confPill(g.best) +
+          (g.lastMs != null
+            ? '<span class="obs-species-last" title="' + escapeHtml(relativeTime(g.lastMs)) +
+                '">last ' + escapeHtml(clockTime(g.lastMs)) + '</span>'
+            : '') +
         '</div>' +
       '</div>';
   }).join('');
 }
 
 /* ── Birds: life list ── */
-async function loadLifetime() {
+async function loadLife() {
   const el = document.getElementById('obs-life');
   const countEl = document.getElementById('obs-life-count');
   setMsg(el, 'obs-loading', 'Tallying lifers…');
@@ -161,21 +204,25 @@ async function loadLifetime() {
     setMsg(el, 'obs-empty', 'Life list unavailable — the box may be offline.');
     return;
   }
-  const species = d.species || [];
-  if (countEl) countEl.textContent = species.length ? '(' + species.length + ')' : '';
-  if (species.length === 0) {
+  state.life = d.species || [];
+  renderBirdStats();
+  if (countEl) countEl.textContent = state.life.length ? '(' + state.life.length + ')' : '';
+  if (state.life.length === 0) {
     setMsg(el, 'obs-empty', 'No lifers logged yet.');
     return;
   }
-  el.innerHTML = species.map((s) => {
+  el.innerHTML = state.life.map((s) => {
     const ms = parseTime(s.first_seen);
     const since = ms != null ? '<span class="obs-lifer-since">since ' + escapeHtml(shortDate(ms)) + '</span>' : '';
     const count = s.total_detections
       ? '<span class="obs-lifer-count">×' + escapeHtml(String(s.total_detections)) + '</span>'
       : '';
     return '<div class="obs-lifer">' +
-        '<span class="obs-lifer-name">' + escapeHtml(s.common_name) + '</span>' +
-        '<span class="obs-lifer-meta">' + count + since + '</span>' +
+        '<div class="obs-lifer-main">' +
+          '<span class="obs-lifer-name">' + escapeHtml(s.common_name) + '</span>' +
+          (s.scientific_name ? '<span class="obs-lifer-sci">' + escapeHtml(s.scientific_name) + '</span>' : '') +
+        '</div>' +
+        '<div class="obs-lifer-meta">' + count + since + '</div>' +
       '</div>';
   }).join('');
 }
@@ -221,20 +268,18 @@ async function loadTrains() {
       ? '<audio class="obs-clip" controls preload="none" src="' +
           API_BASE + '/api/trains/clip/' + encodeURIComponent(file) + '"></audio>'
       : '<div class="obs-clip-missing">clip unavailable</div>';
-    const verdict = renderVerdict(r);
     return '<div class="obs-train">' +
         '<div class="obs-train-head">' +
           (when ? '<span class="obs-train-when">' + escapeHtml(when) + '</span>' : '') +
           (dur  ? '<span class="obs-tag">' + escapeHtml(dur) + '</span>' : '') +
           (db   ? '<span class="obs-tag">' + escapeHtml(db) + '</span>' : '') +
-          verdict +
+          renderVerdict(r) +
         '</div>' +
         clip +
       '</div>';
   }).join('');
 }
 
-// Review verdict badge — only shown once a clip has been judged on the box.
 function renderVerdict(r) {
   if (!r.reviewed) return '';
   const map = {
@@ -243,8 +288,7 @@ function renderVerdict(r) {
     unsure:         { cls: 'obs-verdict-unsure', text: '? unsure' },
   };
   const v = map[r.verdict];
-  if (!v) return '';
-  return '<span class="obs-verdict ' + v.cls + '">' + v.text + '</span>';
+  return v ? '<span class="obs-verdict ' + v.cls + '">' + v.text + '</span>' : '';
 }
 
 /* ── Tabs ── */
@@ -271,10 +315,8 @@ function loadAll() {
   if (updated) updated.textContent = 'Loading…';
   if (btn) btn.classList.add('spinning');
 
-  // All sections load independently — one failure never blocks the others.
   Promise.allSettled([
-    loadBirdStats(), loadToday(), loadLifetime(),
-    loadTrainStats(), loadTrains(),
+    loadToday(), loadLife(), loadTrainStats(), loadTrains(),
   ]).then(() => {
     if (updated) updated.textContent = 'Updated ' + new Date().toLocaleTimeString();
     if (btn) btn.classList.remove('spinning');

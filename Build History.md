@@ -10,6 +10,36 @@
 
 ---
 
+## 2026-05-31 — Observatory: confidence gate, grouped species view, beautify
+
+First post-launch iteration after seeing the page live on mobile.
+
+- **Inflated numbers — root cause:** the BirdNET pipeline *logs* every detection
+  ≥ 0.35 (lots of low-confidence noise — 36%/45% House Sparrows etc.), and the
+  page counted all of it ("1980 today" == "1980 all-time"). **Fix:** the page now
+  only shows birds **≥ 0.70 confidence** (the same gate the life list already
+  uses on the writer side). Enforced two ways: `bird_api.py` got an optional
+  `min_confidence` query param on `/api/today`, `/api/detections`, `/api/stats`
+  (defaults to 0.0 → existing callers unaffected), and `observatory.js` passes
+  `0.70` **and** filters client-side, so the page is correct whether or not the
+  box has been redeployed with the param yet. Stats are now **derived from the
+  filtered data** client-side (heard today / species today / life list / latest)
+  rather than trusting the raw `/api/stats` totals.
+- **Beautify (Birds):** "Today's detections" (a flat list repeating the same
+  species dozens of times) → **"Heard today", grouped by species**: one card per
+  species with count (×N), a colored confidence bar + pill (best-of-day), and
+  last-heard time, sorted most-recent-first. Sets up the future hover/detail
+  feature. Life-list rows gained the scientific name. Dead `.obs-row*` styles
+  removed (the old flat list is gone).
+- **Stale CSS:** the live page showed unstyled `.obs-*` blocks (cached
+  `style.css` from before the deploy) — bumped the link to `style.css?v=obs2`.
+- **Trains = 0 (NOT a front-end bug):** birds flow fine over the same shared
+  API/DB, so `train_events` is simply empty — the detector isn't writing.
+  That's **box-side/operational** (service or stream), can't be reached from the
+  cloud session. Diagnostics handed to Alan (see note in ROADMAP / chat).
+- **Deferred (logged):** hover species overview — a "comic-book" stat card with
+  a photo + key facts, click-through to a fuller view.
+
 ## 2026-05-31 — Bird & Train Observatory — POC front end
 
 Gave the BirdNET + train data its first home on the website: a new

@@ -11,7 +11,25 @@
 
 ## ▶ Next
 
-_(Observatory POC shipped 2026-05-31 — see Done. Pick the next item from Soon.)_
+### 1. Trains not recording — diagnose on the box (operational)
+The Observatory shows **0 train events** though trains roll through daily. Birds
+flow fine over the same shared API/DB, so this is the **detector**, not the front
+end — `train_events` is empty. Can't be reached from the cloud session; on the
+box (`~/alans-brain`):
+- `systemctl status train_detector.service` (is it active? crash-looping?)
+- `tail -n 100 ~/train_detector.log` (stream connect OK? any "Whistle candidate"
+  / "Train event logged" lines? errors?)
+- `ls -la ~/train_clips | tail` and `sqlite3 ~/birdnet.db "SELECT COUNT(*) FROM train_events;"`
+- Confirm the Icecast stream URL (`http://192.168.4.132:8000/backyard`) is reachable
+  from the box and that the duplicate `traindetect.service` is really gone.
+- Likely culprits: service not enabled after cutover; stream IP changed; thresholds
+  (`ENERGY_THRESH` 0.10 / `DB_THRESH_DB` -20) too strict for the actual whistles.
+
+### 2. Observatory: hover species overview (comic-book stat card)
+On hover/tap of a species card, a richer popover: bird **photo** + key facts
+(a few bullet points), then click-through to a fuller detail view. Needs a source
+for photos + facts (e.g. a small curated JSON, or Wikipedia/eBird lookup keyed by
+scientific name). First real feature build on the grouped-species foundation.
 
 ---
 
@@ -59,6 +77,10 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-05-31** — Observatory iteration: confidence gate (≥ 0.70, server +
+  client), grouped-by-species "Heard today" cards with confidence bars, honest
+  derived stats (fixed inflated counts), scientific names on lifers, CSS
+  cache-bust. Surfaced the trains-not-recording box-side issue (now ▶ Next #1).
 - **2026-05-31** — Bird & Train Observatory POC front end (`observatory.html` /
   `observatory.js`): combined two-tab page, load-once + refresh, now linked
   from the home Explore grid + site-wide nav dropdown. Follow-ups when ready:

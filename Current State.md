@@ -72,15 +72,26 @@ train data a home. ID/class prefix: **`obs-`**.
 - **One combined page, two tabs** (🐦 Birds / 🚂 Trains); linked from the home
   Explore card grid + the site-wide Explore dropdown / mobile overlay;
   **load-once + manual ↻ refresh** (no auto-polling).
-- Reads, all GET on `https://birds.alansbrain.com`: Birds → `/api/stats`,
-  `/api/today`, `/api/lifetime`; Trains → `/api/trains/stats`,
-  `/api/trains/recent` (+ inline `<audio>` clips at `/api/trains/clip/{file}`,
-  filename = basename of `clip_path`).
+- Reads, all GET on `https://birds.alansbrain.com`: Birds → `/api/today?min_confidence=0.70`,
+  `/api/lifetime`; Trains → `/api/trains/stats`, `/api/trains/recent` (+ inline
+  `<audio>` clips at `/api/trains/clip/{file}`, filename = basename of `clip_path`).
+- **Confidence gate (0.70):** the pipeline logs everything ≥ 0.35, so the page
+  filters to ≥ 0.70 — the same gate the life list uses. Enforced both server-side
+  (optional `min_confidence` param on `/api/today`, `/api/detections`, `/api/stats`,
+  default 0.0) and client-side in `observatory.js` (so it's correct even before a
+  box redeploy). Bird **stats are derived client-side from the filtered data**
+  (heard today / species today / life-list size / latest), not from raw totals.
+- **Birds "Heard today" is grouped by species:** one card per species with ×count,
+  a colored confidence bar + pill (best-of-day), and last-heard time, newest-first.
 - **Every section fetches independently** (`Promise.allSettled`), so one
-  endpoint failing — or the box being offline — degrades only that section to
-  an offline/empty state. Confidence pill bands at 0.70 (high) / 0.50 (mid).
-- Modular per-section renderers — built to iterate (easy to split Birds/Trains
-  into separate pages later).
+  endpoint failing — or the box being offline — degrades only that section.
+  Confidence color bands: high ≥ 0.85, mid ≥ 0.70.
+- `style.css` is cache-busted via `?v=obs2` on observatory.html (bump on CSS change).
+- Modular per-section renderers — built to iterate. **Deferred:** hover species
+  overview (photo + comic-book stat card, click-through to detail).
+- **Known box-side issue:** Trains show 0 because `train_events` is empty — the
+  `train_detector.service` isn't writing (birds flow fine over the same API/DB,
+  so it's the detector/stream, not the front end). Operational, fix on the box.
 
 ### birdstation (home server — code mirrored in this repo under `birdstation/`)
 
