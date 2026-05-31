@@ -60,10 +60,10 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ## ✓ Done (recent)
 
 - **2026-05-31** — Bird & Train Observatory POC front end (`observatory.html` /
-  `observatory.js`): combined two-tab page, unlisted, load-once + refresh.
-  Follow-ups when ready: wire into home Explore cards / nav; possibly split
-  Birds/Trains; richer views (per-species history, hourly charts, train clip
-  review). Note: `/api/today`, `/api/detections?limit=`, `/api/trains/today`,
+  `observatory.js`): combined two-tab page, load-once + refresh, now linked
+  from the home Explore grid + site-wide nav dropdown. Follow-ups when ready:
+  possibly split Birds/Trains; richer views (per-species history, hourly charts,
+  train clip review). Note: `/api/detections?limit=`, `/api/trains/today`,
   `/api/trains/clips` remain available but unused by the POC.
 - **2026-05-31** — Citations UI polish: wrapping `Sources:` lines, collapsible
   Citations block.

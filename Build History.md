@@ -17,9 +17,12 @@ Gave the BirdNET + train data its first home on the website: a new
 endpoints and renders them. Vanilla, `pulse-`-style patterns, `obs-` prefix.
 
 - **One combined page, two tabs** (🐦 Birds / 🚂 Trains), kicked off by
-  settling the roadmap's three open questions: combined (not split) page,
-  **unlisted for now** (not wired into the home Explore cards / nav yet), and
+  settling the roadmap's three open questions: combined (not split) page and
   **load-once + manual ↻ refresh** (no auto-polling — light on the home box).
+  Shipped unlisted, then **wired in** the same session: a home Explore card
+  (after Pulse) plus an Observatory entry in the site-wide Explore dropdown +
+  mobile overlay across all 15 pages (scripted insert before "Personal
+  Projects", active state on its own page).
 - **Birds tab:** headline stat cards (`/api/stats` — total detections, life
   species, today, latest), today's detections feed (`/api/today` — species,
   scientific name, a color-coded confidence pill, clock time), and the life
