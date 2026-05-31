@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=obs2">
 </head>
 <body>
 
@@ -99,9 +99,10 @@
     <!-- ══════ BIRDS PANEL ══════ -->
     <section class="obs-panel" id="obs-panel-birds" role="tabpanel" aria-labelledby="obs-tab-birds">
       <div class="obs-stats" id="obs-bird-stats"></div>
+      <p class="obs-note">Showing detections at or above 70% confidence.</p>
 
-      <h2 class="obs-heading">Today's detections</h2>
-      <div class="obs-list" id="obs-today"></div>
+      <h2 class="obs-heading">Heard today</h2>
+      <div class="obs-species-grid" id="obs-today"></div>
 
       <h2 class="obs-heading">Life list <span class="obs-heading-count" id="obs-life-count"></span></h2>
       <div class="obs-life" id="obs-life"></div>

@@ -48,21 +48,31 @@ def get_db():
 # Bird Detection Endpoints
 # ─────────────────────────────────────────────────────────────
 
+# NB: `min_confidence` defaults to 0.0 so existing callers are unaffected.
+# The Observatory front-end passes 0.70 to keep low-confidence noise off the
+# page (the pipeline logs everything >= 0.35). The life list is already gated
+# at 0.70 on the writer side, so these filters keep the views consistent.
+
 @app.get("/api/detections")
-def recent_detections(limit: int = 50):
+def recent_detections(limit: int = 50, min_confidence: float = 0.0):
     conn = get_db()
     rows = conn.execute(
-        "SELECT * FROM detections ORDER BY timestamp DESC LIMIT ?", (limit,)
+        "SELECT * FROM detections WHERE confidence >= ? "
+        "ORDER BY timestamp DESC LIMIT ?",
+        (min_confidence, limit)
     ).fetchall()
     conn.close()
     return {"detections": [dict(r) for r in rows]}
 
 
 @app.get("/api/today")
-def today_detections():
+def today_detections(min_confidence: float = 0.0):
     conn = get_db()
     rows = conn.execute(
-        "SELECT * FROM detections WHERE date(timestamp) = date('now', 'localtime') ORDER BY timestamp DESC"
+        "SELECT * FROM detections "
+        "WHERE date(timestamp) = date('now', 'localtime') AND confidence >= ? "
+        "ORDER BY timestamp DESC",
+        (min_confidence,)
     ).fetchall()
     conn.close()
     return {"detections": [dict(r) for r in rows], "count": len(rows)}
@@ -79,15 +89,20 @@ def lifetime_list():
 
 
 @app.get("/api/stats")
-def stats():
+def stats(min_confidence: float = 0.0):
     conn = get_db()
-    total = conn.execute("SELECT COUNT(*) FROM detections").fetchone()[0]
+    total = conn.execute(
+        "SELECT COUNT(*) FROM detections WHERE confidence >= ?", (min_confidence,)
+    ).fetchone()[0]
     species_count = conn.execute("SELECT COUNT(*) FROM lifetime").fetchone()[0]
     today_count = conn.execute(
-        "SELECT COUNT(*) FROM detections WHERE date(timestamp) = date('now', 'localtime')"
+        "SELECT COUNT(*) FROM detections "
+        "WHERE date(timestamp) = date('now', 'localtime') AND confidence >= ?",
+        (min_confidence,)
     ).fetchone()[0]
     latest = conn.execute(
-        "SELECT * FROM detections ORDER BY timestamp DESC LIMIT 1"
+        "SELECT * FROM detections WHERE confidence >= ? ORDER BY timestamp DESC LIMIT 1",
+        (min_confidence,)
     ).fetchone()
     conn.close()
     return {
