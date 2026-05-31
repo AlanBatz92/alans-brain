@@ -84,7 +84,7 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
   - `feed_digests` — `date` (PK), `generated_at`, `headline`, `sections_json`, `model`, `item_count`. (`citations_json` lands with the citations backend.)
 - **Jobs (systemd timers):**
   - `pulse_fetcher.py` — `pulse-fetch.timer`, every 15 min: pulls every enabled source (feedparser), dedupes by `url`, stores, and **purges items older than 30 days** (`RETENTION_DAYS`).
-  - `pulse_enrich.py` — `pulse-enrich.timer`: batched (20/run) AI tagging + one-sentence summaries via **`claude-haiku-4-5`**, prompt-cached system prompt, retried up to `enrich_attempts` 3.
+  - `pulse_enrich.py` — `pulse-enrich.timer` (every 20 min): batched (20/run) AI tagging + one-sentence summaries via **`claude-haiku-4-5`**, prompt-cached system prompt, retried up to `enrich_attempts` 3.
   - `pulse_digest.py` — `pulse-digest.timer`, daily ~6 AM: reads the last 24h of enriched items, writes a sectioned "Morning Brief" via **`claude-sonnet-4-6`** + adaptive thinking, structured output through `messages.parse()`. Skips days with <3 items.
 - **Secrets:** `ANTHROPIC_API_KEY` and `BIRD_API_KEY` live only on the box, moving to `/etc/birdstation.env` (chmod 600) referenced by `EnvironmentFile=`. Never committed; `.gitignore` blocks `*.env`/`*.db`.
 
@@ -104,6 +104,6 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 - **RSS URL rot** is the #1 source-health risk; broken feeds surface as a per-source error in the strip rather than breaking the page.
 - birdstation is a home box — if it's offline, Pulse shows an offline state and the digest card simply hides.
 - The two old local planning docs (`Task Tracker Write-Back Feature Plan.md`, `New Pages Plan.md`) remain gitignored.
-- **birdstation code lives in `birdstation/`** (scripts + `schema.sql` + templated `systemd/` units) and uses the **run-from-clone** model: the box clones the repo to `~/alans-brain` and units point at `~/alans-brain/birdstation/*.py`; deploy = `git pull` + restart. See `birdstation/README.md` for the one-time cutover. *(The `pulse-enrich.timer` schedule in the repo is a best-guess pending confirmation against the box.)*
+- **birdstation code lives in `birdstation/`** (scripts + `schema.sql` + templated `systemd/` units) and uses the **run-from-clone** model: the box clones the repo to `~/alans-brain` and units point at `~/alans-brain/birdstation/*.py`; deploy = `git pull` + restart. See `birdstation/README.md` for the one-time cutover.
 - **Citations backend** is in the repo (`pulse_digest.py` + `/api/digest` + `schema.sql` migration) but **lands on the box at cutover** — needs `ALTER TABLE feed_digests ADD COLUMN citations_json TEXT` and a digest regenerate before the front-end citations render with data.
 - **`BIRD_API_KEY` leaked into chat 2026-05-30** during the import — rotate it as part of the cutover (new value goes in `/etc/birdstation.env`).

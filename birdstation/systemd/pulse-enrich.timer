@@ -1,11 +1,9 @@
-# NOTE: schedule below is a best-guess — confirm against the installed unit
-# (`systemctl cat pulse-enrich.timer`) and correct before cutover.
 [Unit]
-Description=Run Pulse enrichment a few minutes after each fetch
+Description=Run Pulse enrichment every 20 minutes
 
 [Timer]
 OnBootSec=5min
-OnUnitActiveSec=15min
+OnUnitActiveSec=20min
 Persistent=true
 
 [Install]

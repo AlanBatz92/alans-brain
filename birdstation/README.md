@@ -99,6 +99,6 @@ repo's `Build History.md`.
 | Unit | Role |
 |---|---|
 | `pulse-fetch.timer` → `.service` | source fetch every 15 min (purges >30 days) |
-| `pulse-enrich.timer` → `.service` | batched AI enrichment (**timer schedule: confirm**) |
+| `pulse-enrich.timer` → `.service` | batched AI enrichment, every 20 min |
 | `pulse-digest.timer` → `.service` | daily Morning Brief (~06:00 local) |
 | `birdapi.service` | the FastAPI app (long-running, `:8080`) |
