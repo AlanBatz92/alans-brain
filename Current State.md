@@ -86,7 +86,12 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Every section fetches independently** (`Promise.allSettled`), so one
   endpoint failing — or the box being offline — degrades only that section.
   Confidence color bands: high ≥ 0.85, mid ≥ 0.70.
-- `style.css` is cache-busted via `?v=obs2` on observatory.html (bump on CSS change).
+- **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
+  writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
+  aren't read in the viewer's local zone (train stamps carry an offset, untouched).
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs3` +
+  `style.css?v=obs3`. Bump the query on *every* changed Observatory asset (a stale
+  cached `.js` once made a whole iteration look unshipped).
 - Modular per-section renderers — built to iterate. **Deferred:** hover species
   overview (photo + comic-book stat card, click-through to detail).
 - **Known box-side issue:** Trains show 0 because `train_events` is empty — the

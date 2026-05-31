@@ -4423,8 +4423,11 @@ nav {
   font-weight: 800;
   color: var(--teal);
   line-height: 1.1;
-  word-break: break-word;
+  overflow-wrap: break-word;   /* wrap at spaces, not mid-word ("Grasshopper Sparrow") */
 }
+/* Text values (e.g. the "Latest" species name) — smaller than the big number
+   stats so a two-word name wraps tidily instead of dominating the card. */
+.obs-stat-value-sm { font-size: 1.1rem; }
 .obs-stat-label {
   font-size: 0.72rem;
   text-transform: uppercase;
