@@ -4127,6 +4127,10 @@ nav {
 }
 .pulse-brief-sources {
   margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 10px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.72rem;
   color: var(--text-dim);
@@ -4134,17 +4138,38 @@ nav {
 .pulse-cite {
   color: var(--teal);
   text-decoration: none;
-  margin-right: 8px;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pulse-cite:hover { text-decoration: underline; }
+
+/* Collapsible citations (native <details>/<summary>) */
 .pulse-brief-citations {
   margin-top: 20px;
   padding-top: 14px;
   border-top: 1px solid var(--border);
 }
+.pulse-citations-toggle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--teal);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.pulse-citations-toggle::-webkit-details-marker { display: none; }
+.pulse-citations-toggle::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 0.8em;
+  transition: transform 0.15s ease;
+}
+.pulse-brief-citations[open] .pulse-citations-toggle::before { transform: rotate(90deg); }
 .pulse-citation-list {
-  margin: 8px 0 0;
+  margin: 12px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -4153,6 +4178,7 @@ nav {
   line-height: 1.5;
   color: var(--text-muted);
   margin-bottom: 5px;
+  overflow-wrap: anywhere;
 }
 .pulse-citation a { color: var(--teal); text-decoration: none; }
 .pulse-citation a:hover { text-decoration: underline; }

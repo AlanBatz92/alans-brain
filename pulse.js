@@ -250,10 +250,10 @@ function renderCitations(citations) {
       (c.source ? ' <span class="pulse-cite-src">— ' + escapeHtml(c.source) + '</span>' : '') +
     '</li>'
   ).join('');
-  return '<div class="pulse-brief-citations">' +
-           '<h3 class="pulse-brief-heading">Citations</h3>' +
+  return '<details class="pulse-brief-citations">' +
+           '<summary class="pulse-citations-toggle">Citations (' + citations.length + ')</summary>' +
            '<ol class="pulse-citation-list">' + items + '</ol>' +
-         '</div>';
+         '</details>';
 }
 
 function initPulse() {

@@ -22,7 +22,8 @@ DB_PATH = os.path.expanduser("~/birdnet.db")
 BIRDNET_PYTHON = os.path.expanduser("~/BirdNET-Analyzer/birdnet-env/bin/python3")
 LAT = 40.5376
 LON = -75.4968
-MIN_CONFIDENCE = 0.35
+MIN_CONFIDENCE = 0.35            # log a detection at/above this confidence
+LIFE_LIST_MIN_CONFIDENCE = 0.70  # stricter gate before a species joins the life list
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -92,15 +93,19 @@ def parse_and_log(result_file):
                     (now, common_name, scientific_name, confidence, week)
                 )
 
-                c.execute("SELECT total_detections FROM lifetime WHERE common_name=?", (common_name,))
-                existing = c.fetchone()
-                if existing:
-                    c.execute("UPDATE lifetime SET total_detections=? WHERE common_name=?",
-                              (existing[0] + 1, common_name))
-                else:
-                    c.execute("INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections) VALUES (?,?,?,1)",
-                              (common_name, scientific_name, now))
-                    print(f"  *** NEW SPECIES: {common_name} ***")
+                # Life list: only confident detections earn a lifetime entry, so
+                # low-confidence noise (e.g. a 40% "Carolina Wren") never creates a
+                # lifer. The detections table still keeps everything >= MIN_CONFIDENCE.
+                if confidence >= LIFE_LIST_MIN_CONFIDENCE:
+                    c.execute("SELECT total_detections FROM lifetime WHERE common_name=?", (common_name,))
+                    existing = c.fetchone()
+                    if existing:
+                        c.execute("UPDATE lifetime SET total_detections=? WHERE common_name=?",
+                                  (existing[0] + 1, common_name))
+                    else:
+                        c.execute("INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections) VALUES (?,?,?,1)",
+                                  (common_name, scientific_name, now))
+                        print(f"  *** NEW SPECIES: {common_name} ***")
 
                 print(f"  [{confidence:.0%}] {common_name} ({scientific_name})")
                 count += 1

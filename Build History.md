@@ -39,6 +39,20 @@ in manual tests — results were just discarded before the DB write.)
 
 Imported into the repo on 2026-05-30 (see entry below) with the fix in place.
 
+## 2026-05-31 — Citations UI polish; life-list confidence gate; roadmap
+
+- **Pulse citations UI:** the per-section `Sources:` line now wraps (flex-wrap;
+  was overflowing the card on mobile), and the bottom **Citations** list is a
+  collapsible native `<details>`/`<summary>` (collapsed by default, click to
+  expand, "Citations (N)").
+- **BirdNET life-list gate:** added `LIFE_LIST_MIN_CONFIDENCE = 0.70` to
+  `birdnet_pipeline.py` — detections still log at ≥ 0.35, but a species only
+  joins `lifetime` at ≥ 0.70, so low-confidence noise can't create a lifer.
+  (Optional cleanup of pre-gate lifers noted in `ROADMAP.md`.)
+- **Roadmap:** added `ROADMAP.md` (committed) as the running to-do list, and
+  wired it + the now-committed memory docs into `CLAUDE.md`'s bootstrap. Next-up
+  item: the Bird & Train Observatory POC front end.
+
 ## 2026-05-31 — Cutover to run-from-clone; digest max_tokens fix
 
 Ran the full birdstation cutover (clone at `~/alans-brain`, `/etc/birdstation.env`,

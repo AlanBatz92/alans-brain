@@ -1,11 +1,14 @@
 # Alan's Brain — session bootstrap
 
-Before doing any work, read these two local-only reference docs in the project root:
+Before doing any work, read these reference docs in the project root (all committed to the repo):
 
 - `Current State.md` — present-day snapshot of pages, key files/functions, conventions, and known caveats
 - `Build History.md` — chronological record of feature work and decisions
+- `ROADMAP.md` — the running, prioritized to-do list (what's next, what's deferred)
 
-Both are gitignored. Treat them as authoritative context — they capture what's shipped, why, and the conventions to match. After landing a feature, update both files (append a dated entry to `Build History.md`; revise the relevant sections of `Current State.md`).
+Treat them as authoritative context — they capture what's shipped, why, what's planned, and the conventions to match. After landing a feature, update all three: append a dated entry to `Build History.md`, revise the relevant sections of `Current State.md`, and move the item to "Done" in `ROADMAP.md`.
+
+birdstation (the home server behind Pulse + the Bird Observatory) is version-controlled under `birdstation/` and deploys run-from-clone; see `birdstation/README.md`.
 
 ## Project conventions (quick reference, full list in `Current State.md`)
 
