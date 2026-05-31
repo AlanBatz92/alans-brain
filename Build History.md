@@ -37,10 +37,23 @@ the delimiter to `","`. First detection on restart: Gray Catbird, 77%. (BirdNET
 detection itself was always working — American Robin 56%, Chipping Sparrow 47%
 in manual tests — results were just discarded before the DB write.)
 
-NOTE: `birdnet_pipeline.py` is the bird-detection *writer* and is **not yet in
-this repo** (only the Pulse/API files were imported). This fix currently lives
-only on the box. Pending decision: bring the observatory pipeline under
-git-deploy too, or keep this repo scoped to the website + Pulse.
+Imported into the repo on 2026-05-30 (see entry below) with the fix in place.
+
+## 2026-05-30 — Imported the observatory writers (whole box now in repo)
+
+Decision: bring the full Emmaus Observatory under git-deploy (not just Pulse).
+
+- **Imported verbatim** into `birdstation/`: `birdnet_pipeline.py` (with the
+  CSV-delimiter fix) and `train_detector.py` (FFT train-whistle detector).
+- **Added their services** to `birdstation/systemd/`, re-pointed at the clone:
+  `birdnet.service` (keeps the `birdnet-env` venv) and `train_detector.service`
+  (keeps the `train-env` venv).
+- **Duplicate unit found:** the box ran both `train_detector.service` and
+  `traindetect.service` against the same script (two detectors writing
+  `train_events` in parallel). Kept `train_detector.service` as canonical;
+  cutover disables + removes `traindetect.service`.
+- The repo now mirrors the entire box; every change is a tracked commit
+  deployed via `git pull`.
 
 ## 2026-05-30 — birdstation imported into the repo (git-deploy, run-from-clone)
 

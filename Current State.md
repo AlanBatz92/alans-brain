@@ -86,7 +86,10 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
   - `pulse_fetcher.py` — `pulse-fetch.timer`, every 15 min: pulls every enabled source (feedparser), dedupes by `url`, stores, and **purges items older than 30 days** (`RETENTION_DAYS`).
   - `pulse_enrich.py` — `pulse-enrich.timer` (every 20 min): batched (20/run) AI tagging + one-sentence summaries via **`claude-haiku-4-5`**, prompt-cached system prompt, retried up to `enrich_attempts` 3.
   - `pulse_digest.py` — `pulse-digest.timer`, daily ~6 AM: reads the last 24h of enriched items, writes a sectioned "Morning Brief" via **`claude-sonnet-4-6`** + adaptive thinking, structured output through `messages.parse()`. Skips days with <3 items.
-- **Secrets:** `ANTHROPIC_API_KEY` and `BIRD_API_KEY` live only on the box, moving to `/etc/birdstation.env` (chmod 600) referenced by `EnvironmentFile=`. Never committed; `.gitignore` blocks `*.env`/`*.db`.
+- **Observatory writers (long-running services, in `birdstation/`):**
+  - `birdnet_pipeline.py` — `birdnet.service`: captures 15 s chunks off the Icecast `/backyard` stream, runs BirdNET-Analyzer (its own `~/BirdNET-Analyzer/birdnet-env` venv), writes `detections` + `lifetime`. (CSV reader fixed 2026-05-30 to `delimiter=","` — see Build History.)
+  - `train_detector.py` — `train_detector.service`: FFT-based train-whistle detector on the same stream (its own `~/train-env` venv, needs numpy), writes `train_events` + saves WAV clips to `~/train_clips`. **NB:** the box also had a duplicate `traindetect.service` for the same script — `train_detector.service` is canonical; the dup is removed at cutover.
+- **Secrets:** `ANTHROPIC_API_KEY` and `BIRD_API_KEY` live only on the box, moving to `/etc/birdstation.env` (chmod 600) referenced by `EnvironmentFile=`. Never committed; `.gitignore` blocks `*.env`/`*.db`. (The observatory services need no keys.)
 
 ### Digest + citations (current behavior)
 

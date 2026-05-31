@@ -82,8 +82,29 @@ journalctl -u pulse-digest.service -n 10 --no-pager
 curl -s https://birds.alansbrain.com/api/digest | python3 -m json.tool | head -40
 
 # 6. Once green, retire the old copies to avoid confusion.
-mkdir -p ~/retired && mv ~/pulse_fetcher.py ~/pulse_enrich.py ~/pulse_digest.py ~/bird_api.py ~/retired/ 2>/dev/null || true
+mkdir -p ~/retired && mv ~/pulse_fetcher.py ~/pulse_enrich.py ~/pulse_digest.py ~/bird_api.py \
+                        ~/birdnet_pipeline.py ~/train_detector.py ~/retired/ 2>/dev/null || true
 ```
+
+### Cutover addendum — observatory pipelines
+
+The same run-from-clone switch for `birdnet.service` and `train_detector.service`
+(installed alongside the Pulse units in step 4). After `daemon-reload`:
+
+```bash
+# Kill the duplicate train detector first (check which is actually enabled).
+systemctl is-enabled train_detector.service traindetect.service
+sudo systemctl disable --now traindetect.service
+sudo rm /etc/systemd/system/traindetect.service
+sudo systemctl daemon-reload
+
+# Restart the two pipelines onto the clone'd scripts.
+sudo systemctl restart birdnet.service train_detector.service
+systemctl is-active birdnet.service train_detector.service        # → active, active
+journalctl -u birdnet.service -n 5 --no-pager                     # detections flowing
+```
+
+Both keep their existing venvs (`birdnet-env`, `train-env`) — no reinstall.
 
 The venv at `/home/alan/api-env` already has the deps (anthropic, pydantic,
 fastapi, uvicorn, feedparser).
@@ -98,7 +119,18 @@ repo's `Build History.md`.
 
 | Unit | Role |
 |---|---|
+| `birdapi.service` | the FastAPI app (long-running, `:8080`) |
+| `birdnet.service` | BirdNET capture/analyze/log pipeline (long-running loop) |
+| `train_detector.service` | train-whistle detector (long-running loop) |
 | `pulse-fetch.timer` → `.service` | source fetch every 15 min (purges >30 days) |
 | `pulse-enrich.timer` → `.service` | batched AI enrichment, every 20 min |
 | `pulse-digest.timer` → `.service` | daily Morning Brief (~06:00 local) |
-| `birdapi.service` | the FastAPI app (long-running, `:8080`) |
+
+The observatory pipelines (`birdnet`, `train_detector`) each use their own venv —
+`~/BirdNET-Analyzer/birdnet-env` and `~/train-env` — which the units reference
+directly; only the script path moves into the clone.
+
+> **Duplicate unit:** the box had both `train_detector.service` and
+> `traindetect.service` pointing at the same script (two detectors writing
+> `train_events` in parallel). The repo keeps **`train_detector.service`** as
+> canonical; disable and remove `traindetect.service` at cutover (below).

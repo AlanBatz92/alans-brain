@@ -1,0 +1,17 @@
+[Unit]
+Description=BirdNET-Analyzer Pipeline
+After=icecast2.service network-online.target
+Wants=icecast2.service
+
+[Service]
+User=alan
+WorkingDirectory=/home/alan/BirdNET-Analyzer
+ExecStart=/home/alan/BirdNET-Analyzer/birdnet-env/bin/python3 /home/alan/alans-brain/birdstation/birdnet_pipeline.py
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
