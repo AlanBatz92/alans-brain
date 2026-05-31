@@ -10,6 +10,28 @@
 
 ---
 
+## 2026-05-31 — Observatory: cache-bust JS, Eastern time, mid-word wrap
+
+Same-day follow-up after a fresh screenshot showed the previous iteration
+hadn't taken effect, plus two real bugs.
+
+- **Stale cached JS (root cause of "nothing changed"):** the confidence-gate
+  iteration cache-busted `style.css` but *not* the `<script>` tag, so the live
+  page ran the **old `observatory.js`** against the new HTML — old stat labels
+  ("DETECTIONS / SPECIES (LIFE) / TODAY"), ungrouped list, a 36% bird showing.
+  Fix: bump **both** assets together — `observatory.js?v=obs3` + `style.css?v=obs3`.
+  Convention going forward: bump the query on *every* changed Observatory asset.
+- **Timezone → Eastern:** detection times rendered in the viewer's local zone.
+  The box runs UTC and writes **naive** ISO timestamps (no offset), so
+  `parseTime` now appends `Z` to tz-less values (treats them as UTC) and all
+  clock/date output renders in `America/New_York` (`OBS_TZ`). Train timestamps
+  already carry an offset and are left untouched (no double-shift). Verified
+  headless: `23:50 UTC → 7:50 PM` Eastern.
+- **Mid-word wrap:** "Grasshopper Sparrow" broke as "Grasshoppe|r Sparrow" —
+  swapped `word-break: break-word` for `overflow-wrap: break-word` (wrap at
+  spaces) and render the text "Latest" value via `.obs-stat-value-sm` so
+  two-word names fit the card.
+
 ## 2026-05-31 — Observatory: confidence gate, grouped species view, beautify
 
 First post-launch iteration after seeing the page live on mobile.
