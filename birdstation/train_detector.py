@@ -12,6 +12,8 @@ import urllib.request
 import wave
 import collections
 import os
+import sys
+import fcntl
 import logging
 import numpy as np
 from datetime import datetime, timezone
@@ -21,6 +23,7 @@ STREAM_URL      = "http://192.168.4.132:8000/backyard"
 DB_PATH         = "/home/alan/birdnet.db"
 CLIP_DIR        = "/home/alan/train_clips"
 LOG_PATH        = "/home/alan/train_detector.log"
+LOCK_PATH       = "/home/alan/train_detector.lock"   # single-instance guard
 
 SAMPLE_RATE     = 22050   # resample target — sufficient for whistle detection
 CHUNK_SECONDS   = 2       # analyse in 2-second windows
@@ -43,6 +46,23 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(message)s"
 )
 log = logging.getLogger(__name__)
+
+
+def acquire_singleton_lock():
+    """
+    Take an exclusive, non-blocking lock so only one detector runs at a time.
+    If another instance already holds it (e.g. a stray duplicate unit), log and
+    exit cleanly rather than double-reading the stream and double-writing events.
+    Returns the open file handle, which must stay referenced for the process
+    lifetime to keep the lock held.
+    """
+    lock_file = open(LOCK_PATH, "w")
+    try:
+        fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        log.warning("Another train_detector instance is already running — exiting.")
+        sys.exit(0)
+    return lock_file
 
 
 def db_insert(detected_at, duration_s, peak_db, clip_path):
@@ -143,6 +163,7 @@ def stream_chunks(url, chunk_seconds, sample_rate):
 
 
 def run():
+    _lock = acquire_singleton_lock()  # held for the life of the process
     log.info("=" * 60)
     log.info("Train detector starting — Emmaus Observatory")
     log.info("Stream: %s", STREAM_URL)

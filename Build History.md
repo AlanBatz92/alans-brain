@@ -39,6 +39,19 @@ in manual tests — results were just discarded before the DB write.)
 
 Imported into the repo on 2026-05-30 (see entry below) with the fix in place.
 
+## 2026-05-30 — Train detector: single-instance lock + duplicate unit disabled
+
+The box had `train_detector.service` **and** `traindetect.service` both enabled
+and active against the same script — two detectors reading the stream in
+parallel. Disabled + stopped `traindetect.service` on the box (its unit file is
+removed at cutover). A 60s-window pair scan of `train_events` found **no**
+duplicate rows, so no data cleanup was needed.
+
+Added an `flock`-based single-instance guard to `train_detector.py`
+(`acquire_singleton_lock()` at the top of `run()`, lock at
+`~/train_detector.lock`): a second copy now logs and exits cleanly instead of
+double-processing. Cheap insurance against a stray duplicate unit recurring.
+
 ## 2026-05-30 — Imported the observatory writers (whole box now in repo)
 
 Decision: bring the full Emmaus Observatory under git-deploy (not just Pulse).
