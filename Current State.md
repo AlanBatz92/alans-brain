@@ -107,6 +107,7 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 - **RSS URL rot** is the #1 source-health risk; broken feeds surface as a per-source error in the strip rather than breaking the page.
 - birdstation is a home box — if it's offline, Pulse shows an offline state and the digest card simply hides.
 - The two old local planning docs (`Task Tracker Write-Back Feature Plan.md`, `New Pages Plan.md`) remain gitignored.
-- **birdstation code lives in `birdstation/`** (scripts + `schema.sql` + templated `systemd/` units) and uses the **run-from-clone** model: the box clones the repo to `~/alans-brain` and units point at `~/alans-brain/birdstation/*.py`; deploy = `git pull` + restart. See `birdstation/README.md` for the one-time cutover.
-- **Citations backend** is in the repo (`pulse_digest.py` + `/api/digest` + `schema.sql` migration) but **lands on the box at cutover** — needs `ALTER TABLE feed_digests ADD COLUMN citations_json TEXT` and a digest regenerate before the front-end citations render with data.
-- **`BIRD_API_KEY` leaked into chat 2026-05-30** during the import — rotate it as part of the cutover (new value goes in `/etc/birdstation.env`).
+- **birdstation runs from the clone** (cutover complete 2026-05-31): the box has the repo at `~/alans-brain`, units point at `~/alans-brain/birdstation/*.py`, secrets are in `/etc/birdstation.env`. Deploy = `cd ~/alans-brain && git pull && sudo systemctl restart <unit>`. See `birdstation/README.md`.
+- **Citations are live** — the `feed_digests.citations_json` column exists, `pulse_digest.py` writes per-section + global citations, `/api/digest` serves them, and the front-end renders the `Sources:` lines + Citations list. (`pulse_digest.py` uses `max_tokens=16000` — 4000 truncated the thinking+citations output.)
+- **`BIRD_API_KEY` was rotated** at cutover (the old one leaked in chat 2026-05-30); the new value lives only in `/etc/birdstation.env`.
+- Old `~/*.py` copies are retired to `~/retired/`; the canonical copies are in `birdstation/`.
