@@ -4700,8 +4700,9 @@ nav {
 /* Photo */
 .obs-bcard-photo {
   width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
+  max-height: 200px;
+  object-fit: contain;
+  background: var(--bg);
   border-radius: 18px 18px 0 0;
   display: block;
 }
@@ -4742,21 +4743,38 @@ nav {
   line-height: 1.55;
   margin: 10px 0 0;
 }
-.obs-bcard-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
+/* Comic-book character-profile stats grid */
+.obs-bcard-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin-top: 14px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
 }
-.obs-bcard-chip {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 700;
+.obs-bcard-stat {
+  background: var(--bg);
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.obs-bcard-stat-val {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
   color: var(--teal);
-  background: var(--teal-glow);
-  border: 1px solid rgba(45, 212, 191, 0.25);
-  border-radius: 999px;
-  padding: 3px 10px;
+  line-height: 1;
+  overflow-wrap: break-word;
+}
+.obs-bcard-stat-lbl {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
 }
 .obs-bcard-footer {
   display: flex;
@@ -4777,7 +4795,7 @@ nav {
 .obs-bcard-skeleton { padding: 18px 18px 20px; }
 .obs-bcard-skel-photo {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 140px;
   border-radius: 12px;
   background: var(--bg);
   margin-bottom: 14px;
@@ -4858,3 +4876,28 @@ nav {
 }
 .obs-search:focus { border-color: var(--teal); }
 .obs-search::placeholder { color: var(--text-dim); }
+
+/* ── Heading row with inline sort control ── */
+.obs-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.obs-heading-row .obs-heading { margin-bottom: 0; }
+.obs-sort-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.obs-sort-select:focus,
+.obs-sort-select:hover { border-color: var(--teal); color: var(--text); }

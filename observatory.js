@@ -46,7 +46,7 @@ const MAX_TRAINS = 30;   // matches the recent-events query limit
 
 // Cross-section bird state — stats are derived from today + life together,
 // so we stash both and recompute the stat cards as each arrives.
-const state = { today: [], life: [], periodGroups: [], period: 'today', searchQuery: '' };
+const state = { today: [], life: [], periodGroups: [], period: 'today', searchQuery: '', periodSort: 'recent', lifeSort: 'recent' };
 
 /* ── Helpers ── */
 
@@ -109,12 +109,14 @@ function confClass(conf) {
   return 'obs-conf-low';
 }
 
-// Return the first sentence of Wikipedia extract text (≤ 200 chars).
+// Return the first sentence of Wikipedia extract text (≤ 200 chars, word-boundary safe).
 function truncateExtract(text) {
   if (!text) return '';
   const dot = text.indexOf('. ');
   if (dot > 30 && dot < 200) return text.slice(0, dot + 1);
-  return text.length > 200 ? text.slice(0, 197) + '…' : text;
+  if (text.length <= 200) return text;
+  const cut = text.lastIndexOf(' ', 200);
+  return (cut > 100 ? text.slice(0, cut) : text.slice(0, 200)) + '…';
 }
 
 function confPill(conf) {
@@ -231,15 +233,30 @@ async function loadToday() {
   }
 }
 
+function sortGroups(groups, sortKey) {
+  const copy = groups.slice();
+  if (sortKey === 'most')  return copy.sort((a, b) => b.count - a.count);
+  if (sortKey === 'least') return copy.sort((a, b) => a.count - b.count);
+  return copy.sort((a, b) => (parseTime(b.last_heard) || 0) - (parseTime(a.last_heard) || 0));
+}
+
+function sortLifeList(species, sortKey) {
+  const copy = species.slice();
+  if (sortKey === 'most')  return copy.sort((a, b) => (b.total_detections || 0) - (a.total_detections || 0));
+  if (sortKey === 'least') return copy.sort((a, b) => (a.total_detections || 0) - (b.total_detections || 0));
+  return copy.sort((a, b) => (parseTime(b.first_seen) || 0) - (parseTime(a.first_seen) || 0));
+}
+
 function renderPeriodGroups() {
   const el      = document.getElementById('obs-today');
   const countEl = document.getElementById('obs-period-count');
-  const q = state.searchQuery.trim().toLowerCase();
+  const q      = state.searchQuery.trim().toLowerCase();
+  const sorted = sortGroups(state.periodGroups, state.periodSort);
   const groups = q
-    ? state.periodGroups.filter((g) =>
+    ? sorted.filter((g) =>
         g.common_name.toLowerCase().includes(q) ||
         (g.scientific_name || '').toLowerCase().includes(q))
-    : state.periodGroups;
+    : sorted;
   if (countEl) countEl.textContent = groups.length ? '(' + groups.length + ')' : '';
   if (groups.length === 0) {
     setMsg(el, 'obs-empty',
@@ -271,6 +288,31 @@ function renderPeriodGroups() {
 }
 
 /* ── Birds: life list ── */
+function renderLife() {
+  const el = document.getElementById('obs-life');
+  if (!el) return;
+  if (state.life.length === 0) {
+    setMsg(el, 'obs-empty', 'No lifers logged yet.');
+    return;
+  }
+  const sorted = sortLifeList(state.life, state.lifeSort);
+  el.innerHTML = sorted.map((s) => {
+    const ms = parseTime(s.first_seen);
+    const since = ms != null ? '<span class="obs-lifer-since">since ' + escapeHtml(shortDate(ms)) + '</span>' : '';
+    const count = s.total_detections
+      ? '<span class="obs-lifer-count">×' + escapeHtml(String(s.total_detections)) + '</span>'
+      : '';
+    return '<div class="obs-lifer" role="button" tabindex="0"' +
+        ' data-name="' + escapeAttr(s.common_name) + '" data-sci="' + escapeAttr(s.scientific_name || '') + '">' +
+        '<div class="obs-lifer-main">' +
+          '<span class="obs-lifer-name">' + escapeHtml(s.common_name) + '</span>' +
+          (s.scientific_name ? '<span class="obs-lifer-sci">' + escapeHtml(s.scientific_name) + '</span>' : '') +
+        '</div>' +
+        '<div class="obs-lifer-meta">' + count + since + '</div>' +
+      '</div>';
+  }).join('');
+}
+
 async function loadLife() {
   const el = document.getElementById('obs-life');
   const countEl = document.getElementById('obs-life-count');
@@ -286,25 +328,7 @@ async function loadLife() {
   state.life = d.species || [];
   renderBirdStats();
   if (countEl) countEl.textContent = state.life.length ? '(' + state.life.length + ')' : '';
-  if (state.life.length === 0) {
-    setMsg(el, 'obs-empty', 'No lifers logged yet.');
-    return;
-  }
-  el.innerHTML = state.life.map((s) => {
-    const ms = parseTime(s.first_seen);
-    const since = ms != null ? '<span class="obs-lifer-since">since ' + escapeHtml(shortDate(ms)) + '</span>' : '';
-    const count = s.total_detections
-      ? '<span class="obs-lifer-count">×' + escapeHtml(String(s.total_detections)) + '</span>'
-      : '';
-    return '<div class="obs-lifer" role="button" tabindex="0"' +
-        ' data-name="' + escapeAttr(s.common_name) + '" data-sci="' + escapeAttr(s.scientific_name || '') + '">' +
-        '<div class="obs-lifer-main">' +
-          '<span class="obs-lifer-name">' + escapeHtml(s.common_name) + '</span>' +
-          (s.scientific_name ? '<span class="obs-lifer-sci">' + escapeHtml(s.scientific_name) + '</span>' : '') +
-        '</div>' +
-        '<div class="obs-lifer-meta">' + count + since + '</div>' +
-      '</div>';
-  }).join('');
+  renderLife();
 }
 
 /* ── Trains: stats ── */
@@ -404,7 +428,8 @@ function birdCardContent(commonName, scientificName, wiki, hist) {
   if (scientificName) {
     html += '<div class="obs-bcard-sci">' + escapeHtml(scientificName) + '</div>';
   }
-  if (wiki && wiki.description) {
+  // Skip generic descriptions like "species of bird" or "species of owl"
+  if (wiki && wiki.description && !/^species of /i.test(wiki.description)) {
     html += '<div class="obs-bcard-desc">' + escapeHtml(wiki.description) + '</div>';
   }
   if (wiki && wiki.extract) {
@@ -412,15 +437,26 @@ function birdCardContent(commonName, scientificName, wiki, hist) {
     if (snippet) html += '<p class="obs-bcard-extract">' + escapeHtml(snippet) + '</p>';
   }
 
-  // Local detection stats as teal chips
+  // Comic-book character-profile stats grid
   if (hist && hist.total_detections != null) {
-    const chips = ['×' + hist.total_detections + ' detections'];
+    const bestConf = hist.confidence_series && hist.confidence_series.length > 0
+      ? Math.round(hist.confidence_series.reduce((m, v) => Math.max(m, v), 0) * 100) + '%'
+      : '—';
     const firstMs = parseTime(hist.first_heard);
     const lastMs  = parseTime(hist.last_heard);
-    if (firstMs) chips.push('first ' + shortDate(firstMs));
-    if (lastMs)  chips.push('last '  + clockTime(lastMs));
-    html += '<div class="obs-bcard-chips">' +
-      chips.map((c) => '<span class="obs-bcard-chip">' + escapeHtml(c) + '</span>').join('') +
+    const stats = [
+      { lbl: 'Heard Here',  val: '×' + hist.total_detections },
+      { lbl: 'Best ID',     val: bestConf },
+      { lbl: 'First Heard', val: firstMs ? shortDate(firstMs) : '—' },
+      { lbl: 'Last Heard',  val: lastMs  ? shortDate(lastMs) + ' · ' + clockTime(lastMs) : '—' },
+    ];
+    html += '<div class="obs-bcard-stats">' +
+      stats.map((s) =>
+        '<div class="obs-bcard-stat">' +
+          '<div class="obs-bcard-stat-val">' + escapeHtml(s.val) + '</div>' +
+          '<div class="obs-bcard-stat-lbl">' + escapeHtml(s.lbl) + '</div>' +
+        '</div>'
+      ).join('') +
     '</div>';
   }
 
@@ -462,9 +498,15 @@ function closeBirdCard() {
   document.body.style.overflow = '';
 }
 
+const TAGLINES = {
+  birds:  'What is the source of all that chirping?!',
+  trains: 'I like trains.',
+};
+
 /* ── Tabs ── */
 function initTabs() {
   const tabs = document.querySelectorAll('.obs-tab');
+  const taglineEl = document.querySelector('.page-hero-tagline');
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
       const which = tab.getAttribute('data-tab');
@@ -475,6 +517,7 @@ function initTabs() {
       });
       document.getElementById('obs-panel-birds').hidden  = which !== 'birds';
       document.getElementById('obs-panel-trains').hidden = which !== 'trains';
+      if (taglineEl && TAGLINES[which]) taglineEl.textContent = TAGLINES[which];
     });
   });
 }
@@ -550,6 +593,22 @@ function initObservatory() {
     searchEl.addEventListener('input', () => {
       state.searchQuery = searchEl.value;
       renderPeriodGroups();
+    });
+  }
+
+  // Sort selects
+  const periodSortEl = document.getElementById('obs-period-sort');
+  if (periodSortEl) {
+    periodSortEl.addEventListener('change', () => {
+      state.periodSort = periodSortEl.value;
+      renderPeriodGroups();
+    });
+  }
+  const lifeSortEl = document.getElementById('obs-life-sort');
+  if (lifeSortEl) {
+    lifeSortEl.addEventListener('change', () => {
+      state.lifeSort = lifeSortEl.value;
+      renderLife();
     });
   }
 

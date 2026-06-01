@@ -233,7 +233,7 @@ function renderSectionSources(citations) {
     '<a class="pulse-cite" href="' + (c.url ? escapeHtml(c.url) : '#') + '"' +
       (c.url ? ' target="_blank" rel="noopener"' : '') +
       ' title="' + escapeHtml(c.title) + '">[' + c.n + '] ' +
-      escapeHtml(c.source || c.title) + '</a>'
+      escapeHtml(c.title || c.source) + '</a>'
   ).join('');
   return '<div class="pulse-brief-sources">Sources: ' + links + '</div>';
 }

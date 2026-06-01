@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs7">
+  <link rel="stylesheet" href="style.css?v=obs8">
 </head>
 <body>
 
@@ -81,7 +81,7 @@
       <h1 class="anim" style="animation-delay:0.2s">
         <span class="gradient-text">Observatory</span>
       </h1>
-      <div class="page-hero-tagline anim" style="animation-delay:0.35s">Emmaus, PA — who's singing, what's rolling through</div>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">What is the source of all that chirping?!</div>
     </section>
 
     <!-- ══════ CONTROLS ══════ -->
@@ -111,10 +111,24 @@
         <input class="obs-search" id="obs-search" type="search" placeholder="Filter species…" autocomplete="off" aria-label="Filter species by name">
       </div>
 
-      <h2 class="obs-heading"><span id="obs-period-heading">Heard today</span> <span class="obs-heading-count" id="obs-period-count"></span></h2>
+      <div class="obs-heading-row">
+        <h2 class="obs-heading"><span id="obs-period-heading">Heard today</span> <span class="obs-heading-count" id="obs-period-count"></span></h2>
+        <select class="obs-sort-select" id="obs-period-sort" aria-label="Sort species">
+          <option value="recent">Recent</option>
+          <option value="most">Most heard</option>
+          <option value="least">Least heard</option>
+        </select>
+      </div>
       <div class="obs-species-grid" id="obs-today"></div>
 
-      <h2 class="obs-heading">Life list <span class="obs-heading-count" id="obs-life-count"></span></h2>
+      <div class="obs-heading-row">
+        <h2 class="obs-heading">Life list <span class="obs-heading-count" id="obs-life-count"></span></h2>
+        <select class="obs-sort-select" id="obs-life-sort" aria-label="Sort life list">
+          <option value="recent">Recent</option>
+          <option value="most">Most heard</option>
+          <option value="least">Least heard</option>
+        </select>
+      </div>
       <div class="obs-life" id="obs-life"></div>
     </section>
 
@@ -149,7 +163,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs7"></script>
+  <script src="observatory.js?v=obs8"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');
