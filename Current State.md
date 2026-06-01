@@ -97,22 +97,31 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs6` +
-  `style.css?v=obs6` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs8` +
+  `style.css?v=obs8` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
-- **Bird cards (steps 1–3, 2026-06-01):** tapping any species card opens a quick-view
-  modal (bottom sheet on mobile, centered on desktop): Wikipedia photo + description
-  + extract + our detection chips. `bird-info.js` handles fetch + 30-day localStorage
-  cache + `data/bird-overrides.json` hook. `GET /api/species/{name}` serves history.
-  Degrades gracefully if either source is offline. CC BY-SA attribution shown.
-  Classes: `.obs-bcard-*`. Next: step 4 detail view (sparkline + by-hour histogram).
+- **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
+  quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
+  (contain + max-height:200px so full bird is visible) + filtered description (generic
+  "species of bird/owl" suppressed) + extract (word-boundary truncation) + comic-book
+  stats grid (Heard Here / Best ID / First Heard / Last Heard with date+time).
+  `bird-info.js` handles fetch + 30-day localStorage cache + `data/bird-overrides.json`
+  hook. `GET /api/species/{name}` serves history. Degrades gracefully if either source
+  is offline. CC BY-SA attribution shown. Classes: `.obs-bcard-*`.
+  Next: step 4 detail view (sparkline + by-hour histogram).
 - **Timeline + search (2026-06-01):** period selector (Today / Yesterday / This week /
   This month) above the species grid; search input filters by name client-side.
   `GET /api/detections/grouped?start=&end=&min_confidence=` on birdstation returns
   pre-aggregated `{common_name, scientific_name, count, best_confidence, first_heard,
   last_heard}` for the date range. Switching periods fetches the new endpoint;
   "Today" re-renders from already-loaded data (no extra fetch). Stat cards always
-  show today's numbers regardless of selected period. Assets: `?v=obs7`.
+  show today's numbers regardless of selected period.
+- **Sort controls (2026-06-01):** `<select>` dropdowns on the period species grid and
+  life list — Recent / Most heard / Least heard. Client-side, no refetch.
+  `state.periodSort` + `state.lifeSort`. `renderLife()` is now its own function.
+- **Subtitles (2026-06-01):** Birds tab hero tagline = "What is the source of all
+  that chirping?!"; Trains tab dynamically sets it to "I like trains." via `TAGLINES`.
+- Assets: `style.css?v=obs8`, `observatory.js?v=obs8`, `bird-info.js?v=obs6`.
 
 ### birdstation (home server — code mirrored in this repo under `birdstation/`)
 

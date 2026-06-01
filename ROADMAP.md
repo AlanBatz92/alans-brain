@@ -11,18 +11,18 @@
 
 ## ▶ Next
 
-### 1. Observatory: "comic-book" bird cards — **steps 1–3 done**  (design: `PLAN-observatory-cards.md`)
-Tap any species card (today or life list) to open a quick card: Wikipedia photo +
-description + first-sentence extract + our detection chips (×N, first DATE, last
-TIME). Skeleton while fetching; degrades gracefully if either source is offline.
-**Remaining:** step 4 — detail view (larger photo + full extract + confidence
+### 1. Observatory: "comic-book" bird cards — **steps 1–3 + polish done**  (design: `PLAN-observatory-cards.md`)
+Quick-card modal is live: Wikipedia photo (full bird visible, not cropped),
+filtered description, word-boundary extract, comic-book stats grid (Heard Here /
+Best ID / First Heard / Last Heard), sort controls on both species grid and life
+list. **Remaining:** step 4 — detail view (larger photo + full extract + confidence
 sparkline + by-hour bar chart).
 
-### 2. Observatory: timeline + species search  ← FOCUS
+### 2. Observatory: timeline + species search — **done 2026-06-01**
 Period selector (Today / Yesterday / This week / This month) and a live search
 box above the species grid. `GET /api/detections/grouped?start=&end=` serves
 pre-aggregated species data for any date range. Search is client-side (no
-refetch). **Done 2026-06-01** — see Build History.
+refetch). Sort controls added (Recent / Most heard / Least heard).
 
 ### 3. Train vetting — more robust workflow  (design: `PLAN-train-vetting.md`)
 Privacy gate + CLI review (`review_trains.py`) + weekly purge shipped 2026-06-01.
@@ -73,6 +73,13 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-01** — Observatory polish + Pulse citation fix: hero subtitle updated;
+  Trains tab dynamically sets tagline to "I like trains."; bird card photo now shows
+  full bird (contain); comic-book stats grid replaces chips (Heard Here / Best ID /
+  First Heard / Last Heard with date+time); generic descriptions filtered; word-boundary
+  truncation; sort controls on period grid + life list. Pulse section Sources: lines
+  now show article title rather than source label.
 
 - **2026-06-01** — Train privacy: public Observatory now shows **only
   human-confirmed** train events (default-deny on `verdict='train'`); clip

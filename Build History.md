@@ -10,6 +10,35 @@
 
 ---
 
+## 2026-06-01 — Observatory polish + Pulse citation fix
+
+Cosmetic and UX pass on the Observatory page, plus one Pulse data fix.
+
+- **Subtitles:** Birds tab shows "What is the source of all that chirping?!" in the
+  page hero tagline; switching to the Trains tab dynamically updates it to "I like
+  trains." (`TAGLINES` map in `observatory.js`, wired into `initTabs()`).
+- **Bird card photo:** changed from `aspect-ratio:16/9` + `object-fit:cover` to
+  `max-height:200px` + `object-fit:contain` + `background:var(--bg)` — the full
+  bird is now visible rather than cropped. Skeleton placeholder updated to match.
+- **Bird card stats grid:** replaced the three teal chips (×N detections · first
+  DATE · last TIME) with a 2×2 comic-book character-profile grid: **Heard Here**
+  (×N), **Best ID** (peak confidence%), **First Heard** (date), **Last Heard**
+  (date · time). Last Heard now shows date + time instead of time only.
+- **Bird card description filter:** generic Wikipedia descriptions that begin with
+  "species of …" (e.g. "species of bird", "species of owl") are silently dropped —
+  they add nothing useful.
+- **Bird card extract word-wrap:** `truncateExtract()` now finds the last space
+  before 200 chars so it never cuts mid-word.
+- **Sort controls:** `<select>` dropdowns added to the period species grid heading
+  and the life list heading — **Recent / Most heard / Least heard**. State tracked
+  in `state.periodSort` / `state.lifeSort`; re-renders on change without refetch.
+  `renderLife()` extracted from `loadLife()` so both the sort handler and the
+  initial load share the same render path.
+- **Pulse citations:** `renderSectionSources()` now shows `c.title || c.source`
+  (article headline first) instead of `c.source || c.title` (source label first),
+  so section Source links show the article title rather than "PA Governor" etc.
+- **Assets bumped:** `style.css?v=obs8`, `observatory.js?v=obs8`.
+
 ## 2026-06-01 — Observatory timeline + species search
 
 Period selector and live search for the "Heard today" species grid.
