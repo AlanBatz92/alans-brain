@@ -10,6 +10,21 @@
 
 ---
 
+## 2026-06-01 — Observatory: clickable stat cards, Wikipedia link UX, richer extract
+
+- **Clickable stat cards:** "Life list" card smooth-scrolls to the life list section;
+  "Latest" card opens the bird card modal for that species. Both use `data-action`
+  delegation wired in `initObservatory()`; keyboard-accessible (Enter/Space). Cards
+  only become interactive when there's data (life list loads async).
+- **Wikipedia link moved to top of card:** previously the "via Wikipedia ↗" link was
+  at the bottom of the card, below the stats grid — hard to reach on mobile. It now
+  appears just below the scientific name. The photo is also wrapped as a link to
+  Wikipedia so tapping the image works too. Footer div removed.
+- **Richer bird extract:** `truncateExtract` now returns up to 3 sentences (≤ 500 chars)
+  instead of just one, naturally surfacing range, habitat, and behavior info from
+  Wikipedia's lead paragraph.
+- **Assets:** `style.css?v=obs10`, `observatory.js?v=obs10`.
+
 ## 2026-06-01 — Observatory polish + Pulse citation fix
 
 Cosmetic and UX pass on the Observatory page, plus one Pulse data fix.

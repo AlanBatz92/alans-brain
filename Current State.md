@@ -97,8 +97,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs8` +
-  `style.css?v=obs8` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs10` +
+  `style.css?v=obs10` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -121,7 +121,11 @@ train data a home. ID/class prefix: **`obs-`**.
   `state.periodSort` + `state.lifeSort`. `renderLife()` is now its own function.
 - **Subtitles (2026-06-01):** Birds tab hero tagline = "What is the source of all
   that chirping?!"; Trains tab dynamically sets it to "I like trains." via `TAGLINES`.
-- Assets: `style.css?v=obs8`, `observatory.js?v=obs8`, `bird-info.js?v=obs6`.
+- **Stat cards (2026-06-01):** "Life list" smooth-scrolls to the life list; "Latest"
+  opens the bird card modal. Both use `data-action` delegation; keyboard-accessible.
+- **Bird card UX (2026-06-01):** Wikipedia link moved below the sci name (easy to tap on
+  mobile); photo wrapped as Wikipedia link; extract expanded to 3 sentences (≤ 500 chars).
+- Assets: `style.css?v=obs10`, `observatory.js?v=obs10`, `bird-info.js?v=obs6`.
 
 ### birdstation (home server — code mirrored in this repo under `birdstation/`)
 
