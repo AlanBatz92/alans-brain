@@ -1,0 +1,9 @@
+[Unit]
+Description=Purge old / rejected train audio clips
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=alan
+WorkingDirectory=/home/alan/alans-brain/birdstation
+ExecStart=/home/alan/api-env/bin/python3 /home/alan/alans-brain/birdstation/purge_train_clips.py

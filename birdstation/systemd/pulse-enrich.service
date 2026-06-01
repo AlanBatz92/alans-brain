@@ -1,0 +1,11 @@
+[Unit]
+Description=Pulse feed enrichment (AI category + summary)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=alan
+WorkingDirectory=/home/alan/alans-brain/birdstation
+ExecStart=/home/alan/api-env/bin/python3 /home/alan/alans-brain/birdstation/pulse_enrich.py
+EnvironmentFile=/etc/birdstation.env
