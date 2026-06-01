@@ -15,14 +15,16 @@
 Tap any species card (today or life list) to open a quick card: Wikipedia photo +
 description + first-sentence extract + our detection chips (×N, first DATE, last
 TIME). Skeleton while fetching; degrades gracefully if either source is offline.
-**Done:** `GET /api/species/{name}` endpoint + tests; `bird-info.js` Wikipedia
-helper (mem + localStorage 30-day cache, override hook, CC BY-SA attribution);
-quick-card modal (bottom sheet on mobile, centered on desktop), `.obs-bcard-*`.
 **Remaining:** step 4 — detail view (larger photo + full extract + confidence
-sparkline + by-hour bar chart). Step 5 polish mostly done (attribution ✓, TTL ✓,
-error states ✓).
+sparkline + by-hour bar chart).
 
-### 2. Train vetting — more robust workflow  (design: `PLAN-train-vetting.md`)
+### 2. Observatory: timeline + species search  ← FOCUS
+Period selector (Today / Yesterday / This week / This month) and a live search
+box above the species grid. `GET /api/detections/grouped?start=&end=` serves
+pre-aggregated species data for any date range. Search is client-side (no
+refetch). **Done 2026-06-01** — see Build History.
+
+### 3. Train vetting — more robust workflow  (design: `PLAN-train-vetting.md`)
 Privacy gate + CLI review (`review_trains.py`) + weekly purge shipped 2026-06-01.
 Next: a **passphrase-gated web review page** (like `tasks.html`) so vetting
 doesn't need SSH — reuse `POST /api/trains/{id}/verdict`, hold the key safely

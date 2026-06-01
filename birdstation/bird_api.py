@@ -123,6 +123,29 @@ def species_history(name: str, min_confidence: float = 0.75):
     }
 
 
+@app.get("/api/detections/grouped")
+def detections_grouped(start: str, end: str, min_confidence: float = 0.75):
+    """Species grouped by local date range; powers the period selector in the Observatory.
+    start / end are YYYY-MM-DD in local (Eastern) time — matching how the pipeline writes
+    timestamps (naive local, no tz offset)."""
+    conn = get_db()
+    rows = conn.execute(
+        """SELECT common_name, scientific_name,
+                  COUNT(*) AS count,
+                  MAX(confidence) AS best_confidence,
+                  MIN(timestamp) AS first_heard,
+                  MAX(timestamp) AS last_heard
+           FROM detections
+           WHERE date(timestamp) >= ? AND date(timestamp) <= ?
+             AND confidence >= ?
+           GROUP BY common_name
+           ORDER BY MAX(timestamp) DESC""",
+        (start, end, min_confidence)
+    ).fetchall()
+    conn.close()
+    return {"species": [dict(r) for r in rows], "start": start, "end": end}
+
+
 @app.get("/api/stats")
 def stats(min_confidence: float = 0.0):
     conn = get_db()

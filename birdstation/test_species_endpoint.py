@@ -144,6 +144,90 @@ def test_confidence_rounded_to_3dp():
     assert r["confidence_series"] == [0.877]
 
 
+# ── /api/detections/grouped ───────────────────────────────────────────────────
+
+def detections_grouped(conn, start, end, min_confidence=0.75):
+    """Mirrors the SQL + response logic in bird_api.py GET /api/detections/grouped."""
+    rows = conn.execute(
+        """SELECT common_name, scientific_name,
+                  COUNT(*) AS count,
+                  MAX(confidence) AS best_confidence,
+                  MIN(timestamp) AS first_heard,
+                  MAX(timestamp) AS last_heard
+           FROM detections
+           WHERE date(timestamp) >= ? AND date(timestamp) <= ?
+             AND confidence >= ?
+           GROUP BY common_name
+           ORDER BY MAX(timestamp) DESC""",
+        (start, end, min_confidence),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def test_grouped_basic():
+    conn = make_db()
+    seed(conn, [
+        ("2026-06-01 07:00:00", "American Robin",  "Turdus migratorius",      0.88),
+        ("2026-06-01 09:00:00", "American Robin",  "Turdus migratorius",      0.92),
+        ("2026-06-01 08:00:00", "Gray Catbird",    "Dumetella carolinensis",  0.80),
+    ])
+    r = detections_grouped(conn, "2026-06-01", "2026-06-01")
+    assert len(r) == 2
+    # ordered newest-last-heard first: Robin last heard 09:00, Catbird 08:00
+    assert r[0]["common_name"] == "American Robin"
+    assert r[0]["count"] == 2
+    assert r[0]["best_confidence"] == 0.92
+    assert r[0]["first_heard"] == "2026-06-01 07:00:00"
+    assert r[0]["last_heard"]  == "2026-06-01 09:00:00"
+    assert r[1]["common_name"] == "Gray Catbird"
+    assert r[1]["count"] == 1
+
+
+def test_grouped_date_range_excludes_outside():
+    conn = make_db()
+    seed(conn, [
+        ("2026-05-30 07:00:00", "House Sparrow",  "Passer domesticus",   0.80),
+        ("2026-06-01 08:00:00", "American Robin", "Turdus migratorius",  0.88),
+        ("2026-06-03 09:00:00", "Wood Thrush",    "Hylocichla mustelina", 0.90),
+    ])
+    r = detections_grouped(conn, "2026-06-01", "2026-06-02")
+    assert len(r) == 1
+    assert r[0]["common_name"] == "American Robin"
+
+
+def test_grouped_confidence_filter():
+    conn = make_db()
+    seed(conn, [
+        ("2026-06-01 07:00:00", "House Sparrow",  "Passer domesticus",   0.60),  # excluded
+        ("2026-06-01 08:00:00", "American Robin", "Turdus migratorius",  0.88),  # included
+    ])
+    r = detections_grouped(conn, "2026-06-01", "2026-06-01", min_confidence=0.75)
+    assert len(r) == 1
+    assert r[0]["common_name"] == "American Robin"
+
+
+def test_grouped_empty():
+    conn = make_db()
+    assert detections_grouped(conn, "2026-06-01", "2026-06-01") == []
+
+
+def test_grouped_multi_day_accumulates():
+    conn = make_db()
+    seed(conn, [
+        ("2026-05-29 07:00:00", "Wood Thrush", "Hylocichla mustelina", 0.90),
+        ("2026-05-30 14:00:00", "Wood Thrush", "Hylocichla mustelina", 0.85),
+        ("2026-05-31 09:00:00", "Wood Thrush", "Hylocichla mustelina", 0.78),
+        ("2026-05-30 08:00:00", "American Robin", "Turdus migratorius", 0.88),
+    ])
+    r = detections_grouped(conn, "2026-05-29", "2026-05-31")
+    assert len(r) == 2
+    wt = next(x for x in r if x["common_name"] == "Wood Thrush")
+    assert wt["count"] == 3
+    assert wt["best_confidence"] == 0.90
+    assert wt["first_heard"] == "2026-05-29 07:00:00"
+    assert wt["last_heard"]  == "2026-05-31 09:00:00"
+
+
 if __name__ == "__main__":
     tests = [
         test_found_by_common_name,
@@ -153,6 +237,11 @@ if __name__ == "__main__":
         test_not_found_all_below_threshold,
         test_by_hour_spans_multiple_hours,
         test_confidence_rounded_to_3dp,
+        test_grouped_basic,
+        test_grouped_date_range_excludes_outside,
+        test_grouped_confidence_filter,
+        test_grouped_empty,
+        test_grouped_multi_day_accumulates,
     ]
     failed = 0
     for t in tests:

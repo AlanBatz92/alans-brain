@@ -46,7 +46,7 @@ const MAX_TRAINS = 30;   // matches the recent-events query limit
 
 // Cross-section bird state — stats are derived from today + life together,
 // so we stash both and recompute the stat cards as each arrives.
-const state = { today: [], life: [] };
+const state = { today: [], life: [], periodGroups: [], period: 'today', searchQuery: '' };
 
 /* ── Helpers ── */
 
@@ -145,6 +145,53 @@ async function fetchJson(url) {
   return resp.json();
 }
 
+/* ── Period utilities ── */
+
+// Groups raw detection rows into the same shape returned by /api/detections/grouped.
+function groupDetections(rows) {
+  const map = new Map();
+  rows.forEach((r) => {
+    let g = map.get(r.common_name);
+    if (!g) {
+      g = { common_name: r.common_name, scientific_name: r.scientific_name,
+            count: 0, best_confidence: 0, first_heard: r.timestamp, last_heard: r.timestamp };
+      map.set(r.common_name, g);
+    }
+    g.count++;
+    if ((r.confidence || 0) > g.best_confidence) g.best_confidence = r.confidence;
+    const ms = parseTime(r.timestamp);
+    if (ms != null) {
+      if (parseTime(g.first_heard) == null || ms < parseTime(g.first_heard)) g.first_heard = r.timestamp;
+      if (parseTime(g.last_heard)  == null || ms > parseTime(g.last_heard))  g.last_heard  = r.timestamp;
+    }
+  });
+  return [...map.values()]
+    .sort((a, b) => (parseTime(b.last_heard) || 0) - (parseTime(a.last_heard) || 0));
+}
+
+// Returns {start, end, label} for a period key.
+// Dates are YYYY-MM-DD in Eastern time, matching how the pipeline stores timestamps.
+function periodDates(period) {
+  const now = new Date();
+  const e   = new Date(now.toLocaleString('en-US', { timeZone: OBS_TZ }));
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmt = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const today = fmt(e);
+  if (period === 'yesterday') {
+    const y = new Date(e); y.setDate(y.getDate() - 1);
+    const ys = fmt(y); return { start: ys, end: ys, label: 'yesterday' };
+  }
+  if (period === 'week') {
+    const dow = e.getDay();  // 0 = Sunday
+    const mon = new Date(e); mon.setDate(mon.getDate() - (dow === 0 ? 6 : dow - 1));
+    return { start: fmt(mon), end: today, label: 'this week' };
+  }
+  if (period === 'month') {
+    return { start: e.getFullYear() + '-' + pad(e.getMonth() + 1) + '-01', end: today, label: 'this month' };
+  }
+  return { start: today, end: today, label: 'today' };
+}
+
 /* ── Birds: headline stats (derived from today + life list) ── */
 function renderBirdStats() {
   const el = document.getElementById('obs-bird-stats');
@@ -160,61 +207,63 @@ function renderBirdStats() {
   ]);
 }
 
-/* ── Birds: today's detections, grouped by species ── */
+/* ── Birds: today's raw detections (for stat cards) + initial period render ── */
 async function loadToday() {
-  const el = document.getElementById('obs-today');
-  setMsg(el, 'obs-loading', 'Listening…');
+  if (state.period === 'today') {
+    setMsg(document.getElementById('obs-today'), 'obs-loading', 'Listening…');
+  }
   let d;
   try {
     d = await fetchJson(EP.today);
   } catch (err) {
-    setMsg(el, 'obs-empty', 'Couldn’t reach the observatory — it may be offline.');
+    if (state.period === 'today') {
+      setMsg(document.getElementById('obs-today'), 'obs-empty',
+        'Couldn\'t reach the observatory — it may be offline.');
+    }
     return;
   }
-  // Defensive client-side gate (in case the box hasn't been redeployed with
-  // the ?min_confidence param yet), still newest-first.
+  // Defensive client-side confidence gate (keeps page correct before box redeploys).
   state.today = (d.detections || []).filter((r) => (r.confidence || 0) >= MIN_CONFIDENCE);
   renderBirdStats();
-  renderToday();
+  if (state.period === 'today') {
+    state.periodGroups = groupDetections(state.today);
+    renderPeriodGroups();
+  }
 }
 
-function renderToday() {
-  const el = document.getElementById('obs-today');
-  if (state.today.length === 0) {
-    setMsg(el, 'obs-empty', 'No confident detections yet today — quiet skies so far.');
+function renderPeriodGroups() {
+  const el      = document.getElementById('obs-today');
+  const countEl = document.getElementById('obs-period-count');
+  const q = state.searchQuery.trim().toLowerCase();
+  const groups = q
+    ? state.periodGroups.filter((g) =>
+        g.common_name.toLowerCase().includes(q) ||
+        (g.scientific_name || '').toLowerCase().includes(q))
+    : state.periodGroups;
+  if (countEl) countEl.textContent = groups.length ? '(' + groups.length + ')' : '';
+  if (groups.length === 0) {
+    setMsg(el, 'obs-empty',
+      q ? 'No species match "' + q + '".'
+        : 'Nothing detected in this period yet — quiet skies.');
     return;
   }
-  // Group by species: count, best confidence, most-recent time.
-  const groups = new Map();
-  state.today.forEach((r) => {
-    const ms = parseTime(r.timestamp);
-    let g = groups.get(r.common_name);
-    if (!g) {
-      g = { name: r.common_name, sci: r.scientific_name, count: 0, best: 0, lastMs: ms };
-      groups.set(r.common_name, g);
-    }
-    g.count += 1;
-    if ((r.confidence || 0) > g.best) g.best = r.confidence || 0;
-    if (ms != null && (g.lastMs == null || ms > g.lastMs)) g.lastMs = ms;
-  });
-  const species = [...groups.values()].sort((a, b) => (b.lastMs || 0) - (a.lastMs || 0));
-
-  el.innerHTML = species.map((g) => {
-    const pct = Math.round((g.best || 0) * 100);
+  el.innerHTML = groups.map((g) => {
+    const pct    = Math.round((g.best_confidence || 0) * 100);
+    const lastMs = parseTime(g.last_heard);
     return '<div class="obs-species" role="button" tabindex="0"' +
-        ' data-name="' + escapeAttr(g.name) + '" data-sci="' + escapeAttr(g.sci || '') + '">' +
+        ' data-name="' + escapeAttr(g.common_name) + '" data-sci="' + escapeAttr(g.scientific_name || '') + '">' +
         '<div class="obs-species-top">' +
-          '<span class="obs-species-name">' + escapeHtml(g.name) + '</span>' +
+          '<span class="obs-species-name">' + escapeHtml(g.common_name) + '</span>' +
           '<span class="obs-species-count">×' + g.count + '</span>' +
         '</div>' +
-        (g.sci ? '<div class="obs-species-sci">' + escapeHtml(g.sci) + '</div>' : '') +
-        '<div class="obs-bar"><div class="obs-bar-fill ' + confClass(g.best) +
+        (g.scientific_name ? '<div class="obs-species-sci">' + escapeHtml(g.scientific_name) + '</div>' : '') +
+        '<div class="obs-bar"><div class="obs-bar-fill ' + confClass(g.best_confidence) +
           '-bar" style="width:' + pct + '%"></div></div>' +
         '<div class="obs-species-foot">' +
-          confPill(g.best) +
-          (g.lastMs != null
-            ? '<span class="obs-species-last" title="' + escapeHtml(relativeTime(g.lastMs)) +
-                '">last ' + escapeHtml(clockTime(g.lastMs)) + '</span>'
+          confPill(g.best_confidence) +
+          (lastMs != null
+            ? '<span class="obs-species-last" title="' + escapeHtml(relativeTime(lastMs)) +
+                '">last ' + escapeHtml(clockTime(lastMs)) + '</span>'
             : '') +
         '</div>' +
       '</div>';
@@ -284,7 +333,7 @@ async function loadTrains() {
   try {
     rows = await fetchJson(EP.trainsRecent);
   } catch (err) {
-    setMsg(el, 'obs-empty', 'Couldn’t reach the observatory — it may be offline.');
+    setMsg(el, "obs-empty", "Couldn't reach the observatory — it may be offline.");
     return;
   }
   // Defense in depth: even if the API hands back un-approved rows (older box
@@ -430,6 +479,38 @@ function initTabs() {
   });
 }
 
+async function loadPeriod(period) {
+  const { start, end, label } = periodDates(period);
+  state.period      = period;
+  state.searchQuery = '';
+  const searchEl  = document.getElementById('obs-search');
+  if (searchEl) searchEl.value = '';
+  const headingEl = document.getElementById('obs-period-heading');
+  if (headingEl) headingEl.textContent = 'Heard ' + label;
+
+  if (period === 'today') {
+    // Reuse already-loaded raw data — no extra fetch.
+    state.periodGroups = groupDetections(state.today);
+    renderPeriodGroups();
+    return;
+  }
+
+  const el = document.getElementById('obs-today');
+  setMsg(el, 'obs-loading', 'Checking the skies…');
+  let data;
+  try {
+    data = await fetchJson(
+      API_BASE + '/api/detections/grouped?start=' + start + '&end=' + end +
+      '&min_confidence=' + MIN_CONFIDENCE
+    );
+  } catch (err) {
+    setMsg(el, 'obs-empty', 'Couldn\'t reach the observatory — it may be offline.');
+    return;
+  }
+  state.periodGroups = data.species || [];
+  renderPeriodGroups();
+}
+
 /* ── Orchestrate ── */
 function loadAll() {
   const updated = document.getElementById('obs-updated');
@@ -437,9 +518,11 @@ function loadAll() {
   if (updated) updated.textContent = 'Loading…';
   if (btn) btn.classList.add('spinning');
 
-  Promise.allSettled([
-    loadToday(), loadLife(), loadTrainStats(), loadTrains(),
-  ]).then(() => {
+  const refreshes = [loadToday(), loadLife(), loadTrainStats(), loadTrains()];
+  // When viewing a historical period, also refresh that grid on manual reload.
+  if (state.period !== 'today') refreshes.push(loadPeriod(state.period));
+
+  Promise.allSettled(refreshes).then(() => {
     if (updated) updated.textContent = 'Updated ' + new Date().toLocaleTimeString();
     if (btn) btn.classList.remove('spinning');
   });
@@ -447,6 +530,28 @@ function loadAll() {
 
 function initObservatory() {
   initTabs();
+
+  // Period selector tabs
+  const periodTabs = document.querySelectorAll('.obs-period-tab');
+  periodTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      periodTabs.forEach((t) => {
+        const on = t === tab;
+        t.classList.toggle('obs-period-tab-active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      loadPeriod(tab.getAttribute('data-period'));
+    });
+  });
+
+  // Species search (client-side filter, no refetch)
+  const searchEl = document.getElementById('obs-search');
+  if (searchEl) {
+    searchEl.addEventListener('input', () => {
+      state.searchQuery = searchEl.value;
+      renderPeriodGroups();
+    });
+  }
 
   // Delegate tap/click and keyboard activation on species + lifer cards
   function handleCardActivate(e) {

@@ -10,6 +10,29 @@
 
 ---
 
+## 2026-06-01 — Observatory timeline + species search
+
+Period selector and live search for the "Heard today" species grid.
+
+- **`GET /api/detections/grouped?start=&end=&min_confidence=` (`birdstation/bird_api.py`):**
+  groups detections by species for any local date range — returns `{common_name,
+  scientific_name, count, best_confidence, first_heard, last_heard}` per species,
+  ordered newest-last-heard first. Uses `date(timestamp)` directly (pipeline writes
+  naive local time). 5 new tests in `test_species_endpoint.py`; all 12 tests pass.
+- **Period selector (`observatory.html`, `observatory.js`, `style.css`):**
+  four pill tabs above the species grid — Today / Yesterday / This week / This month.
+  "Today" re-renders from the already-loaded `/api/today` data (zero extra fetches);
+  other periods call the new grouped endpoint. Heading updates to "Heard yesterday"
+  etc. Switching tabs clears the search input. Manual ↻ refresh also refreshes the
+  current period if it's not Today. Stat cards always reflect today's numbers.
+- **Species search:** a search input at the right of the period bar filters the
+  loaded species list client-side on every keystroke — no refetch. Matches
+  `common_name` or `scientific_name` (case-insensitive). Shows "No species match
+  '…'" when no results.
+- **Assets bumped:** `style.css?v=obs7`, `observatory.js?v=obs7`.
+- **Box step needed:** `git pull` + `sudo systemctl restart birdapi` to pick up
+  `/api/detections/grouped`.
+
 ## 2026-06-01 — Bird cards steps 1–3: API endpoint, Wikipedia helper, quick-card modal
 
 Implemented the first three steps of the "comic-book" bird cards plan

@@ -100,14 +100,19 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs6` +
   `style.css?v=obs6` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
-- **Bird cards (steps 1–3, 2026-06-01):** tapping any species card (today or life
-  list) opens a quick-view modal. Bottom sheet on mobile, centered on desktop.
-  Photo + description + extract snippet from Wikipedia (`BirdInfo.get()` in
-  `bird-info.js`, mem + 30-day localStorage cache, `data/bird-overrides.json`
-  override hook); detection stats from `GET /api/species/{name}` on birdstation.
-  Skeleton while fetching; degrades gracefully if either source is offline. CC
-  BY-SA attribution always shown. Classes: `.obs-bcard-*`. Next: detail view
-  (step 4 — sparkline + by-hour histogram). Full design in `PLAN-observatory-cards.md`.
+- **Bird cards (steps 1–3, 2026-06-01):** tapping any species card opens a quick-view
+  modal (bottom sheet on mobile, centered on desktop): Wikipedia photo + description
+  + extract + our detection chips. `bird-info.js` handles fetch + 30-day localStorage
+  cache + `data/bird-overrides.json` hook. `GET /api/species/{name}` serves history.
+  Degrades gracefully if either source is offline. CC BY-SA attribution shown.
+  Classes: `.obs-bcard-*`. Next: step 4 detail view (sparkline + by-hour histogram).
+- **Timeline + search (2026-06-01):** period selector (Today / Yesterday / This week /
+  This month) above the species grid; search input filters by name client-side.
+  `GET /api/detections/grouped?start=&end=&min_confidence=` on birdstation returns
+  pre-aggregated `{common_name, scientific_name, count, best_confidence, first_heard,
+  last_heard}` for the date range. Switching periods fetches the new endpoint;
+  "Today" re-renders from already-loaded data (no extra fetch). Stat cards always
+  show today's numbers regardless of selected period. Assets: `?v=obs7`.
 
 ### birdstation (home server — code mirrored in this repo under `birdstation/`)
 

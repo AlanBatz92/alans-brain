@@ -4810,3 +4810,51 @@ nav {
     max-height: 90vh;
   }
 }
+
+/* ── Period selector + search (Observatory timeline) ── */
+.obs-period-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 20px 0 0;
+}
+.obs-period-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.obs-period-tab {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 13px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.obs-period-tab:hover { color: var(--text); border-color: var(--teal); }
+.obs-period-tab-active {
+  color: var(--bg-deep);
+  background: var(--teal);
+  border-color: var(--teal);
+}
+.obs-search {
+  flex: 1;
+  min-width: 140px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 0.82rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+  /* clear the default search cancel button on webkit */
+  -webkit-appearance: none;
+}
+.obs-search:focus { border-color: var(--teal); }
+.obs-search::placeholder { color: var(--text-dim); }
