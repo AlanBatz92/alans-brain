@@ -11,56 +11,49 @@
 
 ## ▶ Next
 
-### 1. Trains not recording — code fixed (2026-06-01), VERIFY on the box
-Root cause found in the logs: `train_detector.py` read the **encoded MP3 bytes**
-as int16 PCM (no decode) → every chunk a stuck loud "-4.9 dB candidate", 0 events
-ever; and it used the `192.168.4.132` mount that 404s. **Fixed:** decode via
-ffmpeg → mono PCM (like the bird pipeline) and read `localhost:8000/backyard`.
-The duplicate `traindetect.service` is already gone (log lines no longer doubled).
-Couldn't test the audio path from the cloud (no ffmpeg/numpy). **On the box:**
-```bash
-cd ~/alans-brain && git pull origin main
-sudo systemctl restart train_detector.service
-tail -f ~/train_detector.log     # expect "Whistle candidate" then "Train event logged" on a passing train
-sqlite3 ~/birdnet.db "SELECT COUNT(*) FROM train_events;"   # should climb
-```
-If trains pass but still nothing fires, relax thresholds (`ENERGY_THRESH` 0.10 /
-`DB_THRESH_DB` -20) — but decode-first should be the real fix.
+### 1. Observatory: "comic-book" bird cards  ← FOCUS
+Make the grouped-species cards come alive. Two layers:
 
-### 1b. Reset the bird DB for a clean start (operational, one-time)
-New 75% / 3-hits life-list gate is live in code; clear the stale pre-tuning data:
-```bash
-cd ~/alans-brain && git pull origin main
-bash birdstation/reset_birds.sh   # backs up, wipes detections+lifetime, keeps Pulse+trains
-```
+**a) Hover / tap → quick card.** A richer popover over a species card showing a
+**photo** and a few punchy facts (size, habitat, a fun fact, maybe its call) —
+"comic-book stat card" energy, not a wall of text. On mobile this is a tap
+(there's no hover), so design it as a tap-to-open card from the start.
 
-### 2. Observatory: hover species overview (comic-book stat card)
-On hover/tap of a species card, a richer popover: bird **photo** + key facts
-(a few bullet points), then click-through to a fuller detail view. Needs a source
-for photos + facts (e.g. a small curated JSON, or Wikipedia/eBird lookup keyed by
-scientific name). First real feature build on the grouped-species foundation.
+**b) Click through → full detail.** From the quick card, open a fuller view.
+Two distinct kinds of "detail" to combine:
+- **Its facts** (external) — fuller description, range map, more photos.
+- **Its history here** (our data) — every time *we've* heard this species:
+  detection count, first/last heard, confidence over time, time-of-day pattern.
+  This is the "go to the bird database we pull from" idea — note birdstation
+  only stores **detections**, so this view is built from `/api/detections` (or a
+  small new per-species endpoint), not from any bird encyclopedia.
 
-### 2. Observatory: hover species overview (comic-book stat card)
-On hover/tap of a species card, a richer popover: bird **photo** + key facts
-(a few bullet points), then click-through to a fuller detail view. Needs a source
-for photos + facts (e.g. a small curated JSON, or Wikipedia/eBird lookup keyed by
-scientific name). First real feature build on the grouped-species foundation.
+**Key decision before building — where do photos + facts come from?** birdstation
+has none (detections only). Options:
+- **Wikipedia / Wikimedia Commons REST API**, keyed by scientific name — free, no
+  key, CC-licensed photos + summary. Best coverage; needs attribution.
+- **eBird / Macaulay (Cornell)** — birding-grade data + media, but needs an API
+  key and has stricter media-use terms.
+- **Small curated JSON in-repo** — full control, zero network, but manual work
+  per species and doesn't scale as the life list grows.
+- *Likely answer:* Wikipedia summary + Commons image at runtime, cached, with a
+  tiny local JSON override for any species we want to hand-tune. Settle this
+  first, then a `PLAN-observatory-cards.md` can spec the markup/fetch/caching.
+
+Foundation is already in place: cards are rendered per-species in `renderToday()`
+/ the life list, `obs-` prefix, vanilla JS — this builds straight on top.
 
 ---
 
 ## ◷ Soon
 
 ### 2. Confidence-tuning follow-ups (life list)
-- **Done this session:** added `LIFE_LIST_MIN_CONFIDENCE = 0.70` so noisy
-  low-confidence hits no longer create lifers (detections still logged ≥ 0.35).
-- **Optional cleanup:** prune existing `lifetime` rows whose best-ever detection
-  is below the gate (species lifed during the pre-gate window):
-  ```sql
-  DELETE FROM lifetime WHERE common_name IN (
-    SELECT common_name FROM detections GROUP BY common_name HAVING MAX(confidence) < 0.70
-  );
-  ```
-- **Later:** per-species thresholds, or a "provisional vs. confirmed" life-list tier.
+- **Current gate (2026-06-01):** a new species joins the life list only after
+  **3 detections in one day at ≥ 0.75**; DB was reset for a clean start.
+- **Watch:** see how the 3-hits/day rule feels in practice — a genuinely rare
+  flyover heard only once or twice won't list. If that's too strict, consider
+  letting hits accumulate across days, or a "provisional vs. confirmed" tier.
+- **Later:** per-species thresholds (some calls are easier to ID than others).
 
 ### 3. Pulse ingestion — Phase 4 (full design in `PLAN-ingestion.md`)
 Generalize ingestion beyond RSS: pluggable adapters (scrape/email/manual), a
@@ -92,6 +85,13 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-01** — Train detector fixed & confirmed on the box: it was reading
+  encoded MP3 bytes as PCM (never decoded) → 0 events ever; now decodes via
+  ffmpeg and reads `localhost:8000/backyard`. Log shows the fix working (no more
+  stuck "-4.9 dB candidate"); awaiting a passing train to log the first event.
+- **2026-06-01** — Life-list gate → **0.75 + 3 hits/day**, and bird DB reset for
+  a clean start (`reset_birds.sh`; 3244 detections / 31 lifers cleared, Pulse's
+  682 feed items preserved). Page floor bumped to 0.75 (`?v=obs4`).
 - **2026-05-31** — Observatory iteration: confidence gate (≥ 0.70, server +
   client), grouped-by-species "Heard today" cards with confidence bars, honest
   derived stats (fixed inflated counts), scientific names on lifers, CSS
