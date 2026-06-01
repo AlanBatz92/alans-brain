@@ -8,7 +8,7 @@ WAV clip for each event, and logs to birdnet.db.
 
 import time
 import sqlite3
-import urllib.request
+import subprocess
 import wave
 import collections
 import os
@@ -19,7 +19,10 @@ import numpy as np
 from datetime import datetime, timezone
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-STREAM_URL      = "http://192.168.4.132:8000/backyard"
+# Read the same mount the (working) BirdNET pipeline uses. The remote
+# 192.168.4.132 mount was returning HTTP 404; Icecast serves /backyard reliably
+# on localhost, so we read it there and let ffmpeg decode the MP3.
+STREAM_URL      = "http://localhost:8000/backyard"
 DB_PATH         = "/home/alan/birdnet.db"
 CLIP_DIR        = "/home/alan/train_clips"
 LOG_PATH        = "/home/alan/train_detector.log"
@@ -138,28 +141,50 @@ def save_clip(audio_buffer, event_start, event_end):
 
 def stream_chunks(url, chunk_seconds, sample_rate):
     """
-    Generator: opens the Icecast MP3 stream and yields float32 numpy audio chunks.
-    Reconnects automatically on any failure.
+    Generator: pipes the Icecast MP3 stream through ffmpeg and yields float32
+    numpy audio chunks. ffmpeg decodes the MP3 and resamples to mono PCM s16le at
+    `sample_rate`, so the bytes we read are real audio samples — the previous
+    version read the *encoded* MP3 bytes as int16 PCM (garbage), which is why no
+    event ever fired. Reconnects (relaunches ffmpeg) automatically on any failure.
     """
     bytes_per_chunk = int(chunk_seconds * sample_rate * 2)  # 16-bit mono
     while True:
+        proc = None
         try:
-            log.info("Connecting to stream: %s", url)
-            with urllib.request.urlopen(url, timeout=15) as resp:
-                buf = b""
-                while True:
-                    data = resp.read(4096)
-                    if not data:
-                        break
-                    buf += data
-                    while len(buf) >= bytes_per_chunk:
-                        raw   = np.frombuffer(buf[:bytes_per_chunk], dtype=np.int16)
-                        audio = raw.astype(np.float32) / 32768.0
-                        yield audio
-                        buf = buf[bytes_per_chunk:]
+            log.info("Connecting to stream via ffmpeg: %s", url)
+            proc = subprocess.Popen(
+                [
+                    "ffmpeg", "-loglevel", "error",
+                    "-i", url,
+                    "-f", "s16le",          # raw PCM out
+                    "-acodec", "pcm_s16le",
+                    "-ac", "1",             # mono
+                    "-ar", str(sample_rate),
+                    "pipe:1",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+            )
+            buf = b""
+            while True:
+                data = proc.stdout.read(4096)
+                if not data:
+                    break  # ffmpeg exited (stream dropped) — reconnect below
+                buf += data
+                while len(buf) >= bytes_per_chunk:
+                    raw   = np.frombuffer(buf[:bytes_per_chunk], dtype=np.int16)
+                    audio = raw.astype(np.float32) / 32768.0
+                    yield audio
+                    buf = buf[bytes_per_chunk:]
         except Exception as exc:
             log.warning("Stream error: %s — reconnecting in 15s", exc)
-            time.sleep(15)
+        finally:
+            if proc is not None:
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
+        time.sleep(15)
 
 
 def run():
