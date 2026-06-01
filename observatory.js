@@ -149,6 +149,33 @@ async function fetchJson(url) {
 
 /* ── Period utilities ── */
 
+// Find the UTC ms timestamp for midnight Eastern (America/New_York) on the given
+// Eastern date. Probes UTC hours 3–6 on that date (covers both EDT = UTC-4 and
+// EST = UTC-5) using Intl; falls back to EDT if the probe window misses.
+function easternMidnightUtcMs(y, m, d) {
+  for (let h = 3; h <= 6; h++) {
+    const probe = new Date(Date.UTC(y, m - 1, d, h, 0, 0));
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: OBS_TZ,
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', hour12: false,
+    }).formatToParts(probe);
+    const get = (type) => Number(parts.find((p) => p.type === type).value);
+    if (get('year') === y && get('month') === m && get('day') === d &&
+        get('hour') % 24 === 0 && get('minute') === 0) {
+      return probe.getTime();
+    }
+  }
+  return Date.UTC(y, m - 1, d, 4, 0, 0);  // fallback: EDT
+}
+
+function fmtUtcTs(ms) {
+  const dt = new Date(ms);
+  const pad = (n) => String(n).padStart(2, '0');
+  return dt.getUTCFullYear() + '-' + pad(dt.getUTCMonth() + 1) + '-' + pad(dt.getUTCDate()) +
+         ' ' + pad(dt.getUTCHours()) + ':00:00';
+}
+
 // Groups raw detection rows into the same shape returned by /api/detections/grouped.
 function groupDetections(rows) {
   const map = new Map();
@@ -172,26 +199,41 @@ function groupDetections(rows) {
 }
 
 // Returns {start, end, label} for a period key.
-// Dates are YYYY-MM-DD in Eastern time, matching how the pipeline stores timestamps.
+// start/end are UTC datetime strings ("YYYY-MM-DD HH:00:00") bracketing the Eastern
+// calendar day(s). The pipeline writes UTC naive timestamps, so a 10PM Eastern
+// detection (2AM UTC next day) must be captured by a UTC-aligned window, not a
+// date() comparison on the raw timestamp.
 function periodDates(period) {
   const now = new Date();
   const e   = new Date(now.toLocaleString('en-US', { timeZone: OBS_TZ }));
   const pad = (n) => String(n).padStart(2, '0');
-  const fmt = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
-  const today = fmt(e);
+  const fmtE = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const today = fmtE(e);
+
+  let startE, endE, label;
   if (period === 'yesterday') {
     const y = new Date(e); y.setDate(y.getDate() - 1);
-    const ys = fmt(y); return { start: ys, end: ys, label: 'yesterday' };
-  }
-  if (period === 'week') {
-    const dow = e.getDay();  // 0 = Sunday
+    const ys = fmtE(y); startE = endE = ys; label = 'yesterday';
+  } else if (period === 'week') {
+    const dow = e.getDay();
     const mon = new Date(e); mon.setDate(mon.getDate() - (dow === 0 ? 6 : dow - 1));
-    return { start: fmt(mon), end: today, label: 'this week' };
+    startE = fmtE(mon); endE = today; label = 'this week';
+  } else if (period === 'month') {
+    startE = e.getFullYear() + '-' + pad(e.getMonth() + 1) + '-01';
+    endE = today; label = 'this month';
+  } else {
+    startE = endE = today; label = 'today';
   }
-  if (period === 'month') {
-    return { start: e.getFullYear() + '-' + pad(e.getMonth() + 1) + '-01', end: today, label: 'this month' };
-  }
-  return { start: today, end: today, label: 'today' };
+
+  const [sy, sm, sd] = startE.split('-').map(Number);
+  const startUtcMs = easternMidnightUtcMs(sy, sm, sd);
+
+  // Exclusive end = midnight Eastern of the day after endE in UTC
+  const [ey, em, ed] = endE.split('-').map(Number);
+  const nextDayUtc = new Date(Date.UTC(ey, em - 1, ed + 1));
+  const endUtcMs = easternMidnightUtcMs(nextDayUtc.getUTCFullYear(), nextDayUtc.getUTCMonth() + 1, nextDayUtc.getUTCDate());
+
+  return { start: fmtUtcTs(startUtcMs), end: fmtUtcTs(endUtcMs), label };
 }
 
 /* ── Birds: headline stats (derived from today + life list) ── */
@@ -543,8 +585,8 @@ async function loadPeriod(period) {
   let data;
   try {
     data = await fetchJson(
-      API_BASE + '/api/detections/grouped?start=' + start + '&end=' + end +
-      '&min_confidence=' + MIN_CONFIDENCE
+      API_BASE + '/api/detections/grouped?start=' + encodeURIComponent(start) +
+      '&end=' + encodeURIComponent(end) + '&min_confidence=' + MIN_CONFIDENCE
     );
   } catch (err) {
     setMsg(el, 'obs-empty', 'Couldn\'t reach the observatory — it may be offline.');

@@ -125,9 +125,10 @@ def species_history(name: str, min_confidence: float = 0.75):
 
 @app.get("/api/detections/grouped")
 def detections_grouped(start: str, end: str, min_confidence: float = 0.75):
-    """Species grouped by local date range; powers the period selector in the Observatory.
-    start / end are YYYY-MM-DD in local (Eastern) time — matching how the pipeline writes
-    timestamps (naive local, no tz offset)."""
+    """Species grouped by UTC datetime range; powers the period selector in the Observatory.
+    start / end are full UTC datetime strings ("YYYY-MM-DD HH:MM:SS") sent by the
+    front-end after converting Eastern midnight → UTC, so late-night detections
+    (e.g. 10 PM Eastern = 2 AM UTC next day) fall in the correct Eastern day."""
     conn = get_db()
     rows = conn.execute(
         """SELECT common_name, scientific_name,
@@ -136,7 +137,7 @@ def detections_grouped(start: str, end: str, min_confidence: float = 0.75):
                   MIN(timestamp) AS first_heard,
                   MAX(timestamp) AS last_heard
            FROM detections
-           WHERE date(timestamp) >= ? AND date(timestamp) <= ?
+           WHERE timestamp >= ? AND timestamp < ?
              AND confidence >= ?
            GROUP BY common_name
            ORDER BY MAX(timestamp) DESC""",
