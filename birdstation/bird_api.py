@@ -4,7 +4,7 @@ Emmaus Bird Observatory — FastAPI Server
 """
 from fastapi import FastAPI, Header, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from datetime import datetime, timezone
 from pydantic import BaseModel
 import sqlite3
@@ -203,19 +203,34 @@ def trains_stats():
     unreviewed = conn.execute(
         "SELECT COUNT(*) FROM train_events WHERE reviewed = 0"
     ).fetchone()[0]
+    # Approved-only counts for the public page (a human marked verdict='train').
+    approved_total = conn.execute(
+        "SELECT COUNT(*) FROM train_events WHERE verdict = 'train'"
+    ).fetchone()[0]
+    approved_today = conn.execute(
+        "SELECT COUNT(*) FROM train_events WHERE verdict = 'train' AND detected_at LIKE ?",
+        (f"{today}%",)
+    ).fetchone()[0]
     conn.close()
     return {
-        "total_events": total,
-        "today_count":  today_count,
-        "unreviewed":   unreviewed
+        "total_events":   total,
+        "today_count":    today_count,
+        "unreviewed":     unreviewed,
+        "approved_total": approved_total,
+        "approved_today": approved_today,
     }
 
 
 @app.get("/api/trains/recent")
-def trains_recent(limit: int = 20):
+def trains_recent(limit: int = 20, approved: int = 0):
+    # approved=1 → only human-confirmed trains (what the public page asks for, so
+    # un-reviewed clips that may contain conversation never leave the box). The
+    # default stays unfiltered for the authenticated review UI.
     conn = get_db()
+    where = "WHERE verdict = 'train'" if approved else ""
     rows = conn.execute(
-        """SELECT * FROM train_events
+        f"""SELECT * FROM train_events
+           {where}
            ORDER BY detected_at DESC LIMIT ?""",
         (limit,)
     ).fetchall()
@@ -229,7 +244,7 @@ def trains_today():
     conn  = get_db()
     rows  = conn.execute(
         """SELECT * FROM train_events
-           WHERE detected_at LIKE ?
+           WHERE detected_at LIKE ? AND verdict = 'train'
            ORDER BY detected_at ASC""",
         (f"{today}%",)
     ).fetchall()
@@ -237,8 +252,10 @@ def trains_today():
     return [dict(r) for r in rows]
 
 
-@app.get("/api/trains/clips")
+@app.get("/api/trains/clips", dependencies=[Depends(require_key)])
 def list_clips():
+    # Reviewer-only: lists every clip on disk (including un-vetted ones), so it's
+    # behind the API key. The public page never calls this.
     files = sorted(
         [f for f in os.listdir(CLIP_DIR) if f.endswith(".wav")],
         reverse=True
@@ -249,7 +266,7 @@ def list_clips():
     ]
 
 
-@app.get("/api/trains/clips/count")
+@app.get("/api/trains/clips/count", dependencies=[Depends(require_key)])
 def clips_count():
     files = [f for f in os.listdir(CLIP_DIR) if f.endswith(".wav")]
     return {"count": len(files)}
@@ -260,7 +277,18 @@ def get_clip(filename: str):
     filename = os.path.basename(filename)  # prevent path traversal
     path     = os.path.join(CLIP_DIR, filename)
     if not os.path.exists(path):
-        return {"error": "clip not found"}
+        return JSONResponse({"error": "clip not found"}, status_code=404)
+    # Privacy gate: only serve a clip that belongs to a human-approved train
+    # event. Un-reviewed / false-positive clips (which can contain conversation
+    # the mic picked up) are never downloadable, even with a direct URL.
+    conn = get_db()
+    row = conn.execute(
+        "SELECT 1 FROM train_events WHERE clip_path LIKE ? AND verdict = 'train' LIMIT 1",
+        (f"%{filename}",)
+    ).fetchone()
+    conn.close()
+    if row is None:
+        return JSONResponse({"error": "clip not available"}, status_code=403)
     return FileResponse(path, media_type="audio/wav")
 
 
