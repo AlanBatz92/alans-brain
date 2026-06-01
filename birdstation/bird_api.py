@@ -88,6 +88,41 @@ def lifetime_list():
     return {"species": [dict(r) for r in rows], "total_species": len(rows)}
 
 
+@app.get("/api/species/{name}")
+def species_history(name: str, min_confidence: float = 0.75):
+    """Per-species detection history for bird cards (count, first/last heard,
+    confidence series, per-hour histogram). Matches common_name OR scientific_name."""
+    conn = get_db()
+    rows = conn.execute(
+        """SELECT timestamp, confidence, common_name, scientific_name
+           FROM detections
+           WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ?
+           ORDER BY timestamp ASC""",
+        (name, name, min_confidence)
+    ).fetchall()
+    conn.close()
+    if not rows:
+        raise HTTPException(status_code=404, detail="species not found or no detections above threshold")
+    by_hour = [0] * 24
+    confidences = []
+    for r in rows:
+        confidences.append(round(r["confidence"], 3))
+        try:
+            hour = int(r["timestamp"][11:13])
+            by_hour[hour] += 1
+        except (ValueError, IndexError):
+            pass
+    return {
+        "common_name":       rows[0]["common_name"],
+        "scientific_name":   rows[0]["scientific_name"],
+        "total_detections":  len(rows),
+        "first_heard":       rows[0]["timestamp"],
+        "last_heard":        rows[-1]["timestamp"],
+        "confidence_series": confidences,
+        "by_hour":           by_hour,
+    }
+
+
 @app.get("/api/stats")
 def stats(min_confidence: float = 0.0):
     conn = get_db()
