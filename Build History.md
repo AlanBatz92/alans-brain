@@ -10,6 +10,45 @@
 
 ---
 
+## 2026-06-01 — Life-list 75%/3-hits gate, bird DB reset, train detector fix
+
+Three changes — one front-end-visible, two box-side.
+
+- **Life-list gate raised & made repeat-based** (`birdnet_pipeline.py`):
+  `LIFE_LIST_MIN_CONFIDENCE` 0.70 → **0.75**, plus a new `LIFE_LIST_MIN_HITS = 3`.
+  A *new* species now joins `lifetime` only after **3 detections in one local day
+  at ≥ 0.75** (counted via `date(timestamp)=date('now','localtime')`). Existing
+  lifers just keep incrementing `total_detections`; sub-0.75 hits never count.
+  Every detection ≥ 0.35 is still logged, so the page keeps visualizing all
+  confident birds — the gate governs only the permanent list. Front-end matched:
+  `MIN_CONFIDENCE` 0.70 → 0.75 in `observatory.js` (filter + `confClass` mid band
+  + `?min_confidence=0.75`), note text updated, assets bumped to `?v=obs4`.
+  Verified with a SQLite harness driving the real `parse_and_log` (2 hits → not
+  listed; 3rd → listed; 0.50×5 → never; mixed 0.9/0.6/0.88 → not until a 3rd
+  *confident* hit; existing lifer increments, no dup row; all rows still logged).
+- **Bird DB reset script** (`birdstation/reset_birds.sh`): clears `detections` +
+  `lifetime` only (stale entries from the pre-tuning era), backs up the whole DB
+  first, and leaves **Pulse (`feed_*`) and `train_events` untouched** — they share
+  `~/birdnet.db`. Stops/restarts `birdnet.service` around the wipe. Reset SQL
+  dry-run against the real schema confirmed birds cleared, trains + Pulse intact.
+  **Run on the box:** `cd ~/alans-brain && bash birdstation/reset_birds.sh`.
+- **Train detector fixed** (`train_detector.py`) — root cause of 0 events found
+  in the logs:
+  1. **MP3 never decoded.** `stream_chunks` read the *encoded* Icecast MP3 bytes
+     and reinterpreted them as int16 PCM (garbage) — the docstring even said
+     "MP3 stream" while doing no decode. That's why every chunk read as a stuck
+     loud "-4.9 dB whistle candidate" that never resolved. Now pipes the stream
+     through **ffmpeg → mono s16le PCM** (same approach as the working BirdNET
+     pipeline), relaunching ffmpeg on disconnect.
+  2. **Wrong mount → HTTP 404.** Was reading `http://192.168.4.132:8000/backyard`
+     (repeated 404s in the log); the bird pipeline reads `localhost:8000/backyard`
+     fine, so switched to that.
+  Also confirmed from the log that the **duplicate `traindetect.service` is gone**
+  after the cutover restart (lines no longer doubled). Could not run the audio
+  path here (sandbox lacks ffmpeg/numpy); `py_compile` passes and the logic mirrors
+  the proven bird pipeline — **needs a real-stream check on the box** (restart the
+  service, watch for a "Train event logged" line on the next passing train).
+
 ## 2026-05-31 — Observatory: cache-bust JS, Eastern time, mid-word wrap
 
 Same-day follow-up after a fresh screenshot showed the previous iteration

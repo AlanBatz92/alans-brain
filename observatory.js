@@ -11,10 +11,12 @@
 
    Confidence gate: the BirdNET pipeline *logs* everything ≥ 0.35 (lots of
    low-confidence noise), but only birds at or above MIN_CONFIDENCE land on
-   this page — the same 0.70 gate the life list already uses on the box. We
-   pass ?min_confidence to the API (honored once birdstation is redeployed
-   with the param; harmlessly ignored before that) AND filter client-side,
-   so the page is correct in both states.
+   this page — the same 0.75 floor the box uses to credit a life-list hit. (A
+   species joins the life list only after 3 such hits in one day; the page
+   still visualizes every confident bird, listed or not.) We pass
+   ?min_confidence to the API (honored once birdstation is redeployed with the
+   param; harmlessly ignored before that) AND filter client-side, so the page
+   is correct in both states.
 
    Every section fetches independently: one endpoint failing (or the box
    being offline) degrades that section to an offline/empty state without
@@ -26,11 +28,11 @@
 const API_BASE = 'https://birds.alansbrain.com';
 
 // Only birds at/above this confidence land on the page. Matches the box's
-// LIFE_LIST_MIN_CONFIDENCE so the feed and the life list agree.
-const MIN_CONFIDENCE = 0.70;
+// LIFE_LIST_MIN_CONFIDENCE — the floor for a hit to count toward a lifer.
+const MIN_CONFIDENCE = 0.75;
 
 const EP = {
-  today:        API_BASE + '/api/today?min_confidence=' + MIN_CONFIDENCE,
+  today:        API_BASE + '/api/today?min_confidence=' + MIN_CONFIDENCE,   // 0.75
   lifetime:     API_BASE + '/api/lifetime',
   trainStats:   API_BASE + '/api/trains/stats',
   trainsRecent: API_BASE + '/api/trains/recent?limit=30',
@@ -91,11 +93,11 @@ function shortDate(ms) {
   return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric', timeZone: OBS_TZ });
 }
 
-// Confidence (0–1) → bucket class. 0.70 is the page's "confident" floor, so
+// Confidence (0–1) → bucket class. 0.75 is the page's "confident" floor, so
 // everything shown is at least mid; we still grade high vs. mid for color.
 function confClass(conf) {
   if (conf >= 0.85) return 'obs-conf-high';
-  if (conf >= 0.70) return 'obs-conf-mid';
+  if (conf >= 0.75) return 'obs-conf-mid';
   return 'obs-conf-low';
 }
 

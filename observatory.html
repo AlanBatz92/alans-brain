@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs3">
+  <link rel="stylesheet" href="style.css?v=obs4">
 </head>
 <body>
 
@@ -99,7 +99,7 @@
     <!-- ══════ BIRDS PANEL ══════ -->
     <section class="obs-panel" id="obs-panel-birds" role="tabpanel" aria-labelledby="obs-tab-birds">
       <div class="obs-stats" id="obs-bird-stats"></div>
-      <p class="obs-note">Showing detections at or above 70% confidence.</p>
+      <p class="obs-note">Showing detections at or above 75% confidence. A species joins the life list after 3 such detections in one day.</p>
 
       <h2 class="obs-heading">Heard today</h2>
       <div class="obs-species-grid" id="obs-today"></div>
@@ -137,7 +137,7 @@
 
   </div><!-- /.page -->
 
-  <script src="observatory.js?v=obs3"></script>
+  <script src="observatory.js?v=obs4"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');

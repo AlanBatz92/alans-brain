@@ -23,7 +23,9 @@ BIRDNET_PYTHON = os.path.expanduser("~/BirdNET-Analyzer/birdnet-env/bin/python3"
 LAT = 40.5376
 LON = -75.4968
 MIN_CONFIDENCE = 0.35            # log a detection at/above this confidence
-LIFE_LIST_MIN_CONFIDENCE = 0.70  # stricter gate before a species joins the life list
+LIFE_LIST_MIN_CONFIDENCE = 0.75  # a hit must clear this to count toward a lifer
+LIFE_LIST_MIN_HITS = 3           # ...and a NEW species needs this many such hits
+                                 #    in a single day before it joins the life list
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -93,19 +95,36 @@ def parse_and_log(result_file):
                     (now, common_name, scientific_name, confidence, week)
                 )
 
-                # Life list: only confident detections earn a lifetime entry, so
-                # low-confidence noise (e.g. a 40% "Carolina Wren") never creates a
-                # lifer. The detections table still keeps everything >= MIN_CONFIDENCE.
+                # Life list gate. Every detection above MIN_CONFIDENCE is still
+                # logged (and visualized on the Observatory page once >= 0.75),
+                # but a species only earns a *permanent* lifetime entry after it
+                # has been heard LIFE_LIST_MIN_HITS times in a single day at or
+                # above LIFE_LIST_MIN_CONFIDENCE. This keeps one-off
+                # mis-identifications out of the life list.
                 if confidence >= LIFE_LIST_MIN_CONFIDENCE:
                     c.execute("SELECT total_detections FROM lifetime WHERE common_name=?", (common_name,))
                     existing = c.fetchone()
                     if existing:
+                        # Already a lifer — just keep its running tally current.
                         c.execute("UPDATE lifetime SET total_detections=? WHERE common_name=?",
                                   (existing[0] + 1, common_name))
                     else:
-                        c.execute("INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections) VALUES (?,?,?,1)",
-                                  (common_name, scientific_name, now))
-                        print(f"  *** NEW SPECIES: {common_name} ***")
+                        # New species: count today's confident hits (this row is
+                        # already inserted, so it's included) and promote once the
+                        # threshold is reached.
+                        c.execute(
+                            "SELECT COUNT(*) FROM detections "
+                            "WHERE common_name=? AND confidence>=? "
+                            "AND date(timestamp)=date('now','localtime')",
+                            (common_name, LIFE_LIST_MIN_CONFIDENCE)
+                        )
+                        hits_today = c.fetchone()[0]
+                        if hits_today >= LIFE_LIST_MIN_HITS:
+                            c.execute(
+                                "INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections) VALUES (?,?,?,?)",
+                                (common_name, scientific_name, now, hits_today)
+                            )
+                            print(f"  *** NEW SPECIES: {common_name} ({hits_today} hits today) ***")
 
                 print(f"  [{confidence:.0%}] {common_name} ({scientific_name})")
                 count += 1

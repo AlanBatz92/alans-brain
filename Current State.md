@@ -72,25 +72,27 @@ train data a home. ID/class prefix: **`obs-`**.
 - **One combined page, two tabs** (🐦 Birds / 🚂 Trains); linked from the home
   Explore card grid + the site-wide Explore dropdown / mobile overlay;
   **load-once + manual ↻ refresh** (no auto-polling).
-- Reads, all GET on `https://birds.alansbrain.com`: Birds → `/api/today?min_confidence=0.70`,
+- Reads, all GET on `https://birds.alansbrain.com`: Birds → `/api/today?min_confidence=0.75`,
   `/api/lifetime`; Trains → `/api/trains/stats`, `/api/trains/recent` (+ inline
   `<audio>` clips at `/api/trains/clip/{file}`, filename = basename of `clip_path`).
-- **Confidence gate (0.70):** the pipeline logs everything ≥ 0.35, so the page
-  filters to ≥ 0.70 — the same gate the life list uses. Enforced both server-side
-  (optional `min_confidence` param on `/api/today`, `/api/detections`, `/api/stats`,
-  default 0.0) and client-side in `observatory.js` (so it's correct even before a
-  box redeploy). Bird **stats are derived client-side from the filtered data**
-  (heard today / species today / life-list size / latest), not from raw totals.
+- **Confidence gate (0.75):** the pipeline logs everything ≥ 0.35, so the page
+  filters to ≥ 0.75 — the floor the box uses to credit a life-list hit. Enforced
+  both server-side (optional `min_confidence` param on `/api/today`,
+  `/api/detections`, `/api/stats`, default 0.0) and client-side in `observatory.js`
+  (so it's correct even before a box redeploy). The page visualizes every confident
+  bird; the **life list itself** requires **3 such hits in one day** (box-side, see
+  birdstation section). Bird **stats are derived client-side from the filtered
+  data** (heard today / species today / life-list size / latest), not raw totals.
 - **Birds "Heard today" is grouped by species:** one card per species with ×count,
   a colored confidence bar + pill (best-of-day), and last-heard time, newest-first.
 - **Every section fetches independently** (`Promise.allSettled`), so one
   endpoint failing — or the box being offline — degrades only that section.
-  Confidence color bands: high ≥ 0.85, mid ≥ 0.70.
+  Confidence color bands: high ≥ 0.85, mid ≥ 0.75.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs3` +
-  `style.css?v=obs3`. Bump the query on *every* changed Observatory asset (a stale
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs4` +
+  `style.css?v=obs4`. Bump the query on *every* changed Observatory asset (a stale
   cached `.js` once made a whole iteration look unshipped).
 - Modular per-section renderers — built to iterate. **Deferred:** hover species
   overview (photo + comic-book stat card, click-through to detail).
@@ -122,7 +124,8 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
   - `pulse_enrich.py` — `pulse-enrich.timer` (every 20 min): batched (20/run) AI tagging + one-sentence summaries via **`claude-haiku-4-5`**, prompt-cached system prompt, retried up to `enrich_attempts` 3.
   - `pulse_digest.py` — `pulse-digest.timer`, daily ~6 AM: reads the last 24h of enriched items, writes a sectioned "Morning Brief" via **`claude-sonnet-4-6`** + adaptive thinking, structured output through `messages.parse()`. Skips days with <3 items.
 - **Observatory writers (long-running services, in `birdstation/`):**
-  - `birdnet_pipeline.py` — `birdnet.service`: captures 15 s chunks off the Icecast `/backyard` stream, runs BirdNET-Analyzer (its own `~/BirdNET-Analyzer/birdnet-env` venv), writes `detections` (confidence ≥ `MIN_CONFIDENCE` 0.35) and `lifetime` (only ≥ `LIFE_LIST_MIN_CONFIDENCE` 0.70, so noise doesn't create lifers). (CSV reader fixed 2026-05-30 to `delimiter=","` — see Build History.)
+  - `birdnet_pipeline.py` — `birdnet.service`: captures 15 s chunks off the Icecast `/backyard` stream (`localhost:8000`), runs BirdNET-Analyzer (its own `~/BirdNET-Analyzer/birdnet-env` venv), writes `detections` (confidence ≥ `MIN_CONFIDENCE` 0.35). **Life-list gate (2026-06-01):** a *new* species joins `lifetime` only after **`LIFE_LIST_MIN_HITS` = 3** detections in one local day at ≥ `LIFE_LIST_MIN_CONFIDENCE` **0.75**; existing lifers just increment `total_detections`. (CSV reader fixed 2026-05-30 to `delimiter=","`.) Wipe bird tables for a clean start with `birdstation/reset_birds.sh` (backs up first; leaves Pulse + trains intact).
+  - `train_detector.py` — `train_detector.service`: reads `localhost:8000/backyard`, pipes it through **ffmpeg → mono s16le PCM** (must decode the MP3 — reading raw stream bytes as PCM was the long-standing reason `train_events` stayed empty), detects sustained energy in the 300–1500 Hz band, writes `train_events` + a WAV clip. Fixed 2026-06-01.
   - `train_detector.py` — `train_detector.service`: FFT-based train-whistle detector on the same stream (its own `~/train-env` venv, needs numpy), writes `train_events` + saves WAV clips to `~/train_clips`. **NB:** the box also had a duplicate `traindetect.service` for the same script — `train_detector.service` is canonical; the dup is removed at cutover.
 - **Secrets:** `ANTHROPIC_API_KEY` and `BIRD_API_KEY` live only on the box, moving to `/etc/birdstation.env` (chmod 600) referenced by `EnvironmentFile=`. Never committed; `.gitignore` blocks `*.env`/`*.db`. (The observatory services need no keys.)
 

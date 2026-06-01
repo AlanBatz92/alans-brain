@@ -11,19 +11,34 @@
 
 ## ▶ Next
 
-### 1. Trains not recording — diagnose on the box (operational)
-The Observatory shows **0 train events** though trains roll through daily. Birds
-flow fine over the same shared API/DB, so this is the **detector**, not the front
-end — `train_events` is empty. Can't be reached from the cloud session; on the
-box (`~/alans-brain`):
-- `systemctl status train_detector.service` (is it active? crash-looping?)
-- `tail -n 100 ~/train_detector.log` (stream connect OK? any "Whistle candidate"
-  / "Train event logged" lines? errors?)
-- `ls -la ~/train_clips | tail` and `sqlite3 ~/birdnet.db "SELECT COUNT(*) FROM train_events;"`
-- Confirm the Icecast stream URL (`http://192.168.4.132:8000/backyard`) is reachable
-  from the box and that the duplicate `traindetect.service` is really gone.
-- Likely culprits: service not enabled after cutover; stream IP changed; thresholds
-  (`ENERGY_THRESH` 0.10 / `DB_THRESH_DB` -20) too strict for the actual whistles.
+### 1. Trains not recording — code fixed (2026-06-01), VERIFY on the box
+Root cause found in the logs: `train_detector.py` read the **encoded MP3 bytes**
+as int16 PCM (no decode) → every chunk a stuck loud "-4.9 dB candidate", 0 events
+ever; and it used the `192.168.4.132` mount that 404s. **Fixed:** decode via
+ffmpeg → mono PCM (like the bird pipeline) and read `localhost:8000/backyard`.
+The duplicate `traindetect.service` is already gone (log lines no longer doubled).
+Couldn't test the audio path from the cloud (no ffmpeg/numpy). **On the box:**
+```bash
+cd ~/alans-brain && git pull origin main
+sudo systemctl restart train_detector.service
+tail -f ~/train_detector.log     # expect "Whistle candidate" then "Train event logged" on a passing train
+sqlite3 ~/birdnet.db "SELECT COUNT(*) FROM train_events;"   # should climb
+```
+If trains pass but still nothing fires, relax thresholds (`ENERGY_THRESH` 0.10 /
+`DB_THRESH_DB` -20) — but decode-first should be the real fix.
+
+### 1b. Reset the bird DB for a clean start (operational, one-time)
+New 75% / 3-hits life-list gate is live in code; clear the stale pre-tuning data:
+```bash
+cd ~/alans-brain && git pull origin main
+bash birdstation/reset_birds.sh   # backs up, wipes detections+lifetime, keeps Pulse+trains
+```
+
+### 2. Observatory: hover species overview (comic-book stat card)
+On hover/tap of a species card, a richer popover: bird **photo** + key facts
+(a few bullet points), then click-through to a fuller detail view. Needs a source
+for photos + facts (e.g. a small curated JSON, or Wikipedia/eBird lookup keyed by
+scientific name). First real feature build on the grouped-species foundation.
 
 ### 2. Observatory: hover species overview (comic-book stat card)
 On hover/tap of a species card, a richer popover: bird **photo** + key facts
