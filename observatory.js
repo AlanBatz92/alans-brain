@@ -677,17 +677,17 @@ function initObservatory() {
   }
 
   // Stat card click delegation (Life list → scroll, Latest → bird card)
+  function handleStatAction(action) {
+    if (action === 'scroll-life') {
+      const lifeEl = document.getElementById('obs-life');
+      if (lifeEl) lifeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (action === 'open-latest') {
+      const latest = state.today[0];
+      if (latest) openBirdCard(latest.common_name, latest.scientific_name || '');
+    }
+  }
   const birdStatsEl = document.getElementById('obs-bird-stats');
   if (birdStatsEl) {
-    function handleStatAction(action) {
-      if (action === 'scroll-life') {
-        const lifeEl = document.getElementById('obs-life');
-        if (lifeEl) lifeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else if (action === 'open-latest') {
-        const latest = state.today[0];
-        if (latest) openBirdCard(latest.common_name, latest.scientific_name || '');
-      }
-    }
     birdStatsEl.addEventListener('click', (e) => {
       const card = e.target.closest('[data-action]');
       if (card) handleStatAction(card.getAttribute('data-action'));
