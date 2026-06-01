@@ -35,7 +35,11 @@ const EP = {
   today:        API_BASE + '/api/today?min_confidence=' + MIN_CONFIDENCE,   // 0.75
   lifetime:     API_BASE + '/api/lifetime',
   trainStats:   API_BASE + '/api/trains/stats',
-  trainsRecent: API_BASE + '/api/trains/recent?limit=30',
+  // Privacy: only events a human has explicitly approved (verdict=train) are
+  // ever shown publicly. We ask the API for approved-only AND filter again
+  // client-side, so an un-reviewed clip (which could contain conversation
+  // picked up by the mic) can never surface on the public page.
+  trainsRecent: API_BASE + '/api/trains/recent?limit=30&approved=1',
 };
 
 const MAX_TRAINS = 30;   // matches the recent-events query limit
@@ -245,10 +249,13 @@ async function loadTrainStats() {
   const el = document.getElementById('obs-train-stats');
   try {
     const d = await fetchJson(EP.trainStats);
+    // Show only confirmed-train counts publicly (the API exposes approved_*
+    // alongside the raw totals; fall back gracefully on an older box build).
+    const confirmed = d.approved_total != null ? d.approved_total : d.total_events;
+    const today     = d.approved_today != null ? d.approved_today : d.today_count;
     renderStats(el, [
-      { label: 'Events',     value: (d.total_events || 0).toLocaleString() },
-      { label: 'Today',      value: d.today_count || 0 },
-      { label: 'Unreviewed', value: d.unreviewed || 0 },
+      { label: 'Confirmed trains', value: (confirmed || 0).toLocaleString() },
+      { label: 'Today',            value: today || 0 },
     ]);
   } catch (err) {
     setMsg(el, 'obs-empty', 'Train stats unavailable — the box may be offline.');
@@ -266,9 +273,13 @@ async function loadTrains() {
     setMsg(el, 'obs-empty', 'Couldn’t reach the observatory — it may be offline.');
     return;
   }
-  rows = (rows || []).slice(0, MAX_TRAINS);
+  // Defense in depth: even if the API hands back un-approved rows (older box
+  // build that ignores ?approved=1), never render anything not explicitly
+  // marked verdict=train. Default-deny — nothing un-vetted reaches the page.
+  rows = (rows || []).filter((r) => r.reviewed && r.verdict === 'train');
+  rows = rows.slice(0, MAX_TRAINS);
   if (rows.length === 0) {
-    setMsg(el, 'obs-empty', 'No train events recorded yet.');
+    setMsg(el, 'obs-empty', 'No confirmed train events yet.');
     return;
   }
   el.innerHTML = rows.map((r) => {
