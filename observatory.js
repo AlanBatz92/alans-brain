@@ -109,14 +109,22 @@ function confClass(conf) {
   return 'obs-conf-low';
 }
 
-// Return the first sentence of Wikipedia extract text (≤ 200 chars, word-boundary safe).
+// Return up to 3 sentences of Wikipedia extract text, capped at ~500 chars.
 function truncateExtract(text) {
   if (!text) return '';
-  const dot = text.indexOf('. ');
-  if (dot > 30 && dot < 200) return text.slice(0, dot + 1);
-  if (text.length <= 200) return text;
-  const cut = text.lastIndexOf(' ', 200);
-  return (cut > 100 ? text.slice(0, cut) : text.slice(0, 200)) + '…';
+  const MAX = 500;
+  let pos = 0;
+  let count = 0;
+  while (count < 3) {
+    const next = text.indexOf('. ', pos);
+    if (next === -1 || next >= MAX) break;
+    pos = next + 1;  // include the period
+    count++;
+  }
+  if (pos > 30) return text.slice(0, pos);
+  if (text.length <= MAX) return text;
+  const cut = text.lastIndexOf(' ', MAX);
+  return (cut > 100 ? text.slice(0, cut) : text.slice(0, MAX)) + '…';
 }
 
 function confPill(conf) {
@@ -124,16 +132,22 @@ function confPill(conf) {
            Math.round((conf || 0) * 100) + '%</span>';
 }
 
-// Render a row of stat cards from [{label, value}] into a container.
+// Render a row of stat cards from [{label, value, action?}] into a container.
+// Cards with an `action` string get .obs-stat-btn + data-action for delegation.
 function renderStats(el, cards) {
   if (!el) return;
-  el.innerHTML = cards.map((c) =>
-    '<div class="obs-stat">' +
+  el.innerHTML = cards.map((c) => {
+    const clickable = !!c.action;
+    const cls = 'obs-stat' + (clickable ? ' obs-stat-btn' : '');
+    const attrs = clickable
+      ? ' data-action="' + escapeAttr(c.action) + '" role="button" tabindex="0"'
+      : '';
+    return '<div class="' + cls + '"' + attrs + '>' +
       '<div class="obs-stat-value' + (c.small ? ' obs-stat-value-sm' : '') + '">' +
         escapeHtml(String(c.value)) + '</div>' +
       '<div class="obs-stat-label">' + escapeHtml(c.label) + '</div>' +
-    '</div>'
-  ).join('');
+    '</div>';
+  }).join('');
 }
 
 function setMsg(el, cls, text) {
@@ -246,8 +260,12 @@ function renderBirdStats() {
   renderStats(el, [
     { label: 'Heard today',   value: todayN.toLocaleString() },
     { label: 'Species today', value: speciesToday },
-    { label: 'Life list',     value: state.life.length },
-    { label: 'Latest',        value: latest ? latest.common_name : '—', small: true },
+    // Life list: clickable → smooth-scroll to the life list section
+    { label: 'Life list',     value: state.life.length,
+      action: state.life.length > 0 ? 'scroll-life' : null },
+    // Latest bird: clickable → opens bird card modal
+    { label: 'Latest',        value: latest ? latest.common_name : '—', small: true,
+      action: latest ? 'open-latest' : null },
   ]);
 }
 
@@ -460,9 +478,14 @@ function birdCardContent(commonName, scientificName, wiki, hist) {
   const hasPhoto = wiki && wiki.photo;
   let html = '';
 
+  // Photo — wrapped in a link to Wikipedia if available
   if (hasPhoto) {
-    html += '<img class="obs-bcard-photo" src="' + escapeAttr(wiki.photo) +
+    const img = '<img class="obs-bcard-photo" src="' + escapeAttr(wiki.photo) +
       '" alt="' + escapeAttr(commonName) + '">';
+    html += wiki && wiki.url
+      ? '<a class="obs-bcard-photo-link" href="' + escapeAttr(wiki.url) +
+          '" target="_blank" rel="noopener">' + img + '</a>'
+      : img;
   }
 
   html += '<div class="obs-bcard-body' + (hasPhoto ? '' : ' obs-bcard-body--nophoto') + '">';
@@ -470,10 +493,16 @@ function birdCardContent(commonName, scientificName, wiki, hist) {
   if (scientificName) {
     html += '<div class="obs-bcard-sci">' + escapeHtml(scientificName) + '</div>';
   }
+  // Wikipedia link near the top — easy to tap on mobile, not buried at the bottom
+  if (wiki && wiki.url) {
+    html += '<a class="obs-bcard-wiki-link" href="' + escapeAttr(wiki.url) +
+      '" target="_blank" rel="noopener">↗ Wikipedia</a>';
+  }
   // Skip generic descriptions like "species of bird" or "species of owl"
   if (wiki && wiki.description && !/^species of /i.test(wiki.description)) {
     html += '<div class="obs-bcard-desc">' + escapeHtml(wiki.description) + '</div>';
   }
+  // Up to 3 sentences — naturally surfaces range, habitat, and behavior facts
   if (wiki && wiki.extract) {
     const snippet = truncateExtract(wiki.extract);
     if (snippet) html += '<p class="obs-bcard-extract">' + escapeHtml(snippet) + '</p>';
@@ -499,13 +528,6 @@ function birdCardContent(commonName, scientificName, wiki, hist) {
           '<div class="obs-bcard-stat-lbl">' + escapeHtml(s.lbl) + '</div>' +
         '</div>'
       ).join('') +
-    '</div>';
-  }
-
-  if (wiki && wiki.url) {
-    html += '<div class="obs-bcard-footer">' +
-      '<a class="obs-bcard-attr" href="' + escapeAttr(wiki.url) +
-      '" target="_blank" rel="noopener">via Wikipedia ↗</a>' +
     '</div>';
   }
 
@@ -651,6 +673,29 @@ function initObservatory() {
     lifeSortEl.addEventListener('change', () => {
       state.lifeSort = lifeSortEl.value;
       renderLife();
+    });
+  }
+
+  // Stat card click delegation (Life list → scroll, Latest → bird card)
+  const birdStatsEl = document.getElementById('obs-bird-stats');
+  if (birdStatsEl) {
+    function handleStatAction(action) {
+      if (action === 'scroll-life') {
+        const lifeEl = document.getElementById('obs-life');
+        if (lifeEl) lifeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (action === 'open-latest') {
+        const latest = state.today[0];
+        if (latest) openBirdCard(latest.common_name, latest.scientific_name || '');
+      }
+    }
+    birdStatsEl.addEventListener('click', (e) => {
+      const card = e.target.closest('[data-action]');
+      if (card) handleStatAction(card.getAttribute('data-action'));
+    });
+    birdStatsEl.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest('[data-action]');
+      if (card) { e.preventDefault(); handleStatAction(card.getAttribute('data-action')); }
     });
   }
 

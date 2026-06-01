@@ -4435,6 +4435,12 @@ nav {
   color: var(--text-muted);
   margin-top: 6px;
 }
+.obs-stat-btn {
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s;
+}
+.obs-stat-btn:hover,
+.obs-stat-btn:focus { border-color: var(--teal); transform: translateY(-2px); outline: none; }
 
 /* ── Detection / event lists ── */
 .obs-list {
@@ -4790,6 +4796,17 @@ nav {
   transition: color 0.15s;
 }
 .obs-bcard-attr:hover { color: var(--teal); }
+
+/* Wikipedia link near the bird name — easy to reach on mobile */
+.obs-bcard-wiki-link {
+  display: inline-block;
+  font-size: 0.72rem;
+  color: var(--teal);
+  text-decoration: none;
+  margin-top: 4px;
+}
+.obs-bcard-wiki-link:hover { text-decoration: underline; }
+.obs-bcard-photo-link { display: block; }
 
 /* Skeleton loading */
 .obs-bcard-skeleton { padding: 18px 18px 20px; }
