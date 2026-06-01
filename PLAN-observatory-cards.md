@@ -57,18 +57,21 @@ Make the grouped-species cards come alive in two layers:
 
 ## Build order
 
-1. `GET /api/species/{name}` on birdstation (history) + a tiny test.
-2. `bird-info.js` (or a section in `observatory.js`): Wikipedia fetch + cache +
-   override hook, returning `{photo, extract, url, attribution}`.
-3. Quick card UI on the species cards (tap/hover-open), `.obs-card-*` styles.
+1. ✓ **2026-06-01** `GET /api/species/{name}` on birdstation (history) + 7 tests.
+2. ✓ **2026-06-01** `bird-info.js`: Wikipedia fetch + mem + localStorage cache +
+   override hook, returning `{photo, photo_full, description, extract, url, attribution}`.
+3. ✓ **2026-06-01** Quick card UI on the species cards (tap-to-open bottom sheet /
+   centered modal), `.obs-bcard-*` styles. Skeleton loading state; graceful
+   degradation if either Wikipedia or history endpoint is unavailable.
+   Both "Heard today" and life-list cards share the same card component.
 4. Detail view (modal/route) combining facts + history with the sparkline/hist.
 5. Attribution, empty/error states, `localStorage` TTL, cache-bust assets.
+   (Steps 2, 3, 5 attribution already done; TTL done; steps 4 + detail view remain.)
 
 ## Open questions
 
 - Structured facts (size, diet, range) — Wikipedia `extract` only for v1, or pull
   **Wikidata** claims too? Start with the summary; revisit if it feels thin.
-- Do life-list cards and "heard today" cards share one card component? (Should —
-  same species identity, same data.)
+- Do life-list cards and "heard today" cards share one card component? **Yes — done.**
 - Image licensing display: a small "© … / CC BY-SA via Wikimedia" line is enough;
   confirm we're comfortable with that placement.

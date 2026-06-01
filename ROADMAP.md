@@ -11,14 +11,16 @@
 
 ## ▶ Next
 
-### 1. Observatory: "comic-book" bird cards  ← FOCUS  (design: `PLAN-observatory-cards.md`)
-Make the grouped-species cards come alive: **tap → quick card** (photo + a few
-punchy facts) and **click-through → detail** combining the bird's external facts
-with its history here (count, first/last heard, confidence + by-hour pattern).
-**Source decided: Wikipedia/Wikimedia at runtime** (summary REST API keyed by
-scientific name, lazy + cached, with attribution; optional in-repo override JSON
-for hand-tuning). History comes from our own data — likely a small
-`GET /api/species/{name}`. Build order + open questions are in the plan doc.
+### 1. Observatory: "comic-book" bird cards — **steps 1–3 done**  (design: `PLAN-observatory-cards.md`)
+Tap any species card (today or life list) to open a quick card: Wikipedia photo +
+description + first-sentence extract + our detection chips (×N, first DATE, last
+TIME). Skeleton while fetching; degrades gracefully if either source is offline.
+**Done:** `GET /api/species/{name}` endpoint + tests; `bird-info.js` Wikipedia
+helper (mem + localStorage 30-day cache, override hook, CC BY-SA attribution);
+quick-card modal (bottom sheet on mobile, centered on desktop), `.obs-bcard-*`.
+**Remaining:** step 4 — detail view (larger photo + full extract + confidence
+sparkline + by-hour bar chart). Step 5 polish mostly done (attribution ✓, TTL ✓,
+error states ✓).
 
 ### 2. Train vetting — more robust workflow  (design: `PLAN-train-vetting.md`)
 Privacy gate + CLI review (`review_trains.py`) + weekly purge shipped 2026-06-01.

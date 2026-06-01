@@ -97,12 +97,17 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs5` +
-  `style.css?v=obs5`. Bump the query on *every* changed Observatory asset (a stale
-  cached `.js` once made a whole iteration look unshipped).
-- Modular per-section renderers — built to iterate. **Next feature:** "comic-book"
-  bird cards (Wikipedia photo + facts on tap, click-through to per-species
-  history) — design in `PLAN-observatory-cards.md`.
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs6` +
+  `style.css?v=obs6` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+  Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
+- **Bird cards (steps 1–3, 2026-06-01):** tapping any species card (today or life
+  list) opens a quick-view modal. Bottom sheet on mobile, centered on desktop.
+  Photo + description + extract snippet from Wikipedia (`BirdInfo.get()` in
+  `bird-info.js`, mem + 30-day localStorage cache, `data/bird-overrides.json`
+  override hook); detection stats from `GET /api/species/{name}` on birdstation.
+  Skeleton while fetching; degrades gracefully if either source is offline. CC
+  BY-SA attribution always shown. Classes: `.obs-bcard-*`. Next: detail view
+  (step 4 — sparkline + by-hour histogram). Full design in `PLAN-observatory-cards.md`.
 
 ### birdstation (home server — code mirrored in this repo under `birdstation/`)
 

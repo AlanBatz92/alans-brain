@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs5">
+  <link rel="stylesheet" href="style.css?v=obs6">
 </head>
 <body>
 
@@ -138,7 +138,8 @@
 
   </div><!-- /.page -->
 
-  <script src="observatory.js?v=obs5"></script>
+  <script src="bird-info.js?v=obs6"></script>
+  <script src="observatory.js?v=obs6"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');
@@ -177,6 +178,15 @@
       });
     }
   </script>
+
+<!-- Bird card quick-view modal (filled by observatory.js) -->
+<div id="obs-bird-modal" class="obs-bcard-overlay">
+  <div class="obs-bcard-backdrop"></div>
+  <div class="obs-bcard" role="dialog" aria-modal="true">
+    <button class="obs-bcard-close" aria-label="Close">✕</button>
+    <div id="obs-bcard-content"></div>
+  </div>
+</div>
 
 <script src="theme-switcher.js" defer></script>
 <script src="visit-ticker.js" defer></script>

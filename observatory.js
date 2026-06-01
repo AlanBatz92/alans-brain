@@ -56,6 +56,10 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
+function escapeAttr(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
 // The box runs on UTC and writes *naive* ISO timestamps (no offset) for bird
 // detections; train events carry an explicit offset. If a value has no timezone
 // marker we treat it as UTC, otherwise it'd be parsed as the viewer's local
@@ -103,6 +107,14 @@ function confClass(conf) {
   if (conf >= 0.85) return 'obs-conf-high';
   if (conf >= 0.75) return 'obs-conf-mid';
   return 'obs-conf-low';
+}
+
+// Return the first sentence of Wikipedia extract text (≤ 200 chars).
+function truncateExtract(text) {
+  if (!text) return '';
+  const dot = text.indexOf('. ');
+  if (dot > 30 && dot < 200) return text.slice(0, dot + 1);
+  return text.length > 200 ? text.slice(0, 197) + '…' : text;
 }
 
 function confPill(conf) {
@@ -189,7 +201,8 @@ function renderToday() {
 
   el.innerHTML = species.map((g) => {
     const pct = Math.round((g.best || 0) * 100);
-    return '<div class="obs-species">' +
+    return '<div class="obs-species" role="button" tabindex="0"' +
+        ' data-name="' + escapeAttr(g.name) + '" data-sci="' + escapeAttr(g.sci || '') + '">' +
         '<div class="obs-species-top">' +
           '<span class="obs-species-name">' + escapeHtml(g.name) + '</span>' +
           '<span class="obs-species-count">×' + g.count + '</span>' +
@@ -234,7 +247,8 @@ async function loadLife() {
     const count = s.total_detections
       ? '<span class="obs-lifer-count">×' + escapeHtml(String(s.total_detections)) + '</span>'
       : '';
-    return '<div class="obs-lifer">' +
+    return '<div class="obs-lifer" role="button" tabindex="0"' +
+        ' data-name="' + escapeAttr(s.common_name) + '" data-sci="' + escapeAttr(s.scientific_name || '') + '">' +
         '<div class="obs-lifer-main">' +
           '<span class="obs-lifer-name">' + escapeHtml(s.common_name) + '</span>' +
           (s.scientific_name ? '<span class="obs-lifer-sci">' + escapeHtml(s.scientific_name) + '</span>' : '') +
@@ -315,6 +329,90 @@ function renderVerdict(r) {
   return v ? '<span class="obs-verdict ' + v.cls + '">' + v.text + '</span>' : '';
 }
 
+/* ── Bird card quick-view ── */
+
+function birdCardSkeleton() {
+  return '<div class="obs-bcard-skeleton">' +
+    '<div class="obs-bcard-skel-photo"></div>' +
+    '<div class="obs-bcard-skel-line obs-bcard-skel-title"></div>' +
+    '<div class="obs-bcard-skel-line obs-bcard-skel-sub"></div>' +
+    '<div class="obs-bcard-skel-line obs-bcard-skel-text"></div>' +
+    '<div class="obs-bcard-skel-line obs-bcard-skel-text2"></div>' +
+  '</div>';
+}
+
+function birdCardContent(commonName, scientificName, wiki, hist) {
+  const hasPhoto = wiki && wiki.photo;
+  let html = '';
+
+  if (hasPhoto) {
+    html += '<img class="obs-bcard-photo" src="' + escapeAttr(wiki.photo) +
+      '" alt="' + escapeAttr(commonName) + '">';
+  }
+
+  html += '<div class="obs-bcard-body' + (hasPhoto ? '' : ' obs-bcard-body--nophoto') + '">';
+  html += '<div class="obs-bcard-name">' + escapeHtml(commonName) + '</div>';
+  if (scientificName) {
+    html += '<div class="obs-bcard-sci">' + escapeHtml(scientificName) + '</div>';
+  }
+  if (wiki && wiki.description) {
+    html += '<div class="obs-bcard-desc">' + escapeHtml(wiki.description) + '</div>';
+  }
+  if (wiki && wiki.extract) {
+    const snippet = truncateExtract(wiki.extract);
+    if (snippet) html += '<p class="obs-bcard-extract">' + escapeHtml(snippet) + '</p>';
+  }
+
+  // Local detection stats as teal chips
+  if (hist && hist.total_detections != null) {
+    const chips = ['×' + hist.total_detections + ' detections'];
+    const firstMs = parseTime(hist.first_heard);
+    const lastMs  = parseTime(hist.last_heard);
+    if (firstMs) chips.push('first ' + shortDate(firstMs));
+    if (lastMs)  chips.push('last '  + clockTime(lastMs));
+    html += '<div class="obs-bcard-chips">' +
+      chips.map((c) => '<span class="obs-bcard-chip">' + escapeHtml(c) + '</span>').join('') +
+    '</div>';
+  }
+
+  if (wiki && wiki.url) {
+    html += '<div class="obs-bcard-footer">' +
+      '<a class="obs-bcard-attr" href="' + escapeAttr(wiki.url) +
+      '" target="_blank" rel="noopener">via Wikipedia ↗</a>' +
+    '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+async function openBirdCard(commonName, scientificName) {
+  const modal   = document.getElementById('obs-bird-modal');
+  const content = document.getElementById('obs-bcard-content');
+  if (!modal || !content) return;
+
+  content.innerHTML = birdCardSkeleton();
+  modal.classList.add('obs-bcard-open');
+  document.body.style.overflow = 'hidden';
+
+  const wikiPromise = typeof BirdInfo !== 'undefined'
+    ? BirdInfo.get(scientificName, commonName)
+    : Promise.resolve(null);
+  const histPromise = fetchJson(API_BASE + '/api/species/' + encodeURIComponent(commonName))
+    .catch(() => null);
+
+  const [wikiResult, histResult] = await Promise.allSettled([wikiPromise, histPromise]);
+  const wiki = wikiResult.status === 'fulfilled' ? wikiResult.value : null;
+  const hist = histResult.status === 'fulfilled' ? histResult.value : null;
+  content.innerHTML = birdCardContent(commonName, scientificName, wiki, hist);
+}
+
+function closeBirdCard() {
+  const modal = document.getElementById('obs-bird-modal');
+  if (modal) modal.classList.remove('obs-bcard-open');
+  document.body.style.overflow = '';
+}
+
 /* ── Tabs ── */
 function initTabs() {
   const tabs = document.querySelectorAll('.obs-tab');
@@ -349,6 +447,34 @@ function loadAll() {
 
 function initObservatory() {
   initTabs();
+
+  // Delegate tap/click and keyboard activation on species + lifer cards
+  function handleCardActivate(e) {
+    const card = e.target.closest('[data-name]');
+    if (!card) return;
+    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.type === 'keydown') e.preventDefault();
+    openBirdCard(card.dataset.name, card.dataset.sci || '');
+  }
+  const todayEl = document.getElementById('obs-today');
+  const lifeEl  = document.getElementById('obs-life');
+  if (todayEl) {
+    todayEl.addEventListener('click',   handleCardActivate);
+    todayEl.addEventListener('keydown', handleCardActivate);
+  }
+  if (lifeEl) {
+    lifeEl.addEventListener('click',   handleCardActivate);
+    lifeEl.addEventListener('keydown', handleCardActivate);
+  }
+
+  // Modal: backdrop click or × button closes; Escape anywhere closes
+  const modal = document.getElementById('obs-bird-modal');
+  if (modal) {
+    modal.querySelector('.obs-bcard-backdrop').addEventListener('click', closeBirdCard);
+    modal.querySelector('.obs-bcard-close').addEventListener('click', closeBirdCard);
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeBirdCard(); });
+
   const btn = document.getElementById('obs-refresh');
   if (btn) btn.addEventListener('click', loadAll);
   loadAll();

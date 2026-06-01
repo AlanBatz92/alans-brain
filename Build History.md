@@ -10,6 +10,42 @@
 
 ---
 
+## 2026-06-01 — Bird cards steps 1–3: API endpoint, Wikipedia helper, quick-card modal
+
+Implemented the first three steps of the "comic-book" bird cards plan
+(`PLAN-observatory-cards.md`), all independently testable.
+
+- **`GET /api/species/{name}` (`birdstation/bird_api.py`):** new endpoint returning
+  per-species detection history — `total_detections`, `first_heard`, `last_heard`,
+  a flat `confidence_series`, and a 24-slot `by_hour` histogram. Matches
+  `common_name` OR `scientific_name`; defaults to `min_confidence=0.75`.
+  Returns 404 when no detections clear the threshold.
+- **`birdstation/test_species_endpoint.py`:** 7 standalone tests (pure stdlib,
+  in-memory SQLite) covering common/scientific lookup, confidence filtering,
+  not-found cases, hour bucketing, rounding. All green.
+- **`bird-info.js`:** `BirdInfo.get(scientificName, commonName)` fetches Wikipedia
+  Summary REST API (scientific name first, common as fallback), caches in-memory
+  and localStorage (30-day TTL), checks `data/bird-overrides.json` for hand-tuned
+  entries, returns `null` on total failure. Returns `{photo, photo_full,
+  description, extract, url, title, attribution}`. CC BY-SA attribution baked in.
+- **`data/bird-overrides.json`:** empty `{}` placeholder; populate per-species
+  to pin a better photo or custom fact text.
+- **Quick-card modal (`observatory.js`, `style.css`, `observatory.html`):**
+  - Tapping any `.obs-species` or `.obs-lifer` card opens a modal (bottom sheet
+    on mobile, 420 px centered on desktop ≥ 600 px), animated slide-up.
+  - Shows: bird photo (16:9, `object-fit: cover`), common + scientific name,
+    Wikipedia description tagline, first-sentence extract, teal detection chips
+    (×N detections · first DATE · last TIME), "via Wikipedia ↗" attribution link.
+  - Skeleton shimmer while both fetches are in-flight (`Promise.allSettled`).
+  - Degrades gracefully: if Wikipedia is unavailable, shows name + local stats
+    only; if the box is offline, shows name + Wikipedia facts only.
+  - Close: × button, backdrop click, or Escape. Keyboard-accessible
+    (`role="button"`, `tabindex="0"`, Enter/Space to open).
+  - Event delegation on the grid containers (no per-card listeners).
+  - Assets bumped: `?v=obs6` on all three Observatory assets.
+- **Box step needed:** `git pull` + `sudo systemctl restart birdapi` to pick up
+  the new `/api/species/{name}` endpoint. Test: `python3 birdstation/test_species_endpoint.py`.
+
 ## 2026-06-01 — Train privacy: approved-only public, CLI vetting, weekly purge
 
 The fixed detector started recording **us talking** near the mic. Train clips

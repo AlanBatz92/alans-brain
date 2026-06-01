@@ -4635,3 +4635,178 @@ nav {
 @media (max-width: 480px) {
   .obs-life { grid-template-columns: 1fr; }
 }
+
+/* ── Bird card quick-view modal ── */
+
+/* Make every species/lifer card tappable */
+.obs-species { cursor: pointer; }
+.obs-lifer   { cursor: pointer; }
+.obs-lifer:hover { border-color: var(--teal); transform: translateY(-2px); }
+
+/* Overlay */
+.obs-bcard-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  align-items: flex-end;
+  justify-content: center;
+}
+.obs-bcard-overlay.obs-bcard-open { display: flex; }
+.obs-bcard-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 8, 20, 0.78);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+/* Card shell */
+.obs-bcard {
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: obs-bcard-up 0.22s ease;
+}
+@keyframes obs-bcard-up {
+  from { transform: translateY(28px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.obs-bcard-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.15s, color 0.15s;
+}
+.obs-bcard-close:hover { background: var(--border); color: var(--text); }
+
+/* Photo */
+.obs-bcard-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 18px 18px 0 0;
+  display: block;
+}
+
+/* Body */
+.obs-bcard-body {
+  padding: 14px 18px 20px;
+}
+.obs-bcard-body--nophoto { padding-top: 46px; }
+.obs-bcard-name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.15;
+  overflow-wrap: break-word;
+  padding-right: 32px;
+}
+.obs-bcard-sci {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.obs-bcard-desc {
+  display: inline-block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-top: 8px;
+}
+.obs-bcard-extract {
+  font-size: 0.87rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 10px 0 0;
+}
+.obs-bcard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.obs-bcard-chip {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--teal);
+  background: var(--teal-glow);
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.obs-bcard-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.obs-bcard-attr {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.obs-bcard-attr:hover { color: var(--teal); }
+
+/* Skeleton loading */
+.obs-bcard-skeleton { padding: 18px 18px 20px; }
+.obs-bcard-skel-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  background: var(--bg);
+  margin-bottom: 14px;
+}
+.obs-bcard-skel-line {
+  height: 13px;
+  border-radius: 999px;
+  background: var(--bg);
+  margin-bottom: 8px;
+}
+.obs-bcard-skel-title { width: 58%; height: 18px; }
+.obs-bcard-skel-sub   { width: 38%; }
+.obs-bcard-skel-text  { width: 92%; }
+.obs-bcard-skel-text2 { width: 72%; }
+@keyframes obs-skel-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+.obs-bcard-skel-photo,
+.obs-bcard-skel-line {
+  animation: obs-skel-pulse 1.5s ease-in-out infinite;
+}
+
+/* Desktop: centered modal instead of bottom sheet */
+@media (min-width: 600px) {
+  .obs-bcard-overlay { align-items: center; }
+  .obs-bcard {
+    border-radius: 20px;
+    width: 420px;
+    max-height: 90vh;
+  }
+}
