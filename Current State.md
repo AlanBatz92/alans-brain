@@ -73,8 +73,14 @@ train data a home. ID/class prefix: **`obs-`**.
   Explore card grid + the site-wide Explore dropdown / mobile overlay;
   **load-once + manual ↻ refresh** (no auto-polling).
 - Reads, all GET on `https://birds.alansbrain.com`: Birds → `/api/today?min_confidence=0.75`,
-  `/api/lifetime`; Trains → `/api/trains/stats`, `/api/trains/recent` (+ inline
-  `<audio>` clips at `/api/trains/clip/{file}`, filename = basename of `clip_path`).
+  `/api/lifetime`; Trains → `/api/trains/stats`, `/api/trains/recent?approved=1`
+  (+ inline `<audio>` clips at `/api/trains/clip/{file}`, basename of `clip_path`).
+- **Train privacy (2026-06-01) — default-deny.** Clips can capture conversation
+  near the mic, so the public page shows **only human-confirmed** events
+  (`verdict='train'`): the page requests `?approved=1` *and* re-filters client-side,
+  the clip endpoint 403s anything not tied to an approved train, and stats show
+  approved counts. Vetting is via `review_trains.py` on the box; clips auto-purge
+  weekly. Full design in `PLAN-train-vetting.md`.
 - **Confidence gate (0.75):** the pipeline logs everything ≥ 0.35, so the page
   filters to ≥ 0.75 — the floor the box uses to credit a life-list hit. Enforced
   both server-side (optional `min_confidence` param on `/api/today`,
@@ -91,14 +97,12 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs4` +
-  `style.css?v=obs4`. Bump the query on *every* changed Observatory asset (a stale
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs5` +
+  `style.css?v=obs5`. Bump the query on *every* changed Observatory asset (a stale
   cached `.js` once made a whole iteration look unshipped).
-- Modular per-section renderers — built to iterate. **Deferred:** hover species
-  overview (photo + comic-book stat card, click-through to detail).
-- **Known box-side issue:** Trains show 0 because `train_events` is empty — the
-  `train_detector.service` isn't writing (birds flow fine over the same API/DB,
-  so it's the detector/stream, not the front end). Operational, fix on the box.
+- Modular per-section renderers — built to iterate. **Next feature:** "comic-book"
+  bird cards (Wikipedia photo + facts on tap, click-through to per-species
+  history) — design in `PLAN-observatory-cards.md`.
 
 ### birdstation (home server — code mirrored in this repo under `birdstation/`)
 
@@ -125,8 +129,9 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
   - `pulse_digest.py` — `pulse-digest.timer`, daily ~6 AM: reads the last 24h of enriched items, writes a sectioned "Morning Brief" via **`claude-sonnet-4-6`** + adaptive thinking, structured output through `messages.parse()`. Skips days with <3 items.
 - **Observatory writers (long-running services, in `birdstation/`):**
   - `birdnet_pipeline.py` — `birdnet.service`: captures 15 s chunks off the Icecast `/backyard` stream (`localhost:8000`), runs BirdNET-Analyzer (its own `~/BirdNET-Analyzer/birdnet-env` venv), writes `detections` (confidence ≥ `MIN_CONFIDENCE` 0.35). **Life-list gate (2026-06-01):** a *new* species joins `lifetime` only after **`LIFE_LIST_MIN_HITS` = 3** detections in one local day at ≥ `LIFE_LIST_MIN_CONFIDENCE` **0.75**; existing lifers just increment `total_detections`. (CSV reader fixed 2026-05-30 to `delimiter=","`.) Wipe bird tables for a clean start with `birdstation/reset_birds.sh` (backs up first; leaves Pulse + trains intact).
-  - `train_detector.py` — `train_detector.service`: reads `localhost:8000/backyard`, pipes it through **ffmpeg → mono s16le PCM** (must decode the MP3 — reading raw stream bytes as PCM was the long-standing reason `train_events` stayed empty), detects sustained energy in the 300–1500 Hz band, writes `train_events` + a WAV clip. Fixed 2026-06-01.
-  - `train_detector.py` — `train_detector.service`: FFT-based train-whistle detector on the same stream (its own `~/train-env` venv, needs numpy), writes `train_events` + saves WAV clips to `~/train_clips`. **NB:** the box also had a duplicate `traindetect.service` for the same script — `train_detector.service` is canonical; the dup is removed at cutover.
+  - `train_detector.py` — `train_detector.service` (own `~/train-env` venv, needs numpy): reads `localhost:8000/backyard`, pipes it through **ffmpeg → mono s16le PCM** (must decode the MP3 — reading raw stream bytes as PCM was the long-standing reason `train_events` stayed empty; fixed 2026-06-01), detects sustained energy in the 300–1500 Hz band, writes `train_events` + a WAV clip in `~/train_clips`. Every event starts un-reviewed/hidden (see Train privacy above). **NB:** a duplicate `traindetect.service` existed for the same script — `train_detector.service` is canonical; the dup is removed.
+  - `review_trains.py` — **manual** CLI on the box to vet pending train events (play clip → train/false/unsure → DB). Near-term vetting workflow; web UI is future (`PLAN-train-vetting.md`).
+  - `purge_train_clips.py` — `purge-train-clips.timer` (**Sun 04:00**): deletes rejected + aged-orphan clips, keeps approved-train + still-pending. `--dry-run` supported.
 - **Secrets:** `ANTHROPIC_API_KEY` and `BIRD_API_KEY` live only on the box, moving to `/etc/birdstation.env` (chmod 600) referenced by `EnvironmentFile=`. Never committed; `.gitignore` blocks `*.env`/`*.db`. (The observatory services need no keys.)
 
 ### Digest + citations (current behavior)

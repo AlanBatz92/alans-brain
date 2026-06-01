@@ -10,6 +10,40 @@
 
 ---
 
+## 2026-06-01 — Train privacy: approved-only public, CLI vetting, weekly purge
+
+The fixed detector started recording **us talking** near the mic. Train clips
+are inherently privacy-sensitive, so the public Observatory is now **default-deny
+on `verdict='train'`** — nothing is visible or playable until a human confirms
+it's a train. (PR #6 + follow-up.)
+
+- **Public gate (front-end, ships via Vercel + API, takes effect on box pull):**
+  - `/api/trains/recent?approved=1` (verdict='train' only); the page requests it
+    **and** re-filters client-side (`reviewed && verdict==='train'`) so an
+    un-updated box can't leak.
+  - `/api/trains/clip/{file}` → **403 unless the clip belongs to an approved
+    train** — un-vetted audio isn't downloadable even by direct URL.
+  - `/api/trains/today` approved-only; `/api/trains/clips[/count]` moved behind
+    the API key. Stats expose `approved_total`/`approved_today`; public cards show
+    "Confirmed trains / Today" (dropped the public "Unreviewed").
+  - Note on the page: only human-confirmed events are shown. Assets → `?v=obs5`.
+- **CLI vetting (`review_trains.py`):** walk the pending queue on the box, play
+  each clip (ffplay/aplay/paplay, or `--no-audio`), record train/false/unsure
+  straight to the DB. Chosen as the near-term workflow (web review UI is future).
+- **Weekly purge (`purge_train_clips.py` + `purge-train-clips.{service,timer}`,
+  Sun 04:00):** deletes rejected clips (clears their `clip_path`) and aged orphan
+  files; **keeps** approved-train and still-pending clips. `--dry-run` supported.
+- **Verified:** SQLite tests — a `false_positive` "conversation" clip is excluded
+  from listing, blocked from download (403), and omitted from public counts;
+  front-end renders only the approved train even if the API returns everything;
+  purge keeps approved+pending, deletes rejected+old-orphans, clears paths.
+- **Docs:** `PLAN-train-vetting.md` (incl. a "known trains improve detection"
+  roadmap — threshold tuning from labels, schedule prior, acoustic fingerprint)
+  and `PLAN-observatory-cards.md` (Wikipedia-at-runtime bird cards, decided).
+- **Box steps handed over:** `git pull` + restart `birdapi`; classify the
+  existing voice events (`UPDATE … verdict='false_positive'`); install the purge
+  timer.
+
 ## 2026-06-01 — Life-list 75%/3-hits gate, bird DB reset, train detector fix
 
 Three changes — one front-end-visible, two box-side.
