@@ -101,7 +101,7 @@
     <!-- ══════ BIRDS PANEL ══════ -->
     <section class="obs-panel" id="obs-panel-birds" role="tabpanel" aria-labelledby="obs-tab-birds">
       <div class="obs-stats" id="obs-bird-stats"></div>
-      <p class="obs-note">Showing detections at or above 75% confidence. A species joins the life list after 3 such detections in one day.</p>
+      <p class="obs-note">Showing detections at or above 75% confidence. A species joins the life list after 3 detections at 85%+ within 24 hours — or a single 100% detection.</p>
 
       <div class="obs-period-bar">
         <div class="obs-period-tabs" role="tablist" aria-label="Time period">
@@ -109,6 +109,7 @@
           <button class="obs-period-tab" data-period="yesterday" role="tab" aria-selected="false">Yesterday</button>
           <button class="obs-period-tab" data-period="week" role="tab" aria-selected="false">This week</button>
           <button class="obs-period-tab" data-period="month" role="tab" aria-selected="false">This month</button>
+          <button class="obs-period-tab" data-period="year" role="tab" aria-selected="false">This year</button>
         </div>
         <input class="obs-search" id="obs-search" type="search" placeholder="Filter species…" autocomplete="off" aria-label="Filter species by name">
       </div>
@@ -165,7 +166,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs10"></script>
+  <script src="observatory.js?v=obs11"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');

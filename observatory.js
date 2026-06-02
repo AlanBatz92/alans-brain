@@ -10,10 +10,11 @@
      🚂 Trains — event stats and recent events with playable WAV clips.
 
    Confidence gate: the BirdNET pipeline *logs* everything ≥ 0.35 (lots of
-   low-confidence noise), but only birds at or above MIN_CONFIDENCE land on
-   this page — the same 0.75 floor the box uses to credit a life-list hit. (A
-   species joins the life list only after 3 such hits in one day; the page
-   still visualizes every confident bird, listed or not.) We pass
+   low-confidence noise), but only birds at or above MIN_CONFIDENCE (0.75) land
+   on this page — the page's *display* floor. The life list is a separate,
+   stricter gate handled box-side: a new species joins only after 3 detections
+   at ≥ 0.85 within a rolling 24 hours, or a single ~100% detection. The page
+   still visualizes every confident (≥ 0.75) bird, listed or not. We pass
    ?min_confidence to the API (honored once birdstation is redeployed with the
    param; harmlessly ignored before that) AND filter client-side, so the page
    is correct in both states.
@@ -27,8 +28,9 @@
 
 const API_BASE = 'https://birds.alansbrain.com';
 
-// Only birds at/above this confidence land on the page. Matches the box's
-// LIFE_LIST_MIN_CONFIDENCE — the floor for a hit to count toward a lifer.
+// Only birds at/above this confidence land on the page — the display floor.
+// (The life list uses a stricter box-side gate: 3 hits at ≥ 0.85 within 24h, or
+// a single ~100% detection. This 0.75 floor only controls what the page shows.)
 const MIN_CONFIDENCE = 0.75;
 
 const EP = {
@@ -44,9 +46,11 @@ const EP = {
 
 const MAX_TRAINS = 30;   // matches the recent-events query limit
 
-// Cross-section bird state — stats are derived from today + life together,
-// so we stash both and recompute the stat cards as each arrives.
-const state = { today: [], life: [], periodGroups: [], period: 'today', searchQuery: '', periodSort: 'recent', lifeSort: 'recent' };
+// Cross-section bird state — stats are derived from the active period + life
+// together, so we stash both and recompute the stat cards as each arrives.
+// `periodLabel` mirrors the selected period for the stat-card labels; the period
+// grid's "latest" species is stashed in `periodLatest` for the Latest card.
+const state = { today: [], life: [], periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent' };
 
 /* ── Helpers ── */
 
@@ -235,6 +239,9 @@ function periodDates(period) {
   } else if (period === 'month') {
     startE = e.getFullYear() + '-' + pad(e.getMonth() + 1) + '-01';
     endE = today; label = 'this month';
+  } else if (period === 'year') {
+    startE = e.getFullYear() + '-01-01';
+    endE = today; label = 'this year';
   } else {
     startE = endE = today; label = 'today';
   }
@@ -250,21 +257,33 @@ function periodDates(period) {
   return { start: fmtUtcTs(startUtcMs), end: fmtUtcTs(endUtcMs), label };
 }
 
-/* ── Birds: headline stats (derived from today + life list) ── */
+/* ── Birds: headline stats — reflect the selected time period ──
+   "Heard / Species / Latest" track whichever period is active (Today, Yesterday,
+   This week/month/year); "Life list" is always the all-time total. All three
+   period stats derive from state.periodGroups (one row per species, each with a
+   count), so a single sum/length gives the right totals for any range and the
+   labels switch with the period ("Heard today" → "Heard this month", …). */
 function renderBirdStats() {
   const el = document.getElementById('obs-bird-stats');
   if (!el) return;
-  const todayN = state.today.length;
-  const speciesToday = new Set(state.today.map((r) => r.common_name)).size;
-  const latest = state.today[0];   // today is ordered newest-first
+  const groups = state.periodGroups;
+  const label  = state.periodLabel;
+  const heardN = groups.reduce((sum, g) => sum + (g.count || 0), 0);
+  // Latest = the species heard most recently within the selected period.
+  let latest = null, latestMs = -Infinity;
+  groups.forEach((g) => {
+    const ms = parseTime(g.last_heard);
+    if (ms != null && ms > latestMs) { latestMs = ms; latest = g; }
+  });
+  state.periodLatest = latest;
   renderStats(el, [
-    { label: 'Heard today',   value: todayN.toLocaleString() },
-    { label: 'Species today', value: speciesToday },
-    // Life list: clickable → smooth-scroll to the life list section
-    { label: 'Life list',     value: state.life.length,
+    { label: 'Heard ' + label,   value: heardN.toLocaleString() },
+    { label: 'Species ' + label, value: groups.length },
+    // Life list: all-time total; clickable → smooth-scroll to the life list.
+    { label: 'Life list',        value: state.life.length,
       action: state.life.length > 0 ? 'scroll-life' : null },
-    // Latest bird: clickable → opens bird card modal
-    { label: 'Latest',        value: latest ? latest.common_name : '—', small: true,
+    // Latest: most recent species this period; clickable → opens its bird card.
+    { label: 'Latest',           value: latest ? latest.common_name : '—', small: true,
       action: latest ? 'open-latest' : null },
   ]);
 }
@@ -286,9 +305,11 @@ async function loadToday() {
   }
   // Defensive client-side confidence gate (keeps page correct before box redeploys).
   state.today = (d.detections || []).filter((r) => (r.confidence || 0) >= MIN_CONFIDENCE);
-  renderBirdStats();
+  // Drive the stat cards + species grid from today's data only when Today is the
+  // active period; for a historical period, loadPeriod owns the stats and grid.
   if (state.period === 'today') {
     state.periodGroups = groupDetections(state.today);
+    renderBirdStats();
     renderPeriodGroups();
   }
 }
@@ -589,6 +610,7 @@ function initTabs() {
 async function loadPeriod(period) {
   const { start, end, label } = periodDates(period);
   state.period      = period;
+  state.periodLabel = label;
   state.searchQuery = '';
   const searchEl  = document.getElementById('obs-search');
   if (searchEl) searchEl.value = '';
@@ -598,6 +620,7 @@ async function loadPeriod(period) {
   if (period === 'today') {
     // Reuse already-loaded raw data — no extra fetch.
     state.periodGroups = groupDetections(state.today);
+    renderBirdStats();
     renderPeriodGroups();
     return;
   }
@@ -615,6 +638,7 @@ async function loadPeriod(period) {
     return;
   }
   state.periodGroups = data.species || [];
+  renderBirdStats();
   renderPeriodGroups();
 }
 
@@ -682,7 +706,7 @@ function initObservatory() {
       const lifeEl = document.getElementById('obs-life');
       if (lifeEl) lifeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else if (action === 'open-latest') {
-      const latest = state.today[0];
+      const latest = state.periodLatest;
       if (latest) openBirdCard(latest.common_name, latest.scientific_name || '');
     }
   }
