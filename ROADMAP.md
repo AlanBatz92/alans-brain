@@ -74,6 +74,17 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-02** — Tech Stack polish (`techstack.html`): 32-term glossary popovers
+  (every technical term clickable with plain-English definitions), custom icons
+  from the site's existing icon set (AudioMoth, birdnode, Cloudflare, Porkbun,
+  website), improved node spacing via 5/4 canvas aspect-ratio + retuned positions.
+
+- **2026-06-02** — Tech Stack page (`techstack.html`): interactive SVG node-graph,
+  11 nodes, 12 protocol-labeled edges, tap-to-explore bottom-sheet panels with
+  connection chips. Correctly documents birdnode (Pi Zero 2 W, Icecast) as a
+  distinct device between AudioMoth and birdstation. "Stack" top-level nav tab
+  added to all 15 pages.
+
 - **2026-06-01** — Observatory polish + Pulse citation fix: hero subtitle updated;
   Trains tab dynamically sets tagline to "I like trains."; bird card photo now shows
   full bird (contain); comic-book stats grid replaces chips (Heard Here / Best ID /

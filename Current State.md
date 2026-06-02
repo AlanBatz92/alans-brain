@@ -34,6 +34,7 @@ a Google Sheet, and a home server called **birdstation**).
 | My Week | `weather.html` / `weather.js` | Weather outlook + running/drone scoring |
 | Household Task Tracker | `tasks.html` / `tasks.js` | Passphrase-gated, reads/writes a Google Sheet |
 | Observatory | `observatory.html` / `observatory.js` | BirdNET + train detections from birdstation. Linked from the home Explore grid + nav dropdown. |
+| Tech Stack | `techstack.html` | Interactive SVG node-graph of the full site/hardware stack. Self-contained (inline CSS + JS). See Tech Stack section below. |
 
 Shared front-end: `style.css` (theme variables + all component styles),
 `theme-switcher.js`, `auth.js`, `visit-ticker.js`.
@@ -47,6 +48,7 @@ Shared front-end: `style.css` (theme variables + all component styles),
 - **Pages are JSON-driven** (`data/*.json`); adding content usually means editing a JSON file + dropping in media. See `README.md` "Adding Content".
 - **Admin tooling:** `admin.py` (CLI) and `admin-gui.py` (tkinter) manage soundboard clips/icons/media.
 - GoatCounter for analytics; `<audio>` elements for iOS silent-switch compatibility.
+- **Nav layout:** Home · My Week · Tasks · Explore ▼ · Stack — across all 15 pages. "Stack" is a top-level link (not in the Explore dropdown).
 
 ## Pulse subsystem (most active area)
 
@@ -167,6 +169,31 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 - `PLAN-pulse.md` — original Pulse design + phases.
 - `PLAN-ingestion.md` — **Phase 4 plan** (next up): generalize ingestion beyond RSS (pluggable adapters for scrape/email/manual, AI-as-parser, a separate `events` store + "What's On" surface, a paste-to-capture tool). Decisions settled: separate events store; paste-first email.
 - `PLAN-spotify-setlist-tools.md`, `Spotify Setlist Tools Implementation.md`, `Task Tracker Write-Back Implementation.md` — design/implementation records for those features.
+
+## Tech Stack page (`techstack.html`)
+
+Self-contained single-file page (inline `<style>` + `<script>`). No external JS dependencies.
+
+### Architecture documented (11 nodes, 12 edges)
+Hardware chain: **AudioMoth** (USB mic) → **birdnode** (Raspberry Pi Zero 2 W running Icecast) → **birdstation** (home server: FastAPI + BirdNET + train detector) → **Cloudflare** (DNS + reverse proxy + SSL) → **alansbrain.com** (Visitor). Parallel paths: **Alan** (admin via SSH + git) → birdstation, **GitHub** (code hosting) → birdstation (git pull deploys) + **Vercel** (static hosting + serverless proxies), **Porkbun** (domain registrar, NS delegated to Cloudflare), **Anthropic** (Claude API called by birdstation's AI services).
+
+### Node graph implementation
+- `NODES` array: each entry has `id`, `label`, `d:[x%,y%]` (desktop pos), `m:[x%,y%]` (mobile pos), `color` (CSS class), `hex`, `type`, `what`, `role` (HTML with `T()` markup), optional `icon` (img path) or `emoji`, optional `privacy`.
+- Canvas aspect-ratio: `5/4` desktop, `7/10` mobile. `positionGraph()` recomputes pixel coords on every resize.
+- `buildGraph()` creates SVG defs/markers + node divs; `selectNode(id)` highlights active edges (stroke-opacity 0.9) and dims inactive (0.06); `clearSelection()` restores defaults.
+- Extra-bow heuristic on long diagonals: alan→birdstation, github→birdstation, birdnode→birdstation (+18px).
+- NODE_R = 28px desktop, 23px mobile (arrowhead offset).
+
+### Glossary / clickable-term system (2026-06-02)
+- **`GLOSSARY`** object: 32 entries mapping `key → {title, def}` (DNS, reverse-proxy, SSL termination, Icecast, BirdNET, systemd, FastAPI, SQLite, PKCE, CDN, anycast, nameserver, A record, CNAME, HTTPS, SSH, git, REST, JSON, API, WAV, PCM, MP3, FFT, uvicorn, CORS, webhook, serverless, venv, cron, passphrase, USB).
+- **`T(key, display)`** helper wraps terms in `<span class="ts-term" data-key="...">` inside node role strings; event delegation on `.ts-panel` opens the popover.
+- **`.ts-gloss`** fixed-position card; `showGloss(key, triggerEl)` uses `getBoundingClientRect()` for placement (flips below trigger if < 60px from top).
+
+### Icons
+Custom icons from `img/Icons/icons/`: AudioMoth → `Audio_Related/audio-waves.png`, birdnode → `Audio_Related/sound-wave.png`, Cloudflare → `Explore/cloud.png`, Porkbun → `Other/domain.png`, website → `Other/planet.png`. Alan, birdstation, GitHub, Vercel, Anthropic, Visitor use emoji fallbacks.
+
+### Privacy posture
+No IPs, ports, credentials, or internal network topology exposed. Node descriptions reference only public-facing URLs or generic architectural patterns.
 
 ## Known caveats
 
