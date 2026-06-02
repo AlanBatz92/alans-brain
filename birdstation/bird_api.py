@@ -49,9 +49,10 @@ def get_db():
 # ─────────────────────────────────────────────────────────────
 
 # NB: `min_confidence` defaults to 0.0 so existing callers are unaffected.
-# The Observatory front-end passes 0.70 to keep low-confidence noise off the
-# page (the pipeline logs everything >= 0.35). The life list is already gated
-# at 0.70 on the writer side, so these filters keep the views consistent.
+# The Observatory front-end passes 0.75 to keep low-confidence noise off the
+# page (the pipeline logs everything >= 0.35) — the page's *display* floor. The
+# life list itself uses a stricter writer-side gate (3 hits at >= 0.85 within a
+# rolling 24h, or one ~100% hit); these view filters are independent of that.
 
 @app.get("/api/detections")
 def recent_detections(limit: int = 50, min_confidence: float = 0.0):

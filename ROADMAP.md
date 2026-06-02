@@ -37,11 +37,18 @@ events → schedule prior → acoustic fingerprint (details in the plan).
 ## ◷ Soon
 
 ### 3. Confidence-tuning follow-ups (life list)
-- **Current gate (2026-06-01):** a new species joins the life list only after
-  **3 detections in one day at ≥ 0.75**; DB was reset for a clean start.
-- **Watch:** see how the 3-hits/day rule feels in practice — a genuinely rare
-  flyover heard only once or twice won't list. If that's too strict, consider
-  letting hits accumulate across days, or a "provisional vs. confirmed" tier.
+- **Current gate (2026-06-02):** a new species joins after **3 detections at
+  ≥ 0.85 within a rolling 24h window, or one ~100% (≥ 0.995) hit** (instant).
+- **Verifiability (new):** retain a short clip/spectrogram per life-list-qualifying
+  detection (reuse the train-clip infra) so lifers can be spot-checked — turns
+  "unknown precision" into a measured number and yields labels to fit a
+  score→probability calibration (Wood & Kahl 2024). Feeds the "provisional vs.
+  confirmed" tier.
+- **Seasonal filter:** the pipeline passes lat/lon but not `--week`, so BirdNET
+  isn't filtering by season. Passing the current week (converted to BirdNET's
+  48-week/yr convention) would cut out-of-season false positives cheaply.
+- **Watch:** see how the 3-hits/24h rule feels — a genuinely rare flyover heard
+  once or twice still won't list. If too strict, revisit the window or a tier.
 - **Later:** per-species thresholds (some calls are easier to ID than others).
 
 ### 4. Pulse ingestion — Phase 4 (full design in `PLAN-ingestion.md`)
@@ -73,6 +80,14 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-02** — Life-list gate retuned + Observatory period-aware stats.
+  Box-side: a new species now lists after **3 hits at ≥ 0.85 in a rolling 24h**,
+  or instantly on a **~100% (≥ 0.995)** hit (`birdnet_pipeline.py`); the rolling
+  window replaces the old calendar-day rule. Front-end: the headline stat cards
+  follow the selected filter ("Heard/Species <period>") and a **"This year"** tab
+  was added; Life list stays all-time. `observatory.js?v=obs11`. Includes a
+  misidentification-probability writeup (see `Build History.md`).
 
 - **2026-06-02** — Tech Stack polish (`techstack.html`): 32-term glossary popovers
   (every technical term clickable with plain-English definitions), custom icons

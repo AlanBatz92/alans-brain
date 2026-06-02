@@ -83,14 +83,16 @@ train data a home. ID/class prefix: **`obs-`**.
   the clip endpoint 403s anything not tied to an approved train, and stats show
   approved counts. Vetting is via `review_trains.py` on the box; clips auto-purge
   weekly. Full design in `PLAN-train-vetting.md`.
-- **Confidence gate (0.75):** the pipeline logs everything ≥ 0.35, so the page
-  filters to ≥ 0.75 — the floor the box uses to credit a life-list hit. Enforced
-  both server-side (optional `min_confidence` param on `/api/today`,
-  `/api/detections`, `/api/stats`, default 0.0) and client-side in `observatory.js`
-  (so it's correct even before a box redeploy). The page visualizes every confident
-  bird; the **life list itself** requires **3 such hits in one day** (box-side, see
-  birdstation section). Bird **stats are derived client-side from the filtered
-  data** (heard today / species today / life-list size / latest), not raw totals.
+- **Confidence gate (0.75 display floor):** the pipeline logs everything ≥ 0.35, so
+  the page filters to ≥ 0.75 — the page's *display* floor (decoupled from the
+  life-list gate, which is stricter). Enforced both server-side (optional
+  `min_confidence` param on `/api/today`, `/api/detections`, `/api/stats`, default
+  0.0) and client-side in `observatory.js` (so it's correct even before a box
+  redeploy). The page visualizes every confident bird; the **life list itself**
+  requires **3 hits at ≥ 0.85 within a rolling 24h**, or one **~100%** hit (box-side,
+  see birdstation section). Bird **stats are derived client-side from the filtered
+  data** and follow the selected period (heard <period> / species <period> /
+  life-list size / latest), not raw totals.
 - **Birds "Heard today" is grouped by species:** one card per species with ×count,
   a colored confidence bar + pill (best-of-day), and last-heard time, newest-first.
 - **Every section fetches independently** (`Promise.allSettled`), so one
@@ -99,7 +101,7 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs10` +
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs11` +
   `style.css?v=obs10` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
@@ -111,13 +113,15 @@ train data a home. ID/class prefix: **`obs-`**.
   hook. `GET /api/species/{name}` serves history. Degrades gracefully if either source
   is offline. CC BY-SA attribution shown. Classes: `.obs-bcard-*`.
   Next: step 4 detail view (sparkline + by-hour histogram).
-- **Timeline + search (2026-06-01):** period selector (Today / Yesterday / This week /
-  This month) above the species grid; search input filters by name client-side.
-  `GET /api/detections/grouped?start=&end=&min_confidence=` on birdstation returns
-  pre-aggregated `{common_name, scientific_name, count, best_confidence, first_heard,
-  last_heard}` for the date range. Switching periods fetches the new endpoint;
-  "Today" re-renders from already-loaded data (no extra fetch). Stat cards always
-  show today's numbers regardless of selected period.
+- **Timeline + search (2026-06-01; period-aware stats 2026-06-02):** period selector
+  (Today / Yesterday / This week / This month / This year) above the species grid;
+  search input filters by name client-side. `GET /api/detections/grouped?start=&end=&min_confidence=`
+  on birdstation returns pre-aggregated `{common_name, scientific_name, count,
+  best_confidence, first_heard, last_heard}` for the date range. Switching periods
+  fetches the new endpoint; "Today" re-renders from already-loaded data (no extra
+  fetch). The headline **stat cards follow the selected period** — "Heard/Species
+  <period>" totals and the period's "Latest" recompute from `state.periodGroups`
+  (`sum(count)` / `length`); only the **Life list** card stays all-time.
 - **Sort controls (2026-06-01):** `<select>` dropdowns on the period species grid and
   life list — Recent / Most heard / Least heard. Client-side, no refetch.
   `state.periodSort` + `state.lifeSort`. `renderLife()` is now its own function.
@@ -127,7 +131,7 @@ train data a home. ID/class prefix: **`obs-`**.
   opens the bird card modal. Both use `data-action` delegation; keyboard-accessible.
 - **Bird card UX (2026-06-01):** Wikipedia link moved below the sci name (easy to tap on
   mobile); photo wrapped as Wikipedia link; extract expanded to 3 sentences (≤ 500 chars).
-- Assets: `style.css?v=obs10`, `observatory.js?v=obs10`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs10`, `observatory.js?v=obs11`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 
@@ -160,7 +164,7 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
   - `pulse_enrich.py` — `pulse-enrich.timer` (every 20 min): batched (20/run) AI tagging + one-sentence summaries via **`claude-haiku-4-5`**, prompt-cached system prompt, retried up to `enrich_attempts` 3.
   - `pulse_digest.py` — `pulse-digest.timer`, daily ~6 AM: reads the last 24h of enriched items, writes a sectioned "Morning Brief" via **`claude-sonnet-4-6`** + adaptive thinking, structured output through `messages.parse()`. Skips days with <3 items.
 - **Observatory writers (long-running services, in `birdstation/`):**
-  - `birdnet_pipeline.py` — `birdnet.service`: captures 15 s chunks off the Icecast `/backyard` stream (`localhost:8000`), runs BirdNET-Analyzer (its own `~/BirdNET-Analyzer/birdnet-env` venv), writes `detections` (confidence ≥ `MIN_CONFIDENCE` 0.35). **Life-list gate (2026-06-01):** a *new* species joins `lifetime` only after **`LIFE_LIST_MIN_HITS` = 3** detections in one local day at ≥ `LIFE_LIST_MIN_CONFIDENCE` **0.75**; existing lifers just increment `total_detections`. (CSV reader fixed 2026-05-30 to `delimiter=","`.) Wipe bird tables for a clean start with `birdstation/reset_birds.sh` (backs up first; leaves Pulse + trains intact).
+  - `birdnet_pipeline.py` — `birdnet.service`: captures 15 s chunks off the Icecast `/backyard` stream (`localhost:8000`), runs BirdNET-Analyzer (its own `~/BirdNET-Analyzer/birdnet-env` venv), writes `detections` (confidence ≥ `MIN_CONFIDENCE` 0.35). **Life-list gate (2026-06-02):** a *new* species joins `lifetime` after **`LIFE_LIST_MIN_HITS` = 3** detections at ≥ `LIFE_LIST_MIN_CONFIDENCE` **0.85** within a **rolling 24h window** (`datetime(timestamp) >= datetime('now','-24 hours')`), **or a single ≥ `LIFE_LIST_INSTANT_CONFIDENCE` 0.995 (~100%) hit** (instant-add, bypasses the multi-hit rule); existing lifers just increment `total_detections`. BirdNET runs with lat/lon (location filter on) but not `--week` (no seasonal filter). (CSV reader fixed 2026-05-30 to `delimiter=","`.) Wipe bird tables for a clean start with `birdstation/reset_birds.sh` (backs up first; leaves Pulse + trains intact).
   - `train_detector.py` — `train_detector.service` (own `~/train-env` venv, needs numpy): reads `localhost:8000/backyard`, pipes it through **ffmpeg → mono s16le PCM** (must decode the MP3 — reading raw stream bytes as PCM was the long-standing reason `train_events` stayed empty; fixed 2026-06-01), detects sustained energy in the 300–1500 Hz band, writes `train_events` + a WAV clip in `~/train_clips`. Every event starts un-reviewed/hidden (see Train privacy above). **NB:** a duplicate `traindetect.service` existed for the same script — `train_detector.service` is canonical; the dup is removed.
   - `review_trains.py` — **manual** CLI on the box to vet pending train events (play clip → train/false/unsure → DB). Near-term vetting workflow; web UI is future (`PLAN-train-vetting.md`).
   - `purge_train_clips.py` — `purge-train-clips.timer` (**Sun 04:00**): deletes rejected + aged-orphan clips, keeps approved-train + still-pending. `--dry-run` supported.

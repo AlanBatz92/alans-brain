@@ -23,9 +23,11 @@ BIRDNET_PYTHON = os.path.expanduser("~/BirdNET-Analyzer/birdnet-env/bin/python3"
 LAT = 40.5376
 LON = -75.4968
 MIN_CONFIDENCE = 0.35            # log a detection at/above this confidence
-LIFE_LIST_MIN_CONFIDENCE = 0.75  # a hit must clear this to count toward a lifer
+LIFE_LIST_MIN_CONFIDENCE = 0.85  # a hit must clear this to count toward a lifer
 LIFE_LIST_MIN_HITS = 3           # ...and a NEW species needs this many such hits
-                                 #    in a single day before it joins the life list
+                                 #    within a rolling 24h window to join the life list
+LIFE_LIST_INSTANT_CONFIDENCE = 0.995  # ...unless a single hit is this confident
+                                      #    (~100%), which lists the species at once
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -97,10 +99,12 @@ def parse_and_log(result_file):
 
                 # Life list gate. Every detection above MIN_CONFIDENCE is still
                 # logged (and visualized on the Observatory page once >= 0.75),
-                # but a species only earns a *permanent* lifetime entry after it
-                # has been heard LIFE_LIST_MIN_HITS times in a single day at or
-                # above LIFE_LIST_MIN_CONFIDENCE. This keeps one-off
-                # mis-identifications out of the life list.
+                # but a species only earns a *permanent* lifetime entry once it
+                # clears the stricter life-list gate: LIFE_LIST_MIN_HITS hits at
+                # or above LIFE_LIST_MIN_CONFIDENCE within a rolling 24-hour
+                # window, OR a single near-certain hit (>= LIFE_LIST_INSTANT_
+                # CONFIDENCE, ~100%). The multi-hit rule filters one-off mis-IDs;
+                # the instant rule fast-tracks a near-certain detection.
                 if confidence >= LIFE_LIST_MIN_CONFIDENCE:
                     c.execute("SELECT total_detections FROM lifetime WHERE common_name=?", (common_name,))
                     existing = c.fetchone()
@@ -109,22 +113,25 @@ def parse_and_log(result_file):
                         c.execute("UPDATE lifetime SET total_detections=? WHERE common_name=?",
                                   (existing[0] + 1, common_name))
                     else:
-                        # New species: count today's confident hits (this row is
-                        # already inserted, so it's included) and promote once the
-                        # threshold is reached.
+                        # New species: count this species' confident hits in the
+                        # last 24 hours (this row is already inserted, so it's
+                        # counted). datetime() normalizes the stored ISO 'T'+microsecond
+                        # timestamps so the comparison against datetime('now') is exact.
                         c.execute(
                             "SELECT COUNT(*) FROM detections "
                             "WHERE common_name=? AND confidence>=? "
-                            "AND date(timestamp)=date('now','localtime')",
+                            "AND datetime(timestamp) >= datetime('now','-24 hours')",
                             (common_name, LIFE_LIST_MIN_CONFIDENCE)
                         )
-                        hits_today = c.fetchone()[0]
-                        if hits_today >= LIFE_LIST_MIN_HITS:
+                        hits_24h = c.fetchone()[0]
+                        instant = confidence >= LIFE_LIST_INSTANT_CONFIDENCE
+                        if instant or hits_24h >= LIFE_LIST_MIN_HITS:
                             c.execute(
                                 "INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections) VALUES (?,?,?,?)",
-                                (common_name, scientific_name, now, hits_today)
+                                (common_name, scientific_name, now, hits_24h)
                             )
-                            print(f"  *** NEW SPECIES: {common_name} ({hits_today} hits today) ***")
+                            why = "instant ~100%" if instant else f"{hits_24h} hits/24h"
+                            print(f"  *** NEW SPECIES: {common_name} ({why}) ***")
 
                 print(f"  [{confidence:.0%}] {common_name} ({scientific_name})")
                 count += 1

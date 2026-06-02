@@ -10,6 +10,54 @@
 
 ---
 
+## 2026-06-02 — Life-list gate (85% × 3 in 24h, instant at ~100%) + period-aware Observatory stats
+
+Two changes — one box-side, one front-end.
+
+**Life-list qualification (box-side, `birdstation/birdnet_pipeline.py`):** a new
+species now joins `lifetime` after **3 detections at ≥ 0.85 within a rolling
+24-hour window** (was 3 at ≥ 0.75 in a calendar day), **or immediately on a
+single ≥ 0.995 (~100%) detection** that bypasses the multi-hit requirement. New
+constant `LIFE_LIST_INSTANT_CONFIDENCE = 0.995` (defined as "displays as 100%" —
+what the page rounds to); `LIFE_LIST_MIN_CONFIDENCE` 0.75 → 0.85; `LIFE_LIST_MIN_HITS`
+stays 3. The window switched from `date(timestamp)=date('now','localtime')` to
+`datetime(timestamp) >= datetime('now','-24 hours')`; `datetime()` normalizes the
+stored ISO `T`+microsecond timestamps so the string comparison is exact (verified
+with a sqlite simulation). Existing-lifer tallies still increment per ≥ 0.85 hit.
+**Deploy:** `cd ~/alans-brain && git pull && sudo systemctl restart birdnet`. No DB
+migration. The page's *display* floor stays 0.75 (it still shows every confident
+bird, listed or not) — display and life-list gating are now decoupled, and stale
+"0.70 gate" / "0.75 matches the lifer floor" comments were corrected in
+`observatory.js` and `bird_api.py`.
+
+**Misidentification quantification (the question behind the change):** BirdNET's
+confidence is a unitless sigmoid score, *not* a calibrated probability (Wood &
+Kahl 2024), so "85%" ≠ "85% chance correct." Literature precision climbs steeply
+with threshold (~95% above 0.82 in one study; <2% false positives at 0.5 in
+another; species-specific thresholds reach >0.9). The lat/lon location filter the
+pipeline already applies is the biggest single false-positive reducer; a noted gap
+is that `--week` isn't passed, so there's no seasonal filtering (BirdNET uses a
+48-week/yr convention, so the stored ISO week would need converting). The 3×/24h
+rule kills one-off flukes but **not** systematic confusers (recurring noise or
+vocal mimics — mockingbird/jay/starling), whose errors are correlated, not
+independent — so it's not a clean p³. The ~100% instant-add trades the multi-hit
+net for those edge cases (low but non-zero risk). To *measure* site precision:
+retain a clip/spectrogram per qualifying detection and spot-check → added to the
+roadmap (ties into the existing "provisional vs. confirmed" idea).
+
+**Observatory period-aware stats (front-end, `observatory.js` / `observatory.html`):**
+the headline stat cards now follow the selected period instead of always showing
+today. "Heard today" → "Heard yesterday / this week / this month / this year", and
+the Heard + Species totals (plus the period's "Latest" bird) update with the filter;
+the **Life list** card stays the all-time total. Added a **"This year"** period tab
+(`periodDates` gains a `year` branch: Jan 1 Eastern → now). All three period stats
+derive from `state.periodGroups` (one row per species, each with a `count`) via
+`sum(count)` and `length`, so they're correct for any range with no extra fetch;
+`state.periodLabel` drives the labels and `state.periodLatest` the Latest card.
+`renderBirdStats()` runs whenever the active period's data loads (not on search/sort,
+so the top totals reflect the period, not the text filter). **Assets:** `observatory.js?v=obs11`
+(HTML cache-bust bumped; no CSS change).
+
 ## 2026-06-02 — Tech Stack: glossary popovers, custom icons, improved node spacing
 
 Polish pass on `techstack.html` after initial launch.
