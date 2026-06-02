@@ -382,13 +382,13 @@ var NODES = [
     emoji: '🎙️',
     color: 'ts-yellow',
     hex: '#fbbf24',
-    d: [21, 9],   // desktop [x%, y%]
-    m: [21, 6],   // mobile
+    d: [21, 7],   // desktop [x%, y%]
+    m: [21, 5],   // mobile
     type: 'Hardware',
     what: 'An open-source, ultra-low-power acoustic recording unit that sits outside 24/7.',
-    role: 'Captures continuous backyard audio and streams it live into birdstation as a USB audio input. Icecast (running locally on birdstation) picks it up as the <code>/backyard</code> mount.',
-    privacy: 'Recordings are processed locally and discarded after analysis. No audio is ever stored permanently or sent off-site.',
-    connects: ['birdstation']
+    role: 'Captures continuous backyard audio and feeds it into birdnode via USB. birdnode picks it up as a USB audio device and streams it over the local network via Icecast.',
+    privacy: 'Audio is processed locally on birdstation and discarded after analysis. No recordings are ever stored permanently or sent off-site.',
+    connects: ['birdnode']
   },
   {
     id: 'alan',
@@ -396,12 +396,26 @@ var NODES = [
     emoji: '👤',
     color: 'ts-pink',
     hex: '#f472b6',
-    d: [79, 9],
-    m: [79, 6],
+    d: [79, 7],
+    m: [79, 5],
     type: 'Person',
     what: "That's me — I maintain the whole stack, from hardware to code.",
     role: 'SSH into birdstation for admin tasks, monitoring logs, and running the train vetting CLI. Push code changes to GitHub, which triggers deploys. Occasionally SSH into birdstation to <code>git pull</code> and restart a service.',
     connects: ['birdstation', 'github']
+  },
+  {
+    id: 'birdnode',
+    label: 'birdnode',
+    emoji: '📡',
+    color: 'ts-teal',
+    hex: '#2dd4bf',
+    d: [21, 23],
+    m: [21, 19],
+    type: 'Edge Device (Raspberry Pi Zero 2 W)',
+    what: 'A Raspberry Pi Zero 2 W — a tiny, low-power single-board computer sitting physically near the AudioMoth.',
+    role: 'Receives audio from the AudioMoth over USB and runs <strong>Icecast</strong>, the audio streaming server. Broadcasts a continuous HTTP audio stream over the local network on the <code>/backyard</code> mount. birdstation connects to this stream to feed BirdNET and the train detector.',
+    privacy: 'Stays on the local network — the stream is never exposed to the internet.',
+    connects: ['audiomoth', 'birdstation']
   },
   {
     id: 'birdstation',
@@ -409,12 +423,12 @@ var NODES = [
     emoji: '🖥️',
     color: 'ts-blue',
     hex: '#38bdf8',
-    d: [21, 32],
-    m: [21, 24],
-    type: 'Home Server (Raspberry Pi)',
-    what: 'A Raspberry Pi running 24/7 at home. The hub of the bird observatory and the Pulse news system.',
-    role: '<strong>Runs six systemd services:</strong><br>• <code>birdnet.service</code> — captures 15 s audio chunks from Icecast, runs BirdNET-Analyzer, writes detections to SQLite<br>• <code>train_detector.service</code> — detects train whistles in the same stream, writes events + WAV clips<br>• <code>birdapi.service</code> — FastAPI on :8080, serves all data to the website<br>• <code>pulse-fetch.timer</code> — pulls RSS sources every 15 min, dedupes<br>• <code>pulse-enrich.timer</code> — AI-tags + summarises articles (Claude Haiku) every 20 min<br>• <code>pulse-digest.timer</code> — writes the daily Morning Brief (Claude Sonnet) at ~6 AM<br><br>Storage: one SQLite database (<code>birdnet.db</code>) shared by all services.',
-    connects: ['audiomoth', 'alan', 'anthropic', 'cloudflare', 'github']
+    d: [21, 42],
+    m: [21, 36],
+    type: 'Home Server',
+    what: 'A home server running 24/7. The processing hub for the bird observatory and the Pulse news system.',
+    role: '<strong>Runs six systemd services:</strong><br>• <code>birdnet.service</code> — pulls 15 s chunks from birdnode\'s Icecast stream, runs BirdNET-Analyzer, writes detections to SQLite<br>• <code>train_detector.service</code> — listens to the same stream, detects train whistles, writes events + WAV clips<br>• <code>birdapi.service</code> — FastAPI, serves all data to the website<br>• <code>pulse-fetch.timer</code> — pulls RSS sources every 15 min, dedupes<br>• <code>pulse-enrich.timer</code> — AI-tags + summarises articles (Claude Haiku) every 20 min<br>• <code>pulse-digest.timer</code> — writes the daily Morning Brief (Claude Sonnet) at ~6 AM<br><br>Storage: one SQLite database (<code>birdnet.db</code>) shared by all services.',
+    connects: ['birdnode', 'alan', 'anthropic', 'cloudflare', 'github']
   },
   {
     id: 'github',
@@ -422,8 +436,8 @@ var NODES = [
     emoji: '🐙',
     color: 'ts-purple',
     hex: '#a78bfa',
-    d: [79, 32],
-    m: [79, 24],
+    d: [79, 30],
+    m: [79, 27],
     type: 'Source Control',
     what: 'Version control and source of truth for every file in the project — website pages, birdstation Python scripts, FastAPI app, systemd units, and this very page.',
     role: 'Accepts git pushes from Alan. Automatically triggers a Vercel deploy for every push to <code>main</code> (the static website). Also serves as the deploy source for birdstation: a <code>git pull</code> on the box updates the running scripts.',
@@ -435,8 +449,8 @@ var NODES = [
     emoji: '🤖',
     color: 'ts-teal',
     hex: '#2dd4bf',
-    d: [50, 48],
-    m: [50, 42],
+    d: [50, 56],
+    m: [50, 50],
     type: 'External AI API',
     what: "Anthropic's Claude AI, called over HTTPS from birdstation.",
     role: 'Powers two Pulse features on birdstation:<br>• <strong>Haiku</strong> (<code>claude-haiku-4-5</code>) — batched category tagging and one-sentence summaries for news articles, with a prompt-cached system prompt for efficiency<br>• <strong>Sonnet</strong> (<code>claude-sonnet-4-6</code>) — writes the daily Morning Brief with adaptive thinking and structured output; includes per-section source citations',
@@ -449,8 +463,8 @@ var NODES = [
     emoji: '☁️',
     color: 'ts-green',
     hex: '#34d399',
-    d: [28, 65],
-    m: [25, 60],
+    d: [28, 71],
+    m: [25, 66],
     type: 'DNS + Reverse Proxy',
     what: 'DNS provider and reverse-proxy CDN for both domains.',
     role: 'Handles DNS for <strong>alansbrain.com</strong> and <strong>birds.alansbrain.com</strong>. Acts as SSL terminator and reverse proxy in front of birdstation\'s FastAPI — so the home server IP is never exposed publicly. The website fetches Observatory and Pulse data by calling <code>birds.alansbrain.com</code>, which routes through Cloudflare to the box. Also provides CDN caching and DDoS protection.',
@@ -462,8 +476,8 @@ var NODES = [
     emoji: '🐷',
     color: 'ts-green',
     hex: '#34d399',
-    d: [8, 82],
-    m: [7, 76],
+    d: [8, 87],
+    m: [7, 82],
     type: 'Domain Registrar',
     what: 'The registrar where the domain was registered.',
     role: 'Holds the domain registration. Nameservers are delegated to Cloudflare, so Cloudflare manages all DNS records and routing.',
@@ -475,8 +489,8 @@ var NODES = [
     emoji: '▲',
     color: 'ts-purple',
     hex: '#a78bfa',
-    d: [74, 65],
-    m: [77, 60],
+    d: [74, 71],
+    m: [77, 66],
     type: 'Static Hosting + Serverless',
     what: 'Static site hosting with serverless function support.',
     role: 'Hosts all of the HTML/CSS/JS pages of <strong>alansbrain.com</strong>. Also runs two serverless proxy functions in <code>api/</code>:<br>• <code>setlist.js</code> — proxies the setlist.fm API (CORS workaround)<br>• <code>spotify-proxy.js</code> — handles Spotify write operations (PKCE OAuth, no client secret in the browser)<br><br>Auto-deploys from GitHub on every push to <code>main</code> — no manual deploy step needed.',
@@ -488,8 +502,8 @@ var NODES = [
     emoji: '🌐',
     color: 'ts-blue',
     hex: '#38bdf8',
-    d: [50, 82],
-    m: [50, 78],
+    d: [50, 87],
+    m: [50, 82],
     type: 'Static Website',
     what: 'This website. A personal digital garden built with vanilla HTML, CSS, and JS — no frameworks, no build step.',
     role: 'The public face of the whole stack. Fetches live data client-side:<br>• Observatory bird detections and train events from <code>birds.alansbrain.com</code> (via Cloudflare → birdstation)<br>• Pulse news feed and Morning Brief from the same endpoint<br><br>Hosted on Vercel; DNS and CDN via Cloudflare.',
@@ -512,7 +526,8 @@ var NODES = [
 
 /* Edges: [fromId, toId, protocol label, hex color, dashed] */
 var EDGES = [
-  ['audiomoth',  'birdstation', 'USB audio',     '#fbbf24', false],
+  ['audiomoth',  'birdnode',    'USB audio',      '#fbbf24', false],
+  ['birdnode',   'birdstation', 'Icecast stream', '#2dd4bf', false],
   ['alan',       'birdstation', 'SSH',            '#fb7185', true ],
   ['alan',       'github',      'git push',       '#a78bfa', false],
   ['github',     'birdstation', 'git pull',       '#a78bfa', true ],
@@ -528,6 +543,7 @@ var EDGES = [
 /* Legend groups */
 var LEGEND = [
   { label: 'USB audio',      color: '#fbbf24', dash: false },
+  { label: 'Icecast stream', color: '#2dd4bf', dash: false },
   { label: 'SSH',            color: '#fb7185', dash: true  },
   { label: 'Git',            color: '#a78bfa', dash: false },
   { label: 'HTTPS / API',    color: '#38bdf8', dash: false },
@@ -709,8 +725,9 @@ function positionGraph() {
 
     /* Specific adjustments for edges that look better with a curve */
     var extraBow = 0;
-    if ((fromId === 'alan' && toId === 'birdstation') ||
-        (fromId === 'github' && toId === 'birdstation') ||
+    if ((fromId === 'alan'      && toId === 'birdstation') ||
+        (fromId === 'github'    && toId === 'birdstation') ||
+        (fromId === 'birdnode'  && toId === 'birdstation') ||
         (fromId === 'birdstation' && toId === 'cloudflare')) {
       extraBow = 20;
     }
