@@ -11,8 +11,10 @@ CREATE TABLE detections (
     common_name TEXT NOT NULL,
     scientific_name TEXT NOT NULL,
     confidence REAL NOT NULL,
-    week INTEGER,
-    battery_voltage_v REAL
+    week INTEGER,             -- BirdNET 1-48 week-of-year used for the --week season filter
+    battery_voltage_v REAL,
+    clip_path TEXT,           -- archived verification clip (life-list-qualifying hits only)
+    verified TEXT             -- review label: correct / wrong / unsure (NULL = unreviewed)
 );
 
 CREATE TABLE lifetime (
@@ -86,3 +88,10 @@ CREATE TABLE feed_digests (
 
 -- migration 2026-05-30: citations on digests
 -- ALTER TABLE feed_digests ADD COLUMN citations_json TEXT;
+
+-- migration 2026-06-02: verifiable lifers (clip archive + review labels)
+-- ALTER TABLE detections ADD COLUMN clip_path TEXT;
+-- ALTER TABLE detections ADD COLUMN verified  TEXT;
+-- birdnet_pipeline.init_db() also applies both idempotently on restart, so a
+-- routine `git pull` + `systemctl restart birdnet` migrates the live DB with no
+-- manual step. (The `week` column now stores BirdNET's 1-48 week, not ISO week.)

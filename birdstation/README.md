@@ -17,13 +17,16 @@ Deploying is `git pull` + a restart — no copy step, nothing drifts.
 
 ```
 birdstation/
-  pulse_fetcher.py   # timer: pull enabled feed_sources, dedupe, store, purge >30d
-  pulse_enrich.py    # timer: batched AI category + one-sentence summary (Haiku)
-  pulse_digest.py    # daily timer: Claude Morning Brief with citations (Sonnet)
-  bird_api.py        # FastAPI app: /api/feed, /api/digest, bird + train routes
-  schema.sql         # full birdnet.db schema + migration log
-  systemd/           # .service / .timer units (templated — no inline secrets)
-  README.md          # this file
+  pulse_fetcher.py    # timer: pull enabled feed_sources, dedupe, store, purge >30d
+  pulse_enrich.py     # timer: batched AI category + one-sentence summary (Haiku)
+  pulse_digest.py     # daily timer: Claude Morning Brief with citations (Sonnet)
+  bird_api.py         # FastAPI app: /api/feed, /api/digest, bird + train routes
+  birdnet_pipeline.py # birdnet.service: capture→analyze→log; life-list gate; clips
+  purge_bird_clips.py # daily timer: age out unreviewed bird verification clips
+  review_birds.py     # CLI: confirm lifers; --stats prints measured precision
+  schema.sql          # full birdnet.db schema + migration log
+  systemd/            # .service / .timer units (templated — no inline secrets)
+  README.md           # this file
 ```
 
 ## Deploy (routine, after the cutover below)
@@ -33,9 +36,10 @@ cd ~/alans-brain
 git pull origin main
 # restart only what changed:
 sudo systemctl restart birdapi              # bird_api.py changed
+sudo systemctl restart birdnet              # birdnet_pipeline.py changed (init_db auto-migrates)
 sudo systemctl start  pulse-digest.service  # regenerate the brief now
-# units changed? re-copy + reload (see cutover step 4)
-# schema.sql changed? apply the new migration block by hand
+# new units? re-copy + reload + enable (see cutover step 4) — e.g. purge-bird-clips.timer
+# schema.sql changed? bird columns auto-migrate via init_db on birdnet restart; others by hand
 ```
 
 ## Secrets — never committed
@@ -122,9 +126,21 @@ repo's `Build History.md`.
 | `birdapi.service` | the FastAPI app (long-running, `:8080`) |
 | `birdnet.service` | BirdNET capture/analyze/log pipeline (long-running loop) |
 | `train_detector.service` | train-whistle detector (long-running loop) |
+| `purge-train-clips.timer` → `.service` | weekly purge of train clips (Sun 04:00) |
+| `purge-bird-clips.timer` → `.service` | daily purge of unreviewed bird clips (04:30) |
 | `pulse-fetch.timer` → `.service` | source fetch every 15 min (purges >30 days) |
 | `pulse-enrich.timer` → `.service` | batched AI enrichment, every 20 min |
 | `pulse-digest.timer` → `.service` | daily Morning Brief (~06:00 local) |
+
+### Bird verification clips (privacy)
+
+`birdnet_pipeline.py` saves one short WAV per life-list-qualifying detection
+(>= 0.85, one per species/day) under `~/bird_clips`, so the life list can be
+spot-checked and BirdNET scores calibrated (`review_birds.py`, with `--stats`).
+Like the train clips these come off the backyard mic and can catch conversation,
+so they are **never served by the API** — review them on the box over SSH. The
+daily `purge-bird-clips.timer` deletes unreviewed clips older than 30 days
+(`BIRD_CLIP_RETENTION_DAYS`); clips you label with `review_birds.py` are kept.
 
 The observatory pipelines (`birdnet`, `train_detector`) each use their own venv —
 `~/BirdNET-Analyzer/birdnet-env` and `~/train-env` — which the units reference

@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily purge of unreviewed bird verification clips
+
+[Timer]
+# 04:30 local — after the weekly train purge (Sun 04:00), before the ~06:00 digest.
+OnCalendar=*-*-* 04:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

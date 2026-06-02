@@ -8,6 +8,8 @@ logs detections to SQLite.
 import subprocess
 import sqlite3
 import os
+import re
+import shutil
 import time
 import csv
 from datetime import datetime
@@ -29,15 +31,54 @@ LIFE_LIST_MIN_HITS = 3           # ...and a NEW species needs this many such hit
 LIFE_LIST_INSTANT_CONFIDENCE = 0.995  # ...unless a single hit is this confident
                                       #    (~100%), which lists the species at once
 
+# Seasonal filter: pass BirdNET's week-of-year so it filters the species list by
+# season as well as by location (lat/lon). Cuts out-of-season false positives.
+USE_WEEK_FILTER = True
+
+# Verifiable lifers: archive a short WAV per life-list-qualifying detection
+# (>= LIFE_LIST_MIN_CONFIDENCE), capped to one per species per local day, so the
+# life list can be spot-checked and BirdNET scores calibrated against truth.
+# Clips stay on the box and are NEVER served publicly — like train clips they can
+# catch backyard conversation. purge_bird_clips.py ages out the unreviewed ones.
+SAVE_LIFE_CLIPS = True
+BIRD_CLIP_DIR = os.path.expanduser("~/bird_clips")
+
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    try:
-        c.execute("ALTER TABLE detections ADD COLUMN battery_voltage_v REAL")
-    except sqlite3.OperationalError:
-        pass
+    # Idempotent column adds (each is a no-op once already applied).
+    for col, decl in (("battery_voltage_v", "REAL"),
+                      ("clip_path", "TEXT"),    # path to the archived verification clip
+                      ("verified",  "TEXT")):   # review label: correct / wrong / unsure
+        try:
+            c.execute(f"ALTER TABLE detections ADD COLUMN {col} {decl}")
+        except sqlite3.OperationalError:
+            pass
     conn.commit()
     conn.close()
+
+
+def birdnet_week(dt):
+    """Date → BirdNET's 1–48 'week of year'. The range model treats every month
+    as exactly 4 weeks (per BirdNET-Analyzer docs), so week = (month-1)*4 +
+    week-of-month. (birdnetlib uses a day-of-year proportional variant; the two
+    differ by at most ~1 week near month boundaries — immaterial to the filter.)"""
+    return (dt.month - 1) * 4 + min((dt.day - 1) // 7, 3) + 1
+
+
+def save_life_clip(common_name, now_dt):
+    """Copy the just-analyzed 15 s chunk into the clip archive, named by time +
+    species. Returns the path, or None on any error. Best-effort — never breaks
+    the pipeline."""
+    try:
+        os.makedirs(BIRD_CLIP_DIR, exist_ok=True)
+        ts   = now_dt.strftime("%Y-%m-%dT%H-%M-%S")
+        slug = re.sub(r"[^A-Za-z0-9]+", "-", common_name).strip("-") or "bird"
+        path = os.path.join(BIRD_CLIP_DIR, f"bird_{ts}_{slug}.wav")
+        shutil.copy(WAV_PATH, path)
+        return path
+    except OSError:
+        return None
 
 def get_latest_battery_voltage():
     return None
@@ -56,15 +97,19 @@ def capture_chunk():
 
 def run_birdnet():
     os.makedirs(RESULT_DIR, exist_ok=True)
-    subprocess.run([
+    cmd = [
         BIRDNET_PYTHON, "-m", "birdnet_analyzer.analyze",
         WAV_PATH,
         "-o", RESULT_DIR,
         "--lat", str(LAT),
         "--lon", str(LON),
         "--min_conf", str(MIN_CONFIDENCE),
-        "--rtype", "csv"
-    ], capture_output=True, timeout=60)
+        "--rtype", "csv",
+    ]
+    # Season filter: restrict the species list to what's expected here this week.
+    if USE_WEEK_FILTER:
+        cmd += ["--week", str(birdnet_week(datetime.now()))]
+    subprocess.run(cmd, capture_output=True, timeout=60)
 
     # Find the output CSV
     results = list(Path(RESULT_DIR).glob("*.csv"))
@@ -77,8 +122,9 @@ def parse_and_log(result_file):
     count = 0
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    now = datetime.now().isoformat()
-    week = int(datetime.now().strftime("%V"))
+    now_dt = datetime.now()
+    now = now_dt.isoformat()
+    week = birdnet_week(now_dt)   # store the same 1–48 week used for the filter
     battery_v = get_latest_battery_voltage()
 
     with open(result_file, newline="") as f:
@@ -96,6 +142,7 @@ def parse_and_log(result_file):
                     "INSERT INTO detections (timestamp, common_name, scientific_name, confidence, week) VALUES (?,?,?,?,?)",
                     (now, common_name, scientific_name, confidence, week)
                 )
+                det_id = c.lastrowid
 
                 # Life list gate. Every detection above MIN_CONFIDENCE is still
                 # logged (and visualized on the Observatory page once >= 0.75),
@@ -132,6 +179,21 @@ def parse_and_log(result_file):
                             )
                             why = "instant ~100%" if instant else f"{hits_24h} hits/24h"
                             print(f"  *** NEW SPECIES: {common_name} ({why}) ***")
+
+                # Verification clip for life-list-qualifying hits — one per species
+                # per local day (keeps storage bounded). The archived chunk lets us
+                # later confirm the ID and measure precision. Local-only, never public.
+                if SAVE_LIFE_CLIPS and confidence >= LIFE_LIST_MIN_CONFIDENCE:
+                    c.execute(
+                        "SELECT 1 FROM detections WHERE common_name=? AND clip_path IS NOT NULL "
+                        "AND date(timestamp)=date('now','localtime') LIMIT 1",
+                        (common_name,)
+                    )
+                    if c.fetchone() is None:
+                        clip_path = save_life_clip(common_name, now_dt)
+                        if clip_path:
+                            c.execute("UPDATE detections SET clip_path=? WHERE id=?",
+                                      (clip_path, det_id))
 
                 print(f"  [{confidence:.0%}] {common_name} ({scientific_name})")
                 count += 1

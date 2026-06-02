@@ -10,6 +10,43 @@
 
 ---
 
+## 2026-06-02 — Verifiable lifers (clip archive + review) + BirdNET seasonal filter
+
+Two box-side follow-ups to the life-list work, both in `birdstation/`.
+
+**Seasonal filter (`birdnet_pipeline.py`).** The analyzer was run with lat/lon
+(location filter) but an implicit `--week -1` (year-round). It now passes BirdNET's
+1-48 week-of-year via a new `birdnet_week(dt)` helper — `(month-1)*4 + week-of-month`,
+the "every month has 4 weeks" convention from the BirdNET-Analyzer docs (birdnetlib's
+day-of-year proportional variant differs by ≤1 week near month boundaries —
+immaterial to seasonal filtering). Gated behind `USE_WEEK_FILTER`. This constrains
+the species list by season as well as location, cutting out-of-season false positives.
+The `detections.week` column now stores this 1-48 value (was ISO `%V`, which nothing read).
+
+**Verifiable lifers (`birdnet_pipeline.py` + new tooling).** The pipeline now archives
+a short WAV for each life-list-qualifying detection (≥ 0.85), capped to **one per species
+per local day** to bound storage, recording the path in a new `detections.clip_path`. A
+new `detections.verified` column holds a review label (correct/wrong/unsure). Both columns
+are added idempotently by `init_db()`, so `git pull` + `systemctl restart birdnet` migrates
+the live DB with no manual step.
+
+- **`review_birds.py`** (mirrors `review_trains.py`): walks unreviewed clips, plays each
+  (ffplay/aplay/paplay), records correct/wrong/unsure into `verified`. `--stats` prints
+  **measured precision by confidence band** (0.85–0.90, 0.90–0.95, 0.95–0.995, 0.995+) and
+  overall — the raw material to calibrate BirdNET scores into real probabilities.
+- **`purge_bird_clips.py`** + **`purge-bird-clips.timer`** (daily 04:30): keeps labelled
+  clips (the calibration set) and recent unreviewed ones; deletes unreviewed clips older
+  than `BIRD_CLIP_RETENTION_DAYS` (30) and aged orphans, clearing the dangling `clip_path`.
+  Mirrors the train-clip purge.
+- **Privacy:** these clips come off the same backyard mic as train clips and can catch
+  conversation, so they are **never served by the API** — local-only, reviewed over SSH,
+  aged out by the purge. No public endpoint was added.
+
+Verified locally: the week formula (range 1-48, today → 21), the one-per-species/day cap
+query, and a purge integration test (keeps reviewed + recent, deletes aged unreviewed +
+aged orphan, clears the path). `schema.sql` and `birdstation/README.md` updated (layout,
+Services table, deploy notes, a clip-privacy section).
+
 ## 2026-06-02 — Life-list gate (85% × 3 in 24h, instant at ~100%) + period-aware Observatory stats
 
 Two changes — one box-side, one front-end.

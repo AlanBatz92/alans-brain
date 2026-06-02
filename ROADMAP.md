@@ -39,16 +39,17 @@ events → schedule prior → acoustic fingerprint (details in the plan).
 ### 3. Confidence-tuning follow-ups (life list)
 - **Current gate (2026-06-02):** a new species joins after **3 detections at
   ≥ 0.85 within a rolling 24h window, or one ~100% (≥ 0.995) hit** (instant).
-- **Verifiability (new):** retain a short clip/spectrogram per life-list-qualifying
-  detection (reuse the train-clip infra) so lifers can be spot-checked — turns
-  "unknown precision" into a measured number and yields labels to fit a
-  score→probability calibration (Wood & Kahl 2024). Feeds the "provisional vs.
+- **✓ Verifiable lifers (2026-06-02):** the pipeline archives one clip per
+  life-list-qualifying detection (`~/bird_clips`, one per species/day);
+  `review_birds.py` labels them and `--stats` prints measured precision by
+  confidence band. **Next:** fit a logistic score→probability calibration
+  (Wood & Kahl 2024) once enough labels accrue; optional on-page "provisional vs.
   confirmed" tier.
-- **Seasonal filter:** the pipeline passes lat/lon but not `--week`, so BirdNET
-  isn't filtering by season. Passing the current week (converted to BirdNET's
-  48-week/yr convention) would cut out-of-season false positives cheaply.
+- **✓ Seasonal filter (2026-06-02):** `--week` (BirdNET's 1-48 week) is now passed
+  to the analyzer, so it filters by season as well as location.
 - **Watch:** see how the 3-hits/24h rule feels — a genuinely rare flyover heard
   once or twice still won't list. If too strict, revisit the window or a tier.
+  Also watch whether the season filter ever hides a real off-season vagrant.
 - **Later:** per-species thresholds (some calls are easier to ID than others).
 
 ### 4. Pulse ingestion — Phase 4 (full design in `PLAN-ingestion.md`)
@@ -80,6 +81,15 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-02** — Verifiable lifers + BirdNET seasonal filter (box-side). The
+  pipeline now passes `--week` (season filter atop lat/lon) and archives one WAV per
+  life-list-qualifying detection (`~/bird_clips`, one per species/day) for
+  spot-checking + calibration. New `review_birds.py` (label clips; `--stats` =
+  measured precision by confidence band) and `purge_bird_clips.py` +
+  `purge-bird-clips.timer` (daily; keeps labelled clips, ages out unreviewed > 30d).
+  `detections` gains `clip_path` + `verified` (auto-migrated by `init_db`). Clips are
+  never served publicly (backyard-mic privacy).
 
 - **2026-06-02** — Life-list gate retuned + Observatory period-aware stats.
   Box-side: a new species now lists after **3 hits at ≥ 0.85 in a rolling 24h**,
