@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Tech Stack — Alan's Brain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      var t = localStorage.getItem('ab_theme');
+      if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Tech Stack overrides ── */
+    .ts-page { max-width: 860px; }
+
+    .ts-hero {
+      text-align: center;
+      padding: 2.5rem 1rem 1rem;
+    }
+    .ts-hero h1 {
+      font-size: clamp(1.8rem, 6vw, 3rem);
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .ts-hero-sub {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    .ts-privacy {
+      max-width: 800px;
+      margin: 0.75rem auto 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-align: center;
+      font-family: var(--font-mono);
+    }
+
+    .ts-hint {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      margin: 0.4rem 0 0.75rem;
+      animation: ts-hint-pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes ts-hint-pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* ── Graph container ── */
+    .ts-graph-wrap {
+      position: relative;
+      padding: 0 0.5rem 1.5rem;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .ts-canvas {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      min-height: 380px;
+    }
+    @media (max-width: 500px) {
+      .ts-canvas { aspect-ratio: 7 / 10; min-height: 480px; }
+    }
+
+    /* SVG layer (behind nodes) */
+    .ts-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* ── Nodes ── */
+    .ts-node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      z-index: 2;
+      transition: transform 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .ts-node:hover { transform: translate(-50%, -50%) scale(1.08); }
+    .ts-node:active { transform: translate(-50%, -50%) scale(0.94); }
+    .ts-node.ts-selected { transform: translate(-50%, -50%) scale(1.08); }
+
+    .ts-node-icon {
+      width: 54px; height: 54px;
+      border-radius: 14px;
+      border: 2px solid var(--ts-border, rgba(45,212,191,0.3));
+      background: var(--ts-bg, rgba(45,212,191,0.08));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      position: relative;
+    }
+    .ts-node.ts-selected .ts-node-icon,
+    .ts-node:hover .ts-node-icon {
+      box-shadow: 0 0 0 3px var(--ts-glow, rgba(45,212,191,0.4)), 0 0 20px var(--ts-glow, rgba(45,212,191,0.2));
+      border-color: var(--ts-color, var(--teal));
+    }
+
+    .ts-node-label {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      color: var(--text-dim);
+      text-align: center;
+      white-space: nowrap;
+      background: rgba(10,14,26,0.75);
+      padding: 2px 5px;
+      border-radius: 4px;
+      transition: color 0.2s;
+      max-width: 78px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ts-node.ts-selected .ts-node-label,
+    .ts-node:hover .ts-node-label { color: var(--ts-color, var(--teal)); }
+
+    /* Color themes per node */
+    .ts-teal  { --ts-color: var(--teal);   --ts-bg: rgba(45,212,191,0.08);  --ts-border: rgba(45,212,191,0.28); --ts-glow: rgba(45,212,191,0.35); }
+    .ts-blue  { --ts-color: var(--blue);   --ts-bg: rgba(56,189,248,0.08);  --ts-border: rgba(56,189,248,0.28); --ts-glow: rgba(56,189,248,0.3); }
+    .ts-purple{ --ts-color: var(--purple); --ts-bg: rgba(167,139,250,0.08); --ts-border: rgba(167,139,250,0.28); --ts-glow: rgba(167,139,250,0.3); }
+    .ts-pink  { --ts-color: var(--pink);   --ts-bg: rgba(244,114,182,0.08); --ts-border: rgba(244,114,182,0.28); --ts-glow: rgba(244,114,182,0.3); }
+    .ts-green { --ts-color: var(--green);  --ts-bg: rgba(52,211,153,0.08);  --ts-border: rgba(52,211,153,0.28); --ts-glow: rgba(52,211,153,0.3); }
+    .ts-yellow{ --ts-color: var(--yellow); --ts-bg: rgba(251,191,36,0.08);  --ts-border: rgba(251,191,36,0.28); --ts-glow: rgba(251,191,36,0.3); }
+
+    @media (max-width: 500px) {
+      .ts-node-icon { width: 44px; height: 44px; font-size: 20px; border-radius: 12px; }
+      .ts-node-label { font-size: 0.52rem; max-width: 64px; }
+    }
+
+    /* ── Legend ── */
+    .ts-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      justify-content: center;
+      max-width: 800px;
+      margin: 0 auto 1.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .ts-leg-item {
+      display: flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);
+    }
+    .ts-leg-line {
+      width: 22px; height: 2px; border-radius: 1px; flex-shrink: 0;
+    }
+    .ts-leg-dash {
+      background: transparent;
+      border-top: 2px dashed var(--dash-color);
+    }
+
+    /* ── Detail panel (bottom sheet) ── */
+    .ts-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(10,14,26,0.65);
+      z-index: 200;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+    .ts-backdrop.ts-open { opacity: 1; pointer-events: all; }
+
+    .ts-panel {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-radius: 18px 18px 0 0;
+      z-index: 201;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 78vh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 1.25rem 2.5rem;
+      padding-bottom: calc(2.5rem + env(safe-area-inset-bottom));
+    }
+    .ts-panel.ts-open { transform: translateY(0); }
+
+    .ts-panel-handle {
+      width: 36px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0.75rem auto 1.25rem;
+    }
+
+    .ts-panel-head {
+      display: flex; align-items: center; gap: 0.875rem;
+      margin-bottom: 1rem;
+    }
+    .ts-panel-icon {
+      width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      border: 2px solid var(--ts-border, rgba(45,212,191,0.3));
+      background: var(--ts-bg, rgba(45,212,191,0.08));
+    }
+    .ts-panel-title { font-size: 1.15rem; font-weight: 800; }
+    .ts-panel-type  { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-dim); margin-top: 2px; }
+
+    .ts-panel-body {
+      font-size: 0.83rem; color: var(--text-muted); line-height: 1.65;
+    }
+    .ts-panel-body p { margin-bottom: 0.7rem; }
+    .ts-panel-body p:last-child { margin-bottom: 0; }
+    .ts-panel-body strong { color: var(--text); font-weight: 700; }
+    .ts-panel-body code {
+      font-family: var(--font-mono); font-size: 0.78rem;
+      background: var(--surface-hover); border: 1px solid var(--border);
+      padding: 1px 5px; border-radius: 4px; color: var(--teal);
+    }
+
+    .ts-panel-divider {
+      border: none; border-top: 1px solid var(--border);
+      margin: 1rem 0;
+    }
+
+    .ts-panel-conns-title {
+      font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;
+    }
+    .ts-panel-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .ts-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--surface-hover); border: 1px solid var(--border);
+      border-radius: 6px; padding: 3px 8px;
+      font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);
+      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .ts-chip:hover { border-color: var(--teal); color: var(--text); }
+    .ts-chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    .ts-close-btn {
+      display: block; width: 100%; margin-top: 1.25rem;
+      padding: 0.6rem; border-radius: 10px;
+      background: var(--surface-hover); border: 1px solid var(--border);
+      color: var(--text-muted); font-family: var(--font-mono); font-size: 0.75rem;
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+      text-align: center;
+    }
+    .ts-close-btn:hover { background: var(--border); color: var(--text); }
+  </style>
+</head>
+<body>
+
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Alan's Brain <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Alan's_Brain/world-creativity-and-innovation-day.png" alt=""></a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+            Explore <span class="nav-dropdown-arrow">▼</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="youtube.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
+            <a href="transart.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
+            <a href="soundboards.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
+            <a href="tools.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""> Great &amp; Free</a>
+            <a href="photos.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
+            <a href="art.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
+            <a href="paranormal.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
+            <a href="observatory.html"><span class="dropdown-icon" style="display:inline-block;width:24px;height:24px;text-align:center;font-size:18px;line-height:24px">🔭</span> Observatory</a>
+            <a href="projects.html"><span class="dropdown-icon" style="display:inline-block;width:24px;height:24px;text-align:center;font-size:18px;line-height:24px">🚀</span> Personal Projects</a>
+            <a href="techstack.html" class="active"><span class="dropdown-icon" style="display:inline-block;width:24px;height:24px;text-align:center;font-size:18px;line-height:24px">⚙️</span> Tech Stack</a>
+          </div>
+        </div>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <div class="nav-hamburger-lines"><span></span><span></span><span></span></div>
+      </button>
+    </div>
+  </nav>
+
+  <div class="nav-mobile-overlay">
+    <a href="index.html">Home</a>
+    <span class="mobile-section-label">Explore</span>
+    <a href="youtube.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
+    <a href="transart.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
+    <a href="soundboards.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
+    <a href="tools.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""> Great &amp; Free</a>
+    <a href="photos.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
+    <a href="art.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
+    <a href="paranormal.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
+    <a href="observatory.html"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">🔭</span> Observatory</a>
+    <a href="projects.html"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">🚀</span> Personal Projects</a>
+    <a href="techstack.html" class="active"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">⚙️</span> Tech Stack</a>
+  </div>
+
+  <div class="page ts-page">
+
+    <section class="ts-hero anim" style="animation-delay:0.1s">
+      <h1><span class="gradient-text">How It All Works</span></h1>
+      <p class="ts-hero-sub">The full stack behind Alan's Brain — tap any node to explore</p>
+    </section>
+
+    <p class="ts-privacy anim" style="animation-delay:0.2s">
+      🔒 Privacy-safe — no IPs, hostnames, ports, or credentials anywhere on this page
+    </p>
+
+    <p class="ts-hint">tap a node to explore it</p>
+
+    <div class="ts-graph-wrap anim" style="animation-delay:0.3s">
+      <div class="ts-canvas" id="tsCanvas"></div>
+    </div>
+
+    <div class="ts-legend anim" style="animation-delay:0.4s" id="tsLegend"></div>
+
+    <footer class="site-footer reveal">
+      <div class="footer-stamp">Crafted by Alan <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/UFO/ufo.png" alt=""></div>
+      <div class="footer-text">
+        Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. Just a human on the internet.<br>
+        Built with HTML, CSS, and JS — the way the web was meant to be.
+      </div>
+      <div class="footer-buttons">
+        <span class="footer-btn">HTML</span>
+        <span class="footer-btn">CSS</span>
+        <span class="footer-btn">JS</span>
+        <a class="footer-btn" href="https://www.grapenuts.com/our-story/" target="_blank" title="🥣"><img src="img/Icons/icons/Grapenuts/Grape_Nuts_No_BG.png" alt="Grape-Nuts" style="width:14px;height:14px;vertical-align:middle"></a>
+      </div>
+      <div class="visit-ticker">
+        <span class="ticker-label">visitors</span>
+        <div class="ticker-digits" id="visitTicker"></div>
+      </div>
+    </footer>
+
+  </div><!-- /.page -->
+
+  <!-- Backdrop + panel -->
+  <div class="ts-backdrop" id="tsBackdrop"></div>
+  <aside class="ts-panel" id="tsPanel" aria-hidden="true">
+    <div class="ts-panel-handle"></div>
+    <div id="tsPanelContent"></div>
+  </aside>
+
+<script>
+/* ══════════════════════════════════════
+   DATA
+══════════════════════════════════════ */
+
+/* Node positions: two layouts [desktop, mobile] as [x%, y%].
+   Desktop canvas: 4:3 aspect.  Mobile canvas: 7:10 aspect (taller). */
+var NODES = [
+  {
+    id: 'audiomoth',
+    label: 'AudioMoth',
+    emoji: '🎙️',
+    color: 'ts-yellow',
+    hex: '#fbbf24',
+    d: [21, 9],   // desktop [x%, y%]
+    m: [21, 6],   // mobile
+    type: 'Hardware',
+    what: 'An open-source, ultra-low-power acoustic recording unit that sits outside 24/7.',
+    role: 'Captures continuous backyard audio and streams it live into birdstation as a USB audio input. Icecast (running locally on birdstation) picks it up as the <code>/backyard</code> mount.',
+    privacy: 'Recordings are processed locally and discarded after analysis. No audio is ever stored permanently or sent off-site.',
+    connects: ['birdstation']
+  },
+  {
+    id: 'alan',
+    label: 'Alan (Admin)',
+    emoji: '👤',
+    color: 'ts-pink',
+    hex: '#f472b6',
+    d: [79, 9],
+    m: [79, 6],
+    type: 'Person',
+    what: "That's me — I maintain the whole stack, from hardware to code.",
+    role: 'SSH into birdstation for admin tasks, monitoring logs, and running the train vetting CLI. Push code changes to GitHub, which triggers deploys. Occasionally SSH into birdstation to <code>git pull</code> and restart a service.',
+    connects: ['birdstation', 'github']
+  },
+  {
+    id: 'birdstation',
+    label: 'birdstation',
+    emoji: '🖥️',
+    color: 'ts-blue',
+    hex: '#38bdf8',
+    d: [21, 32],
+    m: [21, 24],
+    type: 'Home Server (Raspberry Pi)',
+    what: 'A Raspberry Pi running 24/7 at home. The hub of the bird observatory and the Pulse news system.',
+    role: '<strong>Runs six systemd services:</strong><br>• <code>birdnet.service</code> — captures 15 s audio chunks from Icecast, runs BirdNET-Analyzer, writes detections to SQLite<br>• <code>train_detector.service</code> — detects train whistles in the same stream, writes events + WAV clips<br>• <code>birdapi.service</code> — FastAPI on :8080, serves all data to the website<br>• <code>pulse-fetch.timer</code> — pulls RSS sources every 15 min, dedupes<br>• <code>pulse-enrich.timer</code> — AI-tags + summarises articles (Claude Haiku) every 20 min<br>• <code>pulse-digest.timer</code> — writes the daily Morning Brief (Claude Sonnet) at ~6 AM<br><br>Storage: one SQLite database (<code>birdnet.db</code>) shared by all services.',
+    connects: ['audiomoth', 'alan', 'anthropic', 'cloudflare', 'github']
+  },
+  {
+    id: 'github',
+    label: 'GitHub',
+    emoji: '🐙',
+    color: 'ts-purple',
+    hex: '#a78bfa',
+    d: [79, 32],
+    m: [79, 24],
+    type: 'Source Control',
+    what: 'Version control and source of truth for every file in the project — website pages, birdstation Python scripts, FastAPI app, systemd units, and this very page.',
+    role: 'Accepts git pushes from Alan. Automatically triggers a Vercel deploy for every push to <code>main</code> (the static website). Also serves as the deploy source for birdstation: a <code>git pull</code> on the box updates the running scripts.',
+    connects: ['alan', 'birdstation', 'vercel']
+  },
+  {
+    id: 'anthropic',
+    label: 'Anthropic API',
+    emoji: '🤖',
+    color: 'ts-teal',
+    hex: '#2dd4bf',
+    d: [50, 48],
+    m: [50, 42],
+    type: 'External AI API',
+    what: "Anthropic's Claude AI, called over HTTPS from birdstation.",
+    role: 'Powers two Pulse features on birdstation:<br>• <strong>Haiku</strong> (<code>claude-haiku-4-5</code>) — batched category tagging and one-sentence summaries for news articles, with a prompt-cached system prompt for efficiency<br>• <strong>Sonnet</strong> (<code>claude-sonnet-4-6</code>) — writes the daily Morning Brief with adaptive thinking and structured output; includes per-section source citations',
+    privacy: 'Only news article text and metadata is sent to the API. No personal data, no bird audio, no location info.',
+    connects: ['birdstation']
+  },
+  {
+    id: 'cloudflare',
+    label: 'Cloudflare',
+    emoji: '☁️',
+    color: 'ts-green',
+    hex: '#34d399',
+    d: [28, 65],
+    m: [25, 60],
+    type: 'DNS + Reverse Proxy',
+    what: 'DNS provider and reverse-proxy CDN for both domains.',
+    role: 'Handles DNS for <strong>alansbrain.com</strong> and <strong>birds.alansbrain.com</strong>. Acts as SSL terminator and reverse proxy in front of birdstation\'s FastAPI — so the home server IP is never exposed publicly. The website fetches Observatory and Pulse data by calling <code>birds.alansbrain.com</code>, which routes through Cloudflare to the box. Also provides CDN caching and DDoS protection.',
+    connects: ['birdstation', 'porkbun', 'website']
+  },
+  {
+    id: 'porkbun',
+    label: 'Porkbun',
+    emoji: '🐷',
+    color: 'ts-green',
+    hex: '#34d399',
+    d: [8, 82],
+    m: [7, 76],
+    type: 'Domain Registrar',
+    what: 'The registrar where the domain was registered.',
+    role: 'Holds the domain registration. Nameservers are delegated to Cloudflare, so Cloudflare manages all DNS records and routing.',
+    connects: ['cloudflare']
+  },
+  {
+    id: 'vercel',
+    label: 'Vercel',
+    emoji: '▲',
+    color: 'ts-purple',
+    hex: '#a78bfa',
+    d: [74, 65],
+    m: [77, 60],
+    type: 'Static Hosting + Serverless',
+    what: 'Static site hosting with serverless function support.',
+    role: 'Hosts all of the HTML/CSS/JS pages of <strong>alansbrain.com</strong>. Also runs two serverless proxy functions in <code>api/</code>:<br>• <code>setlist.js</code> — proxies the setlist.fm API (CORS workaround)<br>• <code>spotify-proxy.js</code> — handles Spotify write operations (PKCE OAuth, no client secret in the browser)<br><br>Auto-deploys from GitHub on every push to <code>main</code> — no manual deploy step needed.',
+    connects: ['github', 'website']
+  },
+  {
+    id: 'website',
+    label: 'alansbrain.com',
+    emoji: '🌐',
+    color: 'ts-blue',
+    hex: '#38bdf8',
+    d: [50, 82],
+    m: [50, 78],
+    type: 'Static Website',
+    what: 'This website. A personal digital garden built with vanilla HTML, CSS, and JS — no frameworks, no build step.',
+    role: 'The public face of the whole stack. Fetches live data client-side:<br>• Observatory bird detections and train events from <code>birds.alansbrain.com</code> (via Cloudflare → birdstation)<br>• Pulse news feed and Morning Brief from the same endpoint<br><br>Hosted on Vercel; DNS and CDN via Cloudflare.',
+    connects: ['vercel', 'cloudflare', 'visitor']
+  },
+  {
+    id: 'visitor',
+    label: 'Visitor',
+    emoji: '👥',
+    color: 'ts-pink',
+    hex: '#f472b6',
+    d: [50, 95],
+    m: [50, 93],
+    type: 'You',
+    what: 'You! Anyone browsing the site.',
+    role: 'Makes HTTPS requests to alansbrain.com — served by Vercel, DNS via Cloudflare. Observatory and Pulse data is fetched client-side from <code>birds.alansbrain.com</code>.',
+    connects: ['website']
+  }
+];
+
+/* Edges: [fromId, toId, protocol label, hex color, dashed] */
+var EDGES = [
+  ['audiomoth',  'birdstation', 'USB audio',     '#fbbf24', false],
+  ['alan',       'birdstation', 'SSH',            '#fb7185', true ],
+  ['alan',       'github',      'git push',       '#a78bfa', false],
+  ['github',     'birdstation', 'git pull',       '#a78bfa', true ],
+  ['github',     'vercel',      'auto-deploy',    '#38bdf8', false],
+  ['birdstation','anthropic',   'HTTPS API',      '#2dd4bf', false],
+  ['birdstation','cloudflare',  'serves via',     '#34d399', false],
+  ['porkbun',    'cloudflare',  'nameservers',    '#34d399', true ],
+  ['cloudflare', 'website',     'CDN + DNS',      '#34d399', false],
+  ['vercel',     'website',     'static hosting', '#a78bfa', false],
+  ['website',    'visitor',     'HTTPS',          '#38bdf8', false]
+];
+
+/* Legend groups */
+var LEGEND = [
+  { label: 'USB audio',      color: '#fbbf24', dash: false },
+  { label: 'SSH',            color: '#fb7185', dash: true  },
+  { label: 'Git',            color: '#a78bfa', dash: false },
+  { label: 'HTTPS / API',    color: '#38bdf8', dash: false },
+  { label: 'DNS / Proxy',    color: '#34d399', dash: false }
+];
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+var selected = null;
+var nodeMap  = {};
+NODES.forEach(function(n) { nodeMap[n.id] = n; });
+
+/* ══════════════════════════════════════
+   RENDER
+══════════════════════════════════════ */
+var canvas  = document.getElementById('tsCanvas');
+var backdrop = document.getElementById('tsBackdrop');
+var panel   = document.getElementById('tsPanel');
+var panelContent = document.getElementById('tsPanelContent');
+
+var nodeEls = {};  // id → DOM element
+var edgeEls = {};  // "from-to" → { path, labelEl }
+
+function isMobile() {
+  return window.innerWidth <= 500;
+}
+
+function pct(node) {
+  return isMobile() ? node.m : node.d;
+}
+
+function px(node) {
+  var rect = canvas.getBoundingClientRect();
+  var pos = pct(node);
+  return { x: pos[0] / 100 * rect.width, y: pos[1] / 100 * rect.height };
+}
+
+/* Build SVG + nodes once */
+function buildGraph() {
+  canvas.innerHTML = '';
+  nodeEls = {};
+  edgeEls = {};
+
+  /* SVG for edges */
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'ts-svg');
+  svg.setAttribute('aria-hidden', 'true');
+
+  /* Arrowhead markers */
+  var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  var arrowColors = {};
+  EDGES.forEach(function(e) { arrowColors[e[3]] = true; });
+  Object.keys(arrowColors).forEach(function(c) {
+    var m = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    var safeId = 'arr' + c.replace('#','');
+    m.setAttribute('id', safeId);
+    m.setAttribute('markerWidth', '8');
+    m.setAttribute('markerHeight', '6');
+    m.setAttribute('refX', '7');
+    m.setAttribute('refY', '3');
+    m.setAttribute('orient', 'auto');
+    var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points', '0 0, 8 3, 0 6');
+    poly.setAttribute('fill', c);
+    poly.setAttribute('opacity', '0.7');
+    m.appendChild(poly);
+    defs.appendChild(m);
+  });
+  svg.appendChild(defs);
+
+  /* Edge paths */
+  EDGES.forEach(function(e) {
+    var fromId = e[0], toId = e[1], label = e[2], color = e[3], dashed = e[4];
+    var key = fromId + '-' + toId;
+
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '1.5');
+    path.setAttribute('stroke-opacity', '0.45');
+    path.setAttribute('marker-end', 'url(#arr' + color.replace('#','') + ')');
+    if (dashed) path.setAttribute('stroke-dasharray', '5 4');
+    path.style.transition = 'stroke-opacity 0.25s, stroke-width 0.2s';
+    svg.appendChild(path);
+
+    /* Label text */
+    var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    txt.setAttribute('fill', color);
+    txt.setAttribute('font-family', 'JetBrains Mono, monospace');
+    txt.setAttribute('font-size', '8');
+    txt.setAttribute('text-anchor', 'middle');
+    txt.setAttribute('opacity', '0');
+    txt.setAttribute('pointer-events', 'none');
+    txt.style.transition = 'opacity 0.25s';
+    var bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bg.setAttribute('rx', '2');
+    bg.setAttribute('fill', 'rgba(10,14,26,0.85)');
+    bg.setAttribute('opacity', '0');
+    bg.style.transition = 'opacity 0.25s';
+    txt.textContent = label;
+    svg.appendChild(bg);
+    svg.appendChild(txt);
+
+    edgeEls[key] = { path: path, label: txt, bg: bg, color: color };
+  });
+
+  canvas.appendChild(svg);
+
+  /* Node divs */
+  NODES.forEach(function(n) {
+    var div = document.createElement('div');
+    div.className = 'ts-node ' + n.color;
+    div.dataset.id = n.id;
+    div.setAttribute('role', 'button');
+    div.setAttribute('tabindex', '0');
+    div.setAttribute('aria-label', n.label);
+
+    var icon = document.createElement('div');
+    icon.className = 'ts-node-icon';
+    icon.textContent = n.emoji;
+
+    var lbl = document.createElement('div');
+    lbl.className = 'ts-node-label';
+    lbl.textContent = n.label;
+
+    div.appendChild(icon);
+    div.appendChild(lbl);
+    canvas.appendChild(div);
+    nodeEls[n.id] = div;
+  });
+
+  positionGraph();
+}
+
+/* Position nodes and draw edge paths based on current canvas size */
+function positionGraph() {
+  var rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+
+  var w = rect.width, h = rect.height;
+  var NODE_R = isMobile() ? 22 : 27; /* half icon size for arrow offset */
+
+  /* Position node divs */
+  NODES.forEach(function(n) {
+    var pos = pct(n);
+    var el = nodeEls[n.id];
+    el.style.left = pos[0] + '%';
+    el.style.top  = pos[1] + '%';
+  });
+
+  /* Draw edge paths */
+  EDGES.forEach(function(e) {
+    var fromId = e[0], toId = e[1], color = e[3];
+    var key = fromId + '-' + toId;
+    var obj = edgeEls[key];
+    if (!obj) return;
+
+    var n1 = nodeMap[fromId], n2 = nodeMap[toId];
+    var p1 = pct(n1), p2 = pct(n2);
+    var x1 = p1[0] / 100 * w, y1 = p1[1] / 100 * h;
+    var x2 = p2[0] / 100 * w, y2 = p2[1] / 100 * h;
+
+    /* Offset endpoint so arrow lands at edge of icon, not center */
+    var dx = x2 - x1, dy = y2 - y1;
+    var len = Math.sqrt(dx*dx + dy*dy) || 1;
+    var ex = x2 - (dx/len) * NODE_R;
+    var ey = y2 - (dy/len) * NODE_R;
+    var sx = x1 + (dx/len) * NODE_R;
+    var sy = y1 + (dy/len) * NODE_R;
+
+    /* Control point: midpoint + slight perpendicular push for curves */
+    var mx = (sx + ex) / 2;
+    var my = (sy + ey) / 2;
+    /* Perpendicular unit vector */
+    var px2 = -dy/len, py2 = dx/len;
+    /* Curve amount: longer lines get a bit more bow */
+    var bow = Math.min(len * 0.12, 30);
+
+    /* Specific adjustments for edges that look better with a curve */
+    var extraBow = 0;
+    if ((fromId === 'alan' && toId === 'birdstation') ||
+        (fromId === 'github' && toId === 'birdstation') ||
+        (fromId === 'birdstation' && toId === 'cloudflare')) {
+      extraBow = 20;
+    }
+
+    var cpx = mx + px2 * (bow + extraBow);
+    var cpy = my + py2 * (bow + extraBow);
+
+    var d = 'M ' + sx.toFixed(1) + ' ' + sy.toFixed(1) +
+            ' Q ' + cpx.toFixed(1) + ' ' + cpy.toFixed(1) +
+            ' ' + ex.toFixed(1) + ' ' + ey.toFixed(1);
+    obj.path.setAttribute('d', d);
+
+    /* Place label at midpoint of bezier (~t=0.5) */
+    var lx = 0.25*sx + 0.5*cpx + 0.25*ex;
+    var ly = 0.25*sy + 0.5*cpy + 0.25*ey;
+    obj.label.setAttribute('x', lx.toFixed(1));
+    obj.label.setAttribute('y', (ly - 3).toFixed(1));
+    /* background rect sized to approx text */
+    var tw = e[2].length * 4.5 + 6;
+    obj.bg.setAttribute('x', (lx - tw/2).toFixed(1));
+    obj.bg.setAttribute('y', (ly - 13).toFixed(1));
+    obj.bg.setAttribute('width', tw.toFixed(1));
+    obj.bg.setAttribute('height', '11');
+  });
+}
+
+/* ══════════════════════════════════════
+   SELECTION
+══════════════════════════════════════ */
+function selectNode(id) {
+  var node = nodeMap[id];
+  if (!node) return;
+
+  /* Deselect previous */
+  if (selected) {
+    var prev = nodeEls[selected];
+    if (prev) prev.classList.remove('ts-selected');
+  }
+  selected = id;
+  nodeEls[id].classList.add('ts-selected');
+
+  /* Highlight edges touching this node; dim the rest */
+  EDGES.forEach(function(e) {
+    var key = e[0] + '-' + e[1];
+    var obj = edgeEls[key];
+    if (!obj) return;
+    var active = (e[0] === id || e[1] === id);
+    obj.path.setAttribute('stroke-opacity', active ? '0.9' : '0.08');
+    obj.path.setAttribute('stroke-width',   active ? '2' : '1.5');
+    obj.label.setAttribute('opacity',       active ? '1' : '0');
+    obj.bg.setAttribute('opacity',          active ? '1' : '0');
+  });
+
+  openPanel(node);
+}
+
+function clearSelection() {
+  if (selected && nodeEls[selected]) {
+    nodeEls[selected].classList.remove('ts-selected');
+  }
+  selected = null;
+  /* Restore all edges */
+  EDGES.forEach(function(e) {
+    var key = e[0] + '-' + e[1];
+    var obj = edgeEls[key];
+    if (!obj) return;
+    obj.path.setAttribute('stroke-opacity', '0.45');
+    obj.path.setAttribute('stroke-width',   '1.5');
+    obj.label.setAttribute('opacity', '0');
+    obj.bg.setAttribute('opacity', '0');
+  });
+  closePanel();
+}
+
+/* ══════════════════════════════════════
+   PANEL
+══════════════════════════════════════ */
+function openPanel(node) {
+  /* Build connected chips */
+  var connectedEdges = EDGES.filter(function(e) {
+    return e[0] === node.id || e[1] === node.id;
+  });
+
+  var chipsHtml = '';
+  connectedEdges.forEach(function(e) {
+    var otherId = e[0] === node.id ? e[1] : e[0];
+    var direction = e[0] === node.id ? '→' : '←';
+    var other = nodeMap[otherId];
+    if (!other) return;
+    chipsHtml += '<span class="ts-chip" data-id="' + otherId + '">' +
+      '<span class="ts-chip-dot" style="background:' + e[3] + '"></span>' +
+      direction + ' ' + other.label + ' <span style="color:' + e[3] + ';opacity:0.7;font-size:0.6rem">(' + e[2] + ')</span>' +
+      '</span>';
+  });
+
+  var privacyHtml = node.privacy
+    ? '<hr class="ts-panel-divider"><p style="font-size:0.75rem;color:var(--text-dim)">🔒 ' + node.privacy + '</p>'
+    : '';
+
+  panelContent.innerHTML =
+    '<div class="ts-panel-head">' +
+      '<div class="ts-panel-icon ' + node.color + '">' + node.emoji + '</div>' +
+      '<div>' +
+        '<div class="ts-panel-title">' + node.label + '</div>' +
+        '<div class="ts-panel-type">' + node.type + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ts-panel-body">' +
+      '<p>' + node.what + '</p>' +
+      '<p>' + node.role + '</p>' +
+      privacyHtml +
+    '</div>' +
+    (chipsHtml ? (
+      '<hr class="ts-panel-divider">' +
+      '<div class="ts-panel-conns-title">Connections</div>' +
+      '<div class="ts-panel-chips">' + chipsHtml + '</div>'
+    ) : '') +
+    '<button class="ts-close-btn" id="tsPanelClose">✕ close</button>';
+
+  panel.setAttribute('aria-hidden', 'false');
+  panel.classList.add('ts-open');
+  backdrop.classList.add('ts-open');
+  document.body.style.overflow = 'hidden';
+
+  /* Chip clicks — jump to connected node */
+  panelContent.querySelectorAll('.ts-chip[data-id]').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      var nextId = chip.dataset.id;
+      closePanel(function() { selectNode(nextId); });
+    });
+  });
+
+  document.getElementById('tsPanelClose').addEventListener('click', clearSelection);
+}
+
+function closePanel(cb) {
+  panel.classList.remove('ts-open');
+  backdrop.classList.remove('ts-open');
+  panel.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  if (cb) setTimeout(cb, 280);
+}
+
+/* ══════════════════════════════════════
+   EVENTS
+══════════════════════════════════════ */
+canvas.addEventListener('click', function(e) {
+  var nodeEl = e.target.closest('.ts-node');
+  if (nodeEl) {
+    e.stopPropagation();
+    selectNode(nodeEl.dataset.id);
+  }
+});
+canvas.addEventListener('keydown', function(e) {
+  var nodeEl = e.target.closest('.ts-node');
+  if (nodeEl && (e.key === 'Enter' || e.key === ' ')) {
+    e.preventDefault();
+    selectNode(nodeEl.dataset.id);
+  }
+});
+backdrop.addEventListener('click', clearSelection);
+
+var resizeTimer;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(positionGraph, 80);
+}, { passive: true });
+
+/* ══════════════════════════════════════
+   LEGEND
+══════════════════════════════════════ */
+(function() {
+  var leg = document.getElementById('tsLegend');
+  LEGEND.forEach(function(item) {
+    var div = document.createElement('div');
+    div.className = 'ts-leg-item';
+    var line = document.createElement('div');
+    line.className = 'ts-leg-line';
+    if (item.dash) {
+      line.style.cssText = 'border-top: 2px dashed ' + item.color + '; background: transparent;';
+    } else {
+      line.style.background = item.color;
+      line.style.opacity = '0.8';
+    }
+    var span = document.createElement('span');
+    span.textContent = item.label;
+    div.appendChild(line);
+    div.appendChild(span);
+    leg.appendChild(div);
+  });
+})();
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+buildGraph();
+
+/* Wait a frame for layout, then position */
+requestAnimationFrame(function() {
+  requestAnimationFrame(positionGraph);
+});
+
+/* Also re-position after fonts load (they can shift layout) */
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(positionGraph);
+}
+</script>
+
+<script>
+  /* Scroll reveal */
+  var revealEls = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(function(el) { observer.observe(el); });
+
+  /* Nav dropdown */
+  (function() {
+    var dropdown = document.querySelector('.nav-dropdown');
+    if (!dropdown) return;
+    var toggle = dropdown.querySelector('.nav-dropdown-toggle');
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = dropdown.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  })();
+
+  /* Mobile hamburger */
+  (function() {
+    var hamburger = document.querySelector('.nav-hamburger');
+    var overlay = document.querySelector('.nav-mobile-overlay');
+    if (!hamburger || !overlay) return;
+    hamburger.addEventListener('click', function() {
+      var isOpen = hamburger.classList.toggle('open');
+      overlay.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    overlay.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        hamburger.classList.remove('open');
+        overlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  })();
+</script>
+
+<script src="theme-switcher.js" defer></script>
+<script src="visit-ticker.js" defer></script>
+<script data-goatcounter="https://dbatz92.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
