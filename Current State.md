@@ -34,6 +34,7 @@ a Google Sheet, and a home server called **birdstation**).
 | My Week | `weather.html` / `weather.js` | Weather outlook + running/drone scoring |
 | Household Task Tracker | `tasks.html` / `tasks.js` | Passphrase-gated, reads/writes a Google Sheet |
 | Observatory | `observatory.html` / `observatory.js` | BirdNET + train detections from birdstation. Linked from the home Explore grid + nav dropdown. |
+| Tech Stack | `techstack.html` | Interactive SVG node-graph of the full stack. Public, no gate. Linked as a top-level "Stack" nav tab on every page. |
 
 Shared front-end: `style.css` (theme variables + all component styles),
 `theme-switcher.js`, `auth.js`, `visit-ticker.js`.
@@ -47,6 +48,7 @@ Shared front-end: `style.css` (theme variables + all component styles),
 - **Pages are JSON-driven** (`data/*.json`); adding content usually means editing a JSON file + dropping in media. See `README.md` "Adding Content".
 - **Admin tooling:** `admin.py` (CLI) and `admin-gui.py` (tkinter) manage soundboard clips/icons/media.
 - GoatCounter for analytics; `<audio>` elements for iOS silent-switch compatibility.
+- **Nav top-level links:** Home · Explore ▼ · Stack. "Stack" links to `techstack.html` on every page; it is a direct `<a>` in `.nav-links`, not inside the dropdown. The mobile overlay places it before the Explore section label.
 
 ## Pulse subsystem (most active area)
 
@@ -127,7 +129,14 @@ train data a home. ID/class prefix: **`obs-`**.
   mobile); photo wrapped as Wikipedia link; extract expanded to 3 sentences (≤ 500 chars).
 - Assets: `style.css?v=obs10`, `observatory.js?v=obs10`, `bird-info.js?v=obs6`.
 
-### birdstation (home server — code mirrored in this repo under `birdstation/`)
+### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
+
+**Hardware topology:** **birdnode** is a Raspberry Pi Zero 2 W sitting near the
+AudioMoth. It receives USB audio from the AudioMoth, runs **Icecast**, and
+broadcasts a continuous HTTP stream on the local network (`/backyard` mount).
+**birdstation** is the main home server; it connects to birdnode's Icecast stream
+for all processing (BirdNET, train detector). The stream never leaves the local
+network.
 
 birdstation is primarily an **Emmaus Bird Observatory** (BirdNET acoustic
 detections + a train-noise detector; a solar telemetry node is wired but

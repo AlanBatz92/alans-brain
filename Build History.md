@@ -10,6 +10,31 @@
 
 ---
 
+## 2026-06-02 — Tech Stack page (`techstack.html`) + "Stack" nav tab
+
+New public page: an interactive SVG node-graph showing how the full stack
+connects — hardware through cloud through visitor.
+
+- **11 nodes:** AudioMoth · birdnode · birdstation · Alan · GitHub · Anthropic API ·
+  Cloudflare · Porkbun · Vercel · alansbrain.com · Visitor.
+- **12 labeled edges** color-coded by protocol: USB audio (yellow), Icecast stream
+  (teal), SSH (red/dashed), Git (purple), HTTPS/API (blue), DNS/proxy (green).
+- **Interaction:** tap/click any node → bottom-sheet panel with what it is, its exact
+  role, and connection chips; chips are themselves clickable to jump to a linked node.
+  Active node highlights its edges; all others dim.
+- **Dual layout:** desktop (4:3 canvas) and mobile (7:10 taller canvas) use separate
+  `[x%, y%]` coordinate sets per node.
+- **Privacy:** no IPs, hostnames, ports, or credentials anywhere; a lock callout says
+  so explicitly; birdnode panel notes the stream is LAN-only.
+- **Correctly reflects hardware topology:** birdnode (Pi Zero 2 W) runs Icecast and
+  sits between AudioMoth and birdstation — a detail absent from previous docs.
+- **Nav:** "Stack" added as a direct top-level link (`<a>` in `.nav-links`) on all
+  15 pages, after "Explore ▼". Mobile overlay places it before the Explore section.
+- **No gate:** public, no passphrase.
+- Files: `techstack.html` (self-contained — all JS/CSS inline).
+
+---
+
 ## 2026-06-01 — Observatory: clickable stat cards, Wikipedia link UX, richer extract
 
 - **Clickable stat cards:** "Life list" card smooth-scrolls to the life list section;
