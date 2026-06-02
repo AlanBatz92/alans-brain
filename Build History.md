@@ -10,28 +10,24 @@
 
 ---
 
-## 2026-06-02 — Tech Stack page (`techstack.html`) + "Stack" nav tab
+## 2026-06-02 — Tech Stack: glossary popovers, custom icons, improved node spacing
 
-New public page: an interactive SVG node-graph showing how the full stack
-connects — hardware through cloud through visitor.
+Polish pass on `techstack.html` after initial launch.
 
-- **11 nodes:** AudioMoth · birdnode · birdstation · Alan · GitHub · Anthropic API ·
-  Cloudflare · Porkbun · Vercel · alansbrain.com · Visitor.
-- **12 labeled edges** color-coded by protocol: USB audio (yellow), Icecast stream
-  (teal), SSH (red/dashed), Git (purple), HTTPS/API (blue), DNS/proxy (green).
-- **Interaction:** tap/click any node → bottom-sheet panel with what it is, its exact
-  role, and connection chips; chips are themselves clickable to jump to a linked node.
-  Active node highlights its edges; all others dim.
-- **Dual layout:** desktop (4:3 canvas) and mobile (7:10 taller canvas) use separate
-  `[x%, y%]` coordinate sets per node.
-- **Privacy:** no IPs, hostnames, ports, or credentials anywhere; a lock callout says
-  so explicitly; birdnode panel notes the stream is LAN-only.
-- **Correctly reflects hardware topology:** birdnode (Pi Zero 2 W) runs Icecast and
-  sits between AudioMoth and birdstation — a detail absent from previous docs.
-- **Nav:** "Stack" added as a direct top-level link (`<a>` in `.nav-links`) on all
-  15 pages, after "Explore ▼". Mobile overlay places it before the Explore section.
-- **No gate:** public, no passphrase.
-- Files: `techstack.html` (self-contained — all JS/CSS inline).
+- **Glossary / clickable-term system:** 32-entry `GLOSSARY` object maps term keys to `{title, def}`. `T(key, display)` helper wraps technical terms in `<span class="ts-term" data-key="...">` inside all node panel descriptions. Clicking any term opens a fixed-position `.ts-gloss` popover with a plain-English definition; viewport-aware placement via `getBoundingClientRect()` (flips below trigger if < 60px from top). Event delegation on `.ts-panel` — no per-term listeners. A demo term in the hero subtitle ("hop between nodes") shows the feature immediately on load.
+- **Custom icons:** replaced generic colored boxes with site icons for 5 nodes — AudioMoth → `img/Icons/icons/Audio_Related/audio-waves.png`, birdnode → `Audio_Related/sound-wave.png`, Cloudflare → `Explore/cloud.png`, Porkbun → `Other/domain.png`, website → `Other/planet.png`. Alan, birdstation, GitHub, Vercel, Anthropic, Visitor continue to use emoji fallbacks (no matching icon in the set).
+- **Node spacing:** canvas aspect-ratio changed from `4/3` to `5/4` (desktop) to add vertical room for the 6-layer layout. Node positions retuned — the AudioMoth → birdnode → birdstation left-column chain now has ≥ 17% vertical gap between nodes.
+
+## 2026-06-02 — Tech Stack page: initial build + birdnode topology + Stack nav tab
+
+New `techstack.html`: interactive SVG node-graph documenting the full hardware and software stack behind alansbrain.com.
+
+- **11 nodes:** AudioMoth, birdnode, birdstation, Alan, GitHub, Cloudflare, Porkbun, Vercel, Anthropic, alansbrain.com, Visitor. **12 protocol-labeled edges** (USB, Icecast/HTTP, SSH, git pull, HTTPS + CDN, NS delegation, git push/API, Anthropic API, deploy hook).
+- **birdnode is a real distinct device:** Raspberry Pi Zero 2 W running Icecast that sits between AudioMoth and birdstation. Earlier drafts (and the issue description) omitted it. The correct audio chain is AudioMoth → birdnode (Icecast) → birdstation (BirdNET pull from localhost Icecast).
+- **Tap-to-explore:** clicking a node opens a bottom-sheet panel with what/role description and "connection chips" that jump to connected nodes. Edge highlighting on node select (active 0.9 opacity, inactive 0.06).
+- **Dual layout:** percentage-based positions with separate `d:` (desktop, 5/4 canvas) and `m:` (mobile, 7/10 canvas) coordinate sets; `positionGraph()` runs on every resize.
+- **Privacy-safe:** no IPs, ports, credentials, or internal network topology in any panel. Public-facing URLs and generic architectural descriptions only.
+- **"Stack" nav tab:** added as a top-level link (not inside Explore dropdown) to all 15 HTML pages — both desktop `.nav-links` and the mobile overlay. `techstack.html` gets `class="active"`.
 
 ---
 

@@ -16,258 +16,188 @@
   </script>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* ── Tech Stack overrides ── */
-    .ts-page { max-width: 860px; }
+    /* ── Tech Stack page ── */
+    .ts-page { max-width: 900px; }
 
-    .ts-hero {
-      text-align: center;
-      padding: 2.5rem 1rem 1rem;
-    }
-    .ts-hero h1 {
-      font-size: clamp(1.8rem, 6vw, 3rem);
-      font-weight: 800;
-      line-height: 1.1;
-    }
-    .ts-hero-sub {
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      margin-top: 0.5rem;
-    }
+    .ts-hero { text-align: center; padding: 2.5rem 1rem 1rem; }
+    .ts-hero h1 { font-size: clamp(1.8rem, 6vw, 3rem); font-weight: 800; line-height: 1.1; }
+    .ts-hero-sub { color: var(--text-muted); font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.5rem; }
 
     .ts-privacy {
-      max-width: 800px;
-      margin: 0.75rem auto 0.5rem;
-      padding: 0.5rem 1rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      text-align: center;
-      font-family: var(--font-mono);
+      max-width: 820px; margin: 0.75rem auto 0.5rem;
+      padding: 0.5rem 1rem; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 0.72rem; color: var(--text-muted); text-align: center; font-family: var(--font-mono);
     }
-
     .ts-hint {
-      text-align: center;
-      font-size: 0.72rem;
-      color: var(--text-dim);
-      font-family: var(--font-mono);
-      margin: 0.4rem 0 0.75rem;
+      text-align: center; font-size: 0.72rem; color: var(--text-dim);
+      font-family: var(--font-mono); margin: 0.4rem 0 0.75rem;
       animation: ts-hint-pulse 2.5s ease-in-out infinite;
     }
-    @keyframes ts-hint-pulse {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
-    }
+    @keyframes ts-hint-pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
 
-    /* ── Graph container ── */
-    .ts-graph-wrap {
-      position: relative;
-      padding: 0 0.5rem 1.5rem;
-      max-width: 860px;
-      margin: 0 auto;
-    }
-    .ts-canvas {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 4 / 3;
-      min-height: 380px;
-    }
-    @media (max-width: 500px) {
-      .ts-canvas { aspect-ratio: 7 / 10; min-height: 480px; }
-    }
+    /* ── Graph ── */
+    .ts-graph-wrap { position: relative; padding: 0 0.5rem 1.5rem; max-width: 900px; margin: 0 auto; }
+    .ts-canvas { position: relative; width: 100%; aspect-ratio: 5/4; min-height: 420px; }
+    @media (max-width: 520px) { .ts-canvas { aspect-ratio: 7/10; min-height: 500px; } }
 
-    /* SVG layer (behind nodes) */
-    .ts-svg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      overflow: visible;
-    }
+    .ts-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 
     /* ── Nodes ── */
     .ts-node {
-      position: absolute;
-      transform: translate(-50%, -50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-      z-index: 2;
+      position: absolute; transform: translate(-50%,-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      cursor: pointer; z-index: 2;
       transition: transform 0.15s ease;
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      -webkit-user-select: none;
+      user-select: none; -webkit-user-select: none;
     }
-    .ts-node:hover { transform: translate(-50%, -50%) scale(1.08); }
-    .ts-node:active { transform: translate(-50%, -50%) scale(0.94); }
-    .ts-node.ts-selected { transform: translate(-50%, -50%) scale(1.08); }
+    .ts-node:hover  { transform: translate(-50%,-50%) scale(1.09); }
+    .ts-node:active { transform: translate(-50%,-50%) scale(0.93); }
+    .ts-node.ts-selected { transform: translate(-50%,-50%) scale(1.09); }
 
     .ts-node-icon {
-      width: 54px; height: 54px;
-      border-radius: 14px;
-      border: 2px solid var(--ts-border, rgba(45,212,191,0.3));
-      background: var(--ts-bg, rgba(45,212,191,0.08));
+      width: 56px; height: 56px; border-radius: 14px;
+      border: 2px solid var(--ts-border,rgba(45,212,191,.3));
+      background: var(--ts-bg,rgba(45,212,191,.08));
       display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-      transition: box-shadow 0.2s, border-color 0.2s;
-      position: relative;
+      font-size: 26px; transition: box-shadow .2s, border-color .2s;
     }
+    .ts-node-icon img { width: 28px; height: 28px; object-fit: contain; }
     .ts-node.ts-selected .ts-node-icon,
     .ts-node:hover .ts-node-icon {
-      box-shadow: 0 0 0 3px var(--ts-glow, rgba(45,212,191,0.4)), 0 0 20px var(--ts-glow, rgba(45,212,191,0.2));
-      border-color: var(--ts-color, var(--teal));
+      box-shadow: 0 0 0 3px var(--ts-glow,rgba(45,212,191,.4)), 0 0 22px var(--ts-glow,rgba(45,212,191,.18));
+      border-color: var(--ts-color,var(--teal));
     }
-
     .ts-node-label {
-      font-family: var(--font-mono);
-      font-size: 0.58rem;
-      color: var(--text-dim);
-      text-align: center;
-      white-space: nowrap;
-      background: rgba(10,14,26,0.75);
-      padding: 2px 5px;
-      border-radius: 4px;
-      transition: color 0.2s;
-      max-width: 78px;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-family: var(--font-mono); font-size: 0.59rem; color: var(--text-dim);
+      text-align: center; white-space: nowrap;
+      background: rgba(10,14,26,.78); padding: 2px 5px; border-radius: 4px;
+      transition: color .2s; max-width: 82px; overflow: hidden; text-overflow: ellipsis;
     }
     .ts-node.ts-selected .ts-node-label,
-    .ts-node:hover .ts-node-label { color: var(--ts-color, var(--teal)); }
+    .ts-node:hover .ts-node-label { color: var(--ts-color,var(--teal)); }
 
-    /* Color themes per node */
-    .ts-teal  { --ts-color: var(--teal);   --ts-bg: rgba(45,212,191,0.08);  --ts-border: rgba(45,212,191,0.28); --ts-glow: rgba(45,212,191,0.35); }
-    .ts-blue  { --ts-color: var(--blue);   --ts-bg: rgba(56,189,248,0.08);  --ts-border: rgba(56,189,248,0.28); --ts-glow: rgba(56,189,248,0.3); }
-    .ts-purple{ --ts-color: var(--purple); --ts-bg: rgba(167,139,250,0.08); --ts-border: rgba(167,139,250,0.28); --ts-glow: rgba(167,139,250,0.3); }
-    .ts-pink  { --ts-color: var(--pink);   --ts-bg: rgba(244,114,182,0.08); --ts-border: rgba(244,114,182,0.28); --ts-glow: rgba(244,114,182,0.3); }
-    .ts-green { --ts-color: var(--green);  --ts-bg: rgba(52,211,153,0.08);  --ts-border: rgba(52,211,153,0.28); --ts-glow: rgba(52,211,153,0.3); }
-    .ts-yellow{ --ts-color: var(--yellow); --ts-bg: rgba(251,191,36,0.08);  --ts-border: rgba(251,191,36,0.28); --ts-glow: rgba(251,191,36,0.3); }
+    .ts-teal   { --ts-color:var(--teal);   --ts-bg:rgba(45,212,191,.08);  --ts-border:rgba(45,212,191,.28);  --ts-glow:rgba(45,212,191,.35); }
+    .ts-blue   { --ts-color:var(--blue);   --ts-bg:rgba(56,189,248,.08);  --ts-border:rgba(56,189,248,.28);  --ts-glow:rgba(56,189,248,.3); }
+    .ts-purple { --ts-color:var(--purple); --ts-bg:rgba(167,139,250,.08); --ts-border:rgba(167,139,250,.28); --ts-glow:rgba(167,139,250,.3); }
+    .ts-pink   { --ts-color:var(--pink);   --ts-bg:rgba(244,114,182,.08); --ts-border:rgba(244,114,182,.28); --ts-glow:rgba(244,114,182,.3); }
+    .ts-green  { --ts-color:var(--green);  --ts-bg:rgba(52,211,153,.08);  --ts-border:rgba(52,211,153,.28);  --ts-glow:rgba(52,211,153,.3); }
+    .ts-yellow { --ts-color:var(--yellow); --ts-bg:rgba(251,191,36,.08);  --ts-border:rgba(251,191,36,.28);  --ts-glow:rgba(251,191,36,.3); }
 
-    @media (max-width: 500px) {
-      .ts-node-icon { width: 44px; height: 44px; font-size: 20px; border-radius: 12px; }
-      .ts-node-label { font-size: 0.52rem; max-width: 64px; }
+    @media (max-width: 520px) {
+      .ts-node-icon { width: 46px; height: 46px; font-size: 22px; border-radius: 12px; }
+      .ts-node-icon img { width: 24px; height: 24px; }
+      .ts-node-label { font-size: 0.54rem; max-width: 68px; }
     }
 
     /* ── Legend ── */
     .ts-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem 1rem;
-      justify-content: center;
-      max-width: 800px;
-      margin: 0 auto 1.5rem;
-      padding: 0.75rem 1rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: center;
+      max-width: 820px; margin: 0 auto 1.5rem;
+      padding: 0.75rem 1rem; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px;
     }
-    .ts-leg-item {
-      display: flex; align-items: center; gap: 6px;
-      font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);
-    }
-    .ts-leg-line {
-      width: 22px; height: 2px; border-radius: 1px; flex-shrink: 0;
-    }
-    .ts-leg-dash {
-      background: transparent;
-      border-top: 2px dashed var(--dash-color);
-    }
+    .ts-leg-item { display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:.65rem; color:var(--text-muted); }
+    .ts-leg-line { width:22px; height:2px; border-radius:1px; flex-shrink:0; }
 
-    /* ── Detail panel (bottom sheet) ── */
+    /* ── Detail panel ── */
     .ts-backdrop {
-      position: fixed; inset: 0;
-      background: rgba(10,14,26,0.65);
-      z-index: 200;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.28s ease;
+      position: fixed; inset: 0; background: rgba(10,14,26,.65); z-index: 200;
+      opacity: 0; pointer-events: none; transition: opacity .28s ease;
     }
     .ts-backdrop.ts-open { opacity: 1; pointer-events: all; }
 
     .ts-panel {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-radius: 18px 18px 0 0;
-      z-index: 201;
+      position: fixed; left: 0; right: 0; bottom: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+      border-radius: 18px 18px 0 0; z-index: 201;
       transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-      max-height: 78vh;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
-      padding: 0 1.25rem 2.5rem;
-      padding-bottom: calc(2.5rem + env(safe-area-inset-bottom));
+      transition: transform .3s cubic-bezier(.32,.72,0,1);
+      max-height: 78vh; overflow-y: auto;
+      overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+      padding: 0 1.25rem calc(2.5rem + env(safe-area-inset-bottom));
     }
     .ts-panel.ts-open { transform: translateY(0); }
+    .ts-panel-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:.75rem auto 1.25rem; }
 
-    .ts-panel-handle {
-      width: 36px; height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 0.75rem auto 1.25rem;
-    }
-
-    .ts-panel-head {
-      display: flex; align-items: center; gap: 0.875rem;
-      margin-bottom: 1rem;
-    }
+    .ts-panel-head { display:flex; align-items:center; gap:.875rem; margin-bottom:1rem; }
     .ts-panel-icon {
-      width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 26px;
-      border: 2px solid var(--ts-border, rgba(45,212,191,0.3));
-      background: var(--ts-bg, rgba(45,212,191,0.08));
+      width:52px; height:52px; border-radius:14px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; font-size:26px;
+      border: 2px solid var(--ts-border,rgba(45,212,191,.3));
+      background: var(--ts-bg,rgba(45,212,191,.08));
     }
-    .ts-panel-title { font-size: 1.15rem; font-weight: 800; }
-    .ts-panel-type  { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-dim); margin-top: 2px; }
+    .ts-panel-icon img { width:28px; height:28px; object-fit:contain; }
+    .ts-panel-title { font-size:1.15rem; font-weight:800; }
+    .ts-panel-type  { font-family:var(--font-mono); font-size:.68rem; color:var(--text-dim); margin-top:2px; }
 
-    .ts-panel-body {
-      font-size: 0.83rem; color: var(--text-muted); line-height: 1.65;
-    }
-    .ts-panel-body p { margin-bottom: 0.7rem; }
-    .ts-panel-body p:last-child { margin-bottom: 0; }
-    .ts-panel-body strong { color: var(--text); font-weight: 700; }
+    .ts-panel-body { font-size:.83rem; color:var(--text-muted); line-height:1.65; }
+    .ts-panel-body p { margin-bottom:.7rem; }
+    .ts-panel-body p:last-child { margin-bottom:0; }
+    .ts-panel-body strong { color:var(--text); font-weight:700; }
     .ts-panel-body code {
-      font-family: var(--font-mono); font-size: 0.78rem;
-      background: var(--surface-hover); border: 1px solid var(--border);
-      padding: 1px 5px; border-radius: 4px; color: var(--teal);
+      font-family:var(--font-mono); font-size:.78rem;
+      background:var(--surface-hover); border:1px solid var(--border);
+      padding:1px 5px; border-radius:4px; color:var(--teal);
     }
-
-    .ts-panel-divider {
-      border: none; border-top: 1px solid var(--border);
-      margin: 1rem 0;
-    }
-
+    .ts-panel-divider { border:none; border-top:1px solid var(--border); margin:1rem 0; }
     .ts-panel-conns-title {
-      font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-dim);
-      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;
+      font-family:var(--font-mono); font-size:.62rem; color:var(--text-dim);
+      text-transform:uppercase; letter-spacing:.08em; margin-bottom:.5rem;
     }
-    .ts-panel-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .ts-panel-chips { display:flex; flex-wrap:wrap; gap:5px; }
     .ts-chip {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: var(--surface-hover); border: 1px solid var(--border);
-      border-radius: 6px; padding: 3px 8px;
-      font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);
-      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+      display:inline-flex; align-items:center; gap:4px;
+      background:var(--surface-hover); border:1px solid var(--border);
+      border-radius:6px; padding:3px 8px;
+      font-family:var(--font-mono); font-size:.65rem; color:var(--text-muted);
+      cursor:pointer; transition:border-color .15s, color .15s;
     }
-    .ts-chip:hover { border-color: var(--teal); color: var(--text); }
-    .ts-chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-
+    .ts-chip:hover { border-color:var(--teal); color:var(--text); }
+    .ts-chip-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
     .ts-close-btn {
-      display: block; width: 100%; margin-top: 1.25rem;
-      padding: 0.6rem; border-radius: 10px;
-      background: var(--surface-hover); border: 1px solid var(--border);
-      color: var(--text-muted); font-family: var(--font-mono); font-size: 0.75rem;
-      cursor: pointer; transition: background 0.15s, color 0.15s;
-      text-align: center;
+      display:block; width:100%; margin-top:1.25rem;
+      padding:.6rem; border-radius:10px;
+      background:var(--surface-hover); border:1px solid var(--border);
+      color:var(--text-muted); font-family:var(--font-mono); font-size:.75rem;
+      cursor:pointer; transition:background .15s, color .15s; text-align:center;
     }
-    .ts-close-btn:hover { background: var(--border); color: var(--text); }
+    .ts-close-btn:hover { background:var(--border); color:var(--text); }
+
+    /* ── Clickable terms ── */
+    .ts-term {
+      color: var(--teal); text-decoration: underline dotted var(--teal);
+      text-underline-offset: 3px; cursor: pointer; white-space: nowrap;
+      transition: color .15s, text-decoration-color .15s;
+      border-radius: 2px;
+    }
+    .ts-term:hover { color: var(--blue); text-decoration-color: var(--blue); }
+    .ts-term.ts-term-open { color: var(--yellow); text-decoration-color: var(--yellow); }
+
+    /* ── Glossary popover ── */
+    .ts-gloss {
+      position: fixed; z-index: 400;
+      background: var(--bg); border: 1px solid var(--teal);
+      border-radius: 10px; padding: .75rem 1rem;
+      max-width: min(300px, 88vw);
+      box-shadow: 0 8px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(45,212,191,.08);
+      animation: ts-gloss-in .14s ease;
+      pointer-events: all;
+    }
+    @keyframes ts-gloss-in { from{opacity:0;transform:scale(.93) translateY(4px)} to{opacity:1;transform:none} }
+    .ts-gloss-title {
+      font-family: var(--font-mono); font-size: .8rem; font-weight: 700;
+      color: var(--teal); margin-bottom: .4rem;
+    }
+    .ts-gloss-def { font-size: .78rem; color: var(--text-muted); line-height: 1.55; }
+    .ts-gloss-close {
+      position: absolute; top: 5px; right: 7px;
+      background: none; border: none; color: var(--text-dim);
+      font-size: .7rem; cursor: pointer; padding: 2px 5px; border-radius: 4px;
+      transition: color .15s;
+    }
+    .ts-gloss-close:hover { color: var(--text); }
   </style>
 </head>
 <body>
@@ -324,22 +254,22 @@
 
   <div class="page ts-page">
 
-    <section class="ts-hero anim" style="animation-delay:0.1s">
+    <section class="ts-hero anim" style="animation-delay:.1s">
       <h1><span class="gradient-text">How It All Works</span></h1>
-      <p class="ts-hero-sub">The full stack behind Alan's Brain — tap any node to explore</p>
+      <p class="ts-hero-sub">The full stack behind Alan's Brain — tap any node to explore. Underlined <span class="ts-term" data-key="api">terms</span> are clickable.</p>
     </section>
 
-    <p class="ts-privacy anim" style="animation-delay:0.2s">
+    <p class="ts-privacy anim" style="animation-delay:.2s">
       🔒 Privacy-safe — no IPs, hostnames, ports, or credentials anywhere on this page
     </p>
 
-    <p class="ts-hint">tap a node to explore it</p>
+    <p class="ts-hint">tap a node · tap underlined terms for definitions</p>
 
-    <div class="ts-graph-wrap anim" style="animation-delay:0.3s">
+    <div class="ts-graph-wrap anim" style="animation-delay:.3s">
       <div class="ts-canvas" id="tsCanvas"></div>
     </div>
 
-    <div class="ts-legend anim" style="animation-delay:0.4s" id="tsLegend"></div>
+    <div class="ts-legend anim" style="animation-delay:.4s" id="tsLegend"></div>
 
     <footer class="site-footer reveal">
       <div class="footer-stamp">Crafted by Alan <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/UFO/ufo.png" alt=""></div>
@@ -361,170 +291,198 @@
 
   </div><!-- /.page -->
 
-  <!-- Backdrop + panel -->
   <div class="ts-backdrop" id="tsBackdrop"></div>
   <aside class="ts-panel" id="tsPanel" aria-hidden="true">
     <div class="ts-panel-handle"></div>
     <div id="tsPanelContent"></div>
   </aside>
+  <div class="ts-gloss" id="tsGloss" style="display:none" aria-live="polite">
+    <button class="ts-gloss-close" id="tsGlossClose" aria-label="Close">✕</button>
+    <div class="ts-gloss-title" id="tsGlossTitle"></div>
+    <div class="ts-gloss-def" id="tsGlossDef"></div>
+  </div>
 
 <script>
 /* ══════════════════════════════════════
-   DATA
+   GLOSSARY
 ══════════════════════════════════════ */
+var GLOSSARY = {
+  'usb':              { title: 'USB', def: 'Universal Serial Bus — a physical connector standard. The AudioMoth plugs into birdnode via USB and registers itself as an audio input device (like a microphone would).' },
+  'icecast':          { title: 'Icecast', def: 'Open-source audio/video streaming server software. It receives a live audio feed and broadcasts it as a continuous HTTP stream — like an internet radio station, but on the local network.' },
+  'http-stream':      { title: 'HTTP Audio Stream', def: 'A never-ending HTTP response that delivers audio data in real time. Any connected software can tune in and receive audio indefinitely.' },
+  'ssh':              { title: 'SSH — Secure Shell', def: 'An encrypted protocol for remote command-line access over a network. Alan uses it to log into birdstation from any machine and run commands as if sitting at the keyboard.' },
+  'cli':              { title: 'CLI — Command-Line Interface', def: 'A text-based way to interact with software by typing commands, with no graphical window. Faster than a GUI for many tasks, and scriptable.' },
+  'git':              { title: 'Git', def: 'A distributed version control system. Every change to every file is recorded with a timestamp and message. You can compare any two versions, roll back mistakes, and collaborate without overwriting work.' },
+  'git-pull':         { title: 'git pull', def: 'Downloads the latest commits from a remote repository (GitHub) and applies them to the local copy. birdstation deploys new code by running git pull — no file copying, no manual syncing.' },
+  'version-control':  { title: 'Version Control', def: 'A system that records the history of every change made to a codebase. Nothing is ever permanently lost; you can go back to any previous state.' },
+  'webhook':          { title: 'Webhook', def: 'An automatic HTTP notification fired from one service to another when something happens. GitHub fires a webhook at Vercel on every code push, telling it to start a fresh deploy.' },
+  'systemd':          { title: 'systemd', def: 'Linux\'s service manager. It starts, stops, and auto-restarts long-running processes (services) and scheduled tasks (timers), and brings everything back after a reboot.' },
+  'timer':            { title: 'Systemd Timer', def: 'A scheduled task managed by systemd — similar to a cron job. Runs a paired service on a fixed schedule, e.g. every 15 minutes or daily at 6 AM.' },
+  'birdnet':          { title: 'BirdNET-Analyzer', def: 'An open-source AI model from Cornell Lab of Ornithology. It analyzes short audio clips and identifies bird species by their calls, returning a species name and a confidence score between 0 and 1.' },
+  'sqlite':           { title: 'SQLite', def: 'A lightweight, file-based relational database. The entire database lives in a single file on disk — no separate server process to install or manage. All of birdstation\'s data (bird detections, train events, news items) lives in one SQLite file.' },
+  'fastapi':          { title: 'FastAPI', def: 'A modern Python web framework for building APIs quickly. It\'s the engine behind birdstation\'s bird_api.py — the HTTP server that sends Observatory and Pulse data to the website.' },
+  'api':              { title: 'API — Application Programming Interface', def: 'A defined contract for how software talks to other software over a network. The website calls birdstation\'s API to fetch live bird detections, train events, and news.' },
+  'https':            { title: 'HTTPS', def: 'HyperText Transfer Protocol Secure — standard encrypted web traffic. The "S" means the connection is protected by TLS so data can\'t be read or tampered with in transit between browser and server.' },
+  'dns':              { title: 'DNS — Domain Name System', def: 'The internet\'s phonebook. Translates human-readable names like "alansbrain.com" into the IP addresses computers actually route to. Without DNS you\'d have to remember numbers.' },
+  'reverse-proxy':    { title: 'Reverse Proxy', def: 'A server that sits in front of your real server and forwards requests to it. Visitors talk to the proxy (Cloudflare), never directly to the machine behind it — hiding its IP and adding a security layer.' },
+  'ssl-termination':  { title: 'SSL Termination', def: 'Decrypting incoming HTTPS traffic at the edge (Cloudflare) before passing it onward to the origin server. The public internet sees encrypted HTTPS; traffic inside the private network can be plain HTTP.' },
+  'cdn':              { title: 'CDN — Content Delivery Network', def: 'A globally distributed network of servers that cache and serve your content from the location closest to each visitor, making pages load faster worldwide and reducing load on the origin.' },
+  'ddos':             { title: 'DDoS Attack', def: 'Distributed Denial of Service — floods a server with traffic from thousands of sources simultaneously, trying to overwhelm it. Cloudflare absorbs and filters these attacks before they reach the origin server.' },
+  'registrar':        { title: 'Domain Registrar', def: 'A company licensed to sell and manage internet domain name registrations. You pay the registrar annually to maintain your claim on a domain name.' },
+  'nameservers':      { title: 'Nameservers', def: 'The servers responsible for answering DNS queries about a domain. Delegating nameservers to Cloudflare means Cloudflare controls where all traffic for that domain gets routed — not Porkbun.' },
+  'serverless':       { title: 'Serverless Functions', def: 'Short-lived code that runs on-demand in the cloud with no server to manage. Vercel spins up a function to handle a single request, then shuts it down immediately. Great for lightweight API proxies.' },
+  'cors':             { title: 'CORS — Cross-Origin Resource Sharing', def: 'A browser security rule that blocks JavaScript from calling APIs on a different domain unless that server explicitly allows it. Vercel\'s proxy functions work around CORS restrictions on third-party APIs.' },
+  'pkce':             { title: 'PKCE — Proof Key for Code Exchange', def: 'A security extension for OAuth that lets browser apps authenticate with services like Spotify without ever embedding a secret key in the page source.' },
+  'oauth':            { title: 'OAuth — Open Authorization', def: 'An industry-standard protocol that lets users grant an app access to their account on another service (e.g. Spotify) without sharing their password with that app.' },
+  'static-site':      { title: 'Static Site', def: 'A website made entirely of pre-built files — HTML, CSS, and JavaScript. There\'s no server-side rendering; the same files go to every visitor. Dynamic data is fetched separately by JavaScript after the page loads.' },
+  'prompt-caching':   { title: 'Prompt Caching', def: 'A feature of the Anthropic API that reuses ("caches") a large system prompt across many API calls. Avoids re-sending the same thousands of tokens each time, dramatically cutting cost and latency.' },
+  'structured-output':{ title: 'Structured Output', def: 'Asking an AI to respond in a strict format — like a JSON object with specific fields — rather than free-form prose. Used here so the Morning Brief always has the right section structure and citation IDs the code can parse.' },
+  'rss':              { title: 'RSS — Really Simple Syndication', def: 'A standard XML feed format that websites publish so readers can subscribe and receive new content automatically. Pulse fetches dozens of RSS feeds every 15 minutes to build the news feed.' }
+};
 
-/* Node positions: two layouts [desktop, mobile] as [x%, y%].
-   Desktop canvas: 4:3 aspect.  Mobile canvas: 7:10 aspect (taller). */
+/* ── Term helper: returns a clickable span ── */
+function T(key, display) {
+  return '<span class="ts-term" data-key="' + key + '">' + (display !== undefined ? display : key) + '</span>';
+}
+
+/* ══════════════════════════════════════
+   NODE DATA
+   Positions: d=[x%,y%] desktop (5:4 canvas)
+              m=[x%,y%] mobile  (7:10 canvas)
+   icon: path to img  OR  emoji: glyph
+══════════════════════════════════════ */
 var NODES = [
   {
-    id: 'audiomoth',
-    label: 'AudioMoth',
-    emoji: '🎙️',
-    color: 'ts-yellow',
-    hex: '#fbbf24',
-    d: [21, 7],   // desktop [x%, y%]
-    m: [21, 5],   // mobile
-    type: 'Hardware',
-    what: 'An open-source, ultra-low-power acoustic recording unit that sits outside 24/7.',
-    role: 'Captures continuous backyard audio and feeds it into birdnode via USB. birdnode picks it up as a USB audio device and streams it over the local network via Icecast.',
+    id: 'audiomoth', label: 'AudioMoth',
+    icon: 'img/Icons/icons/Audio_Related/audio-waves.png',
+    color: 'ts-yellow', hex: '#fbbf24',
+    d: [20, 7], m: [20, 5],
+    type: 'Hardware — Acoustic Recorder',
+    what: 'An open-source, ultra-low-power acoustic recording unit that sits outside and listens continuously.',
+    role: 'Captures continuous backyard audio and feeds it into birdnode via ' + T('usb','USB') + '. birdnode picks it up as a ' + T('usb','USB') + ' audio device — the same way a microphone would appear to any computer.',
     privacy: 'Audio is processed locally on birdstation and discarded after analysis. No recordings are ever stored permanently or sent off-site.',
     connects: ['birdnode']
   },
   {
-    id: 'alan',
-    label: 'Alan (Admin)',
+    id: 'alan', label: 'Alan (Admin)',
     emoji: '👤',
-    color: 'ts-pink',
-    hex: '#f472b6',
-    d: [79, 7],
-    m: [79, 5],
-    type: 'Person',
-    what: "That's me — I maintain the whole stack, from hardware to code.",
-    role: 'SSH into birdstation for admin tasks, monitoring logs, and running the train vetting CLI. Push code changes to GitHub, which triggers deploys. Occasionally SSH into birdstation to <code>git pull</code> and restart a service.',
+    color: 'ts-pink', hex: '#f472b6',
+    d: [80, 7], m: [80, 5],
+    type: 'Person — Site Operator',
+    what: "That's me — I maintain the whole stack from hardware to code.",
+    role: T('ssh','SSH') + ' into birdstation for admin tasks, monitoring logs, and running the train vetting ' + T('cli','CLI') + '. Push code changes to GitHub, which triggers deploys. Occasionally ' + T('ssh','SSH') + ' into birdstation to run ' + T('git-pull','<code>git pull</code>') + ' and restart a service when the code changes.',
     connects: ['birdstation', 'github']
   },
   {
-    id: 'birdnode',
-    label: 'birdnode',
-    emoji: '📡',
-    color: 'ts-teal',
-    hex: '#2dd4bf',
-    d: [21, 23],
-    m: [21, 19],
-    type: 'Edge Device (Raspberry Pi Zero 2 W)',
-    what: 'A Raspberry Pi Zero 2 W — a tiny, low-power single-board computer sitting physically near the AudioMoth.',
-    role: 'Receives audio from the AudioMoth over USB and runs <strong>Icecast</strong>, the audio streaming server. Broadcasts a continuous HTTP audio stream over the local network on the <code>/backyard</code> mount. birdstation connects to this stream to feed BirdNET and the train detector.',
-    privacy: 'Stays on the local network — the stream is never exposed to the internet.',
+    id: 'birdnode', label: 'birdnode',
+    icon: 'img/Icons/icons/Audio_Related/sound-wave.png',
+    color: 'ts-teal', hex: '#2dd4bf',
+    d: [20, 24], m: [20, 19],
+    type: 'Edge Device — Raspberry Pi Zero 2 W',
+    what: 'A Raspberry Pi Zero 2 W — a credit-card-sized, low-power single-board computer sitting physically near the AudioMoth.',
+    role: 'Receives audio from the AudioMoth over ' + T('usb','USB') + ' and runs <strong>' + T('icecast','Icecast') + '</strong>, the audio streaming server. Broadcasts a continuous ' + T('http-stream','HTTP audio stream') + ' over the local network on the <code>/backyard</code> mount point. birdstation connects to this URL to feed ' + T('birdnet','BirdNET') + ' and the train detector.',
+    privacy: 'Stays entirely on the local network — the audio stream is never exposed to the internet.',
     connects: ['audiomoth', 'birdstation']
   },
   {
-    id: 'birdstation',
-    label: 'birdstation',
+    id: 'birdstation', label: 'birdstation',
     emoji: '🖥️',
-    color: 'ts-blue',
-    hex: '#38bdf8',
-    d: [21, 42],
-    m: [21, 36],
-    type: 'Home Server',
+    color: 'ts-blue', hex: '#38bdf8',
+    d: [20, 43], m: [20, 35],
+    type: 'Home Server — Processing Hub',
     what: 'A home server running 24/7. The processing hub for the bird observatory and the Pulse news system.',
-    role: '<strong>Runs six systemd services:</strong><br>• <code>birdnet.service</code> — pulls 15 s chunks from birdnode\'s Icecast stream, runs BirdNET-Analyzer, writes detections to SQLite<br>• <code>train_detector.service</code> — listens to the same stream, detects train whistles, writes events + WAV clips<br>• <code>birdapi.service</code> — FastAPI, serves all data to the website<br>• <code>pulse-fetch.timer</code> — pulls RSS sources every 15 min, dedupes<br>• <code>pulse-enrich.timer</code> — AI-tags + summarises articles (Claude Haiku) every 20 min<br>• <code>pulse-digest.timer</code> — writes the daily Morning Brief (Claude Sonnet) at ~6 AM<br><br>Storage: one SQLite database (<code>birdnet.db</code>) shared by all services.',
+    role: '<strong>Runs six ' + T('systemd','systemd') + ' services:</strong><br>' +
+          '• <code>birdnet.service</code> — pulls 15-second chunks from birdnode\'s ' + T('icecast','Icecast') + ' stream, runs ' + T('birdnet','BirdNET-Analyzer') + ', writes detections to ' + T('sqlite','SQLite') + '<br>' +
+          '• <code>train_detector.service</code> — listens to the same stream, detects train whistles, writes events + WAV clips<br>' +
+          '• <code>birdapi.service</code> — ' + T('fastapi','FastAPI') + ' ' + T('api','API') + ' server, serves all data to the website<br>' +
+          '• <code>pulse-fetch.' + T('timer','timer') + '</code> — pulls ' + T('rss','RSS') + ' sources every 15 min, dedupes<br>' +
+          '• <code>pulse-enrich.' + T('timer','timer') + '</code> — AI-tags + summarises articles (Claude Haiku) every 20 min<br>' +
+          '• <code>pulse-digest.' + T('timer','timer') + '</code> — writes the daily Morning Brief (Claude Sonnet) at ~6 AM<br><br>' +
+          'Storage: one ' + T('sqlite','SQLite') + ' database (<code>birdnet.db</code>) shared by all services.',
     connects: ['birdnode', 'alan', 'anthropic', 'cloudflare', 'github']
   },
   {
-    id: 'github',
-    label: 'GitHub',
+    id: 'github', label: 'GitHub',
     emoji: '🐙',
-    color: 'ts-purple',
-    hex: '#a78bfa',
-    d: [79, 30],
-    m: [79, 27],
+    color: 'ts-purple', hex: '#a78bfa',
+    d: [80, 27], m: [80, 23],
     type: 'Source Control',
-    what: 'Version control and source of truth for every file in the project — website pages, birdstation Python scripts, FastAPI app, systemd units, and this very page.',
-    role: 'Accepts git pushes from Alan. Automatically triggers a Vercel deploy for every push to <code>main</code> (the static website). Also serves as the deploy source for birdstation: a <code>git pull</code> on the box updates the running scripts.',
+    what: T('version-control','Version control') + ' and source of truth for every file in the project — website pages, birdstation Python scripts, ' + T('fastapi','FastAPI') + ' app, ' + T('systemd','systemd') + ' units, and this very page.',
+    role: 'Accepts git pushes from Alan. Automatically triggers a Vercel deploy via ' + T('webhook','webhook') + ' for every push to <code>main</code>. Also serves as the deploy source for birdstation: a ' + T('git-pull','<code>git pull</code>') + ' on the box updates the running scripts in-place.',
     connects: ['alan', 'birdstation', 'vercel']
   },
   {
-    id: 'anthropic',
-    label: 'Anthropic API',
+    id: 'anthropic', label: 'Anthropic API',
     emoji: '🤖',
-    color: 'ts-teal',
-    hex: '#2dd4bf',
-    d: [50, 56],
-    m: [50, 50],
+    color: 'ts-teal', hex: '#2dd4bf',
+    d: [52, 55], m: [52, 47],
     type: 'External AI API',
-    what: "Anthropic's Claude AI, called over HTTPS from birdstation.",
-    role: 'Powers two Pulse features on birdstation:<br>• <strong>Haiku</strong> (<code>claude-haiku-4-5</code>) — batched category tagging and one-sentence summaries for news articles, with a prompt-cached system prompt for efficiency<br>• <strong>Sonnet</strong> (<code>claude-sonnet-4-6</code>) — writes the daily Morning Brief with adaptive thinking and structured output; includes per-section source citations',
-    privacy: 'Only news article text and metadata is sent to the API. No personal data, no bird audio, no location info.',
+    what: "Anthropic's Claude AI, called over " + T('https','HTTPS') + ' from birdstation.',
+    role: 'Powers two Pulse features on birdstation:<br>' +
+          '• <strong>Haiku</strong> (<code>claude-haiku-4-5</code>) — batched category tagging and one-sentence summaries for news articles, with a ' + T('prompt-caching','prompt-cached') + ' system prompt for efficiency<br>' +
+          '• <strong>Sonnet</strong> (<code>claude-sonnet-4-6</code>) — writes the daily Morning Brief with adaptive thinking and ' + T('structured-output','structured output') + '; includes per-section source citations',
+    privacy: 'Only news article text and metadata is sent to the API. No personal data, no bird audio, no location information.',
     connects: ['birdstation']
   },
   {
-    id: 'cloudflare',
-    label: 'Cloudflare',
-    emoji: '☁️',
-    color: 'ts-green',
-    hex: '#34d399',
-    d: [28, 71],
-    m: [25, 66],
-    type: 'DNS + Reverse Proxy',
-    what: 'DNS provider and reverse-proxy CDN for both domains.',
-    role: 'Handles DNS for <strong>alansbrain.com</strong> and <strong>birds.alansbrain.com</strong>. Acts as SSL terminator and reverse proxy in front of birdstation\'s FastAPI — so the home server IP is never exposed publicly. The website fetches Observatory and Pulse data by calling <code>birds.alansbrain.com</code>, which routes through Cloudflare to the box. Also provides CDN caching and DDoS protection.',
+    id: 'cloudflare', label: 'Cloudflare',
+    icon: 'img/Icons/icons/Explore/cloud.png',
+    color: 'ts-green', hex: '#34d399',
+    d: [27, 67], m: [26, 60],
+    type: 'DNS + Reverse Proxy + CDN',
+    what: T('dns','DNS') + ' provider, ' + T('reverse-proxy','reverse proxy') + ', and ' + T('cdn','CDN') + ' for both domains.',
+    role: 'Handles ' + T('dns','DNS') + ' for <strong>alansbrain.com</strong> and <strong>birds.alansbrain.com</strong>. Acts as ' + T('ssl-termination','SSL terminator') + ' and ' + T('reverse-proxy','reverse proxy') + ' in front of birdstation\'s ' + T('fastapi','FastAPI') + ' — so the home server IP is never exposed publicly. The website fetches Observatory and Pulse data by calling <code>birds.alansbrain.com</code>, which routes through Cloudflare to the box. Also provides ' + T('cdn','CDN') + ' caching and ' + T('ddos','DDoS') + ' protection.',
     connects: ['birdstation', 'porkbun', 'website']
   },
   {
-    id: 'porkbun',
-    label: 'Porkbun',
-    emoji: '🐷',
-    color: 'ts-green',
-    hex: '#34d399',
-    d: [8, 87],
-    m: [7, 82],
+    id: 'porkbun', label: 'Porkbun',
+    icon: 'img/Icons/icons/Other/domain.png',
+    color: 'ts-green', hex: '#34d399',
+    d: [8, 84], m: [7, 75],
     type: 'Domain Registrar',
-    what: 'The registrar where the domain was registered.',
-    role: 'Holds the domain registration. Nameservers are delegated to Cloudflare, so Cloudflare manages all DNS records and routing.',
+    what: 'The ' + T('registrar','domain registrar') + ' where the domain was purchased and is renewed annually.',
+    role: T('registrar','Registrar') + ' for alansbrain.com. ' + T('nameservers','Nameservers') + ' are delegated to Cloudflare, meaning Cloudflare — not Porkbun — controls where all ' + T('dns','DNS') + ' queries for the domain resolve.',
     connects: ['cloudflare']
   },
   {
-    id: 'vercel',
-    label: 'Vercel',
+    id: 'vercel', label: 'Vercel',
     emoji: '▲',
-    color: 'ts-purple',
-    hex: '#a78bfa',
-    d: [74, 71],
-    m: [77, 66],
+    color: 'ts-purple', hex: '#a78bfa',
+    d: [74, 67], m: [76, 60],
     type: 'Static Hosting + Serverless',
-    what: 'Static site hosting with serverless function support.',
-    role: 'Hosts all of the HTML/CSS/JS pages of <strong>alansbrain.com</strong>. Also runs two serverless proxy functions in <code>api/</code>:<br>• <code>setlist.js</code> — proxies the setlist.fm API (CORS workaround)<br>• <code>spotify-proxy.js</code> — handles Spotify write operations (PKCE OAuth, no client secret in the browser)<br><br>Auto-deploys from GitHub on every push to <code>main</code> — no manual deploy step needed.',
+    what: T('static-site','Static site') + ' hosting platform with ' + T('serverless','serverless') + ' function support.',
+    role: 'Hosts all of the HTML/CSS/JS pages of <strong>alansbrain.com</strong>. Also runs two ' + T('serverless','serverless') + ' proxy functions in <code>api/</code>:<br>' +
+          '• <code>setlist.js</code> — proxies the setlist.fm ' + T('api','API') + ' (' + T('cors','CORS') + ' workaround)<br>' +
+          '• <code>spotify-proxy.js</code> — handles Spotify write operations (' + T('pkce','PKCE') + ' ' + T('oauth','OAuth') + ', no client secret in the browser)<br><br>' +
+          'Auto-deploys from GitHub via ' + T('webhook','webhook') + ' on every push to <code>main</code> — no manual deploy step needed.',
     connects: ['github', 'website']
   },
   {
-    id: 'website',
-    label: 'alansbrain.com',
-    emoji: '🌐',
-    color: 'ts-blue',
-    hex: '#38bdf8',
-    d: [50, 87],
-    m: [50, 82],
+    id: 'website', label: 'alansbrain.com',
+    icon: 'img/Icons/icons/Other/planet.png',
+    color: 'ts-blue', hex: '#38bdf8',
+    d: [52, 84], m: [52, 75],
     type: 'Static Website',
     what: 'This website. A personal digital garden built with vanilla HTML, CSS, and JS — no frameworks, no build step.',
-    role: 'The public face of the whole stack. Fetches live data client-side:<br>• Observatory bird detections and train events from <code>birds.alansbrain.com</code> (via Cloudflare → birdstation)<br>• Pulse news feed and Morning Brief from the same endpoint<br><br>Hosted on Vercel; DNS and CDN via Cloudflare.',
+    role: 'A ' + T('static-site','static site') + ' that fetches live data client-side via ' + T('https','HTTPS') + ':<br>' +
+          '• Observatory bird detections and train events from <code>birds.alansbrain.com</code> (via Cloudflare → birdstation)<br>' +
+          '• Pulse news feed and Morning Brief from the same endpoint<br><br>' +
+          'Hosted on Vercel; ' + T('dns','DNS') + ' and ' + T('cdn','CDN') + ' via Cloudflare.',
     connects: ['vercel', 'cloudflare', 'visitor']
   },
   {
-    id: 'visitor',
-    label: 'Visitor',
+    id: 'visitor', label: 'Visitor',
     emoji: '👥',
-    color: 'ts-pink',
-    hex: '#f472b6',
-    d: [50, 95],
-    m: [50, 93],
+    color: 'ts-pink', hex: '#f472b6',
+    d: [52, 95], m: [52, 88],
     type: 'You',
     what: 'You! Anyone browsing the site.',
-    role: 'Makes HTTPS requests to alansbrain.com — served by Vercel, DNS via Cloudflare. Observatory and Pulse data is fetched client-side from <code>birds.alansbrain.com</code>.',
+    role: 'Makes ' + T('https','HTTPS') + ' requests to alansbrain.com — served by Vercel, ' + T('dns','DNS') + ' via Cloudflare. Observatory and Pulse data is fetched client-side from <code>birds.alansbrain.com</code> by the browser\'s JavaScript, not pre-rendered.',
     connects: ['website']
   }
 ];
 
-/* Edges: [fromId, toId, protocol label, hex color, dashed] */
+/* Edges: [fromId, toId, label, hex, dashed] */
 var EDGES = [
   ['audiomoth',  'birdnode',    'USB audio',      '#fbbf24', false],
   ['birdnode',   'birdstation', 'Icecast stream', '#2dd4bf', false],
@@ -540,7 +498,6 @@ var EDGES = [
   ['website',    'visitor',     'HTTPS',          '#38bdf8', false]
 ];
 
-/* Legend groups */
 var LEGEND = [
   { label: 'USB audio',      color: '#fbbf24', dash: false },
   { label: 'Icecast stream', color: '#2dd4bf', dash: false },
@@ -558,31 +515,28 @@ var nodeMap  = {};
 NODES.forEach(function(n) { nodeMap[n.id] = n; });
 
 /* ══════════════════════════════════════
-   RENDER
+   GRAPH RENDER
 ══════════════════════════════════════ */
-var canvas  = document.getElementById('tsCanvas');
-var backdrop = document.getElementById('tsBackdrop');
-var panel   = document.getElementById('tsPanel');
+var canvas       = document.getElementById('tsCanvas');
+var backdrop     = document.getElementById('tsBackdrop');
+var panel        = document.getElementById('tsPanel');
 var panelContent = document.getElementById('tsPanelContent');
+var glossEl      = document.getElementById('tsGloss');
+var glossTitle   = document.getElementById('tsGlossTitle');
+var glossDef     = document.getElementById('tsGlossDef');
+var activeTermEl = null;
 
-var nodeEls = {};  // id → DOM element
-var edgeEls = {};  // "from-to" → { path, labelEl }
+var nodeEls = {};
+var edgeEls = {};
 
-function isMobile() {
-  return window.innerWidth <= 500;
+function isMobile() { return window.innerWidth <= 520; }
+function pct(node)  { return isMobile() ? node.m : node.d; }
+
+function nodeIconHTML(n) {
+  if (n.icon) return '<img src="' + n.icon + '" width="28" height="28" alt="">';
+  return n.emoji || '?';
 }
 
-function pct(node) {
-  return isMobile() ? node.m : node.d;
-}
-
-function px(node) {
-  var rect = canvas.getBoundingClientRect();
-  var pos = pct(node);
-  return { x: pos[0] / 100 * rect.width, y: pos[1] / 100 * rect.height };
-}
-
-/* Build SVG + nodes once */
 function buildGraph() {
   canvas.innerHTML = '';
   nodeEls = {};
@@ -593,14 +547,13 @@ function buildGraph() {
   svg.setAttribute('class', 'ts-svg');
   svg.setAttribute('aria-hidden', 'true');
 
-  /* Arrowhead markers */
   var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
   var arrowColors = {};
   EDGES.forEach(function(e) { arrowColors[e[3]] = true; });
   Object.keys(arrowColors).forEach(function(c) {
     var m = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-    var safeId = 'arr' + c.replace('#','');
-    m.setAttribute('id', safeId);
+    var id = 'arr' + c.replace('#','');
+    m.setAttribute('id', id);
     m.setAttribute('markerWidth', '8');
     m.setAttribute('markerHeight', '6');
     m.setAttribute('refX', '7');
@@ -609,51 +562,49 @@ function buildGraph() {
     var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
     poly.setAttribute('points', '0 0, 8 3, 0 6');
     poly.setAttribute('fill', c);
-    poly.setAttribute('opacity', '0.7');
+    poly.setAttribute('opacity', '0.72');
     m.appendChild(poly);
     defs.appendChild(m);
   });
   svg.appendChild(defs);
 
-  /* Edge paths */
   EDGES.forEach(function(e) {
-    var fromId = e[0], toId = e[1], label = e[2], color = e[3], dashed = e[4];
-    var key = fromId + '-' + toId;
+    var key = e[0] + '-' + e[1];
+    var color = e[3], dashed = e[4];
 
     var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('fill', 'none');
     path.setAttribute('stroke', color);
     path.setAttribute('stroke-width', '1.5');
-    path.setAttribute('stroke-opacity', '0.45');
+    path.setAttribute('stroke-opacity', '0.42');
     path.setAttribute('marker-end', 'url(#arr' + color.replace('#','') + ')');
     if (dashed) path.setAttribute('stroke-dasharray', '5 4');
-    path.style.transition = 'stroke-opacity 0.25s, stroke-width 0.2s';
+    path.style.transition = 'stroke-opacity .22s, stroke-width .18s';
     svg.appendChild(path);
 
-    /* Label text */
+    var bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bg.setAttribute('rx', '2');
+    bg.setAttribute('fill', 'rgba(10,14,26,0.88)');
+    bg.setAttribute('opacity', '0');
+    bg.style.transition = 'opacity .22s';
+    svg.appendChild(bg);
+
     var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     txt.setAttribute('fill', color);
     txt.setAttribute('font-family', 'JetBrains Mono, monospace');
-    txt.setAttribute('font-size', '8');
+    txt.setAttribute('font-size', '8.5');
     txt.setAttribute('text-anchor', 'middle');
     txt.setAttribute('opacity', '0');
     txt.setAttribute('pointer-events', 'none');
-    txt.style.transition = 'opacity 0.25s';
-    var bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    bg.setAttribute('rx', '2');
-    bg.setAttribute('fill', 'rgba(10,14,26,0.85)');
-    bg.setAttribute('opacity', '0');
-    bg.style.transition = 'opacity 0.25s';
-    txt.textContent = label;
-    svg.appendChild(bg);
+    txt.style.transition = 'opacity .22s';
+    txt.textContent = e[2];
     svg.appendChild(txt);
 
-    edgeEls[key] = { path: path, label: txt, bg: bg, color: color };
+    edgeEls[key] = { path: path, bg: bg, label: txt, color: color };
   });
 
   canvas.appendChild(svg);
 
-  /* Node divs */
   NODES.forEach(function(n) {
     var div = document.createElement('div');
     div.className = 'ts-node ' + n.color;
@@ -664,7 +615,7 @@ function buildGraph() {
 
     var icon = document.createElement('div');
     icon.className = 'ts-node-icon';
-    icon.textContent = n.emoji;
+    icon.innerHTML = nodeIconHTML(n);
 
     var lbl = document.createElement('div');
     lbl.className = 'ts-node-label';
@@ -679,15 +630,12 @@ function buildGraph() {
   positionGraph();
 }
 
-/* Position nodes and draw edge paths based on current canvas size */
 function positionGraph() {
   var rect = canvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
-
   var w = rect.width, h = rect.height;
-  var NODE_R = isMobile() ? 22 : 27; /* half icon size for arrow offset */
+  var NODE_R = isMobile() ? 23 : 28;
 
-  /* Position node divs */
   NODES.forEach(function(n) {
     var pos = pct(n);
     var el = nodeEls[n.id];
@@ -695,62 +643,48 @@ function positionGraph() {
     el.style.top  = pos[1] + '%';
   });
 
-  /* Draw edge paths */
   EDGES.forEach(function(e) {
-    var fromId = e[0], toId = e[1], color = e[3];
-    var key = fromId + '-' + toId;
+    var key = e[0] + '-' + e[1];
     var obj = edgeEls[key];
     if (!obj) return;
 
-    var n1 = nodeMap[fromId], n2 = nodeMap[toId];
+    var n1 = nodeMap[e[0]], n2 = nodeMap[e[1]];
     var p1 = pct(n1), p2 = pct(n2);
-    var x1 = p1[0] / 100 * w, y1 = p1[1] / 100 * h;
-    var x2 = p2[0] / 100 * w, y2 = p2[1] / 100 * h;
+    var x1 = p1[0]/100*w, y1 = p1[1]/100*h;
+    var x2 = p2[0]/100*w, y2 = p2[1]/100*h;
 
-    /* Offset endpoint so arrow lands at edge of icon, not center */
-    var dx = x2 - x1, dy = y2 - y1;
-    var len = Math.sqrt(dx*dx + dy*dy) || 1;
-    var ex = x2 - (dx/len) * NODE_R;
-    var ey = y2 - (dy/len) * NODE_R;
-    var sx = x1 + (dx/len) * NODE_R;
-    var sy = y1 + (dy/len) * NODE_R;
+    var dx = x2-x1, dy = y2-y1;
+    var len = Math.sqrt(dx*dx+dy*dy)||1;
+    var sx = x1+(dx/len)*NODE_R, sy = y1+(dy/len)*NODE_R;
+    var ex = x2-(dx/len)*NODE_R, ey = y2-(dy/len)*NODE_R;
 
-    /* Control point: midpoint + slight perpendicular push for curves */
-    var mx = (sx + ex) / 2;
-    var my = (sy + ey) / 2;
-    /* Perpendicular unit vector */
-    var px2 = -dy/len, py2 = dx/len;
-    /* Curve amount: longer lines get a bit more bow */
-    var bow = Math.min(len * 0.12, 30);
+    /* Bezier control point: midpoint + perpendicular bow */
+    var mx = (sx+ex)/2, my = (sy+ey)/2;
+    var px = -dy/len, py = dx/len;
+    var bow = Math.min(len*0.11, 28);
+    var extra = 0;
+    if ((e[0]==='alan'&&e[1]==='birdstation') ||
+        (e[0]==='github'&&e[1]==='birdstation') ||
+        (e[0]==='birdnode'&&e[1]==='birdstation')) extra = 18;
 
-    /* Specific adjustments for edges that look better with a curve */
-    var extraBow = 0;
-    if ((fromId === 'alan'      && toId === 'birdstation') ||
-        (fromId === 'github'    && toId === 'birdstation') ||
-        (fromId === 'birdnode'  && toId === 'birdstation') ||
-        (fromId === 'birdstation' && toId === 'cloudflare')) {
-      extraBow = 20;
-    }
+    var cpx = mx + px*(bow+extra);
+    var cpy = my + py*(bow+extra);
 
-    var cpx = mx + px2 * (bow + extraBow);
-    var cpy = my + py2 * (bow + extraBow);
-
-    var d = 'M ' + sx.toFixed(1) + ' ' + sy.toFixed(1) +
-            ' Q ' + cpx.toFixed(1) + ' ' + cpy.toFixed(1) +
-            ' ' + ex.toFixed(1) + ' ' + ey.toFixed(1);
+    var d = 'M'+sx.toFixed(1)+' '+sy.toFixed(1)+
+            ' Q'+cpx.toFixed(1)+' '+cpy.toFixed(1)+
+            ' '+ex.toFixed(1)+' '+ey.toFixed(1);
     obj.path.setAttribute('d', d);
 
-    /* Place label at midpoint of bezier (~t=0.5) */
-    var lx = 0.25*sx + 0.5*cpx + 0.25*ex;
-    var ly = 0.25*sy + 0.5*cpy + 0.25*ey;
+    /* Label at bezier midpoint (t=0.5) */
+    var lx = 0.25*sx+0.5*cpx+0.25*ex;
+    var ly = 0.25*sy+0.5*cpy+0.25*ey;
+    var tw = e[2].length*4.8+8;
+    obj.bg.setAttribute('x',  (lx-tw/2).toFixed(1));
+    obj.bg.setAttribute('y',  (ly-13).toFixed(1));
+    obj.bg.setAttribute('width',  tw.toFixed(1));
+    obj.bg.setAttribute('height', '12');
     obj.label.setAttribute('x', lx.toFixed(1));
-    obj.label.setAttribute('y', (ly - 3).toFixed(1));
-    /* background rect sized to approx text */
-    var tw = e[2].length * 4.5 + 6;
-    obj.bg.setAttribute('x', (lx - tw/2).toFixed(1));
-    obj.bg.setAttribute('y', (ly - 13).toFixed(1));
-    obj.bg.setAttribute('width', tw.toFixed(1));
-    obj.bg.setAttribute('height', '11');
+    obj.label.setAttribute('y', (ly-3.5).toFixed(1));
   });
 }
 
@@ -760,91 +694,80 @@ function positionGraph() {
 function selectNode(id) {
   var node = nodeMap[id];
   if (!node) return;
-
-  /* Deselect previous */
-  if (selected) {
-    var prev = nodeEls[selected];
-    if (prev) prev.classList.remove('ts-selected');
-  }
+  if (selected && nodeEls[selected]) nodeEls[selected].classList.remove('ts-selected');
   selected = id;
   nodeEls[id].classList.add('ts-selected');
 
-  /* Highlight edges touching this node; dim the rest */
   EDGES.forEach(function(e) {
-    var key = e[0] + '-' + e[1];
+    var key = e[0]+'-'+e[1];
     var obj = edgeEls[key];
     if (!obj) return;
-    var active = (e[0] === id || e[1] === id);
-    obj.path.setAttribute('stroke-opacity', active ? '0.9' : '0.08');
-    obj.path.setAttribute('stroke-width',   active ? '2' : '1.5');
-    obj.label.setAttribute('opacity',       active ? '1' : '0');
-    obj.bg.setAttribute('opacity',          active ? '1' : '0');
+    var active = e[0]===id||e[1]===id;
+    obj.path.setAttribute('stroke-opacity', active ? '0.9' : '0.06');
+    obj.path.setAttribute('stroke-width',   active ? '2.2' : '1.5');
+    obj.label.setAttribute('opacity',        active ? '1'   : '0');
+    obj.bg.setAttribute('opacity',           active ? '1'   : '0');
   });
 
   openPanel(node);
 }
 
 function clearSelection() {
-  if (selected && nodeEls[selected]) {
-    nodeEls[selected].classList.remove('ts-selected');
-  }
+  if (selected && nodeEls[selected]) nodeEls[selected].classList.remove('ts-selected');
   selected = null;
-  /* Restore all edges */
   EDGES.forEach(function(e) {
-    var key = e[0] + '-' + e[1];
+    var key = e[0]+'-'+e[1];
     var obj = edgeEls[key];
     if (!obj) return;
-    obj.path.setAttribute('stroke-opacity', '0.45');
+    obj.path.setAttribute('stroke-opacity', '0.42');
     obj.path.setAttribute('stroke-width',   '1.5');
     obj.label.setAttribute('opacity', '0');
     obj.bg.setAttribute('opacity', '0');
   });
   closePanel();
+  closeGloss();
 }
 
 /* ══════════════════════════════════════
    PANEL
 ══════════════════════════════════════ */
 function openPanel(node) {
-  /* Build connected chips */
-  var connectedEdges = EDGES.filter(function(e) {
-    return e[0] === node.id || e[1] === node.id;
-  });
-
+  var connEdges = EDGES.filter(function(e){ return e[0]===node.id||e[1]===node.id; });
   var chipsHtml = '';
-  connectedEdges.forEach(function(e) {
-    var otherId = e[0] === node.id ? e[1] : e[0];
-    var direction = e[0] === node.id ? '→' : '←';
-    var other = nodeMap[otherId];
+  connEdges.forEach(function(e) {
+    var otherId = e[0]===node.id ? e[1] : e[0];
+    var dir     = e[0]===node.id ? '→' : '←';
+    var other   = nodeMap[otherId];
     if (!other) return;
-    chipsHtml += '<span class="ts-chip" data-id="' + otherId + '">' +
-      '<span class="ts-chip-dot" style="background:' + e[3] + '"></span>' +
-      direction + ' ' + other.label + ' <span style="color:' + e[3] + ';opacity:0.7;font-size:0.6rem">(' + e[2] + ')</span>' +
+    chipsHtml += '<span class="ts-chip" data-id="'+otherId+'">' +
+      '<span class="ts-chip-dot" style="background:'+e[3]+'"></span>' +
+      dir+' '+other.label+
+      ' <span style="color:'+e[3]+';opacity:.7;font-size:.6rem">('+e[2]+')</span>' +
       '</span>';
   });
 
-  var privacyHtml = node.privacy
-    ? '<hr class="ts-panel-divider"><p style="font-size:0.75rem;color:var(--text-dim)">🔒 ' + node.privacy + '</p>'
+  var privHtml = node.privacy
+    ? '<hr class="ts-panel-divider"><p style="font-size:.75rem;color:var(--text-dim)">🔒 '+node.privacy+'</p>'
     : '';
 
   panelContent.innerHTML =
     '<div class="ts-panel-head">' +
-      '<div class="ts-panel-icon ' + node.color + '">' + node.emoji + '</div>' +
+      '<div class="ts-panel-icon '+node.color+'">'+nodeIconHTML(node)+'</div>' +
       '<div>' +
-        '<div class="ts-panel-title">' + node.label + '</div>' +
-        '<div class="ts-panel-type">' + node.type + '</div>' +
+        '<div class="ts-panel-title">'+node.label+'</div>' +
+        '<div class="ts-panel-type">'+node.type+'</div>' +
       '</div>' +
     '</div>' +
     '<div class="ts-panel-body">' +
-      '<p>' + node.what + '</p>' +
-      '<p>' + node.role + '</p>' +
-      privacyHtml +
+      '<p>'+node.what+'</p>' +
+      '<p>'+node.role+'</p>' +
+      privHtml +
     '</div>' +
-    (chipsHtml ? (
+    (chipsHtml ?
       '<hr class="ts-panel-divider">' +
       '<div class="ts-panel-conns-title">Connections</div>' +
-      '<div class="ts-panel-chips">' + chipsHtml + '</div>'
-    ) : '') +
+      '<div class="ts-panel-chips">'+chipsHtml+'</div>'
+    : '') +
     '<button class="ts-close-btn" id="tsPanelClose">✕ close</button>';
 
   panel.setAttribute('aria-hidden', 'false');
@@ -852,11 +775,10 @@ function openPanel(node) {
   backdrop.classList.add('ts-open');
   document.body.style.overflow = 'hidden';
 
-  /* Chip clicks — jump to connected node */
   panelContent.querySelectorAll('.ts-chip[data-id]').forEach(function(chip) {
     chip.addEventListener('click', function() {
-      var nextId = chip.dataset.id;
-      closePanel(function() { selectNode(nextId); });
+      var next = chip.dataset.id;
+      closePanel(function(){ selectNode(next); });
     });
   });
 
@@ -872,21 +794,89 @@ function closePanel(cb) {
 }
 
 /* ══════════════════════════════════════
-   EVENTS
+   GLOSSARY POPOVER
+══════════════════════════════════════ */
+function showGloss(key, triggerEl) {
+  var entry = GLOSSARY[key];
+  if (!entry) return;
+
+  /* Close previous active term */
+  if (activeTermEl && activeTermEl !== triggerEl) {
+    activeTermEl.classList.remove('ts-term-open');
+  }
+
+  /* Toggle: if same term clicked again, close */
+  if (activeTermEl === triggerEl && glossEl.style.display !== 'none') {
+    closeGloss();
+    return;
+  }
+
+  activeTermEl = triggerEl;
+  triggerEl.classList.add('ts-term-open');
+
+  glossTitle.textContent = entry.title;
+  glossDef.textContent   = entry.def;
+  glossEl.style.display  = 'block';
+
+  /* Position: prefer above the term, fall back to below */
+  var rect = triggerEl.getBoundingClientRect();
+  var gw   = Math.min(300, window.innerWidth * 0.88);
+  var gh   = glossEl.offsetHeight || 100;
+
+  var left = rect.left + rect.width/2 - gw/2;
+  left = Math.max(8, Math.min(left, window.innerWidth - gw - 8));
+
+  var top = rect.top - gh - 10;
+  if (top < 60) top = rect.bottom + 10; /* flip below */
+
+  glossEl.style.left  = left + 'px';
+  glossEl.style.top   = top  + 'px';
+  glossEl.style.width = gw   + 'px';
+}
+
+function closeGloss() {
+  glossEl.style.display = 'none';
+  if (activeTermEl) { activeTermEl.classList.remove('ts-term-open'); activeTermEl = null; }
+}
+
+document.getElementById('tsGlossClose').addEventListener('click', function(e) {
+  e.stopPropagation();
+  closeGloss();
+});
+
+/* Delegate term clicks inside panel */
+document.getElementById('tsPanel').addEventListener('click', function(e) {
+  var term = e.target.closest('.ts-term');
+  if (term) {
+    e.stopPropagation();
+    showGloss(term.dataset.key, term);
+  }
+});
+
+/* Also handle the hero demo term */
+document.querySelector('.ts-hero-sub .ts-term').addEventListener('click', function(e) {
+  e.stopPropagation();
+  showGloss(this.dataset.key, this);
+});
+
+/* Close gloss on outside click */
+document.addEventListener('click', function(e) {
+  if (glossEl.style.display === 'none') return;
+  if (!glossEl.contains(e.target) && !e.target.closest('.ts-term')) {
+    closeGloss();
+  }
+});
+
+/* ══════════════════════════════════════
+   GRAPH EVENTS
 ══════════════════════════════════════ */
 canvas.addEventListener('click', function(e) {
   var nodeEl = e.target.closest('.ts-node');
-  if (nodeEl) {
-    e.stopPropagation();
-    selectNode(nodeEl.dataset.id);
-  }
+  if (nodeEl) { e.stopPropagation(); selectNode(nodeEl.dataset.id); }
 });
 canvas.addEventListener('keydown', function(e) {
   var nodeEl = e.target.closest('.ts-node');
-  if (nodeEl && (e.key === 'Enter' || e.key === ' ')) {
-    e.preventDefault();
-    selectNode(nodeEl.dataset.id);
-  }
+  if (nodeEl && (e.key==='Enter'||e.key===' ')) { e.preventDefault(); selectNode(nodeEl.dataset.id); }
 });
 backdrop.addEventListener('click', clearSelection);
 
@@ -902,12 +892,12 @@ window.addEventListener('resize', function() {
 (function() {
   var leg = document.getElementById('tsLegend');
   LEGEND.forEach(function(item) {
-    var div = document.createElement('div');
+    var div  = document.createElement('div');
     div.className = 'ts-leg-item';
     var line = document.createElement('div');
     line.className = 'ts-leg-line';
     if (item.dash) {
-      line.style.cssText = 'border-top: 2px dashed ' + item.color + '; background: transparent;';
+      line.style.cssText = 'border-top:2px dashed '+item.color+';background:transparent;';
     } else {
       line.style.background = item.color;
       line.style.opacity = '0.8';
@@ -924,22 +914,14 @@ window.addEventListener('resize', function() {
    INIT
 ══════════════════════════════════════ */
 buildGraph();
-
-/* Wait a frame for layout, then position */
-requestAnimationFrame(function() {
-  requestAnimationFrame(positionGraph);
-});
-
-/* Also re-position after fonts load (they can shift layout) */
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(positionGraph);
-}
+requestAnimationFrame(function() { requestAnimationFrame(positionGraph); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(positionGraph);
 </script>
 
 <script>
   /* Scroll reveal */
   var revealEls = document.querySelectorAll('.reveal');
-  var observer = new IntersectionObserver(function(entries) {
+  var observer  = new IntersectionObserver(function(entries) {
     entries.forEach(function(e) {
       if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
     });
@@ -967,7 +949,7 @@ if (document.fonts && document.fonts.ready) {
   /* Mobile hamburger */
   (function() {
     var hamburger = document.querySelector('.nav-hamburger');
-    var overlay = document.querySelector('.nav-mobile-overlay');
+    var overlay   = document.querySelector('.nav-mobile-overlay');
     if (!hamburger || !overlay) return;
     hamburger.addEventListener('click', function() {
       var isOpen = hamburger.classList.toggle('open');
