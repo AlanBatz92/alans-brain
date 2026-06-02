@@ -10,6 +10,14 @@
 
 ---
 
+## 2026-06-02 — Observatory: "All" (all-time) period filter
+
+Added an **All** tab alongside Today / Yesterday / This week / This month / This
+year. `periodDates` gains an `all` branch (start `2000-01-01` → today) that the
+existing grouped-fetch + period-aware stats handle unchanged: the stat cards read
+"Heard all time / Species all time" and the grid lists every species ever heard at
+≥ 75%. **Assets:** `observatory.js?v=obs12`.
+
 ## 2026-06-02 — Verifiable lifers (clip archive + review) + BirdNET seasonal filter
 
 Two box-side follow-ups to the life-list work, both in `birdstation/`.

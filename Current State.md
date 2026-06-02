@@ -101,7 +101,7 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs11` +
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs12` +
   `style.css?v=obs10` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
@@ -114,7 +114,7 @@ train data a home. ID/class prefix: **`obs-`**.
   is offline. CC BY-SA attribution shown. Classes: `.obs-bcard-*`.
   Next: step 4 detail view (sparkline + by-hour histogram).
 - **Timeline + search (2026-06-01; period-aware stats 2026-06-02):** period selector
-  (Today / Yesterday / This week / This month / This year) above the species grid;
+  (Today / Yesterday / This week / This month / This year / All) above the species grid;
   search input filters by name client-side. `GET /api/detections/grouped?start=&end=&min_confidence=`
   on birdstation returns pre-aggregated `{common_name, scientific_name, count,
   best_confidence, first_heard, last_heard}` for the date range. Switching periods
@@ -131,7 +131,7 @@ train data a home. ID/class prefix: **`obs-`**.
   opens the bird card modal. Both use `data-action` delegation; keyboard-accessible.
 - **Bird card UX (2026-06-01):** Wikipedia link moved below the sci name (easy to tap on
   mobile); photo wrapped as Wikipedia link; extract expanded to 3 sentences (≤ 500 chars).
-- Assets: `style.css?v=obs10`, `observatory.js?v=obs11`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs10`, `observatory.js?v=obs12`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

@@ -242,6 +242,9 @@ function periodDates(period) {
   } else if (period === 'year') {
     startE = e.getFullYear() + '-01-01';
     endE = today; label = 'this year';
+  } else if (period === 'all') {
+    // Wide-open range — earlier than any possible data, through today.
+    startE = '2000-01-01'; endE = today; label = 'all time';
   } else {
     startE = endE = today; label = 'today';
   }
