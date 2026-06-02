@@ -1,0 +1,17 @@
+[Unit]
+Description=Emmaus Observatory — Train Whistle Detector
+After=network-online.target icecast2.service
+Wants=network-online.target
+
+[Service]
+User=alan
+WorkingDirectory=/home/alan/alans-brain/birdstation
+ExecStart=/home/alan/train-env/bin/python3 /home/alan/alans-brain/birdstation/train_detector.py
+Restart=always
+RestartSec=15
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

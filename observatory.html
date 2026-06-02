@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a0e1a">
-  <title>Pulse — Alan's Brain</title>
+  <title>Observatory — Alan's Brain</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=obs10">
 </head>
 <body>
 
@@ -31,7 +31,7 @@
       <a href="index.html" class="nav-logo">Alan's Brain <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Alan's_Brain/world-creativity-and-innovation-day.png" alt=""></a>
       <div class="nav-links">
         <a href="index.html">Home</a>
-        <a href="pulse.html" class="active">Pulse</a>
+        <a href="pulse.html">Pulse</a>
         <div class="nav-dropdown">
           <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
             Explore <span class="nav-dropdown-arrow">&#9660;</span>
@@ -44,7 +44,7 @@
             <a href="photos.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
             <a href="art.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
             <a href="paranormal.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
-            <a href="observatory.html"><span class="dropdown-icon" style="display:inline-block;width:24px;height:24px;text-align:center;font-size:18px;line-height:24px">🔭</span> Observatory</a>
+            <a href="observatory.html" class="active"><span class="dropdown-icon" style="display:inline-block;width:24px;height:24px;text-align:center;font-size:18px;line-height:24px">🔭</span> Observatory</a>
             <a href="projects.html"><span class="dropdown-icon" style="display:inline-block;width:24px;height:24px;text-align:center;font-size:18px;line-height:24px">🚀</span> Personal Projects</a>
           </div>
         </div>
@@ -61,7 +61,7 @@
   <!-- Mobile menu overlay -->
   <div class="nav-mobile-overlay">
     <a href="index.html">Home</a>
-    <a href="pulse.html" class="active">Pulse</a>
+    <a href="pulse.html">Pulse</a>
     <a href="techstack.html"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">⚙️</span> Stack</a>
     <span class="mobile-section-label">Explore</span>
     <a href="youtube.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
@@ -71,7 +71,7 @@
     <a href="photos.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
     <a href="art.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
     <a href="paranormal.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
-    <a href="observatory.html"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">🔭</span> Observatory</a>
+    <a href="observatory.html" class="active"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">🔭</span> Observatory</a>
     <a href="projects.html"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">🚀</span> Personal Projects</a>
   </div>
 
@@ -79,33 +79,69 @@
 
     <!-- ══════ PAGE HERO ══════ -->
     <section class="page-hero">
-      <div class="page-hero-icon anim" style="animation-delay:0.1s"><span style="font-size:72px;line-height:1">📡</span></div>
+      <div class="page-hero-icon anim" style="animation-delay:0.1s"><span style="font-size:72px;line-height:1">🔭</span></div>
       <h1 class="anim" style="animation-delay:0.2s">
-        <span class="gradient-text">Pulse</span>
+        <span class="gradient-text">Observatory</span>
       </h1>
-      <div class="page-hero-tagline anim" style="animation-delay:0.35s">the Lehigh Valley, as it happens</div>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">What is the source of all that chirping?!</div>
     </section>
-
-    <!-- ══════ MORNING BRIEF ══════ -->
-    <section class="pulse-brief" id="pulse-brief" hidden></section>
 
     <!-- ══════ CONTROLS ══════ -->
     <div class="tracker-controls" style="margin-top:10px">
-      <span class="tracker-updated" id="pulse-updated">Loading…</span>
-      <button class="tracker-refresh" id="pulse-refresh" aria-label="Refresh">&#8635;</button>
+      <span class="tracker-updated" id="obs-updated">Loading…</span>
+      <button class="tracker-refresh" id="obs-refresh" aria-label="Refresh">&#8635;</button>
     </div>
 
-    <!-- ══════ SOURCE HEALTH ══════ -->
-    <div class="pulse-status" id="pulse-status"></div>
-
-    <!-- ══════ FILTER + SEARCH ══════ -->
-    <div class="pulse-toolbar">
-      <input type="search" class="pulse-search" id="pulse-search" placeholder="Search headlines…" aria-label="Search headlines">
-      <div class="pulse-filters" id="pulse-filters"></div>
+    <!-- ══════ TABS ══════ -->
+    <div class="obs-tabs" role="tablist">
+      <button class="obs-tab obs-tab-active" id="obs-tab-birds" data-tab="birds" role="tab" aria-selected="true">🐦 Birds</button>
+      <button class="obs-tab" id="obs-tab-trains" data-tab="trains" role="tab" aria-selected="false">🚂 Trains</button>
     </div>
 
-    <!-- ══════ FEED ══════ -->
-    <div class="pulse-list" id="pulse-list"></div>
+    <!-- ══════ BIRDS PANEL ══════ -->
+    <section class="obs-panel" id="obs-panel-birds" role="tabpanel" aria-labelledby="obs-tab-birds">
+      <div class="obs-stats" id="obs-bird-stats"></div>
+      <p class="obs-note">Showing detections at or above 75% confidence. A species joins the life list after 3 such detections in one day.</p>
+
+      <div class="obs-period-bar">
+        <div class="obs-period-tabs" role="tablist" aria-label="Time period">
+          <button class="obs-period-tab obs-period-tab-active" data-period="today" role="tab" aria-selected="true">Today</button>
+          <button class="obs-period-tab" data-period="yesterday" role="tab" aria-selected="false">Yesterday</button>
+          <button class="obs-period-tab" data-period="week" role="tab" aria-selected="false">This week</button>
+          <button class="obs-period-tab" data-period="month" role="tab" aria-selected="false">This month</button>
+        </div>
+        <input class="obs-search" id="obs-search" type="search" placeholder="Filter species…" autocomplete="off" aria-label="Filter species by name">
+      </div>
+
+      <div class="obs-heading-row">
+        <h2 class="obs-heading"><span id="obs-period-heading">Heard today</span> <span class="obs-heading-count" id="obs-period-count"></span></h2>
+        <select class="obs-sort-select" id="obs-period-sort" aria-label="Sort species">
+          <option value="recent">Recent</option>
+          <option value="most">Most heard</option>
+          <option value="least">Least heard</option>
+        </select>
+      </div>
+      <div class="obs-species-grid" id="obs-today"></div>
+
+      <div class="obs-heading-row">
+        <h2 class="obs-heading">Life list <span class="obs-heading-count" id="obs-life-count"></span></h2>
+        <select class="obs-sort-select" id="obs-life-sort" aria-label="Sort life list">
+          <option value="recent">Recent</option>
+          <option value="most">Most heard</option>
+          <option value="least">Least heard</option>
+        </select>
+      </div>
+      <div class="obs-life" id="obs-life"></div>
+    </section>
+
+    <!-- ══════ TRAINS PANEL ══════ -->
+    <section class="obs-panel" id="obs-panel-trains" role="tabpanel" aria-labelledby="obs-tab-trains" hidden>
+      <div class="obs-stats" id="obs-train-stats"></div>
+      <p class="obs-note">Only train events reviewed and confirmed by a human are shown here.</p>
+
+      <h2 class="obs-heading">Recent events</h2>
+      <div class="obs-list" id="obs-trains"></div>
+    </section>
 
     <!-- ══════ FOOTER ══════ -->
     <footer class="site-footer">
@@ -128,7 +164,8 @@
 
   </div><!-- /.page -->
 
-  <script src="pulse.js"></script>
+  <script src="bird-info.js?v=obs6"></script>
+  <script src="observatory.js?v=obs10"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');
@@ -167,6 +204,15 @@
       });
     }
   </script>
+
+<!-- Bird card quick-view modal (filled by observatory.js) -->
+<div id="obs-bird-modal" class="obs-bcard-overlay">
+  <div class="obs-bcard-backdrop"></div>
+  <div class="obs-bcard" role="dialog" aria-modal="true">
+    <button class="obs-bcard-close" aria-label="Close">✕</button>
+    <div id="obs-bcard-content"></div>
+  </div>
+</div>
 
 <script src="theme-switcher.js" defer></script>
 <script src="visit-ticker.js" defer></script>
