@@ -161,9 +161,17 @@ def parse_and_log(result_file):
                     c.execute("SELECT total_detections FROM lifetime WHERE common_name=?", (common_name,))
                     existing = c.fetchone()
                     if existing:
-                        # Already a lifer — just keep its running tally current.
-                        c.execute("UPDATE lifetime SET total_detections=? WHERE common_name=?",
-                                  (existing[0] + 1, common_name))
+                        # Already a lifer — recompute its tally from the detections
+                        # table (this row is already inserted, so it's included)
+                        # rather than +1'ing the stored value. A live recount can't
+                        # drift, so the life-list total stays truthful even if a past
+                        # update was missed or the species predates its lifetime row.
+                        c.execute(
+                            "UPDATE lifetime SET total_detections="
+                            "(SELECT COUNT(*) FROM detections WHERE common_name=? AND confidence>=?) "
+                            "WHERE common_name=?",
+                            (common_name, LIFE_LIST_MIN_CONFIDENCE, common_name)
+                        )
                     else:
                         # New species: count this species' confident hits in the
                         # last 24 hours (this row is already inserted, so it's
@@ -178,9 +186,16 @@ def parse_and_log(result_file):
                         hits_24h = c.fetchone()[0]
                         instant = confidence >= LIFE_LIST_INSTANT_CONFIDENCE
                         if instant or hits_24h >= LIFE_LIST_MIN_HITS:
+                            # Seed the tally with the true all-time count of qualifying
+                            # hits (>= life-list floor), not just the 24h window.
+                            c.execute(
+                                "SELECT COUNT(*) FROM detections WHERE common_name=? AND confidence>=?",
+                                (common_name, LIFE_LIST_MIN_CONFIDENCE)
+                            )
+                            total_qual = c.fetchone()[0]
                             c.execute(
                                 "INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections) VALUES (?,?,?,?)",
-                                (common_name, scientific_name, now, hits_24h)
+                                (common_name, scientific_name, now, total_qual)
                             )
                             why = "instant ~100%" if instant else f"{hits_24h} hits/24h"
                             print(f"  *** NEW SPECIES: {common_name} ({why}) ***")
