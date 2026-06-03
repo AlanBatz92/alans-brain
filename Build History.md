@@ -10,6 +10,49 @@
 
 ---
 
+## 2026-06-03 — Observatory: recent hits on bird cards + 85% preserve/display floor
+
+Three morning Observatory asks. Two shipped as code; one was a question answered
+in-place (no code change).
+
+**Recent hits on the bird card (front-end + API).** Each bird card now lists the
+**last 10 detections** (newest first) under the comic-book stats grid — a confidence
+pill + date·time per hit — followed by a one-line life-list status: "✓ On the life
+list", or "Not yet a lifer — N of 3 qualifying hits (≥85%) in the last 24h". This
+makes the life-list math legible at a glance: a species heard-but-unlisted is simply
+short of 3 qualifying hits in the rolling window (or its hits are spread too far apart).
+`GET /api/species/{name}` gained `recent[]` (last 10 `{timestamp, confidence}`, newest
+first), `hits_24h` (qualifying hits in the rolling 24h, using the life-list floor),
+`life_list_min_hits`, and `on_life_list` (joins the `lifetime` table). `observatory.js`
+renders them in `birdCardContent`; new `.obs-bcard-hits*` / `.obs-bcard-status*` CSS.
+
+**85% preserve/display floor (box + front-end).** Raised the BirdNET pipeline's
+`MIN_CONFIDENCE` **0.35 → 0.85**, so the box now *preserves* only confident detections
+(it's also passed to the analyzer as `--min_conf`); the page's display floor went
+**0.75 → 0.85** to match (`observatory.js` `MIN_CONFIDENCE`, plus the `/api/species`
+and `/api/detections/grouped` server defaults). The display and preserve floors are
+now equal — every kept detection is shown — which keeps the locale analytics clean.
+**Decision:** only-going-forward — existing sub-0.85 rows stay in the DB (no destructive
+purge); the page just hides them. The life list is unaffected (its floor was already
+0.85). `MIN_CONFIDENCE == LIFE_LIST_MIN_CONFIDENCE` now, so the life-list code's only
+extra gate is the hit-count rule; comments updated to say so.
+
+**Life-list clips — "should a recording be available?" (answered, no change).** The
+pipeline already archives one WAV per life-list-qualifying detection to `~/bird_clips`
+(2026-06-02, "verifiable lifers"), but those clips are **local-only and never served**
+— the backyard mic can catch conversation, so the documented posture is SSH review via
+`review_birds.py`. That's why they haven't appeared on the page: there is intentionally
+no web surface. **Decision:** keep clips local-only for now (declined a public clip on
+the card and a passphrase-gated review page). Re-open later if a vetted, privacy-safe
+surface is wanted.
+
+**Verified:** `test_species_endpoint.py` updated + extended (17 tests, all green) —
+new `recent` ordering/cap, `on_life_list`, `hits_24h` (rolling-window) coverage, and
+all seed data re-baselined to the 0.85 floor; `py_compile` on both box scripts;
+`node --check observatory.js`. **Assets:** `observatory.js?v=obs13`, `style.css?v=obs11`.
+**Box step needed:** `cd ~/alans-brain && git pull && sudo systemctl restart birdnet birdapi`
+(picks up the 0.85 preserve floor + the enriched `/api/species` response).
+
 ## 2026-06-02 — Observatory: "All" (all-time) period filter
 
 Added an **All** tab alongside Today / Yesterday / This week / This month / This

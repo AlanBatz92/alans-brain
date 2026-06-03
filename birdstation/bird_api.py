@@ -28,6 +28,13 @@ app.add_middleware(
 DB_PATH  = os.path.expanduser("~/birdnet.db")
 CLIP_DIR = "/home/alan/train_clips"
 
+# Life-list gate — mirrors birdnet_pipeline.py (the pipeline is the writer; this
+# is read-only). A new species lists after LIFE_LIST_MIN_HITS hits at/above
+# LIFE_LIST_MIN_CONFIDENCE within a rolling 24h (or one ~100% hit). Used by
+# /api/species to show a bird's life-list progress on its card. Keep in sync.
+LIFE_LIST_MIN_CONFIDENCE = 0.85
+LIFE_LIST_MIN_HITS = 3
+
 # ── API key auth (write routes only) ─────────────────────────
 _API_KEY = os.environ.get("BIRD_API_KEY", "")
 
@@ -49,10 +56,11 @@ def get_db():
 # ─────────────────────────────────────────────────────────────
 
 # NB: `min_confidence` defaults to 0.0 so existing callers are unaffected.
-# The Observatory front-end passes 0.75 to keep low-confidence noise off the
-# page (the pipeline logs everything >= 0.35) — the page's *display* floor. The
-# life list itself uses a stricter writer-side gate (3 hits at >= 0.85 within a
-# rolling 24h, or one ~100% hit); these view filters are independent of that.
+# The Observatory front-end passes 0.85 — the display floor now matches the
+# preserve floor: the pipeline only logs detections >= 0.85, so the page shows
+# everything that's kept (kept tight for clean locale analytics). The life list
+# adds a count rule on top (LIFE_LIST_MIN_HITS hits within a rolling 24h, or one
+# ~100% hit); these view filters are independent of that.
 
 @app.get("/api/detections")
 def recent_detections(limit: int = 50, min_confidence: float = 0.0):
@@ -90,9 +98,11 @@ def lifetime_list():
 
 
 @app.get("/api/species/{name}")
-def species_history(name: str, min_confidence: float = 0.75):
-    """Per-species detection history for bird cards (count, first/last heard,
-    confidence series, per-hour histogram). Matches common_name OR scientific_name."""
+def species_history(name: str, min_confidence: float = 0.85):
+    """Per-species detection history for bird cards: count, first/last heard,
+    confidence series, per-hour histogram, the last 10 hits (newest first), and
+    life-list progress (qualifying hits in the last 24h + whether it's listed).
+    Matches common_name OR scientific_name."""
     conn = get_db()
     rows = conn.execute(
         """SELECT timestamp, confidence, common_name, scientific_name
@@ -101,8 +111,8 @@ def species_history(name: str, min_confidence: float = 0.75):
            ORDER BY timestamp ASC""",
         (name, name, min_confidence)
     ).fetchall()
-    conn.close()
     if not rows:
+        conn.close()
         raise HTTPException(status_code=404, detail="species not found or no detections above threshold")
     by_hour = [0] * 24
     confidences = []
@@ -113,19 +123,44 @@ def species_history(name: str, min_confidence: float = 0.75):
             by_hour[hour] += 1
         except (ValueError, IndexError):
             pass
+    # The last 10 hits, newest first — lets the bird card show, at a glance, the
+    # confidence of each recent detection (e.g. why a bird isn't yet a lifer).
+    recent = [
+        {"timestamp": r["timestamp"], "confidence": round(r["confidence"], 3)}
+        for r in reversed(rows[-10:])
+    ]
+    common     = rows[0]["common_name"]
+    scientific = rows[0]["scientific_name"]
+    # Life-list progress: this species' qualifying hits (>= the life-list floor)
+    # within the rolling 24h window the writer uses, and whether it's listed yet.
+    hits_24h = conn.execute(
+        "SELECT COUNT(*) FROM detections "
+        "WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ? "
+        "AND datetime(timestamp) >= datetime('now','-24 hours')",
+        (common, scientific, LIFE_LIST_MIN_CONFIDENCE)
+    ).fetchone()[0]
+    on_life_list = conn.execute(
+        "SELECT 1 FROM lifetime WHERE common_name = ? OR scientific_name = ? LIMIT 1",
+        (common, scientific)
+    ).fetchone() is not None
+    conn.close()
     return {
-        "common_name":       rows[0]["common_name"],
-        "scientific_name":   rows[0]["scientific_name"],
-        "total_detections":  len(rows),
-        "first_heard":       rows[0]["timestamp"],
-        "last_heard":        rows[-1]["timestamp"],
-        "confidence_series": confidences,
-        "by_hour":           by_hour,
+        "common_name":        common,
+        "scientific_name":    scientific,
+        "total_detections":   len(rows),
+        "first_heard":        rows[0]["timestamp"],
+        "last_heard":         rows[-1]["timestamp"],
+        "confidence_series":  confidences,
+        "by_hour":            by_hour,
+        "recent":             recent,
+        "hits_24h":           hits_24h,
+        "life_list_min_hits": LIFE_LIST_MIN_HITS,
+        "on_life_list":       on_life_list,
     }
 
 
 @app.get("/api/detections/grouped")
-def detections_grouped(start: str, end: str, min_confidence: float = 0.75):
+def detections_grouped(start: str, end: str, min_confidence: float = 0.85):
     """Species grouped by UTC datetime range; powers the period selector in the Observatory.
     start / end are full UTC datetime strings ("YYYY-MM-DD HH:MM:SS") sent by the
     front-end after converting Eastern midnight → UTC, so late-night detections

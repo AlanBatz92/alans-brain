@@ -11,12 +11,13 @@
 
 ## ▶ Next
 
-### 1. Observatory: "comic-book" bird cards — **steps 1–3 + polish done**  (design: `PLAN-observatory-cards.md`)
+### 1. Observatory: "comic-book" bird cards — **steps 1–3 + polish + recent hits done**  (design: `PLAN-observatory-cards.md`)
 Quick-card modal is live: Wikipedia photo (full bird visible, not cropped),
 filtered description, word-boundary extract, comic-book stats grid (Heard Here /
 Best ID / First Heard / Last Heard), sort controls on both species grid and life
-list. **Remaining:** step 4 — detail view (larger photo + full extract + confidence
-sparkline + by-hour bar chart).
+list, and (2026-06-03) a **recent-hits list** — the last 10 detections with
+confidence + time and a life-list-progress status line. **Remaining:** step 4 —
+detail view (larger photo + full extract + confidence sparkline + by-hour bar chart).
 
 ### 2. Observatory: timeline + species search — **done 2026-06-01**
 Period selector (Today / Yesterday / This week / This month) and a live search
@@ -39,6 +40,10 @@ events → schedule prior → acoustic fingerprint (details in the plan).
 ### 3. Confidence-tuning follow-ups (life list)
 - **Current gate (2026-06-02):** a new species joins after **3 detections at
   ≥ 0.85 within a rolling 24h window, or one ~100% (≥ 0.995) hit** (instant).
+- **Preserve floor raised (2026-06-03):** the box now keeps only detections ≥ 0.85
+  (was 0.35); the page floor matches at 0.85. Cleaner analytics, but watch that the
+  tighter floor doesn't starve the calibration set (review_birds bands all start at
+  0.85, so no loss there) or hide a genuinely-heard-but-quiet species.
 - **✓ Verifiable lifers (2026-06-02):** the pipeline archives one clip per
   life-list-qualifying detection (`~/bird_clips`, one per species/day);
   `review_birds.py` labels them and `--stats` prints measured precision by
@@ -81,6 +86,15 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-03** — Observatory: recent hits on bird cards + 85% preserve/display
+  floor. Bird cards now show the **last 10 detections** (confidence + time, newest
+  first) plus a life-list-progress line ("N of 3 qualifying hits in 24h" or "✓ On the
+  life list"); `/api/species/{name}` gained `recent[]` / `hits_24h` / `on_life_list`.
+  The box's `MIN_CONFIDENCE` was raised **0.35 → 0.85** (preserve only confident hits)
+  and the page's display floor **0.75 → 0.85** to match — clean locale analytics,
+  only-going-forward (existing rows left in place). Life-list clips stay **local-only**
+  (declined a public/web surface for backyard-mic privacy). `?v=obs13`/`obs11`.
 
 - **2026-06-02** — Verifiable lifers + BirdNET seasonal filter (box-side). The
   pipeline now passes `--week` (season filter atop lat/lon) and archives one WAV per

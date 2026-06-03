@@ -9,15 +9,15 @@
      🐦 Birds  — headline stats, today's species (grouped), the life list.
      🚂 Trains — event stats and recent events with playable WAV clips.
 
-   Confidence gate: the BirdNET pipeline *logs* everything ≥ 0.35 (lots of
-   low-confidence noise), but only birds at or above MIN_CONFIDENCE (0.75) land
-   on this page — the page's *display* floor. The life list is a separate,
-   stricter gate handled box-side: a new species joins only after 3 detections
-   at ≥ 0.85 within a rolling 24 hours, or a single ~100% detection. The page
-   still visualizes every confident (≥ 0.75) bird, listed or not. We pass
-   ?min_confidence to the API (honored once birdstation is redeployed with the
-   param; harmlessly ignored before that) AND filter client-side, so the page
-   is correct in both states.
+   Confidence gate: the BirdNET pipeline only *preserves* detections ≥ 0.85
+   (sub-85% hits are noisy, so they're no longer kept on the box), and this page
+   shows everything at or above MIN_CONFIDENCE (0.85) — display floor == preserve
+   floor, keeping the locale analytics clean. The life list adds a count rule on
+   top, handled box-side: a new species joins only after 3 detections at ≥ 0.85
+   within a rolling 24 hours, or a single ~100% detection. We pass ?min_confidence
+   to the API (honored once birdstation is redeployed with the param; harmlessly
+   ignored before that) AND filter client-side, so the page is correct in both
+   states.
 
    Every section fetches independently: one endpoint failing (or the box
    being offline) degrades that section to an offline/empty state without
@@ -28,13 +28,13 @@
 
 const API_BASE = 'https://birds.alansbrain.com';
 
-// Only birds at/above this confidence land on the page — the display floor.
-// (The life list uses a stricter box-side gate: 3 hits at ≥ 0.85 within 24h, or
-// a single ~100% detection. This 0.75 floor only controls what the page shows.)
-const MIN_CONFIDENCE = 0.75;
+// Only birds at/above this confidence land on the page — the display floor, now
+// equal to the box's preserve floor (the pipeline keeps only ≥ 0.85). The life
+// list adds a count rule on top (3 hits at ≥ 0.85 within 24h, or one ~100% hit).
+const MIN_CONFIDENCE = 0.85;
 
 const EP = {
-  today:        API_BASE + '/api/today?min_confidence=' + MIN_CONFIDENCE,   // 0.75
+  today:        API_BASE + '/api/today?min_confidence=' + MIN_CONFIDENCE,   // 0.85
   lifetime:     API_BASE + '/api/lifetime',
   trainStats:   API_BASE + '/api/trains/stats',
   // Privacy: only events a human has explicitly approved (verdict=train) are
@@ -105,8 +105,9 @@ function shortDate(ms) {
   return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric', timeZone: OBS_TZ });
 }
 
-// Confidence (0–1) → bucket class. 0.75 is the page's "confident" floor, so
-// everything shown is at least mid; we still grade high vs. mid for color.
+// Confidence (0–1) → bucket class. 0.85 is the page's "confident" floor, so
+// everything shown grades as high; the mid/low bands remain for any older
+// sub-0.85 data lingering in the DB before the preserve floor was raised.
 function confClass(conf) {
   if (conf >= 0.85) return 'obs-conf-high';
   if (conf >= 0.75) return 'obs-conf-mid';
@@ -555,6 +556,35 @@ function birdCardContent(commonName, scientificName, wiki, hist) {
     '</div>';
   }
 
+  // Recent hits — the last 10 detections (newest first), each with its confidence
+  // and time. Makes the life-list math legible at a glance: a species shown here
+  // but not on the life list simply hasn't logged enough qualifying hits within
+  // the rolling 24h window yet (e.g. 2 of 3), or its hits are spread too far apart.
+  if (hist && Array.isArray(hist.recent) && hist.recent.length > 0) {
+    const need = hist.life_list_min_hits || 3;
+    let status;
+    if (hist.on_life_list) {
+      status = '<div class="obs-bcard-status obs-bcard-status--on">✓ On the life list</div>';
+    } else {
+      const got = Math.min(hist.hits_24h || 0, need);
+      status = '<div class="obs-bcard-status">Not yet a lifer — ' + got + ' of ' + need +
+        ' qualifying hits (≥85%) in the last 24h</div>';
+    }
+    const items = hist.recent.map((h) => {
+      const ms   = parseTime(h.timestamp);
+      const when = ms != null ? shortDate(ms) + ' · ' + clockTime(ms) : '';
+      return '<div class="obs-bcard-hit">' +
+          confPill(h.confidence) +
+          '<span class="obs-bcard-hit-when">' + escapeHtml(when) + '</span>' +
+        '</div>';
+    }).join('');
+    html += '<div class="obs-bcard-hits-head">Recent hits' +
+        '<span class="obs-bcard-hits-sub">last ' + hist.recent.length + '</span>' +
+      '</div>' +
+      status +
+      '<div class="obs-bcard-hits">' + items + '</div>';
+  }
+
   html += '</div>';
   return html;
 }
@@ -571,7 +601,8 @@ async function openBirdCard(commonName, scientificName) {
   const wikiPromise = typeof BirdInfo !== 'undefined'
     ? BirdInfo.get(scientificName, commonName)
     : Promise.resolve(null);
-  const histPromise = fetchJson(API_BASE + '/api/species/' + encodeURIComponent(commonName))
+  const histPromise = fetchJson(API_BASE + '/api/species/' + encodeURIComponent(commonName) +
+      '?min_confidence=' + MIN_CONFIDENCE)
     .catch(() => null);
 
   const [wikiResult, histResult] = await Promise.allSettled([wikiPromise, histPromise]);

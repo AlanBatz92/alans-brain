@@ -24,7 +24,10 @@ DB_PATH = os.path.expanduser("~/birdnet.db")
 BIRDNET_PYTHON = os.path.expanduser("~/BirdNET-Analyzer/birdnet-env/bin/python3")
 LAT = 40.5376
 LON = -75.4968
-MIN_CONFIDENCE = 0.35            # log a detection at/above this confidence
+MIN_CONFIDENCE = 0.85            # only preserve detections at/above this confidence.
+                                 # Raised from 0.35 (2026-06-03): sub-85% hits are
+                                 # noisy, so we no longer keep them on the box or show
+                                 # them on the page — keeps the locale analytics clean.
 LIFE_LIST_MIN_CONFIDENCE = 0.85  # a hit must clear this to count toward a lifer
 LIFE_LIST_MIN_HITS = 3           # ...and a NEW species needs this many such hits
                                  #    within a rolling 24h window to join the life list
@@ -144,14 +147,13 @@ def parse_and_log(result_file):
                 )
                 det_id = c.lastrowid
 
-                # Life list gate. Every detection above MIN_CONFIDENCE is still
-                # logged (and visualized on the Observatory page once >= 0.75),
-                # but a species only earns a *permanent* lifetime entry once it
-                # clears the stricter life-list gate: LIFE_LIST_MIN_HITS hits at
-                # or above LIFE_LIST_MIN_CONFIDENCE within a rolling 24-hour
-                # window, OR a single near-certain hit (>= LIFE_LIST_INSTANT_
-                # CONFIDENCE, ~100%). The multi-hit rule filters one-off mis-IDs;
-                # the instant rule fast-tracks a near-certain detection.
+                # Life list gate. Every preserved detection is >= MIN_CONFIDENCE
+                # (now 0.85, the same bar as LIFE_LIST_MIN_CONFIDENCE) and is shown
+                # on the Observatory page, but a species only earns a *permanent*
+                # lifetime entry once it also clears the count rule: LIFE_LIST_MIN_HITS
+                # hits within a rolling 24-hour window, OR a single near-certain hit
+                # (>= LIFE_LIST_INSTANT_CONFIDENCE, ~100%). The multi-hit rule filters
+                # one-off mis-IDs; the instant rule fast-tracks a near-certain detection.
                 if confidence >= LIFE_LIST_MIN_CONFIDENCE:
                     c.execute("SELECT total_detections FROM lifetime WHERE common_name=?", (common_name,))
                     existing = c.fetchone()
