@@ -28,10 +28,16 @@ app.add_middleware(
 DB_PATH  = os.path.expanduser("~/birdnet.db")
 CLIP_DIR = "/home/alan/train_clips"
 
-# Life-list gate — mirrors birdnet_pipeline.py (the pipeline is the writer; this
-# is read-only). A new species lists after LIFE_LIST_MIN_HITS hits at/above
-# LIFE_LIST_MIN_CONFIDENCE within a rolling 24h (or one ~100% hit). Used by
-# /api/species to show a bird's life-list progress on its card. Keep in sync.
+# Confidence floors — mirror birdnet_pipeline.py (the pipeline is the writer;
+# this is read-only). Three tiers:
+#   PRESERVE  (0.60) — what the box keeps; the bird card's diagnostic hit list
+#                      shows down to here (sub-85% hits explain non-lifers).
+#   DISPLAY   (0.85) — what the public page/analytics show (front-end passes it).
+#   LIFE-LIST (0.85 + count rule) — a new species lists after LIFE_LIST_MIN_HITS
+#                      hits at/above LIFE_LIST_MIN_CONFIDENCE within a rolling 24h,
+#                      or one ~100% hit.
+# Keep these in sync with the pipeline.
+PRESERVE_MIN_CONFIDENCE  = 0.60
 LIFE_LIST_MIN_CONFIDENCE = 0.85
 LIFE_LIST_MIN_HITS = 3
 
@@ -56,11 +62,11 @@ def get_db():
 # ─────────────────────────────────────────────────────────────
 
 # NB: `min_confidence` defaults to 0.0 so existing callers are unaffected.
-# The Observatory front-end passes 0.85 — the display floor now matches the
-# preserve floor: the pipeline only logs detections >= 0.85, so the page shows
-# everything that's kept (kept tight for clean locale analytics). The life list
-# adds a count rule on top (LIFE_LIST_MIN_HITS hits within a rolling 24h, or one
-# ~100% hit); these view filters are independent of that.
+# The Observatory front-end passes 0.85 (the display floor) to keep sub-85% hits
+# off the public page/analytics, even though the box *preserves* down to 0.60 so
+# the bird card can still show those lower hits as diagnostics. The life list adds
+# a count rule on top (LIFE_LIST_MIN_HITS hits within a rolling 24h, or one ~100%
+# hit); these view filters are independent of that.
 
 @app.get("/api/detections")
 def recent_detections(limit: int = 50, min_confidence: float = 0.0):
@@ -102,6 +108,8 @@ def species_history(name: str, min_confidence: float = 0.85):
     """Per-species detection history for bird cards: count, first/last heard,
     confidence series, per-hour histogram, the last 10 hits (newest first), and
     life-list progress (qualifying hits in the last 24h + whether it's listed).
+    Summary stats use `min_confidence` (the 0.85 display floor); the recent-hits
+    list reaches down to the 0.60 preserve floor so sub-85% diagnostics show.
     Matches common_name OR scientific_name."""
     conn = get_db()
     rows = conn.execute(
@@ -123,14 +131,21 @@ def species_history(name: str, min_confidence: float = 0.85):
             by_hour[hour] += 1
         except (ValueError, IndexError):
             pass
-    # The last 10 hits, newest first — lets the bird card show, at a glance, the
-    # confidence of each recent detection (e.g. why a bird isn't yet a lifer).
-    recent = [
-        {"timestamp": r["timestamp"], "confidence": round(r["confidence"], 3)}
-        for r in reversed(rows[-10:])
-    ]
     common     = rows[0]["common_name"]
     scientific = rows[0]["scientific_name"]
+    # Recent hits — the last 10 detections down to the PRESERVE floor (0.60), newest
+    # first, so the card can show sub-85% *diagnostic* hits (e.g. why a species isn't
+    # yet a lifer) even though the page filters at the higher display floor.
+    recent_rows = conn.execute(
+        """SELECT timestamp, confidence FROM detections
+           WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ?
+           ORDER BY timestamp DESC LIMIT 10""",
+        (common, scientific, PRESERVE_MIN_CONFIDENCE)
+    ).fetchall()
+    recent = [
+        {"timestamp": r["timestamp"], "confidence": round(r["confidence"], 3)}
+        for r in recent_rows
+    ]
     # Life-list progress: this species' qualifying hits (>= the life-list floor)
     # within the rolling 24h window the writer uses, and whether it's listed yet.
     hits_24h = conn.execute(

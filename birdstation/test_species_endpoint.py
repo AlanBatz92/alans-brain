@@ -8,7 +8,8 @@ import sqlite3
 import sys
 
 
-# Life-list gate — mirrors bird_api.py / birdnet_pipeline.py.
+# Confidence floors — mirror bird_api.py / birdnet_pipeline.py.
+PRESERVE_MIN_CONFIDENCE  = 0.60   # box keeps >= this; recent-hits list reaches here
 LIFE_LIST_MIN_CONFIDENCE = 0.85
 LIFE_LIST_MIN_HITS = 3
 
@@ -71,12 +72,20 @@ def species_history(conn, name, min_confidence=0.85):
             by_hour[hour] += 1
         except (ValueError, IndexError):
             pass
-    recent = [
-        {"timestamp": r["timestamp"], "confidence": round(r["confidence"], 3)}
-        for r in reversed(rows[-10:])
-    ]
     common     = rows[0]["common_name"]
     scientific = rows[0]["scientific_name"]
+    # Recent hits reach down to the preserve floor (0.60), newest first — so the
+    # card can show sub-display-floor diagnostic hits. Separate from the stats query.
+    recent_rows = conn.execute(
+        """SELECT timestamp, confidence FROM detections
+           WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ?
+           ORDER BY timestamp DESC LIMIT 10""",
+        (common, scientific, PRESERVE_MIN_CONFIDENCE),
+    ).fetchall()
+    recent = [
+        {"timestamp": r["timestamp"], "confidence": round(r["confidence"], 3)}
+        for r in recent_rows
+    ]
     hits_24h = conn.execute(
         "SELECT COUNT(*) FROM detections "
         "WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ? "
@@ -209,6 +218,37 @@ def test_recent_hits_fewer_than_10():
     assert len(r["recent"]) == 2
     assert r["recent"][0]["timestamp"] == "2026-06-01 09:00:00"   # newest first
     assert r["recent"][0]["confidence"] == 0.88
+
+
+def test_recent_includes_sub_display_floor_diagnostics():
+    # The recent list reaches down to the preserve floor (0.60), so a sub-85% hit
+    # shows for diagnostics even though it doesn't count toward the summary stats.
+    conn = make_db()
+    seed(conn, [
+        ("2026-06-01 07:00:00", "Downy Woodpecker", "Dryobates pubescens", 0.70),  # diagnostic
+        ("2026-06-01 08:00:00", "Downy Woodpecker", "Dryobates pubescens", 0.88),  # qualifying
+        ("2026-06-01 09:00:00", "Downy Woodpecker", "Dryobates pubescens", 0.92),  # qualifying
+    ])
+    r = species_history(conn, "Downy Woodpecker")
+    # Summary stats use the 0.85 display floor → only the two confident hits.
+    assert r["total_detections"] == 2
+    assert r["confidence_series"] == [0.88, 0.92]
+    # Recent list reaches to 0.60 → all three, newest first, with the 0.70 visible.
+    assert len(r["recent"]) == 3
+    assert r["recent"][0]["timestamp"] == "2026-06-01 09:00:00"
+    assert r["recent"][-1]["confidence"] == 0.70
+
+
+def test_recent_excludes_below_preserve_floor():
+    conn = make_db()
+    seed(conn, [
+        ("2026-06-01 07:00:00", "House Sparrow", "Passer domesticus", 0.50),  # below preserve
+        ("2026-06-01 08:00:00", "House Sparrow", "Passer domesticus", 0.90),  # qualifying
+    ])
+    r = species_history(conn, "House Sparrow")
+    assert r["total_detections"] == 1
+    assert len(r["recent"]) == 1           # the 0.50 hit is below the 0.60 preserve floor
+    assert r["recent"][0]["confidence"] == 0.90
 
 
 def test_on_life_list_flag():
@@ -350,6 +390,8 @@ if __name__ == "__main__":
         test_confidence_rounded_to_3dp,
         test_recent_hits_newest_first_capped_at_10,
         test_recent_hits_fewer_than_10,
+        test_recent_includes_sub_display_floor_diagnostics,
+        test_recent_excludes_below_preserve_floor,
         test_on_life_list_flag,
         test_hits_24h_counts_recent_qualifying_only,
         test_grouped_basic,
