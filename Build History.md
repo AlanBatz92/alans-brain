@@ -26,16 +26,32 @@ first), `hits_24h` (qualifying hits in the rolling 24h, using the life-list floo
 `life_list_min_hits`, and `on_life_list` (joins the `lifetime` table). `observatory.js`
 renders them in `birdCardContent`; new `.obs-bcard-hits*` / `.obs-bcard-status*` CSS.
 
-**85% preserve/display floor (box + front-end).** Raised the BirdNET pipeline's
-`MIN_CONFIDENCE` **0.35 → 0.85**, so the box now *preserves* only confident detections
-(it's also passed to the analyzer as `--min_conf`); the page's display floor went
-**0.75 → 0.85** to match (`observatory.js` `MIN_CONFIDENCE`, plus the `/api/species`
-and `/api/detections/grouped` server defaults). The display and preserve floors are
-now equal — every kept detection is shown — which keeps the locale analytics clean.
-**Decision:** only-going-forward — existing sub-0.85 rows stay in the DB (no destructive
-purge); the page just hides them. The life list is unaffected (its floor was already
-0.85). `MIN_CONFIDENCE == LIFE_LIST_MIN_CONFIDENCE` now, so the life-list code's only
-extra gate is the hit-count rule; comments updated to say so.
+**Three-tier confidence model (box + front-end).** Reconciled "keep the diagnostic
+hits" with "clean analytics" by decoupling three floors:
+- **Preserve 0.60** — the pipeline's `MIN_CONFIDENCE` went **0.35 → 0.60** (also passed
+  to the analyzer as `--min_conf`). The box keeps detections ≥ 0.60, so sub-85% hits
+  survive for diagnostics but the worst noise is cut.
+- **Display 0.85** — the page grid/stats floor went **0.75 → 0.85** (`observatory.js`
+  `MIN_CONFIDENCE` + the `/api/species` and `/api/detections/grouped` server defaults),
+  so the public page/analytics show only confident birds.
+- **Life list 0.85 + count** — unchanged (3 hits at ≥ 0.85 in a rolling 24h, or one ~100%).
+
+The bird card's **recent-hits list reaches down to the preserve floor** (a separate
+`/api/species` query at `PRESERVE_MIN_CONFIDENCE`), so the lower hits that explain a
+non-lifer are visible (colour-graded mid/low), while the card's summary stats stay at
+the 0.85 display floor. This delivers the original ask — e.g. a Downy Woodpecker card
+shows two 70% IDs + one 89%, with "1 of 3 qualifying hits".
+
+(An earlier pass this same day set a single 0.85 preserve==display floor; superseded by
+the three-tier model above after deciding to retain the sub-85% diagnostic hits.)
+
+**Purge script for the old noise (`purge_low_confidence.py`).** A manual one-shot the
+box runs once to clear detections below the new preserve floor (default 0.60) — the
+historical ≥ 0.35 rows logged before the floor was raised. Backs the DB up first,
+supports `--dry-run` / `--floor` / `--no-backup`, VACUUMs after. Leaves `lifetime`,
+Pulse, and train tables alone. Not scheduled: the pipeline already declines to write
+below the floor, so new data stays clean. Smoke-tested against a throwaway DB (keeps
+0.60 + 0.88, deletes 0.40 + 0.59, writes a backup).
 
 **Life-list clips — "should a recording be available?" (answered, no change).** The
 pipeline already archives one WAV per life-list-qualifying detection to `~/bird_clips`
@@ -46,12 +62,16 @@ no web surface. **Decision:** keep clips local-only for now (declined a public c
 the card and a passphrase-gated review page). Re-open later if a vetted, privacy-safe
 surface is wanted.
 
-**Verified:** `test_species_endpoint.py` updated + extended (17 tests, all green) —
-new `recent` ordering/cap, `on_life_list`, `hits_24h` (rolling-window) coverage, and
-all seed data re-baselined to the 0.85 floor; `py_compile` on both box scripts;
-`node --check observatory.js`. **Assets:** `observatory.js?v=obs13`, `style.css?v=obs11`.
-**Box step needed:** `cd ~/alans-brain && git pull && sudo systemctl restart birdnet birdapi`
-(picks up the 0.85 preserve floor + the enriched `/api/species` response).
+**Verified:** `test_species_endpoint.py` updated + extended (19 tests, all green) —
+`recent` ordering/cap, the recent-reaches-to-0.60 vs stats-at-0.85 split (sub-display
+diagnostics shown, sub-preserve excluded), `on_life_list`, `hits_24h` (rolling-window);
+seed data re-baselined to the floors; `py_compile` on all three box scripts;
+`node --check observatory.js`; purge script smoke-tested on a throwaway DB.
+**Assets:** `observatory.js?v=obs14`, `style.css?v=obs11`. **Box steps:**
+`cd ~/alans-brain && git pull && sudo systemctl restart birdnet birdapi` (picks up the
+0.60 preserve floor + the enriched `/api/species` response), then optionally
+`python3 ~/alans-brain/birdstation/purge_low_confidence.py --dry-run` and, once happy,
+without `--dry-run` to clear the old < 0.60 noise.
 
 ## 2026-06-02 — Observatory: "All" (all-time) period filter
 

@@ -40,10 +40,13 @@ events → schedule prior → acoustic fingerprint (details in the plan).
 ### 3. Confidence-tuning follow-ups (life list)
 - **Current gate (2026-06-02):** a new species joins after **3 detections at
   ≥ 0.85 within a rolling 24h window, or one ~100% (≥ 0.995) hit** (instant).
-- **Preserve floor raised (2026-06-03):** the box now keeps only detections ≥ 0.85
-  (was 0.35); the page floor matches at 0.85. Cleaner analytics, but watch that the
-  tighter floor doesn't starve the calibration set (review_birds bands all start at
-  0.85, so no loss there) or hide a genuinely-heard-but-quiet species.
+- **Three-tier floors (2026-06-03):** preserve 0.60 (box keeps, for diagnostics) /
+  display 0.85 (page + analytics) / life-list 0.85 + count. `purge_low_confidence.py`
+  clears old < 0.60 noise. Watch: the 0.60 preserve floor still discards the very
+  lowest hits — fine for diagnostics, but if a genuinely-heard-but-quiet species needs
+  inspecting below 0.60, lower the floor temporarily. The card's recent-hits list is
+  also the natural home for a future per-hit clip/spectrogram link if clips ever get a
+  (privacy-safe) surface.
 - **✓ Verifiable lifers (2026-06-02):** the pipeline archives one clip per
   life-list-qualifying detection (`~/bird_clips`, one per species/day);
   `review_birds.py` labels them and `--stats` prints measured precision by
@@ -87,14 +90,16 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
-- **2026-06-03** — Observatory: recent hits on bird cards + 85% preserve/display
-  floor. Bird cards now show the **last 10 detections** (confidence + time, newest
-  first) plus a life-list-progress line ("N of 3 qualifying hits in 24h" or "✓ On the
+- **2026-06-03** — Observatory: recent hits on bird cards + three-tier confidence
+  model. Bird cards now show the **last 10 detections** (confidence + time, newest
+  first, reaching down to the 0.60 preserve floor so sub-85% diagnostic hits are
+  visible) plus a life-list-progress line ("N of 3 qualifying hits in 24h" or "✓ On the
   life list"); `/api/species/{name}` gained `recent[]` / `hits_24h` / `on_life_list`.
-  The box's `MIN_CONFIDENCE` was raised **0.35 → 0.85** (preserve only confident hits)
-  and the page's display floor **0.75 → 0.85** to match — clean locale analytics,
-  only-going-forward (existing rows left in place). Life-list clips stay **local-only**
-  (declined a public/web surface for backyard-mic privacy). `?v=obs13`/`obs11`.
+  Floors decoupled: **preserve 0.60** (box keeps; `MIN_CONFIDENCE` 0.35 → 0.60),
+  **display 0.85** (page grid/stats; was 0.75), **life list 0.85 + count**. New
+  `purge_low_confidence.py` clears the old < 0.60 noise (manual, backs up first).
+  Life-list clips stay **local-only** (declined a public/web surface for backyard-mic
+  privacy). `?v=obs14`/`obs11`.
 
 - **2026-06-02** — Verifiable lifers + BirdNET seasonal filter (box-side). The
   pipeline now passes `--week` (season filter atop lat/lon) and archives one WAV per

@@ -83,18 +83,18 @@ train data a home. ID/class prefix: **`obs-`**.
   the clip endpoint 403s anything not tied to an approved train, and stats show
   approved counts. Vetting is via `review_trains.py` on the box; clips auto-purge
   weekly. Full design in `PLAN-train-vetting.md`.
-- **Confidence gate (0.85 floor — preserve == display, 2026-06-03):** the pipeline
-  now *preserves* only detections ≥ 0.85 (was ≥ 0.35), and the page's display floor
-  matches at 0.85 (was 0.75) — sub-85% hits are too noisy to keep, so dropping them
-  on the box and the page keeps the locale analytics clean. Enforced both server-side
-  (optional `min_confidence` param on `/api/today`, `/api/detections`, `/api/stats`,
-  default 0.0; `/api/species` + `/api/detections/grouped` default 0.85) and
-  client-side in `observatory.js` (correct even before a box redeploy). The **life
-  list** adds a count rule on top: **3 hits at ≥ 0.85 within a rolling 24h**, or one
-  **~100%** hit (box-side, see birdstation section). Existing pre-0.85 rows were left
-  in the DB (only-going-forward); the page just hides them. Bird **stats are derived
-  client-side from the filtered data** and follow the selected period (heard <period>
-  / species <period> / life-list size / latest), not raw totals.
+- **Confidence gate — three tiers (2026-06-03):** decoupled floors.
+  (1) **Preserve 0.60** — the pipeline keeps detections ≥ 0.60 (was 0.35), cutting the
+  worst noise but retaining sub-85% *diagnostic* hits. (2) **Display 0.85** — the page
+  grid/stats show only ≥ 0.85 (was 0.75), for clean locale analytics; enforced
+  server-side (`min_confidence` param on `/api/today`, `/api/detections`, `/api/stats`,
+  default 0.0; `/api/species` + `/api/detections/grouped` default 0.85) and client-side
+  in `observatory.js`. (3) **Life list** — a count rule on top: **3 hits at ≥ 0.85
+  within a rolling 24h**, or one **~100%** hit (box-side). The bird-card recent-hits
+  list deliberately reaches down to the **preserve** floor so the lower hits explaining
+  a non-lifer are visible. Old < 0.60 rows are cleared by `purge_low_confidence.py`
+  (one-shot, on the box). Bird **stats are derived client-side from the filtered data**
+  and follow the selected period (heard / species / life-list size / latest), not raw totals.
 - **Birds "Heard today" is grouped by species:** one card per species with ×count,
   a colored confidence bar + pill (best-of-day), and last-heard time, newest-first.
 - **Every section fetches independently** (`Promise.allSettled`), so one
@@ -103,7 +103,7 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs13` +
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs14` +
   `style.css?v=obs11` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
@@ -117,10 +117,13 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Recent hits on the bird card (2026-06-03):** below the stats grid, each card lists
   the **last 10 detections** (newest first) with a confidence pill + date·time, plus a
   one-line life-list status — either "✓ On the life list" or "Not yet a lifer — N of 3
-  qualifying hits (≥85%) in the last 24h". Makes the life-list math legible at a glance
-  (why a heard-but-unlisted species hasn't qualified). `/api/species/{name}` returns
-  `recent[]` (last 10 `{timestamp, confidence}`), `hits_24h`, `life_list_min_hits`, and
-  `on_life_list`. Classes: `.obs-bcard-hits*`, `.obs-bcard-status*`.
+  qualifying hits (≥85%) in the last 24h". The list reaches down to the **0.60 preserve
+  floor** (separate query in `/api/species`), so sub-85% diagnostic hits are visible
+  (colour-graded mid/low) — making the life-list math legible at a glance (why a
+  heard-but-unlisted species hasn't qualified). The card's summary stats (Heard Here /
+  Best ID) stay at the 0.85 display floor. `/api/species/{name}` returns `recent[]`
+  (last 10 `{timestamp, confidence}` ≥ 0.60), `hits_24h` (≥ 0.85 in 24h),
+  `life_list_min_hits`, and `on_life_list`. Classes: `.obs-bcard-hits*`, `.obs-bcard-status*`.
   Next: step 4 detail view (sparkline + by-hour histogram).
 - **Timeline + search (2026-06-01; period-aware stats 2026-06-02):** period selector
   (Today / Yesterday / This week / This month / This year / All) above the species grid;
@@ -140,7 +143,7 @@ train data a home. ID/class prefix: **`obs-`**.
   opens the bird card modal. Both use `data-action` delegation; keyboard-accessible.
 - **Bird card UX (2026-06-01):** Wikipedia link moved below the sci name (easy to tap on
   mobile); photo wrapped as Wikipedia link; extract expanded to 3 sentences (≤ 500 chars).
-- Assets: `style.css?v=obs11`, `observatory.js?v=obs13`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs11`, `observatory.js?v=obs14`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 
@@ -173,12 +176,13 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
   - `pulse_enrich.py` — `pulse-enrich.timer` (every 20 min): batched (20/run) AI tagging + one-sentence summaries via **`claude-haiku-4-5`**, prompt-cached system prompt, retried up to `enrich_attempts` 3.
   - `pulse_digest.py` — `pulse-digest.timer`, daily ~6 AM: reads the last 24h of enriched items, writes a sectioned "Morning Brief" via **`claude-sonnet-4-6`** + adaptive thinking, structured output through `messages.parse()`. Skips days with <3 items.
 - **Observatory writers (long-running services, in `birdstation/`):**
-  - `birdnet_pipeline.py` — `birdnet.service`: captures 15 s chunks off the Icecast `/backyard` stream (`localhost:8000`), runs BirdNET-Analyzer (its own `~/BirdNET-Analyzer/birdnet-env` venv), writes `detections` (confidence ≥ `MIN_CONFIDENCE` **0.85** — raised from 0.35 on 2026-06-03 so only confident hits are preserved for clean locale analytics; this is also passed to BirdNET as `--min_conf`). **Life-list gate (2026-06-02):** a *new* species joins `lifetime` after **`LIFE_LIST_MIN_HITS` = 3** detections at ≥ `LIFE_LIST_MIN_CONFIDENCE` **0.85** within a **rolling 24h window** (`datetime(timestamp) >= datetime('now','-24 hours')`), **or a single ≥ `LIFE_LIST_INSTANT_CONFIDENCE` 0.995 (~100%) hit** (instant-add, bypasses the multi-hit rule); existing lifers just increment `total_detections`. BirdNET runs with lat/lon **and** `--week` (BirdNET's 1-48 week, `USE_WEEK_FILTER`), so both location and season filter the species list. **Verifiable lifers (2026-06-02):** each life-list-qualifying hit (≥ 0.85) also archives one WAV to `~/bird_clips` (capped one per species/day; `clip_path` + `verified` columns on `detections`), labelled via `review_birds.py` (`--stats` = measured precision by confidence band) and aged out by `purge-bird-clips.timer` — **local-only, never served** (backyard-mic privacy). (CSV reader fixed 2026-05-30 to `delimiter=","`.) Wipe bird tables for a clean start with `birdstation/reset_birds.sh` (backs up first; leaves Pulse + trains intact).
+  - `birdnet_pipeline.py` — `birdnet.service`: captures 15 s chunks off the Icecast `/backyard` stream (`localhost:8000`), runs BirdNET-Analyzer (its own `~/BirdNET-Analyzer/birdnet-env` venv), writes `detections` (confidence ≥ `MIN_CONFIDENCE` **0.60** — the *preserve* floor, raised from 0.35 on 2026-06-03 to cut noise while keeping sub-85% diagnostic hits; also passed to BirdNET as `--min_conf`. The public page filters separately at the 0.85 display floor). **Life-list gate (2026-06-02):** a *new* species joins `lifetime` after **`LIFE_LIST_MIN_HITS` = 3** detections at ≥ `LIFE_LIST_MIN_CONFIDENCE` **0.85** within a **rolling 24h window** (`datetime(timestamp) >= datetime('now','-24 hours')`), **or a single ≥ `LIFE_LIST_INSTANT_CONFIDENCE` 0.995 (~100%) hit** (instant-add, bypasses the multi-hit rule); existing lifers just increment `total_detections`. BirdNET runs with lat/lon **and** `--week` (BirdNET's 1-48 week, `USE_WEEK_FILTER`), so both location and season filter the species list. **Verifiable lifers (2026-06-02):** each life-list-qualifying hit (≥ 0.85) also archives one WAV to `~/bird_clips` (capped one per species/day; `clip_path` + `verified` columns on `detections`), labelled via `review_birds.py` (`--stats` = measured precision by confidence band) and aged out by `purge-bird-clips.timer` — **local-only, never served** (backyard-mic privacy). (CSV reader fixed 2026-05-30 to `delimiter=","`.) Wipe bird tables for a clean start with `birdstation/reset_birds.sh` (backs up first; leaves Pulse + trains intact).
   - `train_detector.py` — `train_detector.service` (own `~/train-env` venv, needs numpy): reads `localhost:8000/backyard`, pipes it through **ffmpeg → mono s16le PCM** (must decode the MP3 — reading raw stream bytes as PCM was the long-standing reason `train_events` stayed empty; fixed 2026-06-01), detects sustained energy in the 300–1500 Hz band, writes `train_events` + a WAV clip in `~/train_clips`. Every event starts un-reviewed/hidden (see Train privacy above). **NB:** a duplicate `traindetect.service` existed for the same script — `train_detector.service` is canonical; the dup is removed.
   - `review_trains.py` — **manual** CLI on the box to vet pending train events (play clip → train/false/unsure → DB). Near-term vetting workflow; web UI is future (`PLAN-train-vetting.md`).
   - `purge_train_clips.py` — `purge-train-clips.timer` (**Sun 04:00**): deletes rejected + aged-orphan clips, keeps approved-train + still-pending. `--dry-run` supported.
   - `review_birds.py` — **manual** CLI on the box to confirm life-list detections from their archived clips (correct/wrong/unsure → `detections.verified`); `--stats` prints measured precision by confidence band (calibration data).
   - `purge_bird_clips.py` — `purge-bird-clips.timer` (**daily 04:30**): deletes unreviewed bird clips older than 30 days + aged orphans, keeps labelled (reviewed) clips + recent unreviewed. `--dry-run` supported.
+  - `purge_low_confidence.py` — **manual one-shot** (not timed): deletes `detections` with confidence below the preserve floor (default 0.60) — cleanup of the old ≥ 0.35 noise after the floor was raised. Backs the DB up first; `--dry-run` / `--floor` / `--no-backup`. Leaves `lifetime`, Pulse, and train tables untouched. New data stays clean on its own (the pipeline won't write below the floor).
 - **Secrets:** `ANTHROPIC_API_KEY` and `BIRD_API_KEY` live only on the box, moving to `/etc/birdstation.env` (chmod 600) referenced by `EnvironmentFile=`. Never committed; `.gitignore` blocks `*.env`/`*.db`. (The observatory services need no keys.)
 
 ### Digest + citations (current behavior)

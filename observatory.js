@@ -9,15 +9,16 @@
      🐦 Birds  — headline stats, today's species (grouped), the life list.
      🚂 Trains — event stats and recent events with playable WAV clips.
 
-   Confidence gate: the BirdNET pipeline only *preserves* detections ≥ 0.85
-   (sub-85% hits are noisy, so they're no longer kept on the box), and this page
-   shows everything at or above MIN_CONFIDENCE (0.85) — display floor == preserve
-   floor, keeping the locale analytics clean. The life list adds a count rule on
-   top, handled box-side: a new species joins only after 3 detections at ≥ 0.85
-   within a rolling 24 hours, or a single ~100% detection. We pass ?min_confidence
-   to the API (honored once birdstation is redeployed with the param; harmlessly
-   ignored before that) AND filter client-side, so the page is correct in both
-   states.
+   Confidence gate — three tiers. The box *preserves* detections ≥ 0.60 (cutting
+   the worst noise while keeping sub-85% diagnostics), this page's *display* floor
+   is MIN_CONFIDENCE (0.85) so only confident birds show in the grid/stats, and the
+   *life list* adds a count rule on top (box-side): a new species joins only after
+   3 detections at ≥ 0.85 within a rolling 24 hours, or a single ~100% detection.
+   The bird-card "recent hits" list reaches down to the preserve floor on purpose,
+   so you can see the lower hits that explain why a species isn't yet a lifer. We
+   pass ?min_confidence to the API (honored once birdstation is redeployed with the
+   param; harmlessly ignored before that) AND filter client-side, so the page is
+   correct in both states.
 
    Every section fetches independently: one endpoint failing (or the box
    being offline) degrades that section to an offline/empty state without
@@ -28,9 +29,10 @@
 
 const API_BASE = 'https://birds.alansbrain.com';
 
-// Only birds at/above this confidence land on the page — the display floor, now
-// equal to the box's preserve floor (the pipeline keeps only ≥ 0.85). The life
-// list adds a count rule on top (3 hits at ≥ 0.85 within 24h, or one ~100% hit).
+// Only birds at/above this confidence land on the page grid/stats — the display
+// floor. The box preserves down to 0.60 (so the bird card can show lower
+// diagnostic hits), and the life list adds a count rule on top (3 hits at ≥ 0.85
+// within 24h, or one ~100% hit). Display, preserve, and life-list are decoupled.
 const MIN_CONFIDENCE = 0.85;
 
 const EP = {
@@ -105,9 +107,9 @@ function shortDate(ms) {
   return new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric', timeZone: OBS_TZ });
 }
 
-// Confidence (0–1) → bucket class. 0.85 is the page's "confident" floor, so
-// everything shown grades as high; the mid/low bands remain for any older
-// sub-0.85 data lingering in the DB before the preserve floor was raised.
+// Confidence (0–1) → bucket class. The page grid only shows ≥ 0.85 (all high),
+// but the bird card's recent-hits list reaches down to the 0.60 preserve floor,
+// so the mid (≥ 0.75) and low (< 0.75) bands colour those diagnostic hits.
 function confClass(conf) {
   if (conf >= 0.85) return 'obs-conf-high';
   if (conf >= 0.75) return 'obs-conf-mid';

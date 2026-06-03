@@ -24,10 +24,12 @@ DB_PATH = os.path.expanduser("~/birdnet.db")
 BIRDNET_PYTHON = os.path.expanduser("~/BirdNET-Analyzer/birdnet-env/bin/python3")
 LAT = 40.5376
 LON = -75.4968
-MIN_CONFIDENCE = 0.85            # only preserve detections at/above this confidence.
-                                 # Raised from 0.35 (2026-06-03): sub-85% hits are
-                                 # noisy, so we no longer keep them on the box or show
-                                 # them on the page — keeps the locale analytics clean.
+MIN_CONFIDENCE = 0.60            # preserve floor — keep detections at/above this.
+                                 # 0.60 (not 0.35, not 0.85) keeps sub-85% *diagnostic*
+                                 # hits so the bird cards can show why a species isn't yet
+                                 # a lifer, while cutting the worst low-confidence noise.
+                                 # The public page filters separately to >= 0.85; old
+                                 # < 0.60 rows are cleared by purge_low_confidence.py.
 LIFE_LIST_MIN_CONFIDENCE = 0.85  # a hit must clear this to count toward a lifer
 LIFE_LIST_MIN_HITS = 3           # ...and a NEW species needs this many such hits
                                  #    within a rolling 24h window to join the life list
@@ -147,11 +149,12 @@ def parse_and_log(result_file):
                 )
                 det_id = c.lastrowid
 
-                # Life list gate. Every preserved detection is >= MIN_CONFIDENCE
-                # (now 0.85, the same bar as LIFE_LIST_MIN_CONFIDENCE) and is shown
-                # on the Observatory page, but a species only earns a *permanent*
-                # lifetime entry once it also clears the count rule: LIFE_LIST_MIN_HITS
-                # hits within a rolling 24-hour window, OR a single near-certain hit
+                # Life list gate. Every preserved detection (>= MIN_CONFIDENCE, 0.60)
+                # is logged and surfaces on the bird card's diagnostic hit list; the
+                # main page shows only the >= 0.85 ones. A species earns a *permanent*
+                # lifetime entry once it also clears the stricter life-list gate:
+                # LIFE_LIST_MIN_HITS hits at or above LIFE_LIST_MIN_CONFIDENCE (0.85)
+                # within a rolling 24-hour window, OR a single near-certain hit
                 # (>= LIFE_LIST_INSTANT_CONFIDENCE, ~100%). The multi-hit rule filters
                 # one-off mis-IDs; the instant rule fast-tracks a near-certain detection.
                 if confidence >= LIFE_LIST_MIN_CONFIDENCE:

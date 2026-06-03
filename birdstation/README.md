@@ -24,6 +24,7 @@ birdstation/
   birdnet_pipeline.py # birdnet.service: capture→analyze→log; life-list gate; clips
   purge_bird_clips.py # daily timer: age out unreviewed bird verification clips
   review_birds.py     # CLI: confirm lifers; --stats prints measured precision
+  purge_low_confidence.py # CLI one-shot: drop detections below the 0.60 preserve floor
   schema.sql          # full birdnet.db schema + migration log
   systemd/            # .service / .timer units (templated — no inline secrets)
   README.md           # this file
