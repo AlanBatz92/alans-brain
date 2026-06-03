@@ -4808,6 +4808,60 @@ nav {
 .obs-bcard-wiki-link:hover { text-decoration: underline; }
 .obs-bcard-photo-link { display: block; }
 
+/* Recent hits — the last 10 detections with confidence + time */
+.obs-bcard-hits-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 16px;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+.obs-bcard-hits-sub {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--text-dim);
+}
+.obs-bcard-status {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+.obs-bcard-status--on {
+  color: var(--green);
+  font-weight: 700;
+}
+.obs-bcard-hits {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 8px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.obs-bcard-hit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg);
+  padding: 7px 12px;
+}
+.obs-bcard-hit-when {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
 /* Skeleton loading */
 .obs-bcard-skeleton { padding: 18px 18px 20px; }
 .obs-bcard-skel-photo {
