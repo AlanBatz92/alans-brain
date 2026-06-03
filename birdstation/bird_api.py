@@ -99,8 +99,24 @@ def lifetime_list():
     rows = conn.execute(
         "SELECT * FROM lifetime ORDER BY first_seen ASC"
     ).fetchall()
+    # `total_detections` is derived live from the detections table rather than read
+    # from the stored counter on `lifetime`. The stored counter is incrementally
+    # maintained by the pipeline and can drift (it misses hits logged before a
+    # species was listed, and never self-corrects), so the life list could show a
+    # tally lower than what "today" already shows. Counting >= the life-list floor
+    # here keeps the life-list total consistent with the page's other ≥0.85 views
+    # and always truthful. (N+1 COUNTs, but N = lifer count, so it's cheap.)
+    species = []
+    for r in rows:
+        d = dict(r)
+        d["total_detections"] = conn.execute(
+            "SELECT COUNT(*) FROM detections "
+            "WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ?",
+            (d.get("common_name"), d.get("scientific_name"), LIFE_LIST_MIN_CONFIDENCE)
+        ).fetchone()[0]
+        species.append(d)
     conn.close()
-    return {"species": [dict(r) for r in rows], "total_species": len(rows)}
+    return {"species": species, "total_species": len(species)}
 
 
 @app.get("/api/species/{name}")

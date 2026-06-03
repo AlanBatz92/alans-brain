@@ -274,6 +274,50 @@ def test_hits_24h_counts_recent_qualifying_only():
     assert r["total_detections"] == 3   # the old hit still counts toward all-time totals
 
 
+# ── /api/lifetime (live total_detections) ─────────────────────────────────────
+
+def lifetime_list(conn, life_floor=0.85):
+    """Mirrors bird_api.py GET /api/lifetime — total_detections is derived live
+    from the detections table (>= life floor), not read from the stored counter."""
+    species = []
+    for r in conn.execute("SELECT * FROM lifetime ORDER BY first_seen ASC").fetchall():
+        d = dict(r)
+        d["total_detections"] = conn.execute(
+            "SELECT COUNT(*) FROM detections "
+            "WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ?",
+            (d.get("common_name"), d.get("scientific_name"), life_floor),
+        ).fetchone()[0]
+        species.append(d)
+    return species
+
+
+def test_lifetime_total_is_live_count_not_stored():
+    conn = make_db()
+    # stored counter is stale/low — the live count must override it
+    seed_life(conn, [("House Sparrow", "Passer domesticus", "2026-06-01 07:00:00", 5)])
+    seed(conn, [
+        ("2026-06-01 07:00:00", "House Sparrow", "Passer domesticus", 0.90),  # counts
+        ("2026-06-01 07:05:00", "House Sparrow", "Passer domesticus", 0.70),  # below life floor, ignored
+        ("2026-06-01 07:10:00", "House Sparrow", "Passer domesticus", 0.88),  # counts
+        ("2026-06-01 07:15:00", "House Sparrow", "Passer domesticus", 0.99),  # counts
+    ])
+    r = lifetime_list(conn)
+    assert len(r) == 1
+    assert r[0]["total_detections"] == 3   # three >=0.85 hits, not the stored 5, not the 0.70
+
+
+def test_lifetime_total_matches_by_scientific_name():
+    conn = make_db()
+    seed_life(conn, [("Gray Catbird", "Dumetella carolinensis", "2026-06-01 06:00:00", 0)])
+    # detections recorded under the scientific name still count toward the lifer
+    seed(conn, [
+        ("2026-06-01 06:00:00", "Gray Catbird", "Dumetella carolinensis", 0.91),
+        ("2026-06-01 06:30:00", "Gray Catbird", "Dumetella carolinensis", 0.86),
+    ])
+    r = lifetime_list(conn)
+    assert r[0]["total_detections"] == 2
+
+
 # ── /api/detections/grouped ───────────────────────────────────────────────────
 
 def detections_grouped(conn, start, end, min_confidence=0.85):
@@ -394,6 +438,8 @@ if __name__ == "__main__":
         test_recent_excludes_below_preserve_floor,
         test_on_life_list_flag,
         test_hits_24h_counts_recent_qualifying_only,
+        test_lifetime_total_is_live_count_not_stored,
+        test_lifetime_total_matches_by_scientific_name,
         test_grouped_basic,
         test_grouped_date_range_excludes_outside,
         test_grouped_confidence_filter,

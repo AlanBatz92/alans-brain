@@ -90,6 +90,12 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-03** — Life-list tally fix: `total_detections` was a denormalized `+1`
+  counter that drifted low (lifetime total below a single day's count). Now derived
+  **live** from `COUNT(*)` of the species' ≥0.85 detections — authoritatively in
+  `/api/lifetime` (always truthful, agrees with the "All" period grid) and self-healed
+  in the pipeline (recompute on each hit). `birdapi` restart fixes the display at once.
+
 - **2026-06-03** — Observatory: recent hits on bird cards + three-tier confidence
   model. Bird cards now show the **last 10 detections** (confidence + time, newest
   first, reaching down to the 0.60 preserve floor so sub-85% diagnostic hits are

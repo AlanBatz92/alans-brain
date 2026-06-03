@@ -10,6 +10,34 @@
 
 ---
 
+## 2026-06-03 — Observatory: life-list tally derived live (was drifting low)
+
+**Bug.** The life list showed a `total_detections` lower than a single day's count
+(e.g. House Sparrow ×856 lifetime while "today" alone was ×759). Root cause: the
+tally was a **denormalized counter** on the `lifetime` table, maintained by the
+pipeline as `existing + 1` per ≥0.85 hit and seeded at listing time with the 24h
+hit count. That counter drifts — it never counts hits logged before a species was
+listed and never self-corrects after any missed update — so it can fall behind the
+real number of detections.
+
+**Fix (two parts).**
+- **`bird_api.py` `/api/lifetime`** now derives `total_detections` **live** from the
+  `detections` table — `COUNT(*)` of that species' hits at ≥ `LIFE_LIST_MIN_CONFIDENCE`
+  (0.85), matching by common *or* scientific name — instead of returning the stored
+  counter. This makes the life-list total always truthful, self-healing across resets
+  /purges, and consistent with the page's other ≥0.85 views (the "All" period grid now
+  agrees with the life-list ×N). N+1 COUNTs, but N = lifer count, so it's cheap.
+- **`birdnet_pipeline.py`** now keeps the stored column honest too: an existing lifer's
+  tally is **recomputed from `COUNT(*)`** (not `+1`), and a newly-listed species is
+  seeded with the true all-time qualifying count (not just the 24h window). So the
+  persisted value self-heals on the next detection rather than carrying old drift.
+
+**Verified:** 2 new tests (live count overrides a stale stored value and ignores
+sub-floor hits; matches by scientific name) — 21 total, all green. **Box step:**
+`cd ~/alans-brain && git pull && sudo systemctl restart birdnet birdapi` (the API fix
+corrects the displayed total immediately; the pipeline fix heals the stored column on
+each new detection). No front-end change (the page already reads `total_detections`).
+
 ## 2026-06-03 — Observatory: recent hits on bird cards + 85% preserve/display floor
 
 Three morning Observatory asks. Two shipped as code; one was a question answered
