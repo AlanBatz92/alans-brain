@@ -51,7 +51,12 @@ const MAX_TRAINS = 30;   // matches the recent-events query limit
 // together, so we stash both and recompute the stat cards as each arrives.
 // `periodLabel` mirrors the selected period for the stat-card labels; the period
 // grid's "latest" species is stashed in `periodLatest` for the Latest card.
-const state = { life: [], periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent' };
+const state = { life: [], periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent', onlyPerfect: false };
+
+// A detection "reads as 100%" when it rounds to 100% — i.e. >= 0.995, the same
+// threshold the box uses to instant-add a lifer. The 100%-only filter keeps
+// species whose best confidence in the period clears this.
+const PERFECT_CONFIDENCE = 0.995;
 
 /* ── Helpers ── */
 
@@ -290,16 +295,22 @@ function renderPeriodGroups() {
   const countEl = document.getElementById('obs-period-count');
   const q      = state.searchQuery.trim().toLowerCase();
   const sorted = sortGroups(state.periodGroups, state.periodSort);
-  const groups = q
+  let groups = q
     ? sorted.filter((g) =>
         g.common_name.toLowerCase().includes(q) ||
         (g.scientific_name || '').toLowerCase().includes(q))
     : sorted;
+  // 100%-only filter: keep species whose best confidence in the period reads as 100%.
+  if (state.onlyPerfect) {
+    groups = groups.filter((g) => (g.best_confidence || 0) >= PERFECT_CONFIDENCE);
+  }
   if (countEl) countEl.textContent = groups.length ? '(' + groups.length + ')' : '';
   if (groups.length === 0) {
-    setMsg(el, 'obs-empty',
-      q ? 'No species match "' + q + '".'
-        : 'Nothing detected in this period yet — quiet skies.');
+    let msg;
+    if (q) msg = 'No species match "' + q + '".';
+    else if (state.onlyPerfect) msg = 'No species heard at 100% in this period.';
+    else msg = 'Nothing detected in this period yet — quiet skies.';
+    setMsg(el, 'obs-empty', msg);
     return;
   }
   el.innerHTML = groups.map((g) => {
@@ -456,14 +467,11 @@ function birdCardContent(commonName, scientificName, wiki, hist) {
   const hasPhoto = wiki && wiki.photo;
   let html = '';
 
-  // Photo — wrapped in a link to Wikipedia if available
+  // Photo — plain image (not a link, so it's not an easy accidental tap-out to
+  // Wikipedia; the deliberate "↗ Wikipedia" text link below the name handles that).
   if (hasPhoto) {
-    const img = '<img class="obs-bcard-photo" src="' + escapeAttr(wiki.photo) +
+    html += '<img class="obs-bcard-photo" src="' + escapeAttr(wiki.photo) +
       '" alt="' + escapeAttr(commonName) + '">';
-    html += wiki && wiki.url
-      ? '<a class="obs-bcard-photo-link" href="' + escapeAttr(wiki.url) +
-          '" target="_blank" rel="noopener">' + img + '</a>'
-      : img;
   }
 
   html += '<div class="obs-bcard-body' + (hasPhoto ? '' : ' obs-bcard-body--nophoto') + '">';
@@ -663,6 +671,16 @@ function initObservatory() {
   if (searchEl) {
     searchEl.addEventListener('input', () => {
       state.searchQuery = searchEl.value;
+      renderPeriodGroups();
+    });
+  }
+
+  // 100%-only filter toggle
+  const perfectEl = document.getElementById('obs-perfect');
+  if (perfectEl) {
+    perfectEl.addEventListener('click', () => {
+      state.onlyPerfect = !state.onlyPerfect;
+      perfectEl.setAttribute('aria-pressed', state.onlyPerfect ? 'true' : 'false');
       renderPeriodGroups();
     });
   }

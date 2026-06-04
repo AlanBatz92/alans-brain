@@ -10,6 +10,28 @@
 
 ---
 
+## 2026-06-03 — Observatory: bird-card tap targets + "100% only" filter
+
+Three small UX asks.
+
+- **Photo is no longer a Wikipedia link.** The card photo was wrapped in an `<a>` to
+  Wikipedia, so tapping it (the biggest element on the card) navigated away by accident.
+  Unwrapped it to a plain `<img>`; the deliberate `↗ Wikipedia` text link below the name
+  stays. Removed the now-dead `.obs-bcard-photo-link` rule.
+- **Bigger close button.** `.obs-bcard-close` 28×28 → **40×40** with a larger glyph,
+  an `:active` state, and `-webkit-tap-highlight-color: transparent`; the name's
+  `padding-right` grew to clear it in the no-photo layout.
+- **"100% only" filter.** A green toggle pill (`#obs-perfect`, `state.onlyPerfect`) in
+  the species-grid heading filters the grid to species whose best confidence in the
+  selected period reads as 100% (≥ `PERFECT_CONFIDENCE` 0.995 — the lifer instant-add
+  bar). Client-side, persists across period switches, and updates the count + empty
+  message ("No species heard at 100% in this period."). Pair with the **All** period for
+  the all-time list of birds heard at 100%. The headline stat cards are unaffected (like
+  search, it's a grid-only filter).
+
+**Assets:** `observatory.js?v=obs16`, `style.css?v=obs12`. `node --check` clean; no box
+step (front-end only — ships via Vercel).
+
 ## 2026-06-03 — Observatory: period counts mutually inconsistent (day-boundary bug)
 
 **Bug.** The page showed 45 birds "today", 62 "yesterday", but 2,277 "this week" —

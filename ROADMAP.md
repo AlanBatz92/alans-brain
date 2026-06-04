@@ -90,6 +90,12 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-03** — Bird-card UX + "100% only" filter: card photo is no longer a
+  Wikipedia link (too easy to tap out by accident — the `↗ Wikipedia` text link stays),
+  the close ✕ is a 40×40 tap target, and a green "100% only" toggle filters the species
+  grid to birds whose best confidence reads as 100% (≥0.995); pair with **All** for the
+  all-time list. `?v=obs16`/`obs12`.
+
 - **2026-06-03** — Period-count consistency fix: "today" (45) / "yesterday" (62) /
   "this week" (2277) disagreed because Today used a UTC-calendar-day endpoint
   (`/api/today`) while other periods used Eastern-aligned grouped windows — and the
