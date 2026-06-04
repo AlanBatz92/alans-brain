@@ -33,7 +33,7 @@ a Google Sheet, and a home server called **birdstation**).
 | Setlist to Spotify | `setlist-spotify.html` / `setlist-spotify.js` | Setlists → Spotify playlist |
 | My Week | `weather.html` / `weather.js` | Weather outlook + running/drone scoring |
 | Household Task Tracker | `tasks.html` / `tasks.js` | Passphrase-gated, reads/writes a Google Sheet |
-| Observatory | `observatory.html` / `observatory.js` | BirdNET + train detections from birdstation. Linked from the home Explore grid + nav dropdown. |
+| Observatory | `observatory.html` / `observatory.js` | BirdNET + train detections from birdstation. Three tabs: 🐦 Birds / 📊 Analytics / 🚂 Trains. Linked from the home Explore grid + nav dropdown. |
 | Tech Stack | `techstack.html` | Interactive SVG node-graph of the full site/hardware stack. Self-contained (inline CSS + JS). Public, no gate. See Tech Stack section below. |
 
 Shared front-end: `style.css` (theme variables + all component styles),
@@ -71,9 +71,10 @@ AI enrichment, and the daily digest; the website just reads JSON and renders.
 A second thin reader over birdstation (like Pulse), giving the BirdNET +
 train data a home. ID/class prefix: **`obs-`**.
 
-- **One combined page, two tabs** (🐦 Birds / 🚂 Trains); linked from the home
-  Explore card grid + the site-wide Explore dropdown / mobile overlay;
-  **load-once + manual ↻ refresh** (no auto-polling).
+- **One combined page, three tabs** (🐦 Birds / 📊 Analytics / 🚂 Trains); linked from the
+  home Explore card grid + the site-wide Explore dropdown / mobile overlay;
+  **load-once + manual ↻ refresh** (no auto-polling). The Analytics tab **lazy-loads on
+  first open** (heavier box aggregation) and joins the refresh only once opened.
 - Reads, all GET on `https://birds.alansbrain.com`: Birds → `/api/detections/grouped`
   (every period, incl. Today — `&min_confidence=0.85`), `/api/lifetime`,
   `/api/species/{name}` (bird card); Trains → `/api/trains/stats`, `/api/trains/recent?approved=1`
@@ -104,8 +105,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs16` +
-  `style.css?v=obs12` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs17` +
+  `style.css?v=obs13` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -155,7 +156,18 @@ train data a home. ID/class prefix: **`obs-`**.
   in the selected period reads as 100% (≥ `PERFECT_CONFIDENCE` 0.995 — the same bar that
   instant-adds a lifer). Client-side, persists across period switches; pair with the
   **All** period for the all-time list of birds heard at 100%.
-- Assets: `style.css?v=obs12`, `observatory.js?v=obs16`, `bird-info.js?v=obs6`.
+- **Analytics tab (📊, 2026-06-04):** a third tab (between Birds and Trains) for detection
+  *distributions* over its own period selector (defaults to **This week**). Renders, all
+  vanilla CSS (no chart lib): summary stat cards (Detections / Species / **Busiest hour** /
+  **Peak day**), a **24-hour activity chart** ("When the birds sing" — busiest hour
+  highlighted), a **species×hour heatmap** ("Who sings when" — each row self-normalized to
+  its own peak so the *pattern* shows; ×total badge for volume; scrolls horizontally on
+  mobile), a **most-heard leaderboard** (top 15, proportional bars), and a **per-day
+  activity chart** (hidden for single-day periods). All times **Eastern**. Heatmap +
+  leaderboard rows are clickable → bird card (reuse the `[data-name]` delegation). Powered
+  by `GET /api/analytics` (one call); `state.an`, `obs-an-*` classes, `loadAnalytics()`,
+  `TAGLINES.analytics`. **Lazy-loads on first tab open.**
+- Assets: `style.css?v=obs13`, `observatory.js?v=obs17`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 
@@ -175,7 +187,12 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 - **API service:** `bird_api.py` — **FastAPI via uvicorn on `:8080`**, fronted at
   `https://birds.alansbrain.com`. CORS allows `alansbrain.com` / `www.alansbrain.com`.
   Pulse uses `/api/feed` and `/api/digest`; the rest serve bird/train data
-  (`/api/detections`, `/api/today`, `/api/lifetime`, `/api/stats`, `/api/trains/*`).
+  (`/api/detections`, `/api/today`, `/api/lifetime`, `/api/stats`,
+  `/api/detections/grouped`, `/api/species/{name}`, `/api/analytics`, `/api/trains/*`).
+  `/api/analytics` returns Eastern-bucketed distributions (hour-of-day, species×hour,
+  per-day volume + diversity, leaderboard) for the Analytics tab — aggregated server-side
+  (SQL groups to a bounded UTC-hour intermediate; Python folds it into Eastern buckets,
+  DST-correct via `zoneinfo` with a self-contained US-Eastern fallback).
   Write routes (train verdicts) are guarded by `BIRD_API_KEY` via an `X-API-Key` header.
 - **Storage:** SQLite at `~/birdnet.db` (full schema in `birdstation/schema.sql`).
   Bird/observatory tables: `detections`, `lifetime`, `train_events`, `solar_telemetry`.

@@ -4999,3 +4999,223 @@ nav {
 }
 .obs-sort-select:focus,
 .obs-sort-select:hover { border-color: var(--teal); color: var(--text); }
+
+/* ═══ Analytics tab (obs-an-*) ═══ */
+.obs-an-caption {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin: -6px 0 10px;
+  line-height: 1.45;
+}
+
+/* Hour-of-day activity chart — 24 vertical bars */
+.obs-an-hours {
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  height: 168px;
+  margin-top: 4px;
+  padding: 12px 12px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.obs-an-hbar-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.obs-an-hbar-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+.obs-an-hbar {
+  width: 100%;
+  min-height: 2px;
+  background: var(--teal);
+  opacity: 0.55;
+  border-radius: 3px 3px 0 0;
+  transition: opacity 0.15s;
+}
+.obs-an-hbar-wrap:hover .obs-an-hbar { opacity: 0.9; }
+.obs-an-hbar-peak { opacity: 1; background: var(--green); }
+.obs-an-haxis {
+  height: 18px;
+  line-height: 18px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* Species × hour heatmap */
+.obs-an-heatmap-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.obs-an-heatmap {
+  min-width: 460px;   /* keep the 24 cells legible; scrolls on narrow screens */
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.obs-an-hm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.obs-an-hm-head { margin-bottom: 1px; }
+.obs-an-hm-label {
+  width: 132px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  overflow: hidden;
+}
+.obs-an-hm-row:not(.obs-an-hm-head) .obs-an-hm-label { cursor: pointer; }
+.obs-an-hm-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.obs-an-hm-label:hover .obs-an-hm-name { color: var(--teal); }
+.obs-an-hm-total {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+.obs-an-hm-cells {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+}
+.obs-an-hm-cell {
+  aspect-ratio: 1 / 1;
+  min-width: 9px;
+  border-radius: 2px;
+  background: var(--bg);
+}
+.obs-an-hm-tick {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: visible;
+}
+
+/* Most-heard leaderboard */
+.obs-an-leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.obs-an-lb-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s;
+}
+.obs-an-lb-row:hover { border-color: var(--teal); transform: translateX(2px); }
+.obs-an-lb-rank {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.obs-an-lb-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.obs-an-lb-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.obs-an-lb-name {
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.obs-an-lb-count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--teal);
+  flex-shrink: 0;
+}
+.obs-an-lb-track {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.obs-an-lb-fill { height: 100%; border-radius: 999px; background: var(--teal); }
+
+/* Per-day activity chart */
+.obs-an-daily {
+  margin-top: 4px;
+  padding: 12px 12px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.obs-an-daily-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 120px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.obs-an-dbar-wrap {
+  flex: 1 0 5px;
+  min-width: 5px;
+  display: flex;
+  align-items: flex-end;
+}
+.obs-an-dbar-track { width: 100%; height: 100%; display: flex; align-items: flex-end; }
+.obs-an-dbar {
+  width: 100%;
+  min-height: 2px;
+  background: var(--teal);
+  opacity: 0.6;
+  border-radius: 2px 2px 0 0;
+  transition: opacity 0.15s;
+}
+.obs-an-dbar-wrap:hover .obs-an-dbar { opacity: 1; }
+.obs-an-daily-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-dim);
+}
+
+@media (max-width: 480px) {
+  .obs-an-hm-label { width: 100px; }
+}

@@ -60,6 +60,17 @@ events → schedule prior → acoustic fingerprint (details in the plan).
   Also watch whether the season filter ever hides a real off-season vagrant.
 - **Later:** per-species thresholds (some calls are easier to ID than others).
 
+### 3b. Analytics — follow-ups (shipped the tab 2026-06-04)
+Ideas building on the new Analytics tab / `GET /api/analytics`:
+- **Bird-card by-hour sparkline** (the ▶ Next #1 "step 4" detail view) — the per-species
+  hourly data already exists; surface a small Eastern-bucketed chart on the card itself.
+  (Note: `/api/species/{name}`'s `by_hour` is currently **UTC**-bucketed and unused; switch
+  it to Eastern, like `/api/analytics`, when the card chart is built.)
+- **Seasonal / first-arrival** view (when each species shows up across the year), a
+  **new-species-over-time** life-list growth curve, and a **confidence-distribution**
+  histogram (ties into the calibration work).
+- Day-of-week or weather correlations (later; weather would need a data join).
+
 ### 4. Pulse ingestion — Phase 4 (full design in `PLAN-ingestion.md`)
 Generalize ingestion beyond RSS: pluggable adapters (scrape/email/manual), a
 separate `events` store + "What's On" surface, AI-as-parser. First sources:
@@ -89,6 +100,15 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-04** — Observatory **Analytics tab** (📊, bird distributions): a third tab with
+  its own period selector rendering, all vanilla CSS, an **hour-of-day activity chart** ("When
+  the birds sing"), a **species×hour heatmap** ("Who sings when" — each row self-normalized so
+  the daily pattern reads), a **most-heard leaderboard**, and a **per-day activity chart**, plus
+  summary cards (Detections / Species / Busiest hour / Peak day). All **Eastern**-bucketed by a
+  new `GET /api/analytics` (server-side SQL→bounded-intermediate→Python Eastern fold, DST-correct).
+  Heatmap/leaderboard rows click through to bird cards. Lazy-loads on first open.
+  `?v=obs17`/`obs13`; 13 new box tests + a 27-check DOM render harness.
 
 - **2026-06-03** — Bird-card UX + "100% only" filter: card photo is no longer a
   Wikipedia link (too easy to tap out by accident — the `↗ Wikipedia` text link stays),

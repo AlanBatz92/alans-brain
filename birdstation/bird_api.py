@@ -5,7 +5,7 @@ Emmaus Bird Observatory — FastAPI Server
 from fastapi import FastAPI, Header, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 import sqlite3
 import os
@@ -40,6 +40,48 @@ CLIP_DIR = "/home/alan/train_clips"
 PRESERVE_MIN_CONFIDENCE  = 0.60
 LIFE_LIST_MIN_CONFIDENCE = 0.85
 LIFE_LIST_MIN_HITS = 3
+
+# ── Eastern-time bucketing (analytics) ───────────────────────
+# The observatory lives in Emmaus, PA and the box stores *naive UTC* timestamps,
+# so any "hour of day" / "per day" analytic must be folded into America/New_York
+# to read correctly (e.g. the dawn chorus lands at ~5–6 AM Eastern, not ~9–10 UTC).
+# We aggregate to UTC (date, hour) buckets in SQL — a bounded set — then convert
+# each bucket to Eastern in Python, so the conversion is cheap and DST-correct
+# without a per-row scan. zoneinfo is used when available (the box runs on a full
+# Linux install with tzdata); a self-contained US-Eastern rule is the fallback.
+try:
+    from zoneinfo import ZoneInfo
+    _EASTERN = ZoneInfo("America/New_York")
+except Exception:  # pragma: no cover — only if tzdata is missing
+    _EASTERN = None
+
+
+def _nth_sunday(year, month, n):
+    """Day-of-month of the nth Sunday (weekday()==6) of year/month."""
+    first = datetime(year, month, 1)
+    first_sunday = 1 + (6 - first.weekday()) % 7
+    return first_sunday + (n - 1) * 7
+
+
+def _is_us_edt(dt_utc):
+    """True if a UTC instant falls in US Eastern Daylight Time (post-2007 rule):
+    2nd Sunday of March 02:00 EST (07:00 UTC) → 1st Sunday of November 02:00 EDT
+    (06:00 UTC). Only used as the zoneinfo fallback."""
+    y = dt_utc.year
+    start = datetime(y, 3, _nth_sunday(y, 3, 2), 7, tzinfo=timezone.utc)
+    end   = datetime(y, 11, _nth_sunday(y, 11, 1), 6, tzinfo=timezone.utc)
+    return start <= dt_utc < end
+
+
+def eastern_parts(uy, um, ud, uh):
+    """Map a UTC (year, month, day, hour) to the (Eastern date "YYYY-MM-DD",
+    Eastern hour 0–23) it falls in."""
+    dt = datetime(uy, um, ud, uh, tzinfo=timezone.utc)
+    if _EASTERN is not None:
+        e = dt.astimezone(_EASTERN)
+    else:
+        e = dt + timedelta(hours=(-4 if _is_us_edt(dt) else -5))
+    return e.strftime("%Y-%m-%d"), e.hour
 
 # ── API key auth (write routes only) ─────────────────────────
 _API_KEY = os.environ.get("BIRD_API_KEY", "")
@@ -216,6 +258,95 @@ def detections_grouped(start: str, end: str, min_confidence: float = 0.85):
     ).fetchall()
     conn.close()
     return {"species": [dict(r) for r in rows], "start": start, "end": end}
+
+
+@app.get("/api/analytics")
+def analytics(start: str, end: str, min_confidence: float = 0.85, top: int = 12):
+    """Pre-aggregated bird analytics over a UTC datetime range — powers the
+    Observatory's Analytics tab. start / end are full UTC datetime strings
+    ("YYYY-MM-DD HH:MM:SS"), the same Eastern→UTC day boundaries the period
+    selector already sends to /api/detections/grouped (end exclusive).
+
+    All distributions are bucketed in **Eastern** (Emmaus, PA): the box stores
+    naive-UTC timestamps, so we GROUP BY the UTC (date, hour) prefix in SQL — a
+    bounded intermediate (≤ ~24×days×species rows) — and fold each bucket into
+    Eastern hour/day buckets in Python (DST-correct, no per-row SQL scan).
+
+    Returns:
+      by_hour[24]      — detections per Eastern hour-of-day (the "dawn chorus")
+      species_hours[]  — top `top` species, each {common_name, scientific_name,
+                         total, hours[24]} → the species×hour heatmap
+      top_species[]    — full leaderboard {common_name, scientific_name, count}
+      by_day[]         — {date, count, species} per Eastern day (volume + diversity)
+      totals + busiest_hour (0–23) + peak_day
+    The timestamp prefix substr(timestamp,1,13) = "YYYY-MM-DDtHH" works for both
+    the "T"-separated ISO timestamps the pipeline writes and space-separated ones."""
+    conn = get_db()
+    rows = conn.execute(
+        """SELECT substr(timestamp, 1, 13) AS hbucket,
+                  common_name,
+                  MAX(scientific_name) AS scientific_name,
+                  COUNT(*) AS n
+           FROM detections
+           WHERE datetime(timestamp) >= datetime(?) AND datetime(timestamp) < datetime(?)
+             AND confidence >= ?
+           GROUP BY hbucket, common_name""",
+        (start, end, min_confidence)
+    ).fetchall()
+    conn.close()
+
+    by_hour = [0] * 24
+    by_day  = {}     # eastern date -> {"count": int, "species": set()}
+    sp_total = {}    # common_name -> total count
+    sp_sci   = {}    # common_name -> scientific_name
+    sp_hours = {}    # common_name -> [24] eastern-hour counts
+    for r in rows:
+        hb = r["hbucket"]
+        try:
+            uy, um, ud, uh = int(hb[0:4]), int(hb[5:7]), int(hb[8:10]), int(hb[11:13])
+        except (ValueError, IndexError):
+            continue
+        edate, ehour = eastern_parts(uy, um, ud, uh)
+        n = r["n"]
+        common = r["common_name"]
+        by_hour[ehour] += n
+        day = by_day.setdefault(edate, {"count": 0, "species": set()})
+        day["count"] += n
+        day["species"].add(common)
+        sp_total[common] = sp_total.get(common, 0) + n
+        sp_sci.setdefault(common, r["scientific_name"])
+        sp_hours.setdefault(common, [0] * 24)[ehour] += n
+
+    total_detections = sum(sp_total.values())
+    ranked = sorted(sp_total.items(), key=lambda kv: kv[1], reverse=True)
+    top_species = [
+        {"common_name": c, "scientific_name": sp_sci.get(c), "count": n}
+        for c, n in ranked
+    ]
+    species_hours = [
+        {"common_name": c, "scientific_name": sp_sci.get(c),
+         "total": sp_total[c], "hours": sp_hours[c]}
+        for c, _ in ranked[:top]
+    ]
+    by_day_list = [
+        {"date": d, "count": v["count"], "species": len(v["species"])}
+        for d, v in sorted(by_day.items())
+    ]
+    busiest_hour = max(range(24), key=lambda i: by_hour[i]) if total_detections else None
+    peak_day = max(by_day_list, key=lambda d: d["count"]) if by_day_list else None
+
+    return {
+        "start": start, "end": end,
+        "total_detections": total_detections,
+        "total_species":    len(sp_total),
+        "active_days":      len(by_day_list),
+        "by_hour":          by_hour,
+        "species_hours":    species_hours,
+        "top_species":      top_species,
+        "by_day":           by_day_list,
+        "busiest_hour":     busiest_hour,
+        "peak_day":         peak_day,
+    }
 
 
 @app.get("/api/stats")

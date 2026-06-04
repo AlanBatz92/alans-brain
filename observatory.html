@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs12">
+  <link rel="stylesheet" href="style.css?v=obs13">
 </head>
 <body>
 
@@ -95,6 +95,7 @@
     <!-- ══════ TABS ══════ -->
     <div class="obs-tabs" role="tablist">
       <button class="obs-tab obs-tab-active" id="obs-tab-birds" data-tab="birds" role="tab" aria-selected="true">🐦 Birds</button>
+      <button class="obs-tab" id="obs-tab-analytics" data-tab="analytics" role="tab" aria-selected="false">📊 Analytics</button>
       <button class="obs-tab" id="obs-tab-trains" data-tab="trains" role="tab" aria-selected="false">🚂 Trains</button>
     </div>
 
@@ -139,6 +140,40 @@
       <div class="obs-life" id="obs-life"></div>
     </section>
 
+    <!-- ══════ ANALYTICS PANEL ══════ -->
+    <section class="obs-panel" id="obs-panel-analytics" role="tabpanel" aria-labelledby="obs-tab-analytics" hidden>
+      <div class="obs-stats" id="obs-an-stats"></div>
+      <p class="obs-note">All times in Eastern (Emmaus, PA). Only detections at 85%+ confidence are counted.</p>
+
+      <div class="obs-period-bar">
+        <div class="obs-period-tabs" id="obs-an-periods" role="tablist" aria-label="Analytics time period">
+          <button class="obs-period-tab" data-period="today" role="tab" aria-selected="false">Today</button>
+          <button class="obs-period-tab" data-period="yesterday" role="tab" aria-selected="false">Yesterday</button>
+          <button class="obs-period-tab obs-period-tab-active" data-period="week" role="tab" aria-selected="true">This week</button>
+          <button class="obs-period-tab" data-period="month" role="tab" aria-selected="false">This month</button>
+          <button class="obs-period-tab" data-period="year" role="tab" aria-selected="false">This year</button>
+          <button class="obs-period-tab" data-period="all" role="tab" aria-selected="false">All</button>
+        </div>
+      </div>
+
+      <h2 class="obs-heading">When the birds sing <span class="obs-heading-count">by hour of day</span></h2>
+      <p class="obs-an-caption">The daily rhythm of the backyard — the dawn chorus and the quiet hours.</p>
+      <div class="obs-an-hours" id="obs-an-hours"></div>
+
+      <h2 class="obs-heading">Who sings when <span class="obs-heading-count">top species × hour</span></h2>
+      <p class="obs-an-caption">Each row is shaded by that species' own busiest hour, so you can see its
+        daily pattern — owls after dark, robins at dawn. Tap a name for its card.</p>
+      <div class="obs-an-heatmap-scroll"><div class="obs-an-heatmap" id="obs-an-heatmap"></div></div>
+
+      <h2 class="obs-heading">Most heard <span class="obs-heading-count" id="obs-an-top-count"></span></h2>
+      <div class="obs-an-leaderboard" id="obs-an-top"></div>
+
+      <div id="obs-an-daily-section">
+        <h2 class="obs-heading">Activity over time <span class="obs-heading-count">detections per day</span></h2>
+        <div class="obs-an-daily" id="obs-an-daily"></div>
+      </div>
+    </section>
+
     <!-- ══════ TRAINS PANEL ══════ -->
     <section class="obs-panel" id="obs-panel-trains" role="tabpanel" aria-labelledby="obs-tab-trains" hidden>
       <div class="obs-stats" id="obs-train-stats"></div>
@@ -170,7 +205,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs16"></script>
+  <script src="observatory.js?v=obs17"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');

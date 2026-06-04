@@ -51,7 +51,9 @@ const MAX_TRAINS = 30;   // matches the recent-events query limit
 // together, so we stash both and recompute the stat cards as each arrives.
 // `periodLabel` mirrors the selected period for the stat-card labels; the period
 // grid's "latest" species is stashed in `periodLatest` for the Latest card.
-const state = { life: [], periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent', onlyPerfect: false };
+const state = { life: [], periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent', onlyPerfect: false,
+  // Analytics tab — lazy-loaded on first open, scoped by its own period selector.
+  an: { period: 'week', data: null, loaded: false } };
 
 // A detection "reads as 100%" when it rounds to 100% — i.e. >= 0.995, the same
 // threshold the box uses to instant-add a lifer. The 100%-only filter keeps
@@ -451,6 +453,199 @@ function renderVerdict(r) {
   return v ? '<span class="obs-verdict ' + v.cls + '">' + v.text + '</span>' : '';
 }
 
+/* ── Analytics ───────────────────────────────────────────────
+   The Analytics tab visualizes detection *distributions* over a selected period,
+   all from a single box-side aggregation (GET /api/analytics, Eastern-bucketed):
+   an hour-of-day activity chart (the dawn chorus), a species×hour heatmap
+   ("who sings when"), a most-heard leaderboard, and a per-day activity chart.
+   The page just draws CSS bars/cells — no chart library (vanilla, per conventions).
+   Heatmap rows + leaderboard rows carry data-name/data-sci, so the existing card
+   delegation opens a bird card on tap. */
+
+// Format an hour 0–23 as a clock label. `long` → "6 AM"; compact → "6a" / "12p".
+function hourLabel(h, long) {
+  const suffix = h < 12 ? (long ? ' AM' : 'a') : (long ? ' PM' : 'p');
+  let hr = h % 12; if (hr === 0) hr = 12;
+  return hr + suffix;
+}
+
+// Pretty "Mon D" from an Eastern "YYYY-MM-DD" string the server already computed.
+// Build at local noon from the parts so it never reparses/rolls to another day.
+function ymdLabel(ymd) {
+  if (!ymd) return '';
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Date(y, m - 1, d, 12).toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+function renderAnStats(a) {
+  const el = document.getElementById('obs-an-stats');
+  if (!el) return;
+  const busiest = a.busiest_hour != null ? hourLabel(a.busiest_hour, true) : '—';
+  const peak    = a.peak_day ? ymdLabel(a.peak_day.date) : '—';
+  renderStats(el, [
+    { label: 'Detections ' + (state.an.label || ''), value: (a.total_detections || 0).toLocaleString() },
+    { label: 'Species',      value: a.total_species || 0 },
+    { label: 'Busiest hour', value: busiest, small: true },
+    { label: 'Peak day',     value: peak, small: true },
+  ]);
+}
+
+// Hour-of-day activity — 24 vertical bars, the busiest hour highlighted.
+function renderHourChart(byHour) {
+  const el = document.getElementById('obs-an-hours');
+  if (!el) return;
+  const max = byHour.reduce((m, n) => Math.max(m, n), 0);
+  if (!max) { setMsg(el, 'obs-empty', 'No detections in this period.'); return; }
+  const busiest = byHour.indexOf(max);
+  let html = '';
+  for (let h = 0; h < 24; h++) {
+    const n = byHour[h];
+    const pct = Math.round((n / max) * 100);
+    const tip = hourLabel(h, true) + ' — ' + n.toLocaleString() + ' detection' + (n === 1 ? '' : 's');
+    html += '<div class="obs-an-hbar-wrap" title="' + escapeAttr(tip) + '">' +
+        '<div class="obs-an-hbar-track">' +
+          '<div class="obs-an-hbar' + (h === busiest ? ' obs-an-hbar-peak' : '') +
+            '" style="height:' + pct + '%"></div>' +
+        '</div>' +
+        '<div class="obs-an-haxis">' + (h % 6 === 0 ? hourLabel(h, false) : '') + '</div>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+}
+
+// Species × hour heatmap — each row self-normalized to its own busiest hour, so
+// the *pattern* (when, not how much) is what shows. A ×total badge conveys volume.
+function renderHeatmap(speciesHours) {
+  const el = document.getElementById('obs-an-heatmap');
+  if (!el) return;
+  if (!speciesHours || speciesHours.length === 0) {
+    setMsg(el, 'obs-empty', 'Not enough data yet for a heatmap.');
+    return;
+  }
+  let head = '<div class="obs-an-hm-row obs-an-hm-head">' +
+    '<div class="obs-an-hm-label"></div><div class="obs-an-hm-cells">';
+  for (let h = 0; h < 24; h++) {
+    head += '<div class="obs-an-hm-tick">' + (h % 6 === 0 ? hourLabel(h, false) : '') + '</div>';
+  }
+  head += '</div></div>';
+
+  const rows = speciesHours.map((s) => {
+    const max = s.hours.reduce((m, n) => Math.max(m, n), 0) || 1;
+    let cells = '';
+    for (let h = 0; h < 24; h++) {
+      const n = s.hours[h];
+      const alpha = n ? (0.14 + 0.86 * (n / max)) : 0;
+      const tip = escapeAttr(s.common_name + ' · ' + hourLabel(h, true) + ' — ' +
+        n + ' detection' + (n === 1 ? '' : 's'));
+      cells += '<div class="obs-an-hm-cell" title="' + tip + '"' +
+        (alpha ? ' style="background:rgba(45,212,191,' + alpha.toFixed(3) + ')"' : '') +
+        '></div>';
+    }
+    return '<div class="obs-an-hm-row">' +
+        '<div class="obs-an-hm-label" role="button" tabindex="0"' +
+          ' data-name="' + escapeAttr(s.common_name) + '" data-sci="' + escapeAttr(s.scientific_name || '') + '">' +
+          '<span class="obs-an-hm-name">' + escapeHtml(s.common_name) + '</span>' +
+          '<span class="obs-an-hm-total">×' + s.total + '</span>' +
+        '</div>' +
+        '<div class="obs-an-hm-cells">' + cells + '</div>' +
+      '</div>';
+  }).join('');
+  el.innerHTML = head + rows;
+}
+
+// Most-heard leaderboard — top 15, each a clickable row with a proportional bar.
+function renderLeaderboard(topSpecies) {
+  const el = document.getElementById('obs-an-top');
+  const countEl = document.getElementById('obs-an-top-count');
+  if (!el) return;
+  if (!topSpecies || topSpecies.length === 0) {
+    if (countEl) countEl.textContent = '';
+    setMsg(el, 'obs-empty', 'No species in this period.');
+    return;
+  }
+  const shown = topSpecies.slice(0, 15);
+  if (countEl) {
+    countEl.textContent = topSpecies.length > shown.length
+      ? '(top ' + shown.length + ' of ' + topSpecies.length + ')' : '(' + shown.length + ')';
+  }
+  const max = shown[0].count || 1;
+  el.innerHTML = shown.map((s, i) => {
+    const pct = Math.round((s.count / max) * 100);
+    return '<div class="obs-an-lb-row" role="button" tabindex="0"' +
+        ' data-name="' + escapeAttr(s.common_name) + '" data-sci="' + escapeAttr(s.scientific_name || '') + '">' +
+        '<span class="obs-an-lb-rank">' + (i + 1) + '</span>' +
+        '<div class="obs-an-lb-main">' +
+          '<div class="obs-an-lb-top">' +
+            '<span class="obs-an-lb-name">' + escapeHtml(s.common_name) + '</span>' +
+            '<span class="obs-an-lb-count">' + s.count.toLocaleString() + '</span>' +
+          '</div>' +
+          '<div class="obs-an-lb-track"><div class="obs-an-lb-fill" style="width:' + pct + '%"></div></div>' +
+        '</div>' +
+      '</div>';
+  }).join('');
+}
+
+// Per-day activity — only meaningful across multiple days, so Today/Yesterday
+// (≤ 1 day) hide the section; the hour-of-day chart already covers a single day.
+function renderDaily(byDay) {
+  const section = document.getElementById('obs-an-daily-section');
+  const el = document.getElementById('obs-an-daily');
+  if (!el || !section) return;
+  if (!byDay || byDay.length <= 1) { section.hidden = true; return; }
+  section.hidden = false;
+  const max = byDay.reduce((m, d) => Math.max(m, d.count), 0) || 1;
+  const bars = byDay.map((d) => {
+    const pct = Math.round((d.count / max) * 100);
+    const tip = escapeAttr(ymdLabel(d.date) + ' — ' + d.count.toLocaleString() +
+      ' detection' + (d.count === 1 ? '' : 's') + ', ' + d.species + ' species');
+    return '<div class="obs-an-dbar-wrap" title="' + tip + '">' +
+        '<div class="obs-an-dbar-track"><div class="obs-an-dbar" style="height:' + pct + '%"></div></div>' +
+      '</div>';
+  }).join('');
+  const first = ymdLabel(byDay[0].date);
+  const last  = ymdLabel(byDay[byDay.length - 1].date);
+  el.innerHTML = '<div class="obs-an-daily-bars">' + bars + '</div>' +
+    '<div class="obs-an-daily-axis"><span>' + escapeHtml(first) + '</span><span>' +
+      escapeHtml(last) + '</span></div>';
+}
+
+async function loadAnalytics(period) {
+  const { start, end, label } = periodDates(period);
+  state.an.period = period;
+  state.an.label  = label;
+
+  // Reflect the active period button
+  document.querySelectorAll('#obs-an-periods .obs-period-tab').forEach((t) => {
+    const on = t.getAttribute('data-period') === period;
+    t.classList.toggle('obs-period-tab-active', on);
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+
+  const hoursEl = document.getElementById('obs-an-hours');
+  setMsg(hoursEl, 'obs-loading', 'Crunching the numbers…');
+  ['obs-an-heatmap', 'obs-an-top'].forEach((id) => {
+    const e = document.getElementById(id); if (e) e.innerHTML = '';
+  });
+
+  let a;
+  try {
+    a = await fetchJson(
+      API_BASE + '/api/analytics?start=' + encodeURIComponent(start) +
+      '&end=' + encodeURIComponent(end) + '&min_confidence=' + MIN_CONFIDENCE
+    );
+  } catch (err) {
+    setMsg(hoursEl, 'obs-empty', 'Couldn\'t reach the observatory — it may be offline.');
+    return;  // leave state.an.loaded false so reopening/refresh retries
+  }
+  state.an.data = a;
+  state.an.loaded = true;
+  renderAnStats(a);
+  renderHourChart(a.by_hour || []);
+  renderHeatmap(a.species_hours || []);
+  renderLeaderboard(a.top_species || []);
+  renderDaily(a.by_day || []);
+}
+
 /* ── Bird card quick-view ── */
 
 function birdCardSkeleton() {
@@ -579,8 +774,9 @@ function closeBirdCard() {
 }
 
 const TAGLINES = {
-  birds:  'What is the source of all that chirping?!',
-  trains: 'I like trains.',
+  birds:     'What is the source of all that chirping?!',
+  analytics: 'The shape of the chorus.',
+  trains:    'I like trains.',
 };
 
 /* ── Tabs ── */
@@ -595,9 +791,13 @@ function initTabs() {
         t.classList.toggle('obs-tab-active', on);
         t.setAttribute('aria-selected', on ? 'true' : 'false');
       });
-      document.getElementById('obs-panel-birds').hidden  = which !== 'birds';
-      document.getElementById('obs-panel-trains').hidden = which !== 'trains';
+      document.getElementById('obs-panel-birds').hidden     = which !== 'birds';
+      document.getElementById('obs-panel-analytics').hidden = which !== 'analytics';
+      document.getElementById('obs-panel-trains').hidden    = which !== 'trains';
       if (taglineEl && TAGLINES[which]) taglineEl.textContent = TAGLINES[which];
+      // Analytics is heavier (a box-side aggregation), so only fetch it the first
+      // time the tab is opened — not on every page load.
+      if (which === 'analytics' && !state.an.loaded) loadAnalytics(state.an.period);
     });
   });
 }
@@ -641,8 +841,10 @@ function loadAll() {
   if (btn) btn.classList.add('spinning');
 
   // The bird grid + stats for the active period (Today included) all come from
-  // loadPeriod now — one consistent Eastern-aligned path.
+  // loadPeriod now — one consistent Eastern-aligned path. Analytics is only
+  // refreshed if it's already been opened (it lazy-loads on first tab open).
   const refreshes = [loadPeriod(state.period), loadLife(), loadTrainStats(), loadTrains()];
+  if (state.an.loaded) refreshes.push(loadAnalytics(state.an.period));
 
   Promise.allSettled(refreshes).then(() => {
     if (updated) updated.textContent = 'Updated ' + new Date().toLocaleTimeString();
@@ -653,8 +855,9 @@ function loadAll() {
 function initObservatory() {
   initTabs();
 
-  // Period selector tabs
-  const periodTabs = document.querySelectorAll('.obs-period-tab');
+  // Period selector tabs (Birds panel only — the Analytics tab has its own set,
+  // also class .obs-period-tab, scoped separately below by #obs-an-periods)
+  const periodTabs = document.querySelectorAll('#obs-panel-birds .obs-period-tab');
   periodTabs.forEach((tab) => {
     tab.addEventListener('click', () => {
       periodTabs.forEach((t) => {
@@ -664,6 +867,11 @@ function initObservatory() {
       });
       loadPeriod(tab.getAttribute('data-period'));
     });
+  });
+
+  // Analytics period selector (loadAnalytics sets the active button + fetches)
+  document.querySelectorAll('#obs-an-periods .obs-period-tab').forEach((tab) => {
+    tab.addEventListener('click', () => loadAnalytics(tab.getAttribute('data-period')));
   });
 
   // Species search (client-side filter, no refetch)
@@ -732,16 +940,14 @@ function initObservatory() {
     if (e.type === 'keydown') e.preventDefault();
     openBirdCard(card.dataset.name, card.dataset.sci || '');
   }
-  const todayEl = document.getElementById('obs-today');
-  const lifeEl  = document.getElementById('obs-life');
-  if (todayEl) {
-    todayEl.addEventListener('click',   handleCardActivate);
-    todayEl.addEventListener('keydown', handleCardActivate);
-  }
-  if (lifeEl) {
-    lifeEl.addEventListener('click',   handleCardActivate);
-    lifeEl.addEventListener('keydown', handleCardActivate);
-  }
+  const cardContainers = ['obs-today', 'obs-life', 'obs-an-heatmap', 'obs-an-top'];
+  cardContainers.forEach((id) => {
+    const c = document.getElementById(id);
+    if (c) {
+      c.addEventListener('click',   handleCardActivate);
+      c.addEventListener('keydown', handleCardActivate);
+    }
+  });
 
   // Modal: backdrop click or × button closes; Escape anywhere closes
   const modal = document.getElementById('obs-bird-modal');
