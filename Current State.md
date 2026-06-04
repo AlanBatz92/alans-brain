@@ -104,8 +104,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs14` +
-  `style.css?v=obs11` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs16` +
+  `style.css?v=obs12` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -146,9 +146,16 @@ train data a home. ID/class prefix: **`obs-`**.
   that chirping?!"; Trains tab dynamically sets it to "I like trains." via `TAGLINES`.
 - **Stat cards (2026-06-01):** "Life list" smooth-scrolls to the life list; "Latest"
   opens the bird card modal. Both use `data-action` delegation; keyboard-accessible.
-- **Bird card UX (2026-06-01):** Wikipedia link moved below the sci name (easy to tap on
-  mobile); photo wrapped as Wikipedia link; extract expanded to 3 sentences (≤ 500 chars).
-- Assets: `style.css?v=obs11`, `observatory.js?v=obs14`, `bird-info.js?v=obs6`.
+- **Bird card UX (2026-06-01; refined 2026-06-03):** Wikipedia link is the `↗ Wikipedia`
+  text link below the sci name (the **photo is no longer a link** — it was too easy to
+  tap out by accident); extract expanded to 3 sentences (≤ 500 chars); the close ✕ is a
+  40×40 tap target (was 28×28).
+- **"100% only" filter (2026-06-03):** a green toggle pill in the species-grid heading
+  (`#obs-perfect`, `state.onlyPerfect`) filters the grid to species whose best confidence
+  in the selected period reads as 100% (≥ `PERFECT_CONFIDENCE` 0.995 — the same bar that
+  instant-adds a lifer). Client-side, persists across period switches; pair with the
+  **All** period for the all-time list of birds heard at 100%.
+- Assets: `style.css?v=obs12`, `observatory.js?v=obs16`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

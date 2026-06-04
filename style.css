@@ -4685,23 +4685,26 @@ nav {
 }
 .obs-bcard-close {
   position: absolute;
-  top: 12px;
-  right: 14px;
-  width: 28px;
-  height: 28px;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 1.05rem;
+  line-height: 1;
   color: var(--text-muted);
   cursor: pointer;
   z-index: 2;
+  -webkit-tap-highlight-color: transparent;
   transition: background 0.15s, color 0.15s;
 }
-.obs-bcard-close:hover { background: var(--border); color: var(--text); }
+.obs-bcard-close:hover,
+.obs-bcard-close:active { background: var(--border); color: var(--text); }
 
 /* Photo */
 .obs-bcard-photo {
@@ -4725,7 +4728,7 @@ nav {
   color: var(--text);
   line-height: 1.15;
   overflow-wrap: break-word;
-  padding-right: 32px;
+  padding-right: 48px;
 }
 .obs-bcard-sci {
   font-size: 0.78rem;
@@ -4806,7 +4809,6 @@ nav {
   margin-top: 4px;
 }
 .obs-bcard-wiki-link:hover { text-decoration: underline; }
-.obs-bcard-photo-link { display: block; }
 
 /* Recent hits — the last 10 detections with confidence + time */
 .obs-bcard-hits-head {
@@ -4957,6 +4959,31 @@ nav {
   flex-wrap: wrap;
 }
 .obs-heading-row .obs-heading { margin-bottom: 0; }
+.obs-heading-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* "100% only" filter toggle — green when active (100% is the celebratory tier) */
+.obs-perfect-toggle {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.obs-perfect-toggle:hover { border-color: var(--green); color: var(--text); }
+.obs-perfect-toggle[aria-pressed="true"] {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--bg-deep);
+}
 .obs-sort-select {
   background: var(--surface);
   border: 1px solid var(--border);
