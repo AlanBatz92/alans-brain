@@ -330,7 +330,7 @@ def detections_grouped(conn, start, end, min_confidence=0.85):
                   MIN(timestamp) AS first_heard,
                   MAX(timestamp) AS last_heard
            FROM detections
-           WHERE timestamp >= ? AND timestamp < ?
+           WHERE datetime(timestamp) >= datetime(?) AND datetime(timestamp) < datetime(?)
              AND confidence >= ?
            GROUP BY common_name
            ORDER BY MAX(timestamp) DESC""",
@@ -406,6 +406,26 @@ def test_grouped_multi_day_accumulates():
     assert wt["last_heard"]  == "2026-05-31 09:00:00"
 
 
+def test_grouped_iso_t_timestamps_eastern_boundary():
+    # The pipeline writes ISO 'T' + microseconds; the window must still split on the
+    # Eastern-midnight-UTC boundary (04:00 UTC for EDT). A raw string compare gets this
+    # wrong because 'T' (chr 84) sorts after the space in the boundary — datetime()
+    # normalization fixes it.
+    conn = make_db()
+    seed(conn, [
+        # UTC 03:30 on 06-03 = 11:30 PM EDT June 2 → belongs to Eastern June 2
+        ("2026-06-03T03:30:00.123456", "Barred Owl",     "Strix varia",          0.90),
+        # UTC 12:00 on 06-03 = 8:00 AM EDT June 3 → Eastern June 3
+        ("2026-06-03T12:00:00.654321", "American Robin",  "Turdus migratorius",   0.91),
+        # UTC 02:00 on 06-04 = 10:00 PM EDT June 3 → still Eastern June 3
+        ("2026-06-04T02:00:00.000000", "Wood Thrush",     "Hylocichla mustelina", 0.88),
+    ])
+    # Eastern June 3 (EDT) = UTC 2026-06-03 04:00:00 → 2026-06-04 04:00:00
+    r = detections_grouped(conn, "2026-06-03 04:00:00", "2026-06-04 04:00:00")
+    names = sorted(x["common_name"] for x in r)
+    assert names == ["American Robin", "Wood Thrush"]  # the 03:30 owl is Eastern June 2
+
+
 def test_grouped_late_night_eastern_boundary():
     # 10PM Eastern (EDT) = 02:00 UTC next day; must appear in the correct Eastern day.
     conn = make_db()
@@ -445,6 +465,7 @@ if __name__ == "__main__":
         test_grouped_confidence_filter,
         test_grouped_empty,
         test_grouped_multi_day_accumulates,
+        test_grouped_iso_t_timestamps_eastern_boundary,
         test_grouped_late_night_eastern_boundary,
     ]
     failed = 0

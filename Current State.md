@@ -74,8 +74,9 @@ train data a home. ID/class prefix: **`obs-`**.
 - **One combined page, two tabs** (🐦 Birds / 🚂 Trains); linked from the home
   Explore card grid + the site-wide Explore dropdown / mobile overlay;
   **load-once + manual ↻ refresh** (no auto-polling).
-- Reads, all GET on `https://birds.alansbrain.com`: Birds → `/api/today?min_confidence=0.75`,
-  `/api/lifetime`; Trains → `/api/trains/stats`, `/api/trains/recent?approved=1`
+- Reads, all GET on `https://birds.alansbrain.com`: Birds → `/api/detections/grouped`
+  (every period, incl. Today — `&min_confidence=0.85`), `/api/lifetime`,
+  `/api/species/{name}` (bird card); Trains → `/api/trains/stats`, `/api/trains/recent?approved=1`
   (+ inline `<audio>` clips at `/api/trains/clip/{file}`, basename of `clip_path`).
 - **Train privacy (2026-06-01) — default-deny.** Clips can capture conversation
   near the mic, so the public page shows **only human-confirmed** events
@@ -129,9 +130,13 @@ train data a home. ID/class prefix: **`obs-`**.
   (Today / Yesterday / This week / This month / This year / All) above the species grid;
   search input filters by name client-side. `GET /api/detections/grouped?start=&end=&min_confidence=`
   on birdstation returns pre-aggregated `{common_name, scientific_name, count,
-  best_confidence, first_heard, last_heard}` for the date range. Switching periods
-  fetches the new endpoint; "Today" re-renders from already-loaded data (no extra
-  fetch). The headline **stat cards follow the selected period** — "Heard/Species
+  best_confidence, first_heard, last_heard}` for the date range. **All periods —
+  including Today — use this one endpoint** (2026-06-03 fix), so the counts are
+  mutually consistent; the query wraps the stored timestamp in `datetime()` so the
+  Eastern-midnight-UTC day boundaries compare correctly against the ISO-`T`/microsecond
+  timestamps the pipeline writes. (Previously Today used `/api/today`, a UTC-calendar-day
+  endpoint, which disagreed with the Eastern windows after UTC midnight — "45 today vs
+  2277 this week".) The headline **stat cards follow the selected period** — "Heard/Species
   <period>" totals and the period's "Latest" recompute from `state.periodGroups`
   (`sum(count)` / `length`); only the **Life list** card stays all-time.
 - **Sort controls (2026-06-01):** `<select>` dropdowns on the period species grid and

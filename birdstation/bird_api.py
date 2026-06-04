@@ -195,7 +195,11 @@ def detections_grouped(start: str, end: str, min_confidence: float = 0.85):
     """Species grouped by UTC datetime range; powers the period selector in the Observatory.
     start / end are full UTC datetime strings ("YYYY-MM-DD HH:MM:SS") sent by the
     front-end after converting Eastern midnight → UTC, so late-night detections
-    (e.g. 10 PM Eastern = 2 AM UTC next day) fall in the correct Eastern day."""
+    (e.g. 10 PM Eastern = 2 AM UTC next day) fall in the correct Eastern day.
+    The comparison wraps the stored timestamp in datetime() so the ISO 'T' separator
+    and microseconds (e.g. "2026-06-03T17:35:00.123456") are normalized to the same
+    "YYYY-MM-DD HH:MM:SS" shape as the boundaries — a raw string compare would mis-sort
+    at the boundary because 'T' (chr 84) sorts after the space (chr 32)."""
     conn = get_db()
     rows = conn.execute(
         """SELECT common_name, scientific_name,
@@ -204,7 +208,7 @@ def detections_grouped(start: str, end: str, min_confidence: float = 0.85):
                   MIN(timestamp) AS first_heard,
                   MAX(timestamp) AS last_heard
            FROM detections
-           WHERE timestamp >= ? AND timestamp < ?
+           WHERE datetime(timestamp) >= datetime(?) AND datetime(timestamp) < datetime(?)
              AND confidence >= ?
            GROUP BY common_name
            ORDER BY MAX(timestamp) DESC""",

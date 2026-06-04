@@ -90,6 +90,13 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-03** — Period-count consistency fix: "today" (45) / "yesterday" (62) /
+  "this week" (2277) disagreed because Today used a UTC-calendar-day endpoint
+  (`/api/today`) while other periods used Eastern-aligned grouped windows — and the
+  grouped string comparison mis-sorted the ISO-`T` timestamps at the 04:00-UTC boundary.
+  Now `/api/detections/grouped` compares via `datetime()` (correct Eastern days) and
+  **all** periods, Today included, use that one endpoint. `?v=obs15`.
+
 - **2026-06-03** — Life-list tally fix: `total_detections` was a denormalized `+1`
   counter that drifted low (lifetime total below a single day's count). Now derived
   **live** from `COUNT(*)` of the species' ≥0.85 detections — authoritatively in

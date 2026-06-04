@@ -10,6 +10,36 @@
 
 ---
 
+## 2026-06-03 — Observatory: period counts mutually inconsistent (day-boundary bug)
+
+**Bug.** The page showed 45 birds "today", 62 "yesterday", but 2,277 "this week" —
+today wasn't even a subset of the week. Two compounding day-boundary defects:
+- **"Today" used `/api/today`**, which filters `date(timestamp)=date('now','localtime')`.
+  The box runs UTC, so that's the **UTC calendar day**; in the evening Eastern (after
+  UTC midnight) it rolls to the next UTC day and shows almost nothing.
+- **The other periods use `/api/detections/grouped`** with Eastern-aligned UTC
+  boundaries, but the query compared **raw timestamp strings**. The pipeline writes
+  ISO `T` + microseconds (`2026-06-03T17:35:00.123456`); compared against the
+  space-formatted boundary (`2026-06-03 04:00:00`), the `T` (chr 84) sorts after the
+  space (chr 32), so the 04:00-UTC boundary check was wrong — windows effectively
+  became whole UTC days, offset from "today".
+
+**Fix.**
+- **`bird_api.py` `/api/detections/grouped`** now compares `datetime(timestamp) >=
+  datetime(?) AND datetime(timestamp) < datetime(?)`, normalizing the `T`/microseconds
+  to the boundary's shape so Eastern-day windows split correctly (a 10 PM EDT
+  detection = 02:00 UTC next day now lands in the right Eastern day).
+- **`observatory.js`** routes **every** period — Today included — through the grouped
+  endpoint (Eastern-aligned), so all counts share one consistent definition and Today ⊆
+  This week. Removed the now-dead `/api/today` path: `loadToday()`, `groupDetections()`,
+  `EP.today`, `state.today`. (`/api/today` the endpoint stays for any other consumer.)
+
+**Verified:** new test seeds realistic ISO-`T`/microsecond timestamps straddling the
+04:00-UTC boundary and asserts the right Eastern-day split (22 tests, all green);
+`node --check`; `py_compile`. **Assets:** `observatory.js?v=obs15`. **Box step:**
+`cd ~/alans-brain && git pull && sudo systemctl restart birdapi` (front-end is the main
+fix; the grouped-query change needs the API restart).
+
 ## 2026-06-03 — Observatory: life-list tally derived live (was drifting low)
 
 **Bug.** The life list showed a `total_detections` lower than a single day's count

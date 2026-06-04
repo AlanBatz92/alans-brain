@@ -36,7 +36,6 @@ const API_BASE = 'https://birds.alansbrain.com';
 const MIN_CONFIDENCE = 0.85;
 
 const EP = {
-  today:        API_BASE + '/api/today?min_confidence=' + MIN_CONFIDENCE,   // 0.85
   lifetime:     API_BASE + '/api/lifetime',
   trainStats:   API_BASE + '/api/trains/stats',
   // Privacy: only events a human has explicitly approved (verdict=train) are
@@ -52,7 +51,7 @@ const MAX_TRAINS = 30;   // matches the recent-events query limit
 // together, so we stash both and recompute the stat cards as each arrives.
 // `periodLabel` mirrors the selected period for the stat-card labels; the period
 // grid's "latest" species is stashed in `periodLatest` for the Latest card.
-const state = { today: [], life: [], periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent' };
+const state = { life: [], periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent' };
 
 /* ── Helpers ── */
 
@@ -197,28 +196,6 @@ function fmtUtcTs(ms) {
          ' ' + pad(dt.getUTCHours()) + ':00:00';
 }
 
-// Groups raw detection rows into the same shape returned by /api/detections/grouped.
-function groupDetections(rows) {
-  const map = new Map();
-  rows.forEach((r) => {
-    let g = map.get(r.common_name);
-    if (!g) {
-      g = { common_name: r.common_name, scientific_name: r.scientific_name,
-            count: 0, best_confidence: 0, first_heard: r.timestamp, last_heard: r.timestamp };
-      map.set(r.common_name, g);
-    }
-    g.count++;
-    if ((r.confidence || 0) > g.best_confidence) g.best_confidence = r.confidence;
-    const ms = parseTime(r.timestamp);
-    if (ms != null) {
-      if (parseTime(g.first_heard) == null || ms < parseTime(g.first_heard)) g.first_heard = r.timestamp;
-      if (parseTime(g.last_heard)  == null || ms > parseTime(g.last_heard))  g.last_heard  = r.timestamp;
-    }
-  });
-  return [...map.values()]
-    .sort((a, b) => (parseTime(b.last_heard) || 0) - (parseTime(a.last_heard) || 0));
-}
-
 // Returns {start, end, label} for a period key.
 // start/end are UTC datetime strings ("YYYY-MM-DD HH:00:00") bracketing the Eastern
 // calendar day(s). The pipeline writes UTC naive timestamps, so a 10PM Eastern
@@ -292,32 +269,6 @@ function renderBirdStats() {
     { label: 'Latest',           value: latest ? latest.common_name : '—', small: true,
       action: latest ? 'open-latest' : null },
   ]);
-}
-
-/* ── Birds: today's raw detections (for stat cards) + initial period render ── */
-async function loadToday() {
-  if (state.period === 'today') {
-    setMsg(document.getElementById('obs-today'), 'obs-loading', 'Listening…');
-  }
-  let d;
-  try {
-    d = await fetchJson(EP.today);
-  } catch (err) {
-    if (state.period === 'today') {
-      setMsg(document.getElementById('obs-today'), 'obs-empty',
-        'Couldn\'t reach the observatory — it may be offline.');
-    }
-    return;
-  }
-  // Defensive client-side confidence gate (keeps page correct before box redeploys).
-  state.today = (d.detections || []).filter((r) => (r.confidence || 0) >= MIN_CONFIDENCE);
-  // Drive the stat cards + species grid from today's data only when Today is the
-  // active period; for a historical period, loadPeriod owns the stats and grid.
-  if (state.period === 'today') {
-    state.periodGroups = groupDetections(state.today);
-    renderBirdStats();
-    renderPeriodGroups();
-  }
 }
 
 function sortGroups(groups, sortKey) {
@@ -653,14 +604,10 @@ async function loadPeriod(period) {
   const headingEl = document.getElementById('obs-period-heading');
   if (headingEl) headingEl.textContent = 'Heard ' + label;
 
-  if (period === 'today') {
-    // Reuse already-loaded raw data — no extra fetch.
-    state.periodGroups = groupDetections(state.today);
-    renderBirdStats();
-    renderPeriodGroups();
-    return;
-  }
-
+  // Every period — including Today — uses the same Eastern-aligned grouped query, so
+  // the counts are mutually consistent (Today ⊆ This week, etc.). The box stores UTC,
+  // so a UTC-day endpoint (/api/today) disagreed with these Eastern day windows after
+  // UTC midnight (evening Eastern); routing Today through grouped fixes that.
   const el = document.getElementById('obs-today');
   setMsg(el, 'obs-loading', 'Checking the skies…');
   let data;
@@ -685,9 +632,9 @@ function loadAll() {
   if (updated) updated.textContent = 'Loading…';
   if (btn) btn.classList.add('spinning');
 
-  const refreshes = [loadToday(), loadLife(), loadTrainStats(), loadTrains()];
-  // When viewing a historical period, also refresh that grid on manual reload.
-  if (state.period !== 'today') refreshes.push(loadPeriod(state.period));
+  // The bird grid + stats for the active period (Today included) all come from
+  // loadPeriod now — one consistent Eastern-aligned path.
+  const refreshes = [loadPeriod(state.period), loadLife(), loadTrainStats(), loadTrains()];
 
   Promise.allSettled(refreshes).then(() => {
     if (updated) updated.textContent = 'Updated ' + new Date().toLocaleTimeString();
