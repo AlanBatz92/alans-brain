@@ -131,16 +131,75 @@ re-scraping is idempotent.
 
 ## Recommended build order
 
-1. **4a — Adapter refactor + scrape.** Add `type`/`config`/`content_kind` to
-   `feed_sources`; move RSS behind the dispatcher (no behavior change; verify
-   existing feeds still flow); build the `scrape` adapter with hash-caching;
-   add the `events` table + router. First real source: Emmaus Theater.
+1. **4a — Adapter refactor + first event source.** Add `type`/`config`/`content_kind`
+   to `feed_sources`; move RSS behind the dispatcher (no behavior change; verify
+   existing feeds still flow); add the `events` table + router. **First real source:
+   Archer Music Hall via the `api` adapter (Ticketmaster Discovery API)** — see the
+   2026-06-04 field finding; it's the testable, rot-resistant path. Build the
+   `scrape` adapter (AI-as-parser, hash-caching) next, when a no-API source comes up.
 2. **4b — Surfaces.** `GET /api/events`, the "What's On" card, and feed
    upcoming events into the digest. Manually seed a few `events` (voting dates).
 3. **4c — `pulse_add` capture CLI.** Paste URL/text → Claude → insert. Covers
    Bug Club manually and every one-off.
 4. **4d (optional, deferred) — automated `email` adapter** via IMAP, only if
    the manual paste step proves tedious.
+
+## Field finding (2026-06-04): HTML scraping is mostly blocked → prefer APIs
+
+Before adding the first real event source (Archer Music Hall, Allentown), each
+candidate page was tested with a plain server-side fetch. **All of them return
+HTTP 403 Forbidden to a non-browser client:**
+
+- `archermusichall.com/shows` (official) — 403
+- Bandsintown, JamBase, Concertfix, SeatGeek venue pages — all 403
+
+These sites sit behind bot protection (Cloudflare/Akamai-style). A server fetch
+(or feedparser/requests on the box) gets the same wall. Lesson, consistent with
+the "thoroughly test each source" rule: **don't assume a page is scrapable —
+verify with a real fetch first, and prefer a structured API when one exists.**
+The same wall applies to the hallucination work — blindly scraping news-article
+bodies for fuller context will 403 on many publishers, so the first move there
+was to stop discarding the full text feeds already provide (see Build History
+2026-06-04), not to add a scraper.
+
+### New adapter type: `api`
+
+Add an **`api`** adapter alongside `rss`/`scrape`/`email`. It calls a documented
+JSON API and maps the response straight to the normalized item/event shape — **no
+AI parser needed** (the data is already structured, so there's nothing to
+hallucinate). This is strictly more robust than `scrape` when an API exists; reach
+for `scrape` (AI-as-parser) only when there's no API and the HTML is fetchable.
+
+### First event source: Archer Music Hall via the Ticketmaster Discovery API
+
+Archer Music Hall is a Live Nation / Ticketmaster venue, so its calendar is
+available through the **Ticketmaster Discovery API** — free key, 5000 calls/day,
+5 req/s, clean JSON.
+
+- **Venue id:** Ticketmaster `KovZ917AYeX` (a.k.a. site venue `393388`). Confirm
+  on first call by name/city rather than hardcoding blindly.
+- **Endpoint:** `GET https://app.ticketmaster.com/discovery/v2/events.json`
+  `?venueId=KovZ917AYeX&sort=date,asc&size=100&apikey=<KEY>`
+- **Map** `_embedded.events[]` → `events` rows:
+  `title=name`, `start_date=dates.start.dateTime||localDate`, `url=url`,
+  `location="Archer Music Hall, Allentown"`,
+  `detail=classifications/genre + room if present`,
+  `content_hash=sha1(id+start_date)` (idempotent re-sync; TM `id` is stable).
+- **Key handling:** `TICKETMASTER_API_KEY` in `/etc/birdstation.env` (chmod 600,
+  `EnvironmentFile=`), never committed — same pattern as `ANTHROPIC_API_KEY` /
+  `BIRD_API_KEY`. Adapter no-ops with a clear `last_error` if the key is absent,
+  so the box never crashes on a missing key.
+- **`feed_sources` row:** `key='archer'`, `label='Archer Music Hall'`,
+  `type='api'`, `content_kind='events'`,
+  `config={"provider":"ticketmaster","venue_id":"KovZ917AYeX"}`.
+- **Cadence:** low — a daily (or twice-daily) timer is plenty; concert calendars
+  don't change by the minute. Content-hash so a re-sync that returns the same
+  events is a no-op.
+
+This replaces "Emmaus Theater (scrape)" as the *first* events source to build,
+precisely because the API path is testable and won't rot. Emmaus Theater stays
+the canonical `scrape` example for when no API exists (test its fetchability
+first).
 
 ## Conventions to honor (see CLAUDE.md / Current State.md)
 

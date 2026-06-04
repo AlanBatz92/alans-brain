@@ -71,11 +71,24 @@ Ideas building on the new Analytics tab / `GET /api/analytics`:
   histogram (ties into the calibration work).
 - Day-of-week or weather correlations (later; weather would need a data join).
 
-### 4. Pulse ingestion — Phase 4 (full design in `PLAN-ingestion.md`)
-Generalize ingestion beyond RSS: pluggable adapters (scrape/email/manual), a
-separate `events` store + "What's On" surface, AI-as-parser. First sources:
-**Emmaus Theater calendar** (scrape) and **Joey Strain's "Bug Club"** email
-(paste-to-capture). Decisions settled: separate events store; paste-first email.
+### 4. Pulse ingestion — Phase 4 (full design in `PLAN-ingestion.md`)  **▶ first source decided**
+Generalize ingestion beyond RSS: pluggable adapters (**api**/scrape/email/manual), a
+separate `events` store + "What's On" surface, AI-as-parser (for scrape only).
+**First event source: Archer Music Hall (Allentown) via a new `api` adapter on the
+Ticketmaster Discovery API** — decided 2026-06-04 after testing showed every HTML
+source (official site, Bandsintown, JamBase, Concertfix, SeatGeek) 403s a server
+fetch. Build order: add `type`/`config`/`content_kind` to `feed_sources` + the
+`events` table + router → the `api` adapter → Archer row (needs a free
+`TICKETMASTER_API_KEY` in `/etc/birdstation.env`) → `GET /api/events` + a "What's On"
+card. Then the `scrape` adapter (AI-as-parser) for no-API sources like the Emmaus
+Theater calendar, and `pulse_add` paste-capture for one-offs / Bug Club.
+
+### 4b. Pulse hallucination — full-text scraping follow-up
+The 2026-06-04 grounding work (capture `content:encoded`, feed the digest real
+excerpts, harden enrich/digest prompts) is the zero-risk baseline. **Next, if the
+digest still invents:** per-source full-text fetch for the feeds that under-provide
+— but **tested individually** (many publishers 403 a server fetch, same wall as the
+venue sites), only adding a source once its fetch is proven reliable.
 
 ---
 
@@ -100,6 +113,15 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-04** — Pulse: brief **`Sources:` lines collapsed by default** (native
+  `<details>`, matching the Citations toggle) + **hallucination grounding** — the
+  fetcher now keeps the fullest article text (`content:encoded`, cap 500→2000), the
+  digest synthesizes from real **excerpts** (not just one-line AI summaries), and the
+  enrich/digest prompts forbid invented specifics ("be vague rather than wrong"). Also
+  tested + decided the first **event** source: **Archer Music Hall via a Ticketmaster
+  Discovery API `api` adapter** (every HTML source 403s a server fetch) — designed in
+  `PLAN-ingestion.md`, build deferred to Phase 4.
 
 - **2026-06-04** — Observatory **Analytics tab** (📊, bird distributions): a third tab with
   its own period selector rendering, all vanilla CSS, an **hour-of-day activity chart** ("When

@@ -36,8 +36,12 @@ SYSTEM_PROMPT = (
     "id, a headline, and an optional blurb. Return exactly one result per id:\n"
     "- category: the single best-fit category from the fixed list.\n"
     "- summary: one plain, factual sentence (max 25 words). No clickbait, no "
-    "phrases like 'this article'. If the blurb is empty, summarize from the "
-    "headline alone.\n\n"
+    "phrases like 'this article'.\n\n"
+    "GROUNDING (important): base the summary ONLY on the provided headline and "
+    "blurb. Do not add facts, names, numbers, dates, locations, or outcomes that "
+    "are not present in the text. If the blurb is empty or thin, summarize from "
+    "the headline alone and stay general rather than guessing specifics. Never "
+    "state as fact anything the text does not say.\n\n"
     "Categories: " + ", ".join(CATEGORIES) + ". Use 'Other' only when nothing fits."
 )
 

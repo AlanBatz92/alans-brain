@@ -4125,7 +4125,28 @@ nav {
   color: var(--text-muted);
   margin: 0;
 }
+/* Per-section sources — collapsed by default (mirrors the Citations toggle) */
 .pulse-brief-sources {
+  margin-top: 8px;
+}
+.pulse-sources-toggle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.pulse-sources-toggle::-webkit-details-marker { display: none; }
+.pulse-sources-toggle::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 5px;
+  font-size: 0.85em;
+  transition: transform 0.15s ease;
+}
+.pulse-brief-sources[open] .pulse-sources-toggle::before { transform: rotate(90deg); }
+.pulse-sources-list {
   margin-top: 6px;
   display: flex;
   flex-wrap: wrap;

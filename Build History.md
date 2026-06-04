@@ -10,6 +10,64 @@
 
 ---
 
+## 2026-06-04 — Pulse: collapse brief sources, anti-hallucination grounding, + Archer source plan
+
+Three threads of Pulse work: a small front-end tidy, a real fix for the digest's
+tendency to invent detail, and the groundwork/decision for adding the first
+*event* source (Archer Music Hall).
+
+**1. Brief "Sources:" lines collapsed by default (front-end).** Each Morning Brief
+section showed an always-visible `Sources:` line of numbered links. It's now a
+native `<details>`/`<summary>` ("Sources (N)"), collapsed by default and styled to
+match the existing Citations toggle (▸ rotates on open). `renderSectionSources()`
+in `pulse.js`; new `.pulse-sources-toggle` / `.pulse-sources-list` in `style.css`
+(the old flat `.pulse-brief-sources` flex rules moved onto `.pulse-sources-list`).
+No version query on Pulse assets, so nothing to bump.
+
+**2. Hallucination reduction — grounding, not scraping (box-side, deployable).**
+Root cause: the AI saw almost nothing real. The fetcher truncated the teaser to
+500 chars and ignored `content:encoded`, and the **digest synthesized from only
+the one-sentence AI summaries** — so Claude filled gaps with plausible-but-invented
+specifics. Fixes:
+- `pulse_fetcher.py` — new `extract_body()` prefers the fullest `content:encoded`
+  (feedparser `e.content[*].value`) over the teaser, and the cap rose 500 → 2000
+  (`BODY_CAP`). Forward-looking: existing rows are deduped by url, so only new
+  items get the richer body.
+- `pulse_digest.py` — the payload now includes an **`excerpt`** (the richer
+  `summary` body, capped 500/item) alongside the one-line `ai_summary`, so synthesis
+  is grounded in actual article text. System prompt gained a hard GROUNDING rule:
+  no invented figures/dates/names/quotes/causes/outcomes; be vague rather than wrong;
+  cite only provided ids.
+- `pulse_enrich.py` — same grounding rule added to the one-sentence summarizer.
+
+  Why not scrape article bodies for even more context? **Tested it — it's blocked.**
+  See thread 3: the same 403 wall that stops venue scraping stops most news
+  publishers, so the high-leverage, zero-risk move was to stop throwing away the
+  full text the feeds already carry, plus constrain the model. Per-source full-text
+  scraping stays a *future, individually-tested* option, not a blanket one.
+
+**3. Archer Music Hall — tested every source, chose the API (decision + plan).**
+Goal: add upcoming concerts at Archer Music Hall, Allentown. Tested each candidate
+with a real server-side fetch: **`archermusichall.com/shows`, Bandsintown, JamBase,
+Concertfix, and SeatGeek all return HTTP 403** to a non-browser client (bot
+protection). The robust path is the **Ticketmaster Discovery API** (Archer is a
+Live Nation/Ticketmaster venue, id `KovZ917AYeX` / `393388`): free key, JSON, no
+HTML parsing, no hallucination surface. Decision (with Alan): build a new **`api`
+adapter** (alongside `rss`/`scrape`/`email`) and make Archer the *first* event
+source, ahead of the scrape-based Emmaus Theater. Full design — endpoint, field
+mapping, `TICKETMASTER_API_KEY` in `/etc/birdstation.env`, `feed_sources` row,
+daily cadence — written into `PLAN-ingestion.md`. **Not built this session**
+(scope: front-end + hallucination only; the box can't be deployed/tested from
+here, and the events table + "What's On" surface is the larger Phase-4 build).
+
+**Verified:** `py_compile` on all three box scripts; `node --check pulse.js`; CSS
+brace-balanced with the new classes present. Box scripts not run against the live
+DB (no box access from this environment) — deploy is `git pull` + restart the
+`pulse-*` units (fetch/enrich/digest). The grounding changes take effect as new
+items are fetched (richer body) and on the next digest run.
+
+---
+
 ## 2026-06-04 — Observatory: Analytics tab (bird distributions)
 
 First of the "fun analytics" — a third Observatory tab (📊 **Analytics**, between

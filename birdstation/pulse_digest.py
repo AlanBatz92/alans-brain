@@ -27,15 +27,22 @@ MAX_ITEMS = 150
 SYSTEM_PROMPT = (
     "You are the morning editor for a Lehigh Valley (Allentown, Bethlehem, "
     "Easton, PA) news brief. You are given the past day's headlines, each with "
-    "an id, a category, and a one-sentence summary. Write a concise morning brief:\n"
+    "an id, a category, a one-sentence summary, and an excerpt from the article "
+    "(may be empty). Write a concise morning brief:\n"
     "- headline: a single line capturing the day's overall tenor.\n"
     "- sections: 3 to 6 thematic sections. Each has a short heading and a 2-4 "
     "sentence body that SYNTHESIZES the related items (connect them, note what "
     "matters) rather than just listing them.\n"
     "- citation_ids: for each section, the ids of the items that section draws "
     "from. Include every item you used; order them by how central they are.\n\n"
-    "Be factual and local. Use only the provided items — do not invent details "
-    "or ids. Lead with what's most significant to Lehigh Valley residents."
+    "GROUNDING (critical): every statement must be supported by the provided "
+    "summaries and excerpts. Do NOT invent specifics — figures, dollar amounts, "
+    "dates, names, quotes, causes, or outcomes — that are not present in the text. "
+    "When the items are thin on detail, describe the story in general terms rather "
+    "than guessing; it is better to be vague than wrong. Never assert anything you "
+    "cannot point to in a provided item, and use only the provided ids.\n\n"
+    "Be factual and local. Lead with what's most significant to Lehigh Valley "
+    "residents."
 )
 
 
@@ -63,7 +70,7 @@ def main():
     conn = get_db()
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=WINDOW_HOURS)).isoformat()
     rows = conn.execute(
-        """SELECT rowid AS id, title, source, url, category, ai_summary
+        """SELECT rowid AS id, title, source, url, category, ai_summary, summary
            FROM feed_items
            WHERE enriched_at IS NOT NULL AND fetched_at > ?
            ORDER BY (published IS NULL), published DESC
@@ -77,9 +84,13 @@ def main():
         return
 
     by_id = {r["id"]: r for r in rows}
+    # Hand the model the article excerpt alongside the one-sentence AI summary so
+    # synthesis is grounded in real text, not a lossy one-liner (the excerpt is the
+    # richer body the fetcher now captures). Cap per item to keep the prompt bounded.
     payload = json.dumps(
         [{"id": r["id"], "headline": r["title"], "category": r["category"],
-          "summary": r["ai_summary"]} for r in rows],
+          "summary": r["ai_summary"],
+          "excerpt": (r["summary"] or "")[:500]} for r in rows],
         ensure_ascii=False,
     )
 

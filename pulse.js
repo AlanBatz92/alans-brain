@@ -225,7 +225,9 @@ async function loadDigest() {
   card.hidden = false;
 }
 
-// Per-section "Sources:" line — compact numbered links to the cited articles.
+// Per-section sources — compact numbered links to the cited articles, collapsed
+// by default (native <details>/<summary>, same as the Citations block at the foot
+// of the brief). The summary shows the count so it stays scannable while closed.
 // citations: [{n, title, url, source}]; absent on pre-citation briefs → nothing.
 function renderSectionSources(citations) {
   if (!Array.isArray(citations) || citations.length === 0) return '';
@@ -235,7 +237,10 @@ function renderSectionSources(citations) {
       ' title="' + escapeHtml(c.title) + '">[' + c.n + '] ' +
       escapeHtml(c.title || c.source) + '</a>'
   ).join('');
-  return '<div class="pulse-brief-sources">Sources: ' + links + '</div>';
+  return '<details class="pulse-brief-sources">' +
+           '<summary class="pulse-sources-toggle">Sources (' + citations.length + ')</summary>' +
+           '<div class="pulse-sources-list">' + links + '</div>' +
+         '</details>';
 }
 
 // Full numbered citations list at the foot of the brief.
