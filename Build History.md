@@ -10,6 +10,59 @@
 
 ---
 
+## 2026-06-04 — Observatory: Analytics tab (bird distributions)
+
+First of the "fun analytics" — a third Observatory tab (📊 **Analytics**, between
+Birds and Trains) that visualizes detection *distributions* over a selected period.
+All charts are vanilla CSS bars/cells (no chart library — per the no-deps convention),
+fed by a single box-side aggregation.
+
+**New endpoint — `GET /api/analytics?start=&end=&min_confidence=&top=` (`birdstation/bird_api.py`).**
+Returns a pre-aggregated bundle for a UTC datetime range (the same Eastern→UTC day
+boundaries the period selector already sends to `/api/detections/grouped`):
+- `by_hour[24]` — detections per **Eastern** hour-of-day (the "dawn chorus" curve)
+- `species_hours[]` — the top `top` (default 12) species, each with `hours[24]` → the species×hour heatmap
+- `top_species[]` — the full most-heard leaderboard `{common_name, scientific_name, count}`
+- `by_day[]` — `{date, count, species}` per Eastern day (volume + diversity)
+- totals + `busiest_hour` (0–23) + `peak_day`
+
+**Eastern bucketing, done right.** The box stores **naive-UTC** timestamps, so a raw
+hour bucket would put the dawn chorus at ~9–10 (UTC) instead of ~5–6 (Eastern). The
+endpoint `GROUP BY substr(timestamp,1,13)` (the UTC `YYYY-MM-DDtHH` prefix — works for
+both the `T`-separated ISO stamps the pipeline writes and space-separated ones), giving a
+**bounded** intermediate (≤ ~24×days×species rows), then folds each bucket into Eastern
+hour/day buckets in Python via `eastern_parts()` — so the conversion is cheap and
+**DST-correct** without a per-row SQL scan. Uses `zoneinfo` when available (the box has
+tzdata) with a self-contained US-Eastern (post-2007) DST rule as the fallback. New tests:
+`birdstation/test_analytics_endpoint.py` (13 — Eastern/EST/EDT bucketing, late-night
+roll-back to the previous Eastern day, the DST fallback boundaries, diversity, leaderboard,
+`top` cap, confidence filter, ISO-`T` stamps, empty range).
+
+**Front-end (`observatory.html`, `observatory.js`, `style.css`).** The Analytics tab has
+its own period selector (Today / Yesterday / This week / This month / This year / All,
+defaulting to **This week**) and renders:
+- **Summary stat cards** — Detections (period), Species, Busiest hour ("7 AM"), Peak day.
+- **"When the birds sing"** — a 24-bar hour-of-day chart, busiest hour highlighted green.
+- **"Who sings when"** — a species×hour heatmap, each row self-normalized to its own
+  busiest hour so the *pattern* (owls after dark, robins at dawn) reads regardless of
+  volume; a ×total badge conveys magnitude. Horizontally scrolls on narrow screens.
+- **Most heard** — top-15 leaderboard with proportional bars.
+- **Activity over time** — per-day detection bars (hidden for single-day periods, where the
+  hour chart already covers it).
+Heatmap rows + leaderboard rows carry `data-name`/`data-sci`, so the **existing bird-card
+delegation opens a card on tap**. Analytics **lazy-loads on first tab open** (it's a heavier
+box aggregation) and is included in the manual ↻ refresh only once opened. New `obs-an-*`
+classes; `TAGLINES.analytics = "The shape of the chorus."`.
+
+**Verified:** `py_compile` + 13 analytics tests + 22 existing species/grouped/lifetime tests
+green; `node --check observatory.js`; a DOM-stub render harness (27 checks — bar counts,
+peak highlighting, heatmap cells/ticks/alpha, clickable rows, empty states, single-day
+hiding) all pass; CSS brace-balanced, all vars defined. (Couldn't hit the live box — the
+web session's network policy blocks `birds.alansbrain.com`.) **Assets:** `observatory.js?v=obs17`,
+`style.css?v=obs13` (`bird-info.js` unchanged). **Box step:** `cd ~/alans-brain && git pull
+&& sudo systemctl restart birdapi` to serve `/api/analytics` (front-end ships via Vercel;
+until the box is restarted the Analytics tab shows the offline state).
+
 ## 2026-06-03 — Observatory: bird-card tap targets + "100% only" filter
 
 Three small UX asks.
