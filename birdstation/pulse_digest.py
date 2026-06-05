@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Pulse digest — a daily Claude-written "Lehigh Valley morning brief".
-Runs on pulse-digest.timer (~6 AM local). Reads the last 24h of enriched
-feed_items, synthesizes a short sectioned brief WITH citations, and stores it
-in feed_digests (one row per local date; re-running the same day overwrites).
+Pulse digest — a Claude-written "Lehigh Valley brief", twice a day.
+Runs on pulse-digest.timer (06:00 + 17:00 America/New_York). Each run reads the
+enriched feed_items that arrived SINCE THE LAST BRIEF, synthesizes a short
+sectioned brief WITH citations, and stores it in feed_digests keyed by
+(Eastern date, slot) where slot is 'morning' or 'evening' — so the two daily
+briefs coexist and each is fresh (no re-tread).
 
 Citations: each item is fed with its rowid as `id`; Claude returns the ids it
 drew from per section; we resolve those ids to {n, title, url, source} here so
@@ -14,15 +16,28 @@ column — the PK is `url` and `rowid` is the stable item id.
 import json
 import os
 import sqlite3
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 import anthropic
 from pydantic import BaseModel, Field
 
 DB_PATH = os.path.expanduser("~/birdnet.db")
-MODEL = "claude-sonnet-4-6"
-WINDOW_HOURS = 24
+MODEL = "claude-haiku-4-5"        # Haiku + adaptive thinking — far cheaper than
+                                  # Sonnet, and grounded enough now to handle the
+                                  # synthesis (see the GROUNDING rule below).
+MAX_LOOKBACK_HOURS = 24           # floor on the "since last brief" window so a
+                                  # first run / outage gap can't pull a huge backlog
 MAX_ITEMS = 150
+MIN_ITEMS = 3                     # skip a brief with too little to synthesize
+
+# Eastern time — the brief's slot (morning/evening) and its date are local, and
+# the box stores naive-UTC timestamps. zoneinfo when available (the box has tzdata);
+# a fixed-offset fallback is fine here since slot/date is a coarse noon split.
+try:
+    from zoneinfo import ZoneInfo
+    EASTERN = ZoneInfo("America/New_York")
+except Exception:  # pragma: no cover
+    EASTERN = timezone(timedelta(hours=-5))
 
 # API/account/network failures (incl. an empty credit balance, rate limits, 5xx,
 # network blips). On these the digest just retries next run rather than crashing
@@ -71,20 +86,68 @@ def get_db():
     return conn
 
 
+def ensure_schema(conn):
+    """Idempotently migrate feed_digests to the (date, slot) PK so morning and
+    evening briefs coexist. SQLite can't add to a PK in place, so rebuild — but
+    only once (guarded on the `slot` column). Runs on every digest invocation, so
+    a plain `git pull` + restart migrates the live DB with no manual SQL."""
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(feed_digests)").fetchall()]
+    if "slot" in cols:
+        return
+    conn.executescript(
+        """
+        ALTER TABLE feed_digests RENAME TO feed_digests_old;
+        CREATE TABLE feed_digests (
+            date           TEXT NOT NULL,
+            slot           TEXT NOT NULL DEFAULT 'morning',
+            generated_at   TEXT NOT NULL,
+            headline       TEXT NOT NULL,
+            sections_json  TEXT NOT NULL,
+            citations_json TEXT,
+            model          TEXT,
+            item_count     INTEGER,
+            PRIMARY KEY (date, slot)
+        );
+        INSERT INTO feed_digests
+            (date, slot, generated_at, headline, sections_json, citations_json, model, item_count)
+            SELECT date, 'morning', generated_at, headline, sections_json,
+                   citations_json, model, item_count
+            FROM feed_digests_old;
+        DROP TABLE feed_digests_old;
+        """
+    )
+    conn.commit()
+    print("digest: migrated feed_digests to (date, slot) PK")
+
+
 def main():
     conn = get_db()
-    cutoff = (datetime.now(timezone.utc) - timedelta(hours=WINDOW_HOURS)).isoformat()
+    ensure_schema(conn)
+
+    now_e = datetime.now(EASTERN)
+    slot = "morning" if now_e.hour < 12 else "evening"
+    today = now_e.strftime("%Y-%m-%d")
+
+    # Window "since the last brief": items enriched after the previous digest was
+    # generated, so each brief is genuinely new (no re-tread). We window on
+    # enriched_at (not fetched_at) so an item that enriched late still lands in the
+    # next brief instead of being skipped. Floor the look-back so a first run or an
+    # outage gap can't pull an unbounded backlog.
+    floor = (datetime.now(timezone.utc) - timedelta(hours=MAX_LOOKBACK_HOURS)).isoformat()
+    last = conn.execute("SELECT MAX(generated_at) FROM feed_digests").fetchone()[0]
+    cutoff = max(last, floor) if last else floor  # ISO-8601 UTC strings sort lexically
+
     rows = conn.execute(
         """SELECT rowid AS id, title, source, url, category, ai_summary, summary
            FROM feed_items
-           WHERE enriched_at IS NOT NULL AND fetched_at > ?
+           WHERE enriched_at IS NOT NULL AND enriched_at > ?
            ORDER BY (published IS NULL), published DESC
            LIMIT ?""",
         (cutoff, MAX_ITEMS),
     ).fetchall()
 
-    if len(rows) < 3:
-        print(f"digest: only {len(rows)} items in window — skipping")
+    if len(rows) < MIN_ITEMS:
+        print(f"digest: only {len(rows)} new items since last brief — skipping {slot}")
         conn.close()
         return
 
@@ -146,14 +209,14 @@ def main():
 
     citations_out = [cite(cid) for cid in order]
 
-    today = date.today().isoformat()
     conn.execute(
         """INSERT OR REPLACE INTO feed_digests
-           (date, generated_at, headline, sections_json, citations_json,
+           (date, slot, generated_at, headline, sections_json, citations_json,
             model, item_count)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             today,
+            slot,
             datetime.now(timezone.utc).isoformat(),
             digest.headline,
             json.dumps(sections_out, ensure_ascii=False),
@@ -164,7 +227,7 @@ def main():
     )
     conn.commit()
     conn.close()
-    print(f"digest: wrote {today} ({len(sections_out)} sections, "
+    print(f"digest: wrote {today} {slot} ({len(sections_out)} sections, "
           f"{len(citations_out)} citations, from {len(rows)} items)")
 
 

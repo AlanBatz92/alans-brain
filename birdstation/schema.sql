@@ -73,13 +73,15 @@ CREATE INDEX idx_feed_items_pub ON feed_items(published DESC);
 CREATE INDEX idx_feed_items_fetched ON feed_items(fetched_at);
 
 CREATE TABLE feed_digests (
-    date          TEXT PRIMARY KEY,   -- local date, e.g. 2026-05-30
+    date          TEXT NOT NULL,      -- Eastern date, e.g. 2026-06-05
+    slot          TEXT NOT NULL DEFAULT 'morning',  -- 'morning' | 'evening' (twice-daily)
     generated_at  TEXT NOT NULL,
     headline      TEXT NOT NULL,
     sections_json TEXT NOT NULL,
     citations_json TEXT,              -- global numbered citation list (added 2026-05-30)
     model         TEXT,
-    item_count    INTEGER
+    item_count    INTEGER,
+    PRIMARY KEY (date, slot)          -- two briefs per day coexist (2026-06-05)
 );
 
 -- ── Migrations ──────────────────────────────────────────────
@@ -95,3 +97,17 @@ CREATE TABLE feed_digests (
 -- birdnet_pipeline.init_db() also applies both idempotently on restart, so a
 -- routine `git pull` + `systemctl restart birdnet` migrates the live DB with no
 -- manual step. (The `week` column now stores BirdNET's 1-48 week, not ISO week.)
+
+-- migration 2026-06-05: twice-daily digest (morning + evening, windowed "since
+-- the last brief"). feed_digests gains a `slot` column and a (date, slot) PK so
+-- both briefs coexist. SQLite can't add to a PK in place, so this is a rebuild.
+-- pulse_digest.ensure_schema() applies it idempotently on the next run (checks
+-- for the `slot` column first), so a plain `git pull` migrates the live DB with
+-- no manual step — same pattern as birdnet_pipeline.init_db():
+-- ALTER TABLE feed_digests RENAME TO feed_digests_old;
+-- CREATE TABLE feed_digests ( ...new schema above... );
+-- INSERT INTO feed_digests (date, slot, generated_at, headline, sections_json,
+--                           citations_json, model, item_count)
+--   SELECT date, 'morning', generated_at, headline, sections_json,
+--          citations_json, model, item_count FROM feed_digests_old;
+-- DROP TABLE feed_digests_old;

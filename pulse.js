@@ -216,8 +216,9 @@ async function loadDigest() {
     '</div>'
   ).join('');
 
+  const briefLabel = d.slot === 'evening' ? '🌆 Evening Brief' : '📰 Morning Brief';
   card.innerHTML =
-    '<div class="pulse-brief-label">📰 Morning Brief' +
+    '<div class="pulse-brief-label">' + briefLabel +
       (d.date ? ' · ' + escapeHtml(d.date) : '') + '</div>' +
     '<p class="pulse-brief-lead">' + escapeHtml(d.headline) + '</p>' +
     sections +

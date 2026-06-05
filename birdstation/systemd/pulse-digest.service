@@ -1,5 +1,5 @@
 [Unit]
-Description=Pulse daily morning brief
+Description=Pulse brief (morning/evening, since last brief)
 After=network-online.target
 Wants=network-online.target
 

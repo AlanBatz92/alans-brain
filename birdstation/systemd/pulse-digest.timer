@@ -1,8 +1,12 @@
 [Unit]
-Description=Generate the Pulse morning brief daily at 6 AM
+Description=Generate the Pulse brief twice daily (6 AM + 5 PM Eastern)
 
 [Timer]
-OnCalendar=*-*-* 06:00:00
+# Eastern-pinned (DST-correct) so the morning/evening slots land at the intended
+# local times regardless of the box running UTC. Each run covers items since the
+# last brief.
+OnCalendar=*-*-* 06:00:00 America/New_York
+OnCalendar=*-*-* 17:00:00 America/New_York
 Persistent=true
 
 [Install]

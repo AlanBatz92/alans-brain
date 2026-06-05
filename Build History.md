@@ -10,6 +10,53 @@
 
 ---
 
+## 2026-06-05 — Pulse digest: twice daily, Haiku, windowed "since the last brief"
+
+Reworked the daily brief into a **twice-daily** one (morning + evening), moved it
+off Sonnet onto **Haiku 4.5** for cost, and changed the window so each brief is
+genuinely fresh rather than a re-tread of the last.
+
+**Model: `claude-sonnet-4-6` → `claude-haiku-4-5`** (keeps adaptive thinking).
+Sonnet wasn't necessary now that the brief is *grounded* (it reads real article
+excerpts + a hard anti-invention prompt, added 2026-06-04) — grounding drives
+correctness far more than model size. Haiku 4.5 handles the synthesis +
+citation-id bookkeeping, at a large fraction of the cost; running it twice a day
+on Haiku still comes in well under once a day on Sonnet.
+
+**Window: last-24h → "since the last brief."** Each run now selects items
+**`enriched_at` after the previous digest's `generated_at`** (floored at
+`MAX_LOOKBACK_HOURS = 24` so a first run / outage gap can't pull an unbounded
+backlog). Windowing on `enriched_at` rather than `fetched_at` means an item that
+enriches late still lands in the *next* brief instead of being dropped — no gap,
+no overlap. In steady state the two briefs are ~11–13h apart, so each covers only
+what's new.
+
+**Storage: two briefs coexist.** `feed_digests` PK went `date` → **`(date, slot)`**
+with `slot ∈ {morning, evening}` (Eastern date + a noon split on
+`datetime.now(ZoneInfo("America/New_York")).hour`). `pulse_digest.ensure_schema()`
+applies the rebuild **idempotently** on the next run (guarded on the `slot`
+column; preserves existing rows as `morning`), so a plain `git pull` migrates the
+live DB — no manual SQL, same pattern as `birdnet_pipeline.init_db()`.
+
+**Surfaces.** `GET /api/digest` now returns the most recent brief **by
+`generated_at`** (was `date`) and includes `slot`; it tolerates the pre-migration
+schema (PRAGMA-checks for the column) so the API doesn't depend on the digest
+migration having run yet. The front-end labels the card **"🌆 Evening Brief"** vs
+**"📰 Morning Brief"** off `d.slot`. The timer (`pulse-digest.timer`) fires
+**06:00 + 17:00 `America/New_York`** (Eastern-pinned so it's DST-correct and
+unaffected by the box running UTC).
+
+**Verified:** `py_compile` (all 4 box scripts) + `node --check pulse.js`; a
+throwaway-DB harness exercised the real `ensure_schema` — legacy→migrated (old row
+becomes `morning`), morning+evening rows coexisting under the new PK, "latest by
+`generated_at`" picking the evening brief, idempotent re-run, and the
+`max(last, floor)` cutoff (last-wins normally, floor-capped after a long gap). Not
+run against the live API (no box access here); deploy = `git pull`, restart
+`birdapi`, `systemctl daemon-reload` for the timer, then the next run migrates +
+writes. Needs Anthropic credits on the account (separate billing top-up in flight).
+
+---
+
 ## 2026-06-05 — Pulse: API outages no longer poison the enrich backlog
 
 Deploying the grounding work surfaced a latent pipeline flaw. The box's Anthropic

@@ -569,16 +569,23 @@ def set_verdict(event_id: int, body: dict):
 
 @app.get("/api/digest")
 def get_digest():
+    # Returns the most recent brief by generated_at (morning or evening — pulse_digest
+    # now writes two per day). Tolerant of the pre-2026-06-05 schema with no `slot`
+    # column, so the API doesn't depend on the digest migration having run yet.
     conn = get_db()
+    has_slot = any(r[1] == "slot" for r in
+                   conn.execute("PRAGMA table_info(feed_digests)").fetchall())
+    cols = "date, generated_at, headline, sections_json, citations_json" + \
+           (", slot" if has_slot else "")
     row = conn.execute(
-        """SELECT date, generated_at, headline, sections_json, citations_json
-           FROM feed_digests ORDER BY date DESC LIMIT 1"""
+        f"SELECT {cols} FROM feed_digests ORDER BY generated_at DESC LIMIT 1"
     ).fetchone()
     conn.close()
     if not row:
         return {}
     return {
         "date":         row["date"],
+        "slot":         row["slot"] if has_slot else "morning",
         "generated_at": row["generated_at"],
         "headline":     row["headline"],
         "sections":     json.loads(row["sections_json"]),

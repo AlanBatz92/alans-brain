@@ -114,6 +114,14 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-05** — Pulse digest: **twice daily** (06:00 + 17:00 Eastern), moved Sonnet
+  → **Haiku 4.5** (with adaptive thinking) for cost — grounding makes Sonnet
+  unnecessary — and re-windowed to **"since the last brief"** (items `enriched_at` after
+  the previous digest's `generated_at`, 24h-floored) so each brief is fresh, no re-tread.
+  `feed_digests` PK → `(date, slot)` (morning/evening coexist; idempotent migration on
+  next run). `/api/digest` returns the latest by `generated_at` + `slot`; card labels
+  "📰 Morning / 🌆 Evening Brief". (Email delivery — item #6 below — still deferred.)
+
 - **2026-06-05** — Pulse pipeline resilience: an API outage (the box ran out of
   Anthropic credits) revealed that `pulse-enrich` bumped `enrich_attempts` on *any*
   batch exception, so an outage permanently excluded the items it touched (capped at
