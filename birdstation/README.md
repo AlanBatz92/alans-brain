@@ -10,8 +10,11 @@ box — they share `~/birdnet.db` and one FastAPI app (`bird_api.py`, uvicorn on
 
 This folder is the **source of truth** for birdstation's code. The box runs the
 checked-out files directly (**run-from-clone**): the repo is cloned to
-`~/alans-brain` and the systemd units point at `~/alans-brain/birdstation/*.py`.
-Deploying is `git pull` + a restart — no copy step, nothing drifts.
+`~/alans-brain`, the systemd units point at `~/alans-brain/birdstation/*.py`, and
+the unit files themselves are **symlinked** from the repo into
+`/etc/systemd/system` (see `link_units.sh`). Deploying is `git pull` + a restart;
+a changed *unit file* also needs `daemon-reload` (see "Deploying unit-file
+changes" below) — but no copy step, so nothing drifts.
 
 ## Layout
 
@@ -19,7 +22,7 @@ Deploying is `git pull` + a restart — no copy step, nothing drifts.
 birdstation/
   pulse_fetcher.py    # timer: pull enabled feed_sources, dedupe, store, purge >30d
   pulse_enrich.py     # timer: batched AI category + one-sentence summary (Haiku)
-  pulse_digest.py     # daily timer: Claude Morning Brief with citations (Sonnet)
+  pulse_digest.py     # timer (6 AM + 5 PM ET): Claude brief w/ citations (Haiku), since-last-brief
   bird_api.py         # FastAPI app: /api/feed, /api/digest, bird + train routes
   birdnet_pipeline.py # birdnet.service: capture→analyze→log; life-list gate; clips
   purge_bird_clips.py # daily timer: age out unreviewed bird verification clips
@@ -27,6 +30,7 @@ birdstation/
   purge_low_confidence.py # CLI one-shot: drop detections below the 0.60 preserve floor
   schema.sql          # full birdnet.db schema + migration log
   systemd/            # .service / .timer units (templated — no inline secrets)
+  link_units.sh       # symlink systemd/*.{service,timer} into /etc (run-from-clone units)
   README.md           # this file
 ```
 
@@ -39,9 +43,31 @@ git pull origin main
 sudo systemctl restart birdapi              # bird_api.py changed
 sudo systemctl restart birdnet              # birdnet_pipeline.py changed (init_db auto-migrates)
 sudo systemctl start  pulse-digest.service  # regenerate the brief now
-# new units? re-copy + reload + enable (see cutover step 4) — e.g. purge-bird-clips.timer
-# schema.sql changed? bird columns auto-migrate via init_db on birdnet restart; others by hand
+# schema.sql changed? bird columns auto-migrate via init_db on birdnet restart;
+#   pulse_digest.ensure_schema() migrates feed_digests on its next run; others by hand
 ```
+
+### Deploying unit-file changes
+
+The unit files in `/etc/systemd/system` are **symlinks** into the clone (set up
+once by `link_units.sh`), so editing a `.service`/`.timer` here and running
+`git pull` updates the live unit's content automatically — **no `cp`**. systemd
+still caches unit definitions in memory, though, so a changed unit needs a
+`daemon-reload` (and a restart of that unit) to take effect:
+
+```bash
+cd ~/alans-brain && git pull origin main
+sudo systemctl daemon-reload                 # re-read changed unit files
+sudo systemctl restart pulse-digest.timer    # restart whatever you changed (timer and/or service)
+systemctl cat pulse-digest.timer             # confirm the live unit shows your change
+```
+
+**A brand-new unit** (a file that didn't exist before) isn't linked yet — run
+`sudo ~/alans-brain/birdstation/link_units.sh` once to (re)link everything
+(idempotent; backs up any real file it replaces), then `daemon-reload` and
+`systemctl enable --now <unit>`. The script is also how you'd retrofit the
+symlinks the first time (it replaces previously-`cp`'d copies, backing each up to
+`<unit>.bak-<timestamp>`).
 
 ## Secrets — never committed
 
@@ -74,10 +100,9 @@ sudo chmod 600 /etc/birdstation.env
 # 3. Apply any pending DB migration (see schema.sql).
 sqlite3 ~/birdnet.db "ALTER TABLE feed_digests ADD COLUMN citations_json TEXT;"
 
-# 4. Install the units from the repo, reload, restart/enable.
-sudo cp ~/alans-brain/birdstation/systemd/*.service \
-        ~/alans-brain/birdstation/systemd/*.timer /etc/systemd/system/
-sudo systemctl daemon-reload
+# 4. Install the units from the repo (symlinks, so future unit edits deploy on
+#    `git pull`), reload, restart/enable.
+sudo ~/alans-brain/birdstation/link_units.sh   # symlinks systemd/*.{service,timer} → /etc, daemon-reloads
 sudo systemctl restart birdapi
 sudo systemctl enable --now pulse-fetch.timer pulse-enrich.timer pulse-digest.timer
 
@@ -131,7 +156,7 @@ repo's `Build History.md`.
 | `purge-bird-clips.timer` → `.service` | daily purge of unreviewed bird clips (04:30) |
 | `pulse-fetch.timer` → `.service` | source fetch every 15 min (purges >30 days) |
 | `pulse-enrich.timer` → `.service` | batched AI enrichment, every 20 min |
-| `pulse-digest.timer` → `.service` | daily Morning Brief (~06:00 local) |
+| `pulse-digest.timer` → `.service` | brief twice daily (06:00 + 17:00 ET), since last brief |
 
 ### Bird verification clips (privacy)
 

@@ -10,6 +10,33 @@
 
 ---
 
+## 2026-06-05 — birdstation: systemd units truly run-from-clone (symlinks)
+
+Deploying the twice-daily timer surfaced that the "run-from-clone" model only
+covered the Python: the unit *files* were `cp`'d into `/etc/systemd/system`, so a
+`.timer`/`.service` edit needed a manual re-copy — and a skipped copy silently
+left the box on the old schedule (the live `pulse-digest.timer` still read
+"daily at 6 AM" after a `git pull`). The README even claimed "no copy step" for
+units, which wasn't true.
+
+**Fix — `birdstation/link_units.sh`:** an idempotent installer that **symlinks**
+`systemd/*.{service,timer}` from the clone into `/etc/systemd/system`, backing up
+any existing real file once (`<unit>.bak-<ts>`) and running `daemon-reload`. After
+this, a unit-file edit deploys on `git pull` + `daemon-reload` + restart — no copy,
+nothing drifts. Relinking doesn't restart running services, so it's non-disruptive.
+
+**README:** corrected the run-from-clone description, added a **"Deploying
+unit-file changes"** section (pull → `daemon-reload` → restart; `link_units.sh`
+for brand-new units), switched cutover step 4 from `cp` to `link_units.sh`, and
+refreshed the stale `pulse_digest`/timer descriptions (Haiku, twice-daily).
+
+**Verified:** `bash -n`; a temp-dir harness exercised the link/backup/idempotency
+logic (real file backed up, symlink resolves to new content, second pass a no-op).
+On the box: `sudo ~/alans-brain/birdstation/link_units.sh` once retrofits the
+symlinks (replacing the `cp`'d copies), then `daemon-reload` + restart the timer.
+
+---
+
 ## 2026-06-05 — Pulse digest: twice daily, Haiku, windowed "since the last brief"
 
 Reworked the daily brief into a **twice-daily** one (morning + evening), moved it
