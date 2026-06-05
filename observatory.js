@@ -539,15 +539,27 @@ function easternDecimalHour(date) {
   return (get('hour') % 24) + get('minute') / 60;
 }
 
-// Classify an hour column (0\u201323) against sunrise/sunset (Eastern decimal hours):
-// pre-dawn night \u2192 dawn band (sunrise..+1.5h, the chorus window) \u2192 day \u2192 dusk \u2192 night.
-function hourBand(h, sr, ss) {
-  const c = h + 0.5;
-  if (c < sr - 0.5) return 'night';
-  if (c <= sr + 1.5) return 'dawn';
-  if (c >= ss + 0.5) return 'night';
-  if (c >= ss - 0.5) return 'dusk';
-  return 'day';
+// Build a left\u2192right CSS gradient for the chart background, mapping the 24-hour
+// span to one continuous "sky": night \u2192 a soft dawn glow around sunrise \u2192 clear
+// day \u2192 a warm dusk near sunset \u2192 night. sr/ss are Eastern decimal hours. Smooth
+// transitions read as a sky band rather than the blocky per-column tints we had.
+function sunGradient(sr, ss) {
+  const NIGHT = 'rgba(2,6,23,0.5)';
+  const DAWN  = 'rgba(255,190,92,0.22)';
+  const DAY   = 'rgba(255,255,255,0)';
+  const DUSK  = 'rgba(255,140,100,0.15)';
+  const pct = (h) => Math.max(0, Math.min(100, (h / 24) * 100));
+  const a = pct(sr - 1.0);   // night holds until ~an hour before sunrise
+  const b = pct(sr + 0.5);   // dawn glow peaks just after sunrise
+  const c = pct(sr + 2.0);   // faded to clear day
+  const d = pct(ss - 2.0);   // clear day holds until ~2h before sunset
+  const e = pct(ss - 0.3);   // dusk warmth peaks near sunset
+  const f = pct(ss + 1.0);   // back to night ~an hour after sunset
+  return 'linear-gradient(to right,' +
+    NIGHT + ' 0%,' + NIGHT + ' ' + a + '%,' +
+    DAWN  + ' ' + b + '%,' + DAY + ' ' + c + '%,' +
+    DAY   + ' ' + d + '%,' + DUSK + ' ' + e + '%,' +
+    NIGHT + ' ' + f + '%,' + NIGHT + ' 100%)';
 }
 
 /* Custom hover tooltip for the analytics charts. Native `title` is slow (≈1s
@@ -615,8 +627,8 @@ function renderAnStats(a) {
   ]);
 }
 
-// Hour-of-day activity — 24 vertical bars, the busiest hour highlighted, columns
-// shaded by Emmaus' day/night cycle (dawn-chorus window picked out in warm gold).
+// Hour-of-day activity — 24 vertical bars, the busiest hour highlighted, over a
+// continuous day/night "sky" gradient (dawn glow at sunrise, warm dusk at sunset).
 function renderHourChart(byHour) {
   const el = document.getElementById('obs-an-hours');
   const sunEl = document.getElementById('obs-an-suninfo');
@@ -633,13 +645,16 @@ function renderHourChart(byHour) {
   const ss  = sun ? easternDecimalHour(sun.sunset)  : null;
   const shade = sr != null && ss != null;
   const busiest = byHour.indexOf(max);
-  let html = '';
+  // One continuous gradient layer behind all the columns, rather than per-column
+  // tints (which read as gappy blocks). The bars sit above it (z-index in CSS).
+  let html = shade
+    ? '<div class="obs-an-hours-bg" style="background:' + sunGradient(sr, ss) + '"></div>'
+    : '';
   for (let h = 0; h < 24; h++) {
     const n = byHour[h];
     const pct = Math.round((n / max) * 100);
     const tip = hourLabel(h, true) + ' — ' + nbCount(n, 'detection');
-    const band = shade ? ' obs-an-hbar-' + hourBand(h, sr, ss) : '';
-    html += '<div class="obs-an-hbar-wrap' + band + '" data-tip="' + escapeAttr(tip) + '">' +
+    html += '<div class="obs-an-hbar-wrap" data-tip="' + escapeAttr(tip) + '">' +
         '<div class="obs-an-hbar-track">' +
           '<div class="obs-an-hbar' + (h === busiest ? ' obs-an-hbar-peak' : '') +
             '" style="height:' + pct + '%"></div>' +

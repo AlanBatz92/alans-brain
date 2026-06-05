@@ -105,8 +105,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs21` +
-  `style.css?v=obs16` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs22` +
+  `style.css?v=obs17` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -191,15 +191,17 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Tooltip wrapping (2026-06-05):** the `.obs-an-tip` figures use a `nbCount()` helper
   that glues the count to its unit with a non-breaking space ("188 detections"), so a
   wrapping tooltip never strands the number on its own line.
-- **Dawn-chorus shading (2026-06-05):** the "When the birds sing" hour chart tints its 24
-  columns by Emmaus' day/night cycle — night a soft dark wash, the **dawn window in gold**,
-  daytime clear — with a 🌅/🌇 sunrise/sunset line (`#obs-an-suninfo`) below it. Sun times are
-  computed client-side by a trimmed SunCalc (`sunTimes()`, `OBS_LAT`/`OBS_LON`) for the
-  period's midpoint date, read in Eastern (`easternDecimalHour()`), and each column is
-  classed `obs-an-hbar-{night,dawn,dusk,day}` via `hourBand()`. Pure vanilla, no deps;
-  degrades to no shading if sun times are unavailable. Birds-only (the train-analytics toggle
-  will skip it — see `PLAN-train-analytics.md`).
-- Assets: `style.css?v=obs16`, `observatory.js?v=obs21`, `bird-info.js?v=obs6`.
+- **Dawn-chorus shading (2026-06-05):** the "When the birds sing" hour chart sits over a
+  **continuous day/night "sky" gradient** — night a soft dark wash, a **gold dawn glow** at
+  sunrise, clear day, a **warm dusk** near sunset — with a 🌅/🌇 sunrise/sunset line
+  (`#obs-an-suninfo`) below it. Sun times are computed client-side by a trimmed SunCalc
+  (`sunTimes()`, `OBS_LAT`/`OBS_LON`) for the period's midpoint date, read in Eastern
+  (`easternDecimalHour()`); `sunGradient()` builds a `linear-gradient` whose stops map the
+  24-hour span to sunrise/sunset (the bars sit above it via `.obs-an-hours-bg` z-index). Pure
+  vanilla, no deps; degrades to no shading if sun times are unavailable. Birds-only (the
+  train-analytics toggle will skip it — see `PLAN-train-analytics.md`). *(First cut used
+  per-column tints, which read as blocky/gappy; replaced with the single gradient.)*
+- Assets: `style.css?v=obs17`, `observatory.js?v=obs22`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

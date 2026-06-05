@@ -5107,6 +5107,7 @@ nav {
 
 /* Hour-of-day activity chart — 24 vertical bars */
 .obs-an-hours {
+  position: relative;   /* anchors the day/night gradient layer */
   display: flex;
   align-items: stretch;
   gap: 3px;
@@ -5116,8 +5117,11 @@ nav {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
+  overflow: hidden;     /* clip the gradient to the rounded card */
 }
 .obs-an-hbar-wrap {
+  position: relative;   /* sit above the gradient layer */
+  z-index: 1;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -5141,13 +5145,19 @@ nav {
 .obs-an-hbar-wrap:hover .obs-an-hbar { opacity: 0.9; }
 .obs-an-hbar-peak { opacity: 1; background: var(--green); }
 
-/* Dawn-chorus shading — tint each hour column by Emmaus' day/night cycle. The
-   dawn window (sunrise → ~90 min after) is picked out in warm gold; night is
-   a soft dark wash; daytime is left clear. Tints sit behind the bars. */
-.obs-an-hbar-night { background: rgba(2, 6, 23, 0.45); }
-.obs-an-hbar-dawn  { background: rgba(255, 184, 84, 0.16); }
-.obs-an-hbar-dusk  { background: rgba(255, 138, 101, 0.10); }
-.obs-an-hbar-night, .obs-an-hbar-dawn, .obs-an-hbar-dusk { border-radius: 3px; }
+/* Dawn-chorus shading — one continuous day/night "sky" gradient behind the bars
+   (built in JS from Emmaus' sunrise/sunset). Spans the columns' content box; the
+   bars sit above it via z-index. The bottom is left clear of the axis labels. */
+.obs-an-hours-bg {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 12px;
+  bottom: 18px;
+  z-index: 0;
+  border-radius: 6px;
+  pointer-events: none;
+}
 .obs-an-suninfo {
   display: flex;
   justify-content: center;

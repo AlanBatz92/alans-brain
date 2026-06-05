@@ -44,8 +44,17 @@ ideas backlog (§3a train analytics, §3b the rest), tagging each idea **[new]**
 "Almost a lifer" shelf, a year calendar heatmap, "compared to usual" baselines, rare
 visitors, a diversity trend, and a `weather.js` correlation join.
 
-**Verified:** `node --check`; SunCalc + `hourBand` sanity-checked in node. Front-end
-only — no birdstation change in this batch.
+**Verified:** `node --check`; SunCalc + the hour classification sanity-checked in node.
+Front-end only — no birdstation change in this batch.
+
+**Follow-up (same day): gradient, not blocks.** The first cut tinted each hour *column*
+behind the bars (`obs-an-hbar-{night,dawn,dusk,day}` classes); on screen that read as
+gappy, muddy boxes (the 3px inter-column gaps + low-alpha gold smears). Replaced with a
+**single continuous `linear-gradient`** drawn behind all the columns (`.obs-an-hours-bg`,
+built by `sunGradient()` from the same sunrise/sunset) — night → gold dawn glow → clear day
+→ warm dusk → night, smooth. The container is now `position:relative; overflow:hidden` and
+the bars sit above the gradient via z-index. Stops verified monotonic for summer + winter.
+`?v=obs22`/`obs17`.
 
 ---
 
