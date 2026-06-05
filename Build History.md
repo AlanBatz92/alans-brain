@@ -43,7 +43,10 @@ Reworked the daily brief into a **twice-daily** one (morning + evening), moved i
 off Sonnet onto **Haiku 4.5** for cost, and changed the window so each brief is
 genuinely fresh rather than a re-tread of the last.
 
-**Model: `claude-sonnet-4-6` → `claude-haiku-4-5`** (keeps adaptive thinking).
+**Model: `claude-sonnet-4-6` → `claude-haiku-4-5`** with **extended thinking**
+(`{"type":"enabled","budget_tokens":4000}` — Haiku rejects `"adaptive"` thinking
+with a 400, so we use the explicit-budget form; the digest auto-falls-back to no
+thinking if a model rejects thinking entirely).
 Sonnet wasn't necessary now that the brief is *grounded* (it reads real article
 excerpts + a hard anti-invention prompt, added 2026-06-04) — grounding drives
 correctness far more than model size. Haiku 4.5 handles the synthesis +

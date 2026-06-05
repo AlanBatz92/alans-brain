@@ -22,13 +22,17 @@ import anthropic
 from pydantic import BaseModel, Field
 
 DB_PATH = os.path.expanduser("~/birdnet.db")
-MODEL = "claude-haiku-4-5"        # Haiku + adaptive thinking — far cheaper than
-                                  # Sonnet, and grounded enough now to handle the
-                                  # synthesis (see the GROUNDING rule below).
+MODEL = "claude-haiku-4-5"        # Haiku + extended thinking (see THINKING) — far
+                                  # cheaper than Sonnet, and grounded enough now to
+                                  # handle the synthesis (see the GROUNDING rule).
 MAX_LOOKBACK_HOURS = 24           # floor on the "since last brief" window so a
                                   # first run / outage gap can't pull a huge backlog
 MAX_ITEMS = 150
 MIN_ITEMS = 3                     # skip a brief with too little to synthesize
+
+# Haiku 4.5 supports extended ("enabled") thinking but NOT "adaptive" thinking
+# (which 400s). budget_tokens is the thinking allowance; max_tokens must exceed it.
+THINKING = {"type": "enabled", "budget_tokens": 4000}
 
 # Eastern time — the brief's slot (morning/evening) and its date are local, and
 # the box stores naive-UTC timestamps. zoneinfo when available (the box has tzdata);
@@ -45,11 +49,11 @@ except Exception:  # pragma: no cover
 TRANSIENT_API_ERRORS = (anthropic.APIError,)
 
 SYSTEM_PROMPT = (
-    "You are the morning editor for a Lehigh Valley (Allentown, Bethlehem, "
-    "Easton, PA) news brief. You are given the past day's headlines, each with "
-    "an id, a category, a one-sentence summary, and an excerpt from the article "
-    "(may be empty). Write a concise morning brief:\n"
-    "- headline: a single line capturing the day's overall tenor.\n"
+    "You are the editor for a Lehigh Valley (Allentown, Bethlehem, "
+    "Easton, PA) news brief. You are given the latest headlines (everything since "
+    "the previous brief), each with an id, a category, a one-sentence summary, and "
+    "an excerpt from the article (may be empty). Write a concise brief:\n"
+    "- headline: a single line capturing the overall tenor.\n"
     "- sections: 3 to 6 thematic sections. Each has a short heading and a 2-4 "
     "sentence body that SYNTHESIZES the related items (connect them, note what "
     "matters) rather than just listing them.\n"
@@ -78,6 +82,22 @@ class DigestSection(BaseModel):
 class Digest(BaseModel):
     headline: str
     sections: list[DigestSection]
+
+
+def generate(client, payload, use_thinking):
+    """One digest call. `use_thinking` toggles extended thinking so the caller can
+    retry without it on a model that rejects thinking entirely."""
+    kwargs = dict(
+        model=MODEL,
+        max_tokens=16000,   # headroom for thinking + the citations output
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user",
+                   "content": "Here are the latest items since the previous brief:\n" + payload}],
+        output_format=Digest,
+    )
+    if use_thinking:
+        kwargs["thinking"] = THINKING
+    return client.messages.parse(**kwargs)
 
 
 def get_db():
@@ -164,15 +184,15 @@ def main():
 
     client = anthropic.Anthropic()
     try:
-        message = client.messages.parse(
-            model=MODEL,
-            max_tokens=16000,   # headroom for adaptive thinking + the citations output
-            thinking={"type": "adaptive"},
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user",
-                       "content": "Here are the past day's items:\n" + payload}],
-            output_format=Digest,
-        )
+        try:
+            message = generate(client, payload, use_thinking=True)
+        except anthropic.BadRequestError as ex:
+            # If the model rejects thinking (e.g. an unsupported thinking type),
+            # fall back to no thinking so a brief still gets written.
+            if "thinking" not in str(ex).lower():
+                raise
+            print(f"digest: thinking unsupported on {MODEL}, retrying without it")
+            message = generate(client, payload, use_thinking=False)
     except TRANSIENT_API_ERRORS as ex:
         conn.close()
         print(f"digest: API unavailable, retrying next run ({ex})")
