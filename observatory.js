@@ -495,6 +495,61 @@ function nbCount(n, singular, plural) {
   return n.toLocaleString() + '\u00A0' + (n === 1 ? singular : (plural || singular + 's'));
 }
 
+/* \u2500\u2500 Dawn-chorus shading \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   The hour-chart caption talks about "the dawn chorus and the quiet hours"; this
+   shades the 24 columns by Emmaus' real day/night cycle so you can *see* it. Sun
+   times come from a trimmed SunCalc (Vladimir Agafonkin, MIT \u2014 pure vanilla, no
+   deps), computed for the selected period's midpoint date and read in Eastern. */
+const OBS_LAT = 40.5409;   // Emmaus, PA
+const OBS_LON = -75.4976;
+
+// Sunrise/sunset for a date+location \u2192 { sunrise: Date, sunset: Date } (UTC
+// epoch), or null when the sun never crosses the horizon (polar day/night).
+function sunTimes(date, lat, lng) {
+  const rad = Math.PI / 180, dayMs = 86400000, J1970 = 2440588, J2000 = 2451545;
+  const e = rad * 23.4397, J0 = 0.0009;
+  const toDays = (d) => d.valueOf() / dayMs - 0.5 + J1970 - J2000;
+  const fromJulian = (j) => new Date((j + 0.5 - J1970) * dayMs);
+  const lw = rad * -lng, phi = rad * lat, d = toDays(date);
+  const n  = Math.round(d - J0 - lw / (2 * Math.PI));
+  const ds = J0 + lw / (2 * Math.PI) + n;
+  const M  = rad * (357.5291 + 0.98560028 * ds);
+  const L  = M + rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M)) +
+             rad * 102.9372 + Math.PI;
+  const dec = Math.asin(Math.sin(e) * Math.sin(L));
+  const Jnoon = J2000 + ds + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
+  const h0 = -0.833 * rad;   // standard sunrise/sunset altitude (refraction + disc)
+  const cosw = (Math.sin(h0) - Math.sin(phi) * Math.sin(dec)) / (Math.cos(phi) * Math.cos(dec));
+  if (cosw < -1 || cosw > 1) return null;
+  const w = Math.acos(cosw);
+  const aTransit = J0 + (w + lw) / (2 * Math.PI) + n;
+  const Jset  = J2000 + aTransit + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
+  const Jrise = Jnoon - (Jset - Jnoon);
+  return { sunrise: fromJulian(Jrise), sunset: fromJulian(Jset) };
+}
+
+// A UTC Date \u2192 its Eastern wall-clock time as a decimal hour (e.g. 5.55 = 5:33 AM),
+// so sun times line up with the chart's Eastern hour buckets. null if invalid.
+function easternDecimalHour(date) {
+  if (!date || isNaN(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: OBS_TZ, hour: 'numeric', minute: 'numeric', hour12: false,
+  }).formatToParts(date);
+  const get = (t) => Number(parts.find((p) => p.type === t).value);
+  return (get('hour') % 24) + get('minute') / 60;
+}
+
+// Classify an hour column (0\u201323) against sunrise/sunset (Eastern decimal hours):
+// pre-dawn night \u2192 dawn band (sunrise..+1.5h, the chorus window) \u2192 day \u2192 dusk \u2192 night.
+function hourBand(h, sr, ss) {
+  const c = h + 0.5;
+  if (c < sr - 0.5) return 'night';
+  if (c <= sr + 1.5) return 'dawn';
+  if (c >= ss + 0.5) return 'night';
+  if (c >= ss - 0.5) return 'dusk';
+  return 'day';
+}
+
 /* Custom hover tooltip for the analytics charts. Native `title` is slow (≈1s
    delay), unstyled, and never fires on touch; this instant, themed bubble reads
    each element's `data-tip` text and tracks the cursor. All the figures it shows
@@ -560,19 +615,31 @@ function renderAnStats(a) {
   ]);
 }
 
-// Hour-of-day activity — 24 vertical bars, the busiest hour highlighted.
+// Hour-of-day activity — 24 vertical bars, the busiest hour highlighted, columns
+// shaded by Emmaus' day/night cycle (dawn-chorus window picked out in warm gold).
 function renderHourChart(byHour) {
   const el = document.getElementById('obs-an-hours');
+  const sunEl = document.getElementById('obs-an-suninfo');
   if (!el) return;
   const max = byHour.reduce((m, n) => Math.max(m, n), 0);
-  if (!max) { setMsg(el, 'obs-empty', 'No detections in this period.'); return; }
+  if (!max) {
+    setMsg(el, 'obs-empty', 'No detections in this period.');
+    if (sunEl) sunEl.innerHTML = '';
+    return;
+  }
+  // Sun times for the period midpoint (Eastern). Absent/invalid → no shading.
+  const sun = state.an.sun;
+  const sr  = sun ? easternDecimalHour(sun.sunrise) : null;
+  const ss  = sun ? easternDecimalHour(sun.sunset)  : null;
+  const shade = sr != null && ss != null;
   const busiest = byHour.indexOf(max);
   let html = '';
   for (let h = 0; h < 24; h++) {
     const n = byHour[h];
     const pct = Math.round((n / max) * 100);
     const tip = hourLabel(h, true) + ' — ' + nbCount(n, 'detection');
-    html += '<div class="obs-an-hbar-wrap" data-tip="' + escapeAttr(tip) + '">' +
+    const band = shade ? ' obs-an-hbar-' + hourBand(h, sr, ss) : '';
+    html += '<div class="obs-an-hbar-wrap' + band + '" data-tip="' + escapeAttr(tip) + '">' +
         '<div class="obs-an-hbar-track">' +
           '<div class="obs-an-hbar' + (h === busiest ? ' obs-an-hbar-peak' : '') +
             '" style="height:' + pct + '%"></div>' +
@@ -581,6 +648,12 @@ function renderHourChart(byHour) {
       '</div>';
   }
   el.innerHTML = html;
+  if (sunEl) {
+    sunEl.innerHTML = shade
+      ? '<span class="obs-an-suninfo-item">🌅 ' + escapeHtml(clockTime(sun.sunrise.getTime())) + '</span>' +
+        '<span class="obs-an-suninfo-item">🌇 ' + escapeHtml(clockTime(sun.sunset.getTime())) + '</span>'
+      : '';
+  }
 }
 
 // Species × hour heatmap — each row self-normalized to its own busiest hour, so
@@ -684,6 +757,10 @@ async function loadAnalytics(period) {
   const { start, end, label } = periodDates(period);
   state.an.period = period;
   state.an.label  = label;
+  // Sun times for the period's midpoint date, used to shade the hour chart. For
+  // multi-day periods this is representative (the chart aggregates all the days).
+  const midMs = (parseTime(start) + parseTime(end)) / 2;
+  state.an.sun = isNaN(midMs) ? null : sunTimes(new Date(midMs), OBS_LAT, OBS_LON);
 
   // Reflect the active period button
   document.querySelectorAll('#obs-an-periods .obs-period-tab').forEach((t) => {

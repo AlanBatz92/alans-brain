@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs15">
+  <link rel="stylesheet" href="style.css?v=obs16">
 </head>
 <body>
 
@@ -146,8 +146,10 @@
       </div>
 
       <h2 class="obs-heading">When the birds sing <span class="obs-heading-count">by hour of day</span></h2>
-      <p class="obs-an-caption">The daily rhythm of the backyard — the dawn chorus and the quiet hours.</p>
+      <p class="obs-an-caption">The daily rhythm of the backyard — the dawn chorus and the quiet hours.
+        Columns are shaded by Emmaus' day/night cycle (dawn picked out in gold).</p>
       <div class="obs-an-hours" id="obs-an-hours"></div>
+      <div class="obs-an-suninfo" id="obs-an-suninfo"></div>
 
       <h2 class="obs-heading">Who sings when <span class="obs-heading-count">top species × hour</span></h2>
       <p class="obs-an-caption">Each row is shaded by that species' own busiest hour, so you can see its
@@ -194,7 +196,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs20"></script>
+  <script src="observatory.js?v=obs21"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');

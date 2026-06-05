@@ -105,8 +105,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs20` +
-  `style.css?v=obs15` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs21` +
+  `style.css?v=obs16` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -191,7 +191,15 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Tooltip wrapping (2026-06-05):** the `.obs-an-tip` figures use a `nbCount()` helper
   that glues the count to its unit with a non-breaking space ("188 detections"), so a
   wrapping tooltip never strands the number on its own line.
-- Assets: `style.css?v=obs15`, `observatory.js?v=obs20`, `bird-info.js?v=obs6`.
+- **Dawn-chorus shading (2026-06-05):** the "When the birds sing" hour chart tints its 24
+  columns by Emmaus' day/night cycle — night a soft dark wash, the **dawn window in gold**,
+  daytime clear — with a 🌅/🌇 sunrise/sunset line (`#obs-an-suninfo`) below it. Sun times are
+  computed client-side by a trimmed SunCalc (`sunTimes()`, `OBS_LAT`/`OBS_LON`) for the
+  period's midpoint date, read in Eastern (`easternDecimalHour()`), and each column is
+  classed `obs-an-hbar-{night,dawn,dusk,day}` via `hourBand()`. Pure vanilla, no deps;
+  degrades to no shading if sun times are unavailable. Birds-only (the train-analytics toggle
+  will skip it — see `PLAN-train-analytics.md`).
+- Assets: `style.css?v=obs16`, `observatory.js?v=obs21`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 
@@ -247,6 +255,8 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 
 - `PLAN-pulse.md` — original Pulse design + phases.
 - `PLAN-ingestion.md` — **Phase 4 plan** (next up): generalize ingestion beyond RSS (pluggable adapters for **api**/scrape/email/manual, AI-as-parser for scrape, a separate `events` store + "What's On" surface, a paste-to-capture tool). Decisions settled: separate events store; paste-first email; **first event source is Archer Music Hall via an `api` adapter (Ticketmaster Discovery API)** — every HTML source (official site + Bandsintown/JamBase/Concertfix/SeatGeek) 403s a server fetch (tested 2026-06-04), so prefer APIs and verify fetchability before assuming a page is scrapable. Needs a free `TICKETMASTER_API_KEY` in `/etc/birdstation.env`.
+- `PLAN-train-analytics.md` — **designed, not started** (2026-06-05): a `Birds | Trains` toggle on the Analytics tab. Reuses the stat cards / hour chart / per-day chart; adds a day-of-week×hour heatmap, duration/loudness histograms, and a headway card; backed by a new approved-only `GET /api/trains/analytics`. **Gated on vetted train data** (ties to `PLAN-train-vetting.md`); the front-end scaffold can land first.
+- `PLAN-train-vetting.md` — train privacy gate + CLI review + purge (shipped); web review UI + detection-tuning loop are future.
 - `PLAN-spotify-setlist-tools.md`, `Spotify Setlist Tools Implementation.md`, `Task Tracker Write-Back Implementation.md` — design/implementation records for those features.
 
 ## Tech Stack page (`techstack.html`)

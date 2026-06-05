@@ -10,6 +10,45 @@
 
 ---
 
+## 2026-06-05 — Observatory: dawn-chorus shading + train-analytics design
+
+A quick-win visual plus the design groundwork for train analytics (assets
+`?v=obs21` / `style.css?v=obs16`).
+
+**Dawn-chorus shading.** The "When the birds sing" hour chart's caption already
+talked about "the dawn chorus and the quiet hours" — now the chart *draws* it. The
+24 hour-columns are tinted by Emmaus' real day/night cycle: night a soft dark wash,
+the **dawn window (sunrise → ~90 min after) picked out in gold**, dusk a faint warm
+tint, daytime clear. A 🌅/🌇 sunrise/sunset line sits under the chart
+(`#obs-an-suninfo`). Sun times come from a **trimmed SunCalc** (`sunTimes()`,
+Agafonkin/MIT — pure vanilla, no deps) computed for the selected period's **midpoint
+date** (representative for multi-day ranges), converted to Eastern decimal hours
+(`easternDecimalHour()`), and each column is classed `obs-an-hbar-{night,dawn,dusk,day}`
+by `hourBand()`. Verified the math against real Emmaus times (Jun 5: sunrise 5:33a /
+sunset 8:30p; winter solstice 7:23a / 4:39p). Degrades to no shading if sun times are
+unavailable. Birds-only — the future train toggle will skip it.
+
+**Train-analytics design (`PLAN-train-analytics.md`).** Wrote the full design for a
+`Birds | Trains` toggle on the Analytics tab: reuse the stat cards / hour chart /
+per-day chart, swap in a **day-of-week × hour heatmap**, **duration & loudness
+histograms**, and a **headway** ("typical wait between passes") card; backed by a new
+**approved-only** `GET /api/trains/analytics` that mirrors `/api/analytics`' Eastern
+bucketing (with a note that train `detected_at` carries an offset, unlike the naive-UTC
+bird rows, so the bucketing differs). Gated on the detector producing **vetted** events;
+the front-end scaffold (toggle + empty state) can land ahead of data. Build order +
+endpoint shape are in the doc.
+
+**Roadmap re-prioritization.** Folded the 2026-06-05 brainstorm into the Observatory
+ideas backlog (§3a train analytics, §3b the rest), tagging each idea **[new]** vs.
+**[tracked]** so a future session can pick up cleanly. Standout **[new]** ideas: an
+"Almost a lifer" shelf, a year calendar heatmap, "compared to usual" baselines, rare
+visitors, a diversity trend, and a `weather.js` correlation join.
+
+**Verified:** `node --check`; SunCalc + `hourBand` sanity-checked in node. Front-end
+only — no birdstation change in this batch.
+
+---
+
 ## 2026-06-05 — Observatory: life list → popout + tooltip wrap fix
 
 Two front-end follow-ups (assets `?v=obs20` / `style.css?v=obs15`):

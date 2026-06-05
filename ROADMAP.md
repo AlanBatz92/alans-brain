@@ -60,16 +60,46 @@ events → schedule prior → acoustic fingerprint (details in the plan).
   Also watch whether the season filter ever hides a real off-season vagrant.
 - **Later:** per-species thresholds (some calls are easier to ID than others).
 
-### 3b. Analytics — follow-ups (shipped the tab 2026-06-04)
-Ideas building on the new Analytics tab / `GET /api/analytics`:
-- **Bird-card by-hour sparkline** (the ▶ Next #1 "step 4" detail view) — the per-species
-  hourly data already exists; surface a small Eastern-bucketed chart on the card itself.
-  (Note: `/api/species/{name}`'s `by_hour` is currently **UTC**-bucketed and unused; switch
-  it to Eastern, like `/api/analytics`, when the card chart is built.)
-- **Seasonal / first-arrival** view (when each species shows up across the year), a
-  **new-species-over-time** life-list growth curve, and a **confidence-distribution**
-  histogram (ties into the calibration work).
-- Day-of-week or weather correlations (later; weather would need a data join).
+### 3a. Train analytics — `Birds | Trains` toggle on the Analytics tab  (design: `PLAN-train-analytics.md`)
+**New (2026-06-05).** Add a `Birds | Trains` toggle to the Analytics tab that swaps the
+dataset and re-renders — reusing the stat cards, hour chart, and per-day chart, swapping
+in a **day-of-week × hour heatmap**, **duration/loudness histograms**, and a **headway**
+("typical wait between passes") card. Backed by a new approved-only
+`GET /api/trains/analytics` (mirrors `/api/analytics`' Eastern bucketing). **Gated on train
+data:** the detector must be producing **vetted** events first (ties to ▶ Next #3 / the
+`PLAN-train-vetting.md` review loop). Front-end scaffold (the toggle + empty state) can land
+ahead of the data. Full build order + endpoint shape in `PLAN-train-analytics.md`.
+
+### 3b. Observatory ideas backlog — re-prioritized 2026-06-05
+Building on the Analytics tab / `GET /api/analytics` / bird cards. Tags: **[new]** = added
+from the 2026-06-05 brainstorm, **[tracked]** = already on the list before then.
+
+Highest-value, low-effort (do next):
+- **[tracked] Bird-card detail view (step 4)** — larger photo + full extract + confidence
+  sparkline + by-hour histogram. The per-species hourly data already exists. (Note:
+  `/api/species/{name}`'s `by_hour` is **UTC**-bucketed and unused; switch it to Eastern,
+  like `/api/analytics`, when the card chart is built.) This is also ▶ Next #1's remaining step.
+- **[new] "Almost a lifer" shelf** — species heard at 85%+ but not yet qualified ("2 of 3
+  hits in 24h"). Turns the life-list rule into a progress game; `/api/species` already
+  returns `hits_24h` / `on_life_list`.
+- **[new] Year calendar heatmap** — GitHub-style 7×53 grid of detections/day; pairs with the
+  **All** period to show seasonality at a glance. Reuses the heatmap cell styling.
+
+Bigger / more data or math:
+- **[tracked] Seasonal / first-arrival** view (when each species shows up across the year) +
+  **[tracked] life-list growth curve** (cumulative new species over time).
+- **[tracked] Confidence-distribution histogram** (ties into the calibration work).
+- **[new] "Compared to usual"** — on Today, show each stat vs. its trailing baseline
+  ("23 species today · typically ~18"). Needs a baseline computation.
+- **[new] Rare visitors** — rank species by how seldom they're detected here; surface the
+  uncommon ones. Derivable from all-time counts.
+- **[new] Diversity trend** — a Shannon-diversity number per day ("how varied was the chorus")
+  trending over time. Niche, on-brand.
+- **[new/tracked] Weather correlation** — join detection volume against `weather.js` data
+  (temp/wind/precip). The most *uniquely yours* idea (stitches two of your own systems); was
+  loosely tracked as "weather correlations (later)", now spelled out. Needs a weather-history join.
+
+✓ **Done from this backlog:** dawn-chorus shading on the hour chart (2026-06-05, below).
 
 ### 4. Pulse ingestion — Phase 4 (full design in `PLAN-ingestion.md`)  **▶ first source decided**
 Generalize ingestion beyond RSS: pluggable adapters (**api**/scrape/email/manual), a
@@ -113,6 +143,14 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-05** — Observatory Analytics: **dawn-chorus shading** on the "When the birds
+  sing" hour chart. The 24 columns are tinted by Emmaus' real day/night cycle (computed
+  client-side via a trimmed SunCalc for the period's midpoint date, read in Eastern) — night
+  a soft dark wash, the **dawn window picked out in gold**, daytime clear — with a 🌅/🌇
+  sunrise/sunset line under the chart. Literally draws the caption's "dawn chorus and the
+  quiet hours". Pure vanilla, no deps. `?v=obs21`/`obs16`. Also wrote `PLAN-train-analytics.md`
+  (the `Birds | Trains` toggle design) and re-prioritized the Observatory ideas backlog (§3a/§3b).
 
 - **2026-06-05** — Observatory: **life list moved to a popout** (modal reusing the bird-card
   shell — bottom sheet on mobile, centered on desktop; sticky header with sort + "100% only";
