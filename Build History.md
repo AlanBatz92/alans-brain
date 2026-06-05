@@ -10,6 +10,40 @@
 
 ---
 
+## 2026-06-05 — Pulse: API outages no longer poison the enrich backlog
+
+Deploying the grounding work surfaced a latent pipeline flaw. The box's Anthropic
+account had run out of credits, so every `pulse-enrich` run 400'd
+("credit balance is too low") — and the old code **bumped `enrich_attempts` on
+the whole batch for any exception**. Since the fetch query skips items at
+`enrich_attempts >= MAX_ATTEMPTS` (3), a few hours of outage permanently excluded
+the items it touched: they'd never enrich even after credits returned (the logs
+showed "bumped 11/12 attempts" per failed run). An infrastructure failure was
+silently burning a budget meant for genuinely-unprocessable items.
+
+**Fix — only burn the retry budget on a real per-item miss.**
+- `pulse_enrich.py` — batch-level API/account/network failures (`anthropic.APIError`,
+  the base for all status + connection errors: billing 400, auth 401, 429, 5xx,
+  timeouts) now **roll back without bumping** and exit non-zero cleanly (no
+  traceback); the next timer run retries the same items as-is. The *only* place
+  `enrich_attempts` increments now is the existing path where a **successful** call
+  returns a response that omits an item — the genuine "can't enrich this one" signal.
+- `pulse_digest.py` — same `anthropic.APIError` guard around the digest call, so an
+  outage logs one line and retries next run instead of crashing with a traceback
+  (the digest has no per-item counter, so nothing was poisoned there — this is just
+  cleaner failure behavior).
+
+**Operational note (one-time):** items already capped by the outage need their
+counter reset so they re-enrich once credits are restored:
+`sqlite3 ~/birdnet.db "UPDATE feed_items SET enrich_attempts = 0 WHERE enriched_at IS NULL;"`.
+Going forward this is self-healing — no manual reset after an API hiccup.
+
+**Verified:** `py_compile` on both scripts. (Couldn't exercise against the live
+API from this environment; the failure path is exercised naturally by the billing
+outage on the box — re-run `pulse-enrich` after adding credits + the reset above.)
+
+---
+
 ## 2026-06-04 — Pulse: collapse brief sources, anti-hallucination grounding, + Archer source plan
 
 Three threads of Pulse work: a small front-end tidy, a real fix for the digest's

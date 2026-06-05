@@ -19,6 +19,14 @@ MODEL = "claude-haiku-4-5"
 BATCH_SIZE = 20
 MAX_ATTEMPTS = 3
 
+# Failures that mean the API / account / network is unavailable — NOT that an
+# item is unprocessable. On these we must not bump enrich_attempts, or an outage
+# (e.g. an empty credit balance, a rate-limit spell, a network blip) would burn
+# every touched item's retry budget and exclude it from enrichment for good.
+# `anthropic.APIError` is the base for all API-layer errors (status + connection).
+# Only a *successful* call that omits an item bumps that item (the genuine valve).
+TRANSIENT_API_ERRORS = (anthropic.APIError,)
+
 CATEGORIES = [
     "Government & Politics", "Public Safety & Crime", "Business & Economy",
     "Education", "Health", "Weather & Environment", "Transportation",
@@ -109,21 +117,25 @@ def main():
     client = anthropic.Anthropic()  # ANTHROPIC_API_KEY from env
     try:
         result = enrich(client, batch)
-    except Exception as ex:
-        conn.executemany(
-            "UPDATE feed_items SET enrich_attempts = enrich_attempts + 1 WHERE rowid = ?",
-            [(it["id"],) for it in batch],
-        )
-        conn.commit()
+    except TRANSIENT_API_ERRORS as ex:
+        # API/account/network failure — leave the items un-enriched and DON'T bump
+        # their attempt counters. The next timer run retries them as-is. Exit
+        # non-zero (cleanly, no traceback) so the failure is still visible.
+        conn.rollback()
         conn.close()
-        print(f"enrich: batch failed ({ex}); bumped {len(batch)} attempts")
-        raise
+        print(f"enrich: API unavailable, retrying next run ({ex}); "
+              f"{len(batch)} items left un-enriched (attempts NOT bumped)")
+        raise SystemExit(1)
 
     by_id = {e.id: e for e in result.items}
     ok = 0
     for it in batch:
         e = by_id.get(it["id"])
         if e is None:
+            # The call succeeded but the model omitted this item — the only
+            # genuine "this item couldn't be enriched" signal, so it's the only
+            # place we burn the retry budget. After MAX_ATTEMPTS such misses the
+            # fetch query stops selecting it.
             conn.execute(
                 "UPDATE feed_items SET enrich_attempts = enrich_attempts + 1 WHERE rowid = ?",
                 (it["id"],),

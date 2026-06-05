@@ -114,6 +114,14 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-05** — Pulse pipeline resilience: an API outage (the box ran out of
+  Anthropic credits) revealed that `pulse-enrich` bumped `enrich_attempts` on *any*
+  batch exception, so an outage permanently excluded the items it touched (capped at
+  `>=3`). Now only a genuine per-item miss (a successful call that omits an item)
+  burns the budget; API/account/network failures (`anthropic.APIError`) retry next
+  run without bumping. Digest got the same clean-retry guard. Self-healing — no more
+  manual counter resets after an API hiccup.
+
 - **2026-06-04** — Pulse: brief **`Sources:` lines collapsed by default** (native
   `<details>`, matching the Citations toggle) + **hallucination grounding** — the
   fetcher now keeps the fullest article text (`content:encoded`, cap 500→2000), the

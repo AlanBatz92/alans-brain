@@ -24,6 +24,11 @@ MODEL = "claude-sonnet-4-6"
 WINDOW_HOURS = 24
 MAX_ITEMS = 150
 
+# API/account/network failures (incl. an empty credit balance, rate limits, 5xx,
+# network blips). On these the digest just retries next run rather than crashing
+# with a traceback. `anthropic.APIError` is the base for all API-layer errors.
+TRANSIENT_API_ERRORS = (anthropic.APIError,)
+
 SYSTEM_PROMPT = (
     "You are the morning editor for a Lehigh Valley (Allentown, Bethlehem, "
     "Easton, PA) news brief. You are given the past day's headlines, each with "
@@ -95,15 +100,20 @@ def main():
     )
 
     client = anthropic.Anthropic()
-    message = client.messages.parse(
-        model=MODEL,
-        max_tokens=16000,   # headroom for adaptive thinking + the citations output
-        thinking={"type": "adaptive"},
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user",
-                   "content": "Here are the past day's items:\n" + payload}],
-        output_format=Digest,
-    )
+    try:
+        message = client.messages.parse(
+            model=MODEL,
+            max_tokens=16000,   # headroom for adaptive thinking + the citations output
+            thinking={"type": "adaptive"},
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user",
+                       "content": "Here are the past day's items:\n" + payload}],
+            output_format=Digest,
+        )
+    except TRANSIENT_API_ERRORS as ex:
+        conn.close()
+        print(f"digest: API unavailable, retrying next run ({ex})")
+        raise SystemExit(1)
     digest = message.parsed_output
     if digest is None:
         raise RuntimeError(
