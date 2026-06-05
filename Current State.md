@@ -29,7 +29,7 @@ a Google Sheet, and a home server called **birdstation**).
 | Photo Gallery | `photos.html` | Masonry grid |
 | Paranormal | `paranormal.html` | Curated media grid |
 | Pride & Identity | `transart.html` | Tabbed: art, polyamory, resources |
-| Personal Projects | `projects.html` | Hub for the Spotify/setlist tool |
+| Personal Projects | `projects.html` | Hub for the home-built projects — cards link to Pulse, Observatory, and Setlist to Spotify |
 | Setlist to Spotify | `setlist-spotify.html` / `setlist-spotify.js` | Setlists → Spotify playlist |
 | My Week | `weather.html` / `weather.js` | Weather outlook + running/drone scoring |
 | Household Task Tracker | `tasks.html` / `tasks.js` | Passphrase-gated, reads/writes a Google Sheet |

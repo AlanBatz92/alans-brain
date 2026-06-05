@@ -10,6 +10,20 @@
 
 ---
 
+## 2026-06-05 — Personal Projects page: add the Observatory card
+
+Small navigation fix: `projects.html` (the "things I've built" hub) only listed
+Pulse and Setlist to Spotify — the Observatory was reachable from the home Explore
+grid and the site-wide nav, but not from the project hub. Added an **Observatory
+project card** (`card-teal`, 🔭) between Pulse and Setlist, mirroring the home
+page's Pulse → Observatory ordering and grouping the two birdstation-powered
+projects. Matches the page's existing `.project-card` format (emoji / title /
+`card-desc` / two `card-tag`s — "BirdNET", "Raspberry Pi"). Pure static HTML,
+consistent with the home card's colour/emoji. Verified: 3 project cards,
+balanced `<a>` tags. `Current State.md` Pages table updated.
+
+---
+
 ## 2026-06-05 — Observatory: "Almost a lifer" shelf (life-list progress game)
 
 A front-end-only delight feature (assets `?v=obs23` / `style.css?v=obs18`) that turns the
