@@ -489,6 +489,12 @@ function ymdLabel(ymd) {
   return new Date(y, m - 1, d, 12).toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
+// Glue a count to its unit with a non-breaking space ("188 detections"), so a
+// wrapping tooltip never strands the number on its own line away from "detections".
+function nbCount(n, singular, plural) {
+  return n.toLocaleString() + '\u00A0' + (n === 1 ? singular : (plural || singular + 's'));
+}
+
 /* Custom hover tooltip for the analytics charts. Native `title` is slow (≈1s
    delay), unstyled, and never fires on touch; this instant, themed bubble reads
    each element's `data-tip` text and tracks the cursor. All the figures it shows
@@ -565,7 +571,7 @@ function renderHourChart(byHour) {
   for (let h = 0; h < 24; h++) {
     const n = byHour[h];
     const pct = Math.round((n / max) * 100);
-    const tip = hourLabel(h, true) + ' — ' + n.toLocaleString() + ' detection' + (n === 1 ? '' : 's');
+    const tip = hourLabel(h, true) + ' — ' + nbCount(n, 'detection');
     html += '<div class="obs-an-hbar-wrap" data-tip="' + escapeAttr(tip) + '">' +
         '<div class="obs-an-hbar-track">' +
           '<div class="obs-an-hbar' + (h === busiest ? ' obs-an-hbar-peak' : '') +
@@ -600,7 +606,7 @@ function renderHeatmap(speciesHours) {
       const n = s.hours[h];
       const alpha = n ? (0.14 + 0.86 * (n / max)) : 0;
       const tip = escapeAttr(s.common_name + ' · ' + hourLabel(h, true) + ' — ' +
-        n + ' detection' + (n === 1 ? '' : 's'));
+        nbCount(n, 'detection'));
       cells += '<div class="obs-an-hm-cell" data-tip="' + tip + '"' +
         (alpha ? ' style="background:rgba(45,212,191,' + alpha.toFixed(3) + ')"' : '') +
         '></div>';
@@ -661,8 +667,8 @@ function renderDaily(byDay) {
   const max = byDay.reduce((m, d) => Math.max(m, d.count), 0) || 1;
   const bars = byDay.map((d) => {
     const pct = Math.round((d.count / max) * 100);
-    const tip = escapeAttr(ymdLabel(d.date) + ' — ' + d.count.toLocaleString() +
-      ' detection' + (d.count === 1 ? '' : 's') + ', ' + d.species + ' species');
+    const tip = escapeAttr(ymdLabel(d.date) + ' — ' +
+      nbCount(d.count, 'detection') + ', ' + nbCount(d.species, 'species', 'species'));
     return '<div class="obs-an-dbar-wrap" data-tip="' + tip + '">' +
         '<div class="obs-an-dbar-track"><div class="obs-an-dbar" style="height:' + pct + '%"></div></div>' +
       '</div>';

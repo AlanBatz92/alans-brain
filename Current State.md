@@ -105,7 +105,7 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs18` +
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs19` +
   `style.css?v=obs14` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
@@ -179,7 +179,10 @@ train data a home. ID/class prefix: **`obs-`**.
   lifers whose best-ever confidence reads as 100% (≥ `PERFECT_CONFIDENCE` 0.995). Driven by a
   new `best_confidence` field on `/api/lifetime` (unfloored `MAX(confidence)` per species);
   `renderLife()` now owns the life-list count so it follows the filter.
-- Assets: `style.css?v=obs14`, `observatory.js?v=obs18`, `bird-info.js?v=obs6`.
+- **Tooltip wrapping (2026-06-05):** the `.obs-an-tip` figures use a `nbCount()` helper
+  that glues the count to its unit with a non-breaking space ("188 detections"), so a
+  wrapping tooltip never strands the number on its own line.
+- Assets: `style.css?v=obs14`, `observatory.js?v=obs19`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 
