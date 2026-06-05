@@ -10,6 +10,50 @@
 
 ---
 
+## 2026-06-05 — Observatory: "Almost a lifer" shelf (life-list progress game)
+
+A front-end-only delight feature (assets `?v=obs23` / `style.css?v=obs18`) that turns the
+life-list qualification rule into a visible progress game.
+
+**What it is.** A shelf on the Birds panel (between the stat cards and the period bar)
+listing species **on the cusp of the life list** — heard at the display floor (≥ 0.85) in
+the **rolling last 24 hours** but not yet listed and short of the 3-hit bar. Each is a card
+with a green **"N of 3"** progress bar, an "M more to go" line, the last-heard time, and a
+tap-through to the bird card. Sorted closest-first (most hits, then most recent). The shelf
+is **self-hiding**: `#obs-almost-section` starts `hidden` and only appears when something is
+actually close — so it reads as a reward, not clutter, and silently disappears if nothing's
+near or the box is offline (it's a bonus surface, no error state).
+
+**Pure front-end — no box change.** It mirrors birdstation's life-list rule client-side:
+- `loadAlmost()` fetches `GET /api/detections/grouped` over a **rolling 24h** window. A new
+  `fmtUtcTsFull()` formats the window bounds as full `YYYY-MM-DD HH:MM:SS` UTC strings
+  (minute/second precision), unlike the hour-floored `fmtUtcTs()` the period selector uses,
+  so the window tracks the box's `datetime('now','-24 hours')` rule closely. `count` from the
+  endpoint = qualifying (≥ 0.85) hits in the window, exactly the life-list numerator.
+- `computeAlmostLifers(groups, life, need, perfectConf)` — a **pure, tested** function —
+  keeps only species with `1 ≤ count < LIFE_LIST_MIN_HITS` (3), drops anything already on the
+  life list (matched by common **or** scientific name, like the box), and drops the ~100%
+  instant-add tier (`best_confidence ≥ PERFECT_CONFIDENCE` 0.995, which would already list).
+- `renderAlmost()` is called from **both** `loadAlmost()` and `loadLife()` (whichever resolves
+  last wins, same cross-section pattern as `renderBirdStats()`), and is **gated on
+  `state.lifeLoaded`** so a species is never briefly shown as "almost" before we know the life
+  list. The shelf is independent of the page's period selector — the rule is always rolling-24h.
+
+New constants `LIFE_LIST_MIN_HITS = 3` / `LIFE_LIST_WINDOW_HOURS = 24` mirror the pipeline.
+The shelf container joins the existing `[data-name]` card delegation, so taps open the bird
+card with no new listener. New `.obs-almost-*` CSS (green left-accent + green progress bar to
+read as a goal-in-progress, distinct from the confidence-coloured species cards).
+
+**Verified:** `node --check`; CSS brace-balanced with all `.obs-almost-*` classes + theme
+vars present; a throwaway DOM-stub harness (25 checks) exercised `computeAlmostLifers`
+(exclusions for listed/≥100%/count≥3/0-hit, common-vs-scientific match, closest-first +
+recency tiebreak), `renderAlmost` (hidden until life loads, count badge, "N of 3" / "M more
+to go" / progress-bar widths, hide-when-empty), the HTML↔JS id cross-check, and the rolling
+window (valid format, exact 24h span, sub-hour precision preserved). Front-end only — ships
+via Vercel; no box deploy needed (it reuses `/api/detections/grouped` + `/api/lifetime`).
+
+---
+
 ## 2026-06-05 — Observatory: dawn-chorus shading + train-analytics design
 
 A quick-win visual plus the design groundwork for train analytics (assets

@@ -4595,6 +4595,84 @@ nav {
 .obs-lifer-count { color: var(--teal); font-weight: 700; }
 .obs-lifer-since { color: var(--text-dim); white-space: nowrap; }
 
+/* ── "Almost a lifer" shelf ──
+   Species on the cusp of the life list (rolling 24h). A green left-accent + green
+   progress bar mark it as a goal-in-progress, distinct from the confidence-coloured
+   species cards; the bar fills to qualifying-hits / required, not to confidence. */
+.obs-almost-caption {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin: -6px 0 10px;
+  line-height: 1.45;
+}
+.obs-almost {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.obs-almost-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  border-radius: 14px;
+  padding: 13px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.obs-almost-card:hover { border-color: var(--teal); border-left-color: var(--green); transform: translateY(-2px); }
+.obs-almost-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.obs-almost-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.02rem;
+  color: var(--text);
+  line-height: 1.15;
+}
+.obs-almost-progress {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--green);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.obs-almost-sci {
+  font-size: 0.76rem;
+  font-style: italic;
+  color: var(--text-dim);
+  margin-top: -3px;
+}
+.obs-almost-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.obs-almost-fill { height: 100%; border-radius: 999px; background: var(--green); }
+.obs-almost-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 1px;
+  font-size: 0.72rem;
+}
+.obs-almost-need { color: var(--text-muted); font-weight: 700; }
+.obs-almost-last {
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
 /* ── Train events ── */
 .obs-train {
   background: var(--surface);

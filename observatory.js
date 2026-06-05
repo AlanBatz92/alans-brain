@@ -51,7 +51,10 @@ const MAX_TRAINS = 30;   // matches the recent-events query limit
 // together, so we stash both and recompute the stat cards as each arrives.
 // `periodLabel` mirrors the selected period for the stat-card labels; the period
 // grid's "latest" species is stashed in `periodLatest` for the Latest card.
-const state = { life: [], periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent', onlyPerfect: false, lifeOnlyPerfect: false,
+const state = { life: [], lifeLoaded: false, periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent', onlyPerfect: false, lifeOnlyPerfect: false,
+  // "Almost a lifer" shelf — rolling-24h grouped species, filtered against the
+  // life list at render time (so it tracks whichever of the two loads last).
+  almost: [],
   // Analytics tab — lazy-loaded on first open, scoped by its own period selector.
   an: { period: 'week', data: null, loaded: false } };
 
@@ -59,6 +62,14 @@ const state = { life: [], periodGroups: [], period: 'today', periodLabel: 'today
 // threshold the box uses to instant-add a lifer. The 100%-only filter keeps
 // species whose best confidence in the period clears this.
 const PERFECT_CONFIDENCE = 0.995;
+
+// Life-list qualification, mirrored from birdstation's birdnet_pipeline: a *new*
+// species joins after LIFE_LIST_MIN_HITS detections at ≥ the display floor (0.85)
+// within a rolling LIFE_LIST_WINDOW_HOURS window, or a single ~100%
+// (≥ PERFECT_CONFIDENCE) hit. The "Almost a lifer" shelf surfaces the species
+// partway there — 1..MIN_HITS-1 qualifying hits, not yet listed.
+const LIFE_LIST_MIN_HITS = 3;
+const LIFE_LIST_WINDOW_HOURS = 24;
 
 /* ── Helpers ── */
 
@@ -201,6 +212,17 @@ function fmtUtcTs(ms) {
   const pad = (n) => String(n).padStart(2, '0');
   return dt.getUTCFullYear() + '-' + pad(dt.getUTCMonth() + 1) + '-' + pad(dt.getUTCDate()) +
          ' ' + pad(dt.getUTCHours()) + ':00:00';
+}
+
+// Like fmtUtcTs but keeps minutes/seconds — a full "YYYY-MM-DD HH:MM:SS" UTC
+// string. The period windows floor to the hour; the rolling-24h "almost a lifer"
+// window needs the exact instant so it tracks the box's life-list rule
+// (datetime('now','-24 hours')) precisely rather than to the nearest hour.
+function fmtUtcTsFull(ms) {
+  const dt = new Date(ms);
+  const pad = (n) => String(n).padStart(2, '0');
+  return dt.getUTCFullYear() + '-' + pad(dt.getUTCMonth() + 1) + '-' + pad(dt.getUTCDate()) +
+         ' ' + pad(dt.getUTCHours()) + ':' + pad(dt.getUTCMinutes()) + ':' + pad(dt.getUTCSeconds());
 }
 
 // Returns {start, end, label} for a period key.
@@ -390,8 +412,93 @@ async function loadLife() {
     return;
   }
   state.life = d.species || [];
+  state.lifeLoaded = true;
   renderBirdStats();
-  renderLife();  // owns the life-list count (reflects the 100%-only filter)
+  renderLife();    // owns the life-list count (reflects the 100%-only filter)
+  renderAlmost();  // the shelf excludes listed species, so refresh it once life is known
+}
+
+/* ── Birds: "Almost a lifer" shelf ──
+   Species heard at the display floor (≥ 0.85) within the rolling life-list window
+   but not yet listed and short of the hit count — i.e. on the cusp. Turns the
+   life-list rule into a progress game. Computed entirely client-side from the
+   grouped endpoint (a rolling-24h window) minus the loaded life list, so it needs
+   no box change. Independent of the period selector — the rule is always rolling-24h. */
+
+// Pure (testable): from the rolling-window grouped species + the life list, return
+// the species on the cusp — not yet listed, heard 1..need-1 times at the display
+// floor in the window, and not a ~100% instant-add — ordered closest-first.
+function computeAlmostLifers(groups, life, need, perfectConf) {
+  const listed = new Set();
+  (life || []).forEach((s) => {
+    if (s.common_name)     listed.add(s.common_name.toLowerCase());
+    if (s.scientific_name) listed.add(s.scientific_name.toLowerCase());
+  });
+  return (groups || []).filter((g) => {
+    const c = g.count || 0;
+    if (c < 1 || c >= need) return false;                          // none, or already qualified
+    if ((g.best_confidence || 0) >= perfectConf) return false;     // a ~100% hit instant-adds
+    if (listed.has((g.common_name || '').toLowerCase())) return false;
+    if (g.scientific_name && listed.has(g.scientific_name.toLowerCase())) return false;
+    return true;
+  }).sort((a, b) =>
+    (b.count - a.count) ||                                          // closest to the goal first
+    ((parseTime(b.last_heard) || 0) - (parseTime(a.last_heard) || 0)));
+}
+
+function renderAlmost() {
+  const section = document.getElementById('obs-almost-section');
+  const el      = document.getElementById('obs-almost');
+  const countEl = document.getElementById('obs-almost-count');
+  if (!section || !el) return;
+  // The shelf hinges on knowing the life list (to exclude listed species). Until
+  // it has loaded, keep the bonus shelf hidden rather than risk showing a lifer.
+  if (!state.lifeLoaded) { section.hidden = true; return; }
+
+  const need = LIFE_LIST_MIN_HITS;
+  const candidates = computeAlmostLifers(state.almost, state.life, need, PERFECT_CONFIDENCE);
+  if (candidates.length === 0) { section.hidden = true; return; }   // bonus shelf — hide when nothing's close
+  section.hidden = false;
+  if (countEl) countEl.textContent = '(' + candidates.length + ')';
+
+  el.innerHTML = candidates.map((g) => {
+    const got    = Math.min(g.count || 0, need);
+    const pct    = Math.round((got / need) * 100);
+    const more   = need - got;
+    const lastMs = parseTime(g.last_heard);
+    return '<div class="obs-almost-card" role="button" tabindex="0"' +
+        ' data-name="' + escapeAttr(g.common_name) + '" data-sci="' + escapeAttr(g.scientific_name || '') + '">' +
+        '<div class="obs-almost-top">' +
+          '<span class="obs-almost-name">' + escapeHtml(g.common_name) + '</span>' +
+          '<span class="obs-almost-progress">' + got + ' of ' + need + '</span>' +
+        '</div>' +
+        (g.scientific_name ? '<div class="obs-almost-sci">' + escapeHtml(g.scientific_name) + '</div>' : '') +
+        '<div class="obs-almost-track"><div class="obs-almost-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="obs-almost-foot">' +
+          '<span class="obs-almost-need">' + more + ' more to go</span>' +
+          (lastMs != null ? '<span class="obs-almost-last">last ' + escapeHtml(clockTime(lastMs)) + '</span>' : '') +
+        '</div>' +
+      '</div>';
+  }).join('');
+}
+
+async function loadAlmost() {
+  const now   = Date.now();
+  const start = fmtUtcTsFull(now - LIFE_LIST_WINDOW_HOURS * 3600 * 1000);
+  const end   = fmtUtcTsFull(now);
+  let data;
+  try {
+    data = await fetchJson(
+      API_BASE + '/api/detections/grouped?start=' + encodeURIComponent(start) +
+      '&end=' + encodeURIComponent(end) + '&min_confidence=' + MIN_CONFIDENCE
+    );
+  } catch (err) {
+    state.almost = [];
+    renderAlmost();  // hides the section (it's a bonus shelf — no error noise if the box is down)
+    return;
+  }
+  state.almost = data.species || [];
+  renderAlmost();
 }
 
 /* ── Trains: stats ── */
@@ -1035,7 +1142,7 @@ function loadAll() {
   // The bird grid + stats for the active period (Today included) all come from
   // loadPeriod now — one consistent Eastern-aligned path. Analytics is only
   // refreshed if it's already been opened (it lazy-loads on first tab open).
-  const refreshes = [loadPeriod(state.period), loadLife(), loadTrainStats(), loadTrains()];
+  const refreshes = [loadPeriod(state.period), loadLife(), loadAlmost(), loadTrainStats(), loadTrains()];
   if (state.an.loaded) refreshes.push(loadAnalytics(state.an.period));
 
   Promise.allSettled(refreshes).then(() => {
@@ -1144,7 +1251,7 @@ function initObservatory() {
     if (e.type === 'keydown') e.preventDefault();
     openBirdCard(card.dataset.name, card.dataset.sci || '');
   }
-  const cardContainers = ['obs-today', 'obs-life', 'obs-an-heatmap', 'obs-an-top'];
+  const cardContainers = ['obs-today', 'obs-life', 'obs-almost', 'obs-an-heatmap', 'obs-an-top'];
   cardContainers.forEach((id) => {
     const c = document.getElementById(id);
     if (c) {

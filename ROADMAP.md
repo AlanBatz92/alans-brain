@@ -79,9 +79,6 @@ Highest-value, low-effort (do next):
   sparkline + by-hour histogram. The per-species hourly data already exists. (Note:
   `/api/species/{name}`'s `by_hour` is **UTC**-bucketed and unused; switch it to Eastern,
   like `/api/analytics`, when the card chart is built.) This is also ▶ Next #1's remaining step.
-- **[new] "Almost a lifer" shelf** — species heard at 85%+ but not yet qualified ("2 of 3
-  hits in 24h"). Turns the life-list rule into a progress game; `/api/species` already
-  returns `hits_24h` / `on_life_list`.
 - **[new] Year calendar heatmap** — GitHub-style 7×53 grid of detections/day; pairs with the
   **All** period to show seasonality at a glance. Reuses the heatmap cell styling.
 
@@ -99,7 +96,8 @@ Bigger / more data or math:
   (temp/wind/precip). The most *uniquely yours* idea (stitches two of your own systems); was
   loosely tracked as "weather correlations (later)", now spelled out. Needs a weather-history join.
 
-✓ **Done from this backlog:** dawn-chorus shading on the hour chart (2026-06-05, below).
+✓ **Done from this backlog:** dawn-chorus shading on the hour chart (2026-06-05); the
+**"Almost a lifer" shelf** (2026-06-05) — both in "Done (recent)" above.
 
 ### 4. Pulse ingestion — Phase 4 (full design in `PLAN-ingestion.md`)  **▶ first source decided**
 Generalize ingestion beyond RSS: pluggable adapters (**api**/scrape/email/manual), a
@@ -143,6 +141,14 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-05** — Observatory: **"Almost a lifer" shelf** on the Birds tab — turns the
+  life-list rule into a progress game. Surfaces species heard at 85%+ in the **rolling last
+  24h** but not yet listed and short of the 3-hit bar, as cards with a green **"N of 3"**
+  progress bar + an "M more to go" line, closest-first, tap-through to the bird card. Pure
+  front-end: computed client-side from `/api/detections/grouped` (a 24h window) minus
+  `/api/lifetime` — no box change — and the section hides itself when nothing's close or the
+  box is offline. `computeAlmostLifers()` is a tested pure fn. `?v=obs23`/`obs18`.
 
 - **2026-06-05** — Observatory Analytics: **dawn-chorus shading** on the "When the birds
   sing" hour chart. The 24 columns are tinted by Emmaus' real day/night cycle (computed

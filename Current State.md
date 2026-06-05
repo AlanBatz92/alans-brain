@@ -105,8 +105,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs22` +
-  `style.css?v=obs17` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs23` +
+  `style.css?v=obs18` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -188,6 +188,20 @@ train data a home. ID/class prefix: **`obs-`**.
   tapping a lifer opens its card on top and closing returns to the list; `openLifeModal()` /
   `closeLifeModal()` coordinate the body scroll-lock with the bird card. Escape closes the
   topmost modal.
+- **"Almost a lifer" shelf (2026-06-05):** a progress-game shelf on the Birds panel (between
+  the stat cards and the period bar; `#obs-almost-section`, hidden until populated) listing
+  species **heard at ≥ 0.85 in the rolling last 24h but not yet on the life list and short of
+  the 3-hit bar** — cards with a green **"N of 3"** progress bar + an "M more to go" line,
+  ordered closest-first, tap-through to the bird card (added to the `[data-name]` delegation).
+  Mirrors the box's life-list rule **client-side, no box change**: `loadAlmost()` fetches
+  `/api/detections/grouped` over a **rolling 24h** window (`fmtUtcTsFull()` keeps minute/second
+  precision, vs the hour-floored period windows) and `computeAlmostLifers()` (a pure, tested fn)
+  drops listed species (matched by common **or** scientific name), the ~100% instant-add tier
+  (`PERFECT_CONFIDENCE`), and counts outside `1..LIFE_LIST_MIN_HITS-1`. The section **hides
+  itself** when nothing's close or the box is offline (a bonus shelf — no error noise).
+  `renderAlmost()` is called from both `loadAlmost()` and `loadLife()` (whichever lands last
+  wins) and gated on `state.lifeLoaded` so a lifer is never briefly shown as "almost". Classes
+  `.obs-almost-*`.
 - **Tooltip wrapping (2026-06-05):** the `.obs-an-tip` figures use a `nbCount()` helper
   that glues the count to its unit with a non-breaking space ("188 detections"), so a
   wrapping tooltip never strands the number on its own line.
@@ -201,7 +215,7 @@ train data a home. ID/class prefix: **`obs-`**.
   vanilla, no deps; degrades to no shading if sun times are unavailable. Birds-only (the
   train-analytics toggle will skip it — see `PLAN-train-analytics.md`). *(First cut used
   per-column tints, which read as blocky/gappy; replaced with the single gradient.)*
-- Assets: `style.css?v=obs17`, `observatory.js?v=obs22`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs18`, `observatory.js?v=obs23`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

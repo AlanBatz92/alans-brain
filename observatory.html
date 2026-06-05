@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs17">
+  <link rel="stylesheet" href="style.css?v=obs18">
 </head>
 <body>
 
@@ -102,6 +102,14 @@
     <!-- ══════ BIRDS PANEL ══════ -->
     <section class="obs-panel" id="obs-panel-birds" role="tabpanel" aria-labelledby="obs-tab-birds">
       <div class="obs-stats" id="obs-bird-stats"></div>
+
+      <!-- "Almost a lifer" shelf — species on the cusp of the life list (rolling 24h).
+           Hidden by default; observatory.js reveals it only when something's close. -->
+      <div id="obs-almost-section" hidden>
+        <h2 class="obs-heading">🎯 Almost a lifer <span class="obs-heading-count" id="obs-almost-count"></span></h2>
+        <p class="obs-almost-caption">Heard at 85%+ in the last 24 hours but not yet on the life list — a couple more qualifying hits and they're in.</p>
+        <div class="obs-almost" id="obs-almost"></div>
+      </div>
 
       <div class="obs-period-bar">
         <div class="obs-period-tabs" role="tablist" aria-label="Time period">
@@ -196,7 +204,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs22"></script>
+  <script src="observatory.js?v=obs23"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');
