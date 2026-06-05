@@ -10,6 +10,38 @@
 
 ---
 
+## 2026-06-05 — Observatory: life list → popout + tooltip wrap fix
+
+Two front-end follow-ups (assets `?v=obs20` / `style.css?v=obs15`):
+
+**Life list is now a popout, not an inline section.** Clicking the "Life list" stat
+card used to smooth-scroll the page — and it landed *past* the section heading (the
+scroll target was `#obs-life`, the cards container, which sits below the heading +
+controls). Rather than just fix the scroll, the whole list moved into a **modal**
+(`#obs-life-modal`, `.obs-life-*`) that reuses the bird-card shell: **bottom sheet on
+mobile, centered ≥600px**, sticky header with the sort `<select>` + `💯 100% only`
+toggle, scrollable body. The inline section (and its now-redundant rule note) is gone,
+so the main Birds page is more compact with no scrolling to reach the list.
+
+Layering: the life modal sits at `z-index 390`, below the bird card's 400, so tapping a
+lifer opens its card **on top** and closing returns to the list. `openLifeModal()` /
+`closeLifeModal()` coordinate the `body` scroll-lock with `closeBirdCard()` (the page
+stays locked while either modal is up), and Escape closes the **topmost** modal. Flexbox
+scroll gotcha handled — the sheet is `overflow:hidden` and the body is `flex:1; min-height:0`
+so the body scrolls under a fixed header. Lifer cards get `var(--bg)` inside the
+surface-colored sheet so they still stand out. `renderLife()` already owned the count +
+the `#obs-life` render, so it needed no change — opening just reveals the modal.
+
+**Tooltip count no longer wraps mid-phrase.** The analytics hover tooltips were breaking
+"188 detections" across two lines (number stranded from its unit). Added an `nbCount()`
+helper that joins the figure to its unit with a non-breaking space (` `), used in the
+hour, heatmap, and daily tips so each count wraps as one unit.
+
+**Verified:** `node --check`; HTML/JS id cross-check; no stale `scroll-life`/`scrollIntoView`
+refs remain. Front-end only — no birdstation change in this batch.
+
+---
+
 ## 2026-06-05 — Observatory: life-list 100%-only filter + Analytics fixes
 
 Four targeted Observatory tweaks (assets `?v=obs18` / `style.css?v=obs14`):

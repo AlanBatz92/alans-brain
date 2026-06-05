@@ -269,9 +269,9 @@ function renderBirdStats() {
   renderStats(el, [
     { label: 'Heard ' + label,   value: heardN.toLocaleString() },
     { label: 'Species ' + label, value: groups.length },
-    // Life list: all-time total; clickable → smooth-scroll to the life list.
+    // Life list: all-time total; clickable → opens the life-list popout.
     { label: 'Life list',        value: state.life.length,
-      action: state.life.length > 0 ? 'scroll-life' : null },
+      action: state.life.length > 0 ? 'open-life' : null },
     // Latest: most recent species this period; clickable → opens its bird card.
     { label: 'Latest',           value: latest ? latest.common_name : '—', small: true,
       action: latest ? 'open-latest' : null },
@@ -838,10 +838,39 @@ async function openBirdCard(commonName, scientificName) {
   content.innerHTML = birdCardContent(commonName, scientificName, wiki, hist);
 }
 
+function lifeModalOpen() {
+  const m = document.getElementById('obs-life-modal');
+  return !!(m && m.classList.contains('obs-life-open'));
+}
+
 function closeBirdCard() {
   const modal = document.getElementById('obs-bird-modal');
   if (modal) modal.classList.remove('obs-bcard-open');
-  document.body.style.overflow = '';
+  // A bird card can layer over the open life list; only release the page scroll
+  // lock if no other modal is still up.
+  document.body.style.overflow = lifeModalOpen() ? 'hidden' : '';
+}
+
+/* ── Life list popout ──
+   The full life list lives in a bottom-sheet/centered modal (no inline section),
+   opened from the "Life list" stat card. renderLife() already populates #obs-life
+   and the count inside it; opening just reveals the modal. */
+function openLifeModal() {
+  const modal = document.getElementById('obs-life-modal');
+  if (!modal) return;
+  modal.classList.add('obs-life-open');
+  document.body.style.overflow = 'hidden';
+  const body = modal.querySelector('.obs-life-modal-body');
+  if (body) body.scrollTop = 0;
+}
+
+function closeLifeModal() {
+  const modal = document.getElementById('obs-life-modal');
+  if (modal) modal.classList.remove('obs-life-open');
+  // Don't unlock the page if a bird card is still open on top of the list.
+  const card = document.getElementById('obs-bird-modal');
+  const cardOpen = card && card.classList.contains('obs-bcard-open');
+  if (!cardOpen) document.body.style.overflow = '';
 }
 
 const TAGLINES = {
@@ -995,9 +1024,8 @@ function initObservatory() {
 
   // Stat card click delegation (Life list → scroll, Latest → bird card)
   function handleStatAction(action) {
-    if (action === 'scroll-life') {
-      const lifeEl = document.getElementById('obs-life');
-      if (lifeEl) lifeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (action === 'open-life') {
+      openLifeModal();
     } else if (action === 'open-latest') {
       const latest = state.periodLatest;
       if (latest) openBirdCard(latest.common_name, latest.scientific_name || '');
@@ -1033,13 +1061,27 @@ function initObservatory() {
     }
   });
 
-  // Modal: backdrop click or × button closes; Escape anywhere closes
+  // Bird card modal: backdrop click or × button closes
   const modal = document.getElementById('obs-bird-modal');
   if (modal) {
     modal.querySelector('.obs-bcard-backdrop').addEventListener('click', closeBirdCard);
     modal.querySelector('.obs-bcard-close').addEventListener('click', closeBirdCard);
   }
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeBirdCard(); });
+
+  // Life list modal: backdrop click or × button closes
+  const lifeModal = document.getElementById('obs-life-modal');
+  if (lifeModal) {
+    lifeModal.querySelector('.obs-life-backdrop').addEventListener('click', closeLifeModal);
+    lifeModal.querySelector('.obs-life-modal-close').addEventListener('click', closeLifeModal);
+  }
+
+  // Escape closes the topmost open modal (bird card layers over the life list)
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const card = document.getElementById('obs-bird-modal');
+    if (card && card.classList.contains('obs-bcard-open')) closeBirdCard();
+    else if (lifeModalOpen()) closeLifeModal();
+  });
 
   const btn = document.getElementById('obs-refresh');
   if (btn) btn.addEventListener('click', loadAll);

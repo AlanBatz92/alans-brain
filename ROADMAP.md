@@ -114,6 +114,13 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-05** — Observatory: **life list moved to a popout** (modal reusing the bird-card
+  shell — bottom sheet on mobile, centered on desktop; sticky header with sort + "100% only";
+  scrollable body). Opened from the "Life list" stat card (fixes the old scroll that jumped
+  past the heading); inline section removed → more compact Birds page. Layers below the bird
+  card so a lifer's card opens on top. Also fixed analytics hover tooltips wrapping
+  "188 detections" mid-phrase (non-breaking space via `nbCount()`). `?v=obs20`/`obs15`.
+
 - **2026-06-05** — Observatory polish: a **"100% only" toggle on the life list** (mirrors
   the species grid; new unfloored `best_confidence` on `/api/lifetime`), and three Analytics
   fixes — the **"Activity over time / detections per day"** chart was blank (CSS: the

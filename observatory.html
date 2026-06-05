@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs14">
+  <link rel="stylesheet" href="style.css?v=obs15">
 </head>
 <body>
 
@@ -102,7 +102,6 @@
     <!-- ══════ BIRDS PANEL ══════ -->
     <section class="obs-panel" id="obs-panel-birds" role="tabpanel" aria-labelledby="obs-tab-birds">
       <div class="obs-stats" id="obs-bird-stats"></div>
-      <p class="obs-note">A species joins the life list after 3 detections at 85%+ within 24 hours — or a single 100% detection.</p>
 
       <div class="obs-period-bar">
         <div class="obs-period-tabs" role="tablist" aria-label="Time period">
@@ -128,19 +127,6 @@
         </div>
       </div>
       <div class="obs-species-grid" id="obs-today"></div>
-
-      <div class="obs-heading-row">
-        <h2 class="obs-heading">Life list <span class="obs-heading-count" id="obs-life-count"></span></h2>
-        <div class="obs-heading-controls">
-          <button class="obs-perfect-toggle" id="obs-life-perfect" type="button" aria-pressed="false" title="Show only lifers heard at 100% confidence">💯 100% only</button>
-          <select class="obs-sort-select" id="obs-life-sort" aria-label="Sort life list">
-            <option value="recent">Recent</option>
-            <option value="most">Most heard</option>
-            <option value="least">Least heard</option>
-          </select>
-        </div>
-      </div>
-      <div class="obs-life" id="obs-life"></div>
     </section>
 
     <!-- ══════ ANALYTICS PANEL ══════ -->
@@ -208,7 +194,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs19"></script>
+  <script src="observatory.js?v=obs20"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');
@@ -247,6 +233,29 @@
       });
     }
   </script>
+
+<!-- Life list popout (compact, scroll-free; opened from the "Life list" stat card) -->
+<div id="obs-life-modal" class="obs-life-overlay">
+  <div class="obs-life-backdrop"></div>
+  <div class="obs-life-sheet" role="dialog" aria-modal="true" aria-label="Life list">
+    <div class="obs-life-modal-head">
+      <button class="obs-bcard-close obs-life-modal-close" aria-label="Close">✕</button>
+      <h2 class="obs-life-modal-title">Life list <span class="obs-heading-count" id="obs-life-count"></span></h2>
+      <p class="obs-life-modal-note">A species joins after 3 detections at 85%+ within 24 hours — or a single 100% detection.</p>
+      <div class="obs-life-modal-controls">
+        <button class="obs-perfect-toggle" id="obs-life-perfect" type="button" aria-pressed="false" title="Show only lifers heard at 100% confidence">💯 100% only</button>
+        <select class="obs-sort-select" id="obs-life-sort" aria-label="Sort life list">
+          <option value="recent">Recent</option>
+          <option value="most">Most heard</option>
+          <option value="least">Least heard</option>
+        </select>
+      </div>
+    </div>
+    <div class="obs-life-modal-body">
+      <div class="obs-life" id="obs-life"></div>
+    </div>
+  </div>
+</div>
 
 <!-- Bird card quick-view modal (filled by observatory.js) -->
 <div id="obs-bird-modal" class="obs-bcard-overlay">

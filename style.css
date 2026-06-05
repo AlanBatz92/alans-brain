@@ -4923,6 +4923,82 @@ nav {
   }
 }
 
+/* ── Life list popout ──
+   Same bottom-sheet-on-mobile / centered-on-desktop shell as the bird card, but
+   it holds the full life list (sticky header with sort + 100%-only controls,
+   scrollable body). Sits just below the bird card's z-index so tapping a lifer
+   opens its card on top, and closing it returns here. */
+.obs-life-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 390;
+  align-items: flex-end;
+  justify-content: center;
+}
+.obs-life-overlay.obs-life-open { display: flex; }
+.obs-life-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 8, 20, 0.78);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.obs-life-sheet {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 85vh;
+  overflow: hidden;   /* clip rounded corners; the body scrolls, header stays put */
+  animation: obs-bcard-up 0.22s ease;
+}
+.obs-life-modal-head {
+  position: relative;
+  flex-shrink: 0;
+  padding: 18px 56px 12px 18px;   /* right padding clears the ✕ */
+  border-bottom: 1px solid var(--border);
+}
+.obs-life-modal-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.obs-life-modal-note {
+  margin: 6px 0 0;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+.obs-life-modal-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.obs-life-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;      /* allow the body to shrink within the sheet so it scrolls */
+  padding: 14px 18px 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+/* Lifer cards sit on the surface-colored sheet, so give them the page bg to pop */
+.obs-life-modal-body .obs-lifer { background: var(--bg); }
+
+@media (min-width: 600px) {
+  .obs-life-overlay { align-items: center; }
+  .obs-life-sheet {
+    border-radius: 20px;
+    width: 480px;
+    max-height: 86vh;
+  }
+}
+
 /* ── Period selector + search (Observatory timeline) ── */
 .obs-period-bar {
   display: flex;
