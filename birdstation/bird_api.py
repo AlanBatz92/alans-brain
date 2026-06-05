@@ -156,6 +156,14 @@ def lifetime_list():
             "WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ?",
             (d.get("common_name"), d.get("scientific_name"), LIFE_LIST_MIN_CONFIDENCE)
         ).fetchone()[0]
+        # Best-ever confidence (no floor, so a single ~100% instant-add hit shows),
+        # so the front-end can offer a "100% only" filter on the life list — mirroring
+        # the species grid's toggle. Falls back to 0 if (impossibly) the lifer has no rows.
+        d["best_confidence"] = conn.execute(
+            "SELECT MAX(confidence) FROM detections "
+            "WHERE (common_name = ? OR scientific_name = ?)",
+            (d.get("common_name"), d.get("scientific_name"))
+        ).fetchone()[0] or 0
         species.append(d)
     conn.close()
     return {"species": species, "total_species": len(species)}

@@ -10,6 +10,43 @@
 
 ---
 
+## 2026-06-05 — Observatory: life-list 100%-only filter + Analytics fixes
+
+Four targeted Observatory tweaks (assets `?v=obs18` / `style.css?v=obs14`):
+
+**Birds — "100% only" on the life list.** The species grid already had a green
+`💯 100% only` toggle; the life list now has the same affordance (`#obs-life-perfect`,
+`state.lifeOnlyPerfect`), filtering to lifers whose **best-ever** confidence reads as
+100% (≥ `PERFECT_CONFIDENCE` 0.995 — the instant-add bar). This needed a new field:
+`/api/lifetime` now derives `best_confidence` per species (unfloored `MAX(confidence)`,
+so a single ~100% hit counts), alongside the live `total_detections`. `renderLife()`
+now owns the life-list count so it tracks the filter (like the grid). Degrades to "No
+lifers heard at 100% yet" until the box redeploys with the new field.
+
+**Analytics — "Activity over time / detections per day" was blank.** A pure CSS bug:
+`.obs-an-dbar-wrap` had no height and its parent `.obs-an-daily-bars` uses
+`align-items: flex-end` (not `stretch`), so the wrapper collapsed to content height and
+the `height:100%` track (and the `%`-height bars inside) resolved against ~0 → invisible
+bars. Fixed by giving the wrapper `height: 100%` so it resolves against the row's 120px.
+
+**Analytics — "Who sings when" long names cut off.** Widened the heatmap species label
+132 → 168px (mobile 100 → 124px), bumped the heatmap `min-width` 460 → 500px to keep the
+24 cells legible, and added a `title` (full common name) on each label for hover.
+
+**Analytics — real hover tooltips.** Replaced the slow/unstyled native `title` on the
+hour bars, heatmap cells, and daily bars with an **instant, themed tooltip** (`.obs-an-tip`):
+elements carry `data-tip`, delegated `mousemove`/`mouseleave` on each chart container show
+a cursor-tracking bubble (`initAnTooltips()`). "Who sings when" shows the species×hour
+count; "When the birds sing" shows the per-hour total (all species); daily shows the
+per-day total + species count. All read from the period-scoped `/api/analytics` response,
+so they respect the active filter (Today / Yesterday / This week / …).
+
+**Verified:** `node --check`, `python3 -m ast` parse; analytics + species test suites pass
+(added `test_lifetime_best_confidence_is_unfloored_max` and extended the `lifetime_list`
+mirror with `best_confidence`).
+
+---
+
 ## 2026-06-05 — birdstation: systemd units truly run-from-clone (symlinks)
 
 Deploying the twice-daily timer surfaced that the "run-from-clone" model only

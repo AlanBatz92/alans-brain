@@ -105,8 +105,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs17` +
-  `style.css?v=obs13` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs18` +
+  `style.css?v=obs14` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -156,18 +156,30 @@ train data a home. ID/class prefix: **`obs-`**.
   in the selected period reads as 100% (≥ `PERFECT_CONFIDENCE` 0.995 — the same bar that
   instant-adds a lifer). Client-side, persists across period switches; pair with the
   **All** period for the all-time list of birds heard at 100%.
-- **Analytics tab (📊, 2026-06-04):** a third tab (between Birds and Trains) for detection
-  *distributions* over its own period selector (defaults to **This week**). Renders, all
-  vanilla CSS (no chart lib): summary stat cards (Detections / Species / **Busiest hour** /
-  **Peak day**), a **24-hour activity chart** ("When the birds sing" — busiest hour
-  highlighted), a **species×hour heatmap** ("Who sings when" — each row self-normalized to
-  its own peak so the *pattern* shows; ×total badge for volume; scrolls horizontally on
-  mobile), a **most-heard leaderboard** (top 15, proportional bars), and a **per-day
-  activity chart** (hidden for single-day periods). All times **Eastern**. Heatmap +
-  leaderboard rows are clickable → bird card (reuse the `[data-name]` delegation). Powered
-  by `GET /api/analytics` (one call); `state.an`, `obs-an-*` classes, `loadAnalytics()`,
-  `TAGLINES.analytics`. **Lazy-loads on first tab open.**
-- Assets: `style.css?v=obs13`, `observatory.js?v=obs17`, `bird-info.js?v=obs6`.
+- **Analytics tab (📊, 2026-06-04; hover + daily fix 2026-06-05):** a third tab (between
+  Birds and Trains) for detection *distributions* over its own period selector (defaults to
+  **This week**). Renders, all vanilla CSS (no chart lib): summary stat cards (Detections /
+  Species / **Busiest hour** / **Peak day**), a **24-hour activity chart** ("When the birds
+  sing" — busiest hour highlighted), a **species×hour heatmap** ("Who sings when" — each row
+  self-normalized to its own peak so the *pattern* shows; ×total badge for volume; scrolls
+  horizontally on mobile; species-name label widened to 168px + full-name `title` so longer
+  names aren't cut off), a **most-heard leaderboard** (top 15, proportional bars), and a
+  **per-day activity chart** ("Activity over time"; hidden for single-day periods). All times
+  **Eastern**. Heatmap + leaderboard rows are clickable → bird card (reuse the `[data-name]`
+  delegation). **Hover tooltips (2026-06-05):** the hour bars, heatmap cells, and daily bars
+  carry `data-tip` and a delegated cursor-tracking `.obs-an-tip` bubble (`initAnTooltips()`)
+  shows the count for that block — replacing the slow native `title` (which is kept only on
+  the heatmap label for the full name). Tooltips read from the period-scoped response, so
+  they respect the active filter. Powered by `GET /api/analytics` (one call); `state.an`,
+  `obs-an-*` classes, `loadAnalytics()`, `TAGLINES.analytics`. **Lazy-loads on first tab
+  open.** **Daily-chart blank fix (2026-06-05):** `.obs-an-dbar-wrap` now has `height:100%`
+  (its `flex-end` parent had collapsed it, hiding the `%`-height bars).
+- **Life list "100% only" filter (2026-06-05):** the life list has the same `💯 100% only`
+  toggle as the species grid (`#obs-life-perfect`, `state.lifeOnlyPerfect`), filtering to
+  lifers whose best-ever confidence reads as 100% (≥ `PERFECT_CONFIDENCE` 0.995). Driven by a
+  new `best_confidence` field on `/api/lifetime` (unfloored `MAX(confidence)` per species);
+  `renderLife()` now owns the life-list count so it follows the filter.
+- Assets: `style.css?v=obs14`, `observatory.js?v=obs18`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

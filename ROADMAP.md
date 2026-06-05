@@ -114,6 +114,15 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-05** — Observatory polish: a **"100% only" toggle on the life list** (mirrors
+  the species grid; new unfloored `best_confidence` on `/api/lifetime`), and three Analytics
+  fixes — the **"Activity over time / detections per day"** chart was blank (CSS: the
+  `flex-end` parent collapsed the bar wrappers; gave them `height:100%`), the **"Who sings
+  when"** heatmap labels were widened (132 → 168px) + given a full-name `title` so long
+  names aren't cut off, and **instant hover tooltips** (`.obs-an-tip`, `data-tip`) replaced
+  the slow native `title` on the hour bars, heatmap cells, and daily bars (each shows the
+  block's detection count, respecting the active period filter). `?v=obs18`/`obs14`.
+
 - **2026-06-05** — Pulse digest: **twice daily** (06:00 + 17:00 Eastern), moved Sonnet
   → **Haiku 4.5** (with adaptive thinking) for cost — grounding makes Sonnet
   unnecessary — and re-windowed to **"since the last brief"** (items `enriched_at` after

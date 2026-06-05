@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs13">
+  <link rel="stylesheet" href="style.css?v=obs14">
 </head>
 <body>
 
@@ -131,11 +131,14 @@
 
       <div class="obs-heading-row">
         <h2 class="obs-heading">Life list <span class="obs-heading-count" id="obs-life-count"></span></h2>
-        <select class="obs-sort-select" id="obs-life-sort" aria-label="Sort life list">
-          <option value="recent">Recent</option>
-          <option value="most">Most heard</option>
-          <option value="least">Least heard</option>
-        </select>
+        <div class="obs-heading-controls">
+          <button class="obs-perfect-toggle" id="obs-life-perfect" type="button" aria-pressed="false" title="Show only lifers heard at 100% confidence">💯 100% only</button>
+          <select class="obs-sort-select" id="obs-life-sort" aria-label="Sort life list">
+            <option value="recent">Recent</option>
+            <option value="most">Most heard</option>
+            <option value="least">Least heard</option>
+          </select>
+        </div>
       </div>
       <div class="obs-life" id="obs-life"></div>
     </section>
@@ -205,7 +208,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs17"></script>
+  <script src="observatory.js?v=obs18"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');

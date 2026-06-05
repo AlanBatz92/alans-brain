@@ -51,7 +51,7 @@ const MAX_TRAINS = 30;   // matches the recent-events query limit
 // together, so we stash both and recompute the stat cards as each arrives.
 // `periodLabel` mirrors the selected period for the stat-card labels; the period
 // grid's "latest" species is stashed in `periodLatest` for the Latest card.
-const state = { life: [], periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent', onlyPerfect: false,
+const state = { life: [], periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent', onlyPerfect: false, lifeOnlyPerfect: false,
   // Analytics tab — lazy-loaded on first open, scoped by its own period selector.
   an: { period: 'week', data: null, loaded: false } };
 
@@ -341,12 +341,25 @@ function renderPeriodGroups() {
 /* ── Birds: life list ── */
 function renderLife() {
   const el = document.getElementById('obs-life');
+  const countEl = document.getElementById('obs-life-count');
   if (!el) return;
   if (state.life.length === 0) {
+    if (countEl) countEl.textContent = '';
     setMsg(el, 'obs-empty', 'No lifers logged yet.');
     return;
   }
-  const sorted = sortLifeList(state.life, state.lifeSort);
+  // 100%-only filter — keep lifers whose best-ever confidence reads as 100%
+  // (≥ PERFECT_CONFIDENCE), mirroring the species grid's toggle.
+  let list = state.life;
+  if (state.lifeOnlyPerfect) {
+    list = list.filter((s) => (s.best_confidence || 0) >= PERFECT_CONFIDENCE);
+  }
+  if (countEl) countEl.textContent = list.length ? '(' + list.length + ')' : '';
+  if (list.length === 0) {
+    setMsg(el, 'obs-empty', 'No lifers heard at 100% yet.');
+    return;
+  }
+  const sorted = sortLifeList(list, state.lifeSort);
   el.innerHTML = sorted.map((s) => {
     const ms = parseTime(s.first_seen);
     const since = ms != null ? '<span class="obs-lifer-since">since ' + escapeHtml(shortDate(ms)) + '</span>' : '';
@@ -378,8 +391,7 @@ async function loadLife() {
   }
   state.life = d.species || [];
   renderBirdStats();
-  if (countEl) countEl.textContent = state.life.length ? '(' + state.life.length + ')' : '';
-  renderLife();
+  renderLife();  // owns the life-list count (reflects the 100%-only filter)
 }
 
 /* ── Trains: stats ── */
@@ -477,6 +489,58 @@ function ymdLabel(ymd) {
   return new Date(y, m - 1, d, 12).toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
+/* Custom hover tooltip for the analytics charts. Native `title` is slow (≈1s
+   delay), unstyled, and never fires on touch; this instant, themed bubble reads
+   each element's `data-tip` text and tracks the cursor. All the figures it shows
+   (per-hour totals, per-cell species×hour counts, per-day totals) come straight
+   from the period-scoped /api/analytics response, so they respect the active
+   filter context (Today / Yesterday / This week / …). */
+let anTipEl = null;
+function ensureTip() {
+  if (!anTipEl) {
+    anTipEl = document.createElement('div');
+    anTipEl.className = 'obs-an-tip';
+    anTipEl.setAttribute('role', 'tooltip');
+    document.body.appendChild(anTipEl);
+  }
+  return anTipEl;
+}
+function positionTip(x, y) {
+  const t = anTipEl;
+  if (!t) return;
+  const r = t.getBoundingClientRect();
+  let left = x + 14;
+  let top  = y + 16;
+  if (left + r.width  > window.innerWidth  - 8) left = x - r.width  - 14;
+  if (left < 8) left = 8;
+  if (top  + r.height > window.innerHeight - 8) top  = y - r.height - 16;
+  t.style.left = left + 'px';
+  t.style.top  = top + 'px';
+}
+function showTip(text, x, y) {
+  const t = ensureTip();
+  t.textContent = text;
+  t.classList.add('obs-an-tip-show');
+  positionTip(x, y);
+}
+function hideTip() {
+  if (anTipEl) anTipEl.classList.remove('obs-an-tip-show');
+}
+// Wire delegated hover tooltips on the chart containers (they persist across
+// re-renders, so one listener each survives every period change).
+function initAnTooltips() {
+  ['obs-an-hours', 'obs-an-heatmap', 'obs-an-daily'].forEach((id) => {
+    const c = document.getElementById(id);
+    if (!c) return;
+    c.addEventListener('mousemove', (e) => {
+      const el = e.target.closest('[data-tip]');
+      if (!el) { hideTip(); return; }
+      showTip(el.getAttribute('data-tip'), e.clientX, e.clientY);
+    });
+    c.addEventListener('mouseleave', hideTip);
+  });
+}
+
 function renderAnStats(a) {
   const el = document.getElementById('obs-an-stats');
   if (!el) return;
@@ -502,7 +566,7 @@ function renderHourChart(byHour) {
     const n = byHour[h];
     const pct = Math.round((n / max) * 100);
     const tip = hourLabel(h, true) + ' — ' + n.toLocaleString() + ' detection' + (n === 1 ? '' : 's');
-    html += '<div class="obs-an-hbar-wrap" title="' + escapeAttr(tip) + '">' +
+    html += '<div class="obs-an-hbar-wrap" data-tip="' + escapeAttr(tip) + '">' +
         '<div class="obs-an-hbar-track">' +
           '<div class="obs-an-hbar' + (h === busiest ? ' obs-an-hbar-peak' : '') +
             '" style="height:' + pct + '%"></div>' +
@@ -537,12 +601,13 @@ function renderHeatmap(speciesHours) {
       const alpha = n ? (0.14 + 0.86 * (n / max)) : 0;
       const tip = escapeAttr(s.common_name + ' · ' + hourLabel(h, true) + ' — ' +
         n + ' detection' + (n === 1 ? '' : 's'));
-      cells += '<div class="obs-an-hm-cell" title="' + tip + '"' +
+      cells += '<div class="obs-an-hm-cell" data-tip="' + tip + '"' +
         (alpha ? ' style="background:rgba(45,212,191,' + alpha.toFixed(3) + ')"' : '') +
         '></div>';
     }
     return '<div class="obs-an-hm-row">' +
         '<div class="obs-an-hm-label" role="button" tabindex="0"' +
+          ' title="' + escapeAttr(s.common_name) + '"' +
           ' data-name="' + escapeAttr(s.common_name) + '" data-sci="' + escapeAttr(s.scientific_name || '') + '">' +
           '<span class="obs-an-hm-name">' + escapeHtml(s.common_name) + '</span>' +
           '<span class="obs-an-hm-total">×' + s.total + '</span>' +
@@ -598,7 +663,7 @@ function renderDaily(byDay) {
     const pct = Math.round((d.count / max) * 100);
     const tip = escapeAttr(ymdLabel(d.date) + ' — ' + d.count.toLocaleString() +
       ' detection' + (d.count === 1 ? '' : 's') + ', ' + d.species + ' species');
-    return '<div class="obs-an-dbar-wrap" title="' + tip + '">' +
+    return '<div class="obs-an-dbar-wrap" data-tip="' + tip + '">' +
         '<div class="obs-an-dbar-track"><div class="obs-an-dbar" style="height:' + pct + '%"></div></div>' +
       '</div>';
   }).join('');
@@ -874,6 +939,9 @@ function initObservatory() {
     tab.addEventListener('click', () => loadAnalytics(tab.getAttribute('data-period')));
   });
 
+  // Instant hover tooltips on the analytics charts (hour bars, heatmap cells, daily bars)
+  initAnTooltips();
+
   // Species search (client-side filter, no refetch)
   const searchEl = document.getElementById('obs-search');
   if (searchEl) {
@@ -883,13 +951,23 @@ function initObservatory() {
     });
   }
 
-  // 100%-only filter toggle
+  // 100%-only filter toggle (species grid)
   const perfectEl = document.getElementById('obs-perfect');
   if (perfectEl) {
     perfectEl.addEventListener('click', () => {
       state.onlyPerfect = !state.onlyPerfect;
       perfectEl.setAttribute('aria-pressed', state.onlyPerfect ? 'true' : 'false');
       renderPeriodGroups();
+    });
+  }
+
+  // 100%-only filter toggle (life list) — same affordance as the species grid
+  const lifePerfectEl = document.getElementById('obs-life-perfect');
+  if (lifePerfectEl) {
+    lifePerfectEl.addEventListener('click', () => {
+      state.lifeOnlyPerfect = !state.lifeOnlyPerfect;
+      lifePerfectEl.setAttribute('aria-pressed', state.lifeOnlyPerfect ? 'true' : 'false');
+      renderLife();
     });
   }
 

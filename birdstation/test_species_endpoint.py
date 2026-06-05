@@ -278,7 +278,9 @@ def test_hits_24h_counts_recent_qualifying_only():
 
 def lifetime_list(conn, life_floor=0.85):
     """Mirrors bird_api.py GET /api/lifetime — total_detections is derived live
-    from the detections table (>= life floor), not read from the stored counter."""
+    from the detections table (>= life floor), not read from the stored counter;
+    best_confidence is the unfloored max (so a single ~100% hit drives the
+    front-end's "100% only" life-list filter)."""
     species = []
     for r in conn.execute("SELECT * FROM lifetime ORDER BY first_seen ASC").fetchall():
         d = dict(r)
@@ -287,6 +289,11 @@ def lifetime_list(conn, life_floor=0.85):
             "WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ?",
             (d.get("common_name"), d.get("scientific_name"), life_floor),
         ).fetchone()[0]
+        d["best_confidence"] = conn.execute(
+            "SELECT MAX(confidence) FROM detections "
+            "WHERE (common_name = ? OR scientific_name = ?)",
+            (d.get("common_name"), d.get("scientific_name")),
+        ).fetchone()[0] or 0
         species.append(d)
     return species
 
@@ -316,6 +323,27 @@ def test_lifetime_total_matches_by_scientific_name():
     ])
     r = lifetime_list(conn)
     assert r[0]["total_detections"] == 2
+
+
+def test_lifetime_best_confidence_is_unfloored_max():
+    conn = make_db()
+    seed_life(conn, [
+        ("Barred Owl",    "Strix varia",        "2026-06-01 02:00:00", 0),
+        ("House Sparrow", "Passer domesticus",  "2026-06-01 07:00:00", 0),
+    ])
+    seed(conn, [
+        # Owl reads as 100% (>= 0.995) — a "100% only" filter should keep it
+        ("2026-06-01 02:00:00", "Barred Owl",    "Strix varia",       0.997),
+        ("2026-06-01 02:30:00", "Barred Owl",    "Strix varia",       0.86),
+        # Sparrow tops out at 0.92 — the filter should drop it
+        ("2026-06-01 07:00:00", "House Sparrow", "Passer domesticus", 0.92),
+        ("2026-06-01 07:05:00", "House Sparrow", "Passer domesticus", 0.70),
+    ])
+    by_name = {s["common_name"]: s for s in lifetime_list(conn)}
+    assert by_name["Barred Owl"]["best_confidence"] == 0.997
+    assert by_name["House Sparrow"]["best_confidence"] == 0.92
+    perfect = [s["common_name"] for s in lifetime_list(conn) if s["best_confidence"] >= 0.995]
+    assert perfect == ["Barred Owl"]
 
 
 # ── /api/detections/grouped ───────────────────────────────────────────────────
@@ -460,6 +488,7 @@ if __name__ == "__main__":
         test_hits_24h_counts_recent_qualifying_only,
         test_lifetime_total_is_live_count_not_stored,
         test_lifetime_total_matches_by_scientific_name,
+        test_lifetime_best_confidence_is_unfloored_max,
         test_grouped_basic,
         test_grouped_date_range_excludes_outside,
         test_grouped_confidence_filter,
