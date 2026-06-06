@@ -142,6 +142,18 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-06** — Emmaus Observatory **P2 train horn study**: an offline AudioMoth horn
+  detector (`train_horn_detector.py`, now version-controlled) plus the new
+  **`build_horn_profile.py`** corpus-calibration pass. Point the profiler at confirmed-horn
+  and no-train folders → it derives the real horn band from positive/negative spectral
+  contrast, calibrates the tonality/duration/gap thresholds against the labelled corpus
+  (reusing the detector's own feature fns), and emits diagnostic plots + a ready-to-paste
+  parameter block + `horn_profile.json` that the detector auto-loads. Both are manual
+  birdstation CLIs (no unit). This is the offline-study analogue of ▶ Next #3's "known
+  trains improve detection" loop (the *live-stream* `train_detector.service` vetting/tuning
+  loop is still future). Generated profiles are gitignored; the param block is the durable
+  record. Verified end-to-end on a synthetic corpus. See `Build History.md` (2026-06-06).
+
 - **2026-06-05** — Observatory: **"Almost a lifer" shelf** on the Birds tab — turns the
   life-list rule into a progress game. Surfaces species heard at 85%+ in the **rolling last
   24h** but not yet listed and short of the 3-hit bar, as cards with a green **"N of 3"**

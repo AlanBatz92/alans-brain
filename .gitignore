@@ -9,3 +9,8 @@ __pycache__/
 # Secrets / data — never commit (birdstation backstop)
 *.env
 *.db
+
+# birdstation: generated train-horn calibration (deployment-specific, like *.db —
+# regenerated on the box from the local corpus; the param block is the durable record)
+horn_profile.json
+horn_profile_out/

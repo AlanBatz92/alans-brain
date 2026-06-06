@@ -255,6 +255,24 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 - **Observatory writers (long-running services, in `birdstation/`):**
   - `birdnet_pipeline.py` — `birdnet.service`: captures 15 s chunks off the Icecast `/backyard` stream (`localhost:8000`), runs BirdNET-Analyzer (its own `~/BirdNET-Analyzer/birdnet-env` venv), writes `detections` (confidence ≥ `MIN_CONFIDENCE` **0.60** — the *preserve* floor, raised from 0.35 on 2026-06-03 to cut noise while keeping sub-85% diagnostic hits; also passed to BirdNET as `--min_conf`. The public page filters separately at the 0.85 display floor). **Life-list gate (2026-06-02):** a *new* species joins `lifetime` after **`LIFE_LIST_MIN_HITS` = 3** detections at ≥ `LIFE_LIST_MIN_CONFIDENCE` **0.85** within a **rolling 24h window** (`datetime(timestamp) >= datetime('now','-24 hours')`), **or a single ≥ `LIFE_LIST_INSTANT_CONFIDENCE` 0.995 (~100%) hit** (instant-add, bypasses the multi-hit rule). **Life-list tally (fixed 2026-06-03):** `total_detections` is **recomputed live from `COUNT(*)` of the species' ≥ 0.85 detections** — both in the pipeline (on each new hit, self-healing the stored column) and, authoritatively, in `/api/lifetime` (derived at read time, so the displayed total is always truthful and consistent with the page's other ≥0.85 views). This replaced a `+1` counter that drifted low (showed a lifetime total below a single day's count). BirdNET runs with lat/lon **and** `--week` (BirdNET's 1-48 week, `USE_WEEK_FILTER`), so both location and season filter the species list. **Verifiable lifers (2026-06-02):** each life-list-qualifying hit (≥ 0.85) also archives one WAV to `~/bird_clips` (capped one per species/day; `clip_path` + `verified` columns on `detections`), labelled via `review_birds.py` (`--stats` = measured precision by confidence band) and aged out by `purge-bird-clips.timer` — **local-only, never served** (backyard-mic privacy). (CSV reader fixed 2026-05-30 to `delimiter=","`.) Wipe bird tables for a clean start with `birdstation/reset_birds.sh` (backs up first; leaves Pulse + trains intact).
   - `train_detector.py` — `train_detector.service` (own `~/train-env` venv, needs numpy): reads `localhost:8000/backyard`, pipes it through **ffmpeg → mono s16le PCM** (must decode the MP3 — reading raw stream bytes as PCM was the long-standing reason `train_events` stayed empty; fixed 2026-06-01), detects sustained energy in the 300–1500 Hz band, writes `train_events` + a WAV clip in `~/train_clips`. Every event starts un-reviewed/hidden (see Train privacy above). **NB:** a duplicate `traindetect.service` existed for the same script — `train_detector.service` is canonical; the dup is removed.
+  - **P2 train horn study (offline, manual CLIs — added 2026-06-06):** a *second*
+    train detector that works on **recorded AudioMoth WAVs**, not the live stream —
+    an AudioMoth ~1500–1700 ft from the tracks keying on the **horn** (tonal energy
+    ~250–600 Hz, 2+ blasts within a window) rather than rumble. **No systemd unit;**
+    run on demand. `train_horn_detector.py` scans a file/dir of WAVs (STFT → horn-band
+    RMS + a tonality ratio; sustained blasts; 2+ within `CONFIRMATION_WINDOW_SEC` =
+    train), parses AudioMoth `YYYYMMDD_HHMMSS.WAV` timestamps, optional CSV out.
+    `build_horn_profile.py` is the **one-time calibration**: feed it a folder of
+    confirmed horns + a folder of confirmed no-train clips and it derives the real
+    horn band (positive-vs-negative spectral contrast), calibrates the
+    tonality/duration/gap thresholds against the corpus (reusing the detector's own
+    feature fns), writes diagnostic PNGs + a parameter block + `horn_profile.json`.
+    The detector **auto-loads** a `horn_profile.json` sitting next to it (or via
+    `--profile`), so calibration flows into detection with no source edits. Deps:
+    `librosa numpy scipy` (+ `matplotlib` for the profiler's plots). The corpus WAVs
+    and generated `horn_profile.json` / `horn_profile_out/` are **gitignored**
+    (deployment-specific, like `*.db`); the param block is the durable record. Full
+    write-up in `Build History.md` (2026-06-06) and `birdstation/README.md`.
   - `review_trains.py` — **manual** CLI on the box to vet pending train events (play clip → train/false/unsure → DB). Near-term vetting workflow; web UI is future (`PLAN-train-vetting.md`).
   - `purge_train_clips.py` — `purge-train-clips.timer` (**Sun 04:00**): deletes rejected + aged-orphan clips, keeps approved-train + still-pending. `--dry-run` supported.
   - `review_birds.py` — **manual** CLI on the box to confirm life-list detections from their archived clips (correct/wrong/unsure → `detections.verified`); `--stats` prints measured precision by confidence band (calibration data).

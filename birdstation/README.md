@@ -28,6 +28,8 @@ birdstation/
   purge_bird_clips.py # daily timer: age out unreviewed bird verification clips
   review_birds.py     # CLI: confirm lifers; --stats prints measured precision
   purge_low_confidence.py # CLI one-shot: drop detections below the 0.60 preserve floor
+  train_horn_detector.py  # CLI: offline horn detection in AudioMoth WAVs (P2 study)
+  build_horn_profile.py   # CLI one-time: calibrate the horn detector from a labeled corpus
   schema.sql          # full birdnet.db schema + migration log
   systemd/            # .service / .timer units (templated — no inline secrets)
   link_units.sh       # symlink systemd/*.{service,timer} into /etc (run-from-clone units)
@@ -171,6 +173,38 @@ daily `purge-bird-clips.timer` deletes unreviewed clips older than 30 days
 The observatory pipelines (`birdnet`, `train_detector`) each use their own venv —
 `~/BirdNET-Analyzer/birdnet-env` and `~/train-env` — which the units reference
 directly; only the script path moves into the clone.
+
+## Train horn study (P2 — offline, AudioMoth)
+
+A second, **offline** train detector — separate from the live
+`train_detector.service` that watches the Icecast stream. The P2 study runs an
+AudioMoth ~1500–1700 ft from the freight tracks and analyses its recorded WAVs in
+batch, keying on the **train horn** (sustained tonal energy ~250–600 Hz, 2+ blasts
+within a window) rather than broadband rumble, which is too faint at that range.
+Both tools are **manual CLIs** (no systemd unit), run on demand:
+
+- **`train_horn_detector.py`** — scans a file or directory of AudioMoth WAVs and
+  logs confirmed horn events (optionally to CSV). Needs `librosa numpy scipy`.
+- **`build_horn_profile.py`** — the **one-time calibration pass**. Point it at a
+  folder of confirmed horn WAVs and a folder of confirmed no-train WAVs; it finds
+  the real horn band for this mic, calibrates the tonality/duration/gap
+  thresholds against the corpus, writes diagnostic plots + `horn_profile.json`,
+  and prints a ready-to-paste parameter block. Also needs `matplotlib`.
+
+```bash
+# in a venv with librosa/numpy/scipy/matplotlib:
+python3 build_horn_profile.py -p ./horn_positives -n ./no_train -o ./profile_out
+# review profile_out/*.png, then activate the calibration for the detector:
+cp profile_out/horn_profile.json ~/alans-brain/birdstation/horn_profile.json
+python3 train_horn_detector.py ~/audiomoth_recordings/ --output detections.csv
+```
+
+`train_horn_detector.py` auto-loads a `horn_profile.json` sitting next to it (or
+one passed with `--profile`), overriding its built-in guesses — so the
+calibration flows straight into detection. The corpus WAVs and the generated
+`horn_profile.json` / `horn_profile_out/` are **gitignored** (deployment-specific
+data, like `*.db`); the durable record is the parameter block, pasted into
+`train_horn_detector.py` and logged in `Build History.md`.
 
 > **Duplicate unit:** the box had both `train_detector.service` and
 > `traindetect.service` pointing at the same script (two detectors writing

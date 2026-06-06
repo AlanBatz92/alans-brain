@@ -10,6 +10,60 @@
 
 ---
 
+## 2026-06-06 — P2 train horn study: offline detector + corpus calibration
+
+A second, **offline** train detector for the Emmaus Observatory's P2 freight
+study — distinct from the live `train_detector.service` on the Icecast stream.
+An AudioMoth ~1500–1700 ft from the tracks records to WAV; these tools analyse
+those recordings in batch, keying on the **train horn** (tonal energy ~250–600 Hz,
+2+ blasts within a window) rather than the broadband rumble that's too faint at
+that distance. Both are **manual CLIs** in `birdstation/` (no systemd unit).
+
+**`train_horn_detector.py`** — the detector (drafted in a prior session), now
+version-controlled. Per file: STFT → horn-band RMS + a **tonality ratio**
+(horn-band energy / 100–1200 Hz broadband energy; tonal horn = high, wind/thunder
+= low), find sustained blasts, confirm a train when 2+ blasts fall within the
+window. Parses AudioMoth `YYYYMMDD_HHMMSS.WAV` names for wall-clock timestamps;
+optional CSV out. **Added a runtime-profile hook:** `load_profile()` + a
+`--profile` flag (and auto-discovery of a `horn_profile.json` next to the script)
+override the built-in constants, and `extract_horn_band_features()` gained
+optional `low_hz`/`high_hz` args (backward-compatible) so a calibrated band can
+be applied without editing source.
+
+**`build_horn_profile.py`** — the new one-time calibration pass (the actual ask).
+Takes a folder of confirmed horn WAVs and a folder of confirmed no-train WAVs and:
+- **Spectral analysis** — builds each file's representative spectrum from its
+  loudest frames, takes the median across positives vs negatives, and derives the
+  real horn band from the **positive/negative contrast** (the frequencies where
+  horns carry energy the negatives don't — may be narrower than the 250–600 Hz
+  default). Plots the spectrum overlay (band shaded) + an **onset-aligned average
+  spectrogram** so the signature is visually obvious.
+- **Threshold calibration** — runs the detector's *own* feature functions
+  (imported, not re-implemented) over every file to compare positives vs
+  negatives on tonality ratio, blast duration, inter-blast gap, and horn-band
+  RMS. Sweeps tonality thresholds and picks low/medium/high tiers from the
+  separation (medium = best F1; low = most sensitive still-precise split; high =
+  strictest split still catching most horns), reporting the precision/recall each
+  would give. Duration bounds from positive-blast percentiles; confirmation
+  window from observed inter-blast spacing.
+- **Outputs** — a ready-to-paste parameter block (with `# was X` deltas), six
+  diagnostic PNGs, a `calibration_report.txt`, and `horn_profile.json` (which the
+  detector auto-loads). Degrades gracefully: per-file load errors are skipped,
+  `--no-plots` drops the matplotlib dependency, and thin corpora fall back to
+  defaults with a flagged note instead of inventing a number.
+
+**Conventions/wiring:** modern Python 3 + type hints (matches the other box
+scripts), `librosa numpy scipy` (+ `matplotlib` for plots, headless `Agg`).
+Generated `horn_profile.json` / `horn_profile_out/` are **gitignored**
+(deployment-specific, like `*.db`); the durable record is the committed parameter
+block. **Verified** end-to-end against a synthetic corpus (8 horn-like positives /
+6 broadband negatives): the profiler recovered the planted band (355–415 Hz vs a
+350–420 Hz fundamental), separated the classes cleanly, wrote all artifacts, and
+the detector then loaded the profile and fired on positives / stayed silent on
+negatives. `birdstation/README.md` gained a "Train horn study (P2)" section.
+
+---
+
 ## 2026-06-05 — Personal Projects page: add the Observatory card
 
 Small navigation fix: `projects.html` (the "things I've built" hub) only listed
