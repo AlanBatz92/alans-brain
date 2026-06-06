@@ -290,9 +290,15 @@ horns and ~10 negatives out of the corpus (a `holdout\` folder you don't pass in
 calibrate on the rest, then run the detector on the held-out ones and see if it
 still gets them. (Optional — the in-corpus number is a fine day-to-day guide.)
 
-**Recall is low (it misses horns).** Usually the horns are faint or short. Try the
-`low` sensitivity when running the detector (add `--sensitivity low`), and add
-more horn clips — especially distant/quiet ones — then re-calibrate.
+**Recall is low (it misses horns).** Look at two lines in the output. **"Horn found
+(≥1 blast)"** is the blast detector's true reach; if it's high but "Trains confirmed"
+is lower, the confirmation rule was too strict (the tool now auto-lowers
+`MIN_BLASTS_FOR_CONFIRMATION` for clip corpora). **"Train passes caught"** groups
+clips within a few minutes into one train (`--pass-gap-min`) — usually the highest,
+fairest number. For the clips where no horn was found at all, open
+`missed_positives.txt` in the output folder and listen: genuinely faint/absent horn,
+mislabeled, or horn outside the band? Add more distant/quiet horn clips and
+re-calibrate; try `--sensitivity low` when running the detector.
 
 **One class keeps fooling it (high false-alarm rate).** That sound is genuinely
 horn-like at this distance. Add *more* clips of it; the calibrator will push the

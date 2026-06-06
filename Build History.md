@@ -10,6 +10,24 @@
 
 ---
 
+## 2026-06-06 — Horn calibration: pass-level recall + missed-clip list
+
+Real corpus at MIN_BLASTS=1 hit **80% recall / 96% precision** — the gap is now
+"horn found in only 80% of clips" (19/97 yield no blast at all), not the
+confirmation rule. Two diagnostics to chase that, the first from Alan's insight
+that clips minutes apart are the same train:
+- **Pass-level recall:** `parse_clip_time()` reads the timestamp from each clip name
+  (live `train_2026-06-01T08-30-00.wav` or AudioMoth `20260601_083000.WAV`),
+  `pass_recall()` groups clips within `--pass-gap-min` (default 5) into train
+  *passes*, and a pass counts as caught if ANY of its clips has a horn. That's the
+  number that matters (catching a train once = caught it) and it's how the webpage
+  should later *count* trains (dedup clips → passes; feeds frequency/headway). Shown
+  in the console + ACCURACY block, stored in the profile.
+- **`missed_positives.txt`:** lists the positive clips that yielded zero blasts, so
+  they can be listened to — genuinely faint/absent horn, mislabeled, or horn outside
+  the band. Tells us whether to widen the band / lower tonality next, or accept them.
+`blast_counts()` now returns (path, count) pairs so both can map back to filenames.
+
 ## 2026-06-06 — Horn calibration: blast-count diagnostic + MIN_BLASTS calibration
 
 First real-corpus run (97 trains / 66 negatives) gave 97% precision but only **58%

@@ -58,7 +58,7 @@ Usage:
 import argparse
 import json
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import List, Optional
 
@@ -362,12 +362,12 @@ def blast_counts(files, sr, low_hz, high_hz, tonality_thresh, dur_min, dur_max,
     Blasts found per clip at the full operating config (derived band + medium
     tonality + the chosen duration bounds + merge gap). This is what decides how
     many blasts a clip yields, which the 2-blast confirmation rule then gates on.
-    Returns a list of ints, one per loadable file.
+    Returns a list of (path, count) for each loadable file.
     """
     import train_horn_detector as thd
     saved = (thd.BLAST_MIN_DURATION_SEC, thd.BLAST_MAX_DURATION_SEC,
              thd.BLAST_MERGE_GAP_SEC, thd.TONALITY_RATIO_THRESHOLD)
-    counts = []
+    pairs = []
     try:
         thd.BLAST_MIN_DURATION_SEC = dur_min
         thd.BLAST_MAX_DURATION_SEC = dur_max
@@ -378,11 +378,11 @@ def blast_counts(files, sr, low_hz, high_hz, tonality_thresh, dur_min, dur_max,
             if y is None:
                 continue
             rms, ton = thd.extract_horn_band_features(y, sr, low_hz=low_hz, high_hz=high_hz)
-            counts.append(len(thd.find_horn_blasts(rms, ton, sr, HOP_LENGTH, "medium")))
+            pairs.append((f, len(thd.find_horn_blasts(rms, ton, sr, HOP_LENGTH, "medium"))))
     finally:
         (thd.BLAST_MIN_DURATION_SEC, thd.BLAST_MAX_DURATION_SEC,
          thd.BLAST_MERGE_GAP_SEC, thd.TONALITY_RATIO_THRESHOLD) = saved
-    return counts
+    return pairs
 
 
 def recommend_min_blasts(pos_counts, neg_counts, override=None):
@@ -408,6 +408,59 @@ def recommend_min_blasts(pos_counts, neg_counts, override=None):
         return override, table
     best = max(table, key=lambda r: (r[3], -r[0]))  # best F1, prefer smaller k
     return best[0], table
+
+
+def parse_clip_time(path):
+    """Best-effort timestamp from a clip filename. Handles the live detector's
+    `train_2026-06-01T08-30-00.wav` and AudioMoth `20260601_083000.WAV`. None if
+    unparseable (e.g. a renamed clip)."""
+    stem = Path(path).stem
+    candidates = []
+    if stem.startswith("train_"):
+        candidates.append((stem[len("train_"):], "%Y-%m-%dT%H-%M-%S"))
+        candidates.append((stem[len("train_"):], "%Y-%m-%dT%H:%M:%S"))
+    candidates.append((stem, "%Y%m%d_%H%M%S"))
+    for text, fmt in candidates:
+        try:
+            return datetime.strptime(text, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def pass_recall(pos_pairs, gap_min):
+    """
+    Group positive clips into train *passes* — clips within `gap_min` minutes of
+    each other are the same train — and report recall at the pass level (a pass
+    counts as detected if ANY of its clips yielded >=1 blast). This is the number
+    that matters: catching a train once is catching it. Returns a dict, or None if
+    too few clips carry parseable timestamps.
+    """
+    timed = [(parse_clip_time(p), c >= 1) for p, c in pos_pairs]
+    timed = [(t, det) for t, det in timed if t is not None]
+    untimed = len(pos_pairs) - len(timed)
+    if len(timed) < 2:
+        return None
+    timed.sort(key=lambda x: x[0])
+    passes = []                      # one bool per pass: was it detected?
+    cur_det, last_t = timed[0][1], timed[0][0]
+    for t, det in timed[1:]:
+        if (t - last_t).total_seconds() <= gap_min * 60:
+            cur_det = cur_det or det
+        else:
+            passes.append(cur_det)
+            cur_det = det
+        last_t = t
+    passes.append(cur_det)
+    detected = sum(passes)
+    return {
+        "gap_min": gap_min,
+        "n_passes": len(passes),
+        "detected": detected,
+        "recall": round(detected / len(passes), 3) if passes else 0.0,
+        "n_clips_timed": len(timed),
+        "untimed": untimed,
+    }
 
 
 def sweep_threshold(pos: np.ndarray, neg: np.ndarray):
@@ -890,6 +943,10 @@ def accuracy_lines(v: dict) -> List[str]:
         f"  False alarms:   {v['false_alarms']}/{v['n_negatives']}"
         f"   ({v['false_alarm_rate']:.0%}  →  {v['precision']:.0%} precision)",
     ]
+    if "pass_level_recall" in v:
+        lines.append(
+            f"  Train passes caught:  {v['pass_level_recall']:.0%} "
+            f"(of {v['n_passes']} time-grouped passes — the number that matters)")
     for c in v["by_category"]:
         flag = "   <- most confusable" if (c["rate"] >= CONFUSABLE_RATE
                                            and c["false_alarms"]) else ""
@@ -951,6 +1008,9 @@ def main():
                     help="Force MIN_BLASTS_FOR_CONFIRMATION (default: auto from the "
                          "data). 1 = a single horn blast confirms (best for clips); "
                          "2 = needs a multi-blast pattern (safer on continuous audio).")
+    ap.add_argument("--pass-gap-min", type=float, default=5.0,
+                    help="Clips within this many minutes count as one train pass "
+                         "(default 5) — used for pass-level recall.")
     ap.add_argument("--no-plots", action="store_true",
                     help="Skip the diagnostic plots (no matplotlib needed).")
     ap.add_argument("--no-validate", action="store_true",
@@ -1025,10 +1085,12 @@ def main():
     # How many blasts each clip yields at this config — the 2-blast confirmation
     # rule gates on this. A clip corpus is often single-blast, so requiring 2
     # silently tanks recall; measure it and pick the requirement from the data.
-    pos_counts = blast_counts(pos_files, args.sr, low_hz, high_hz, tiers["medium"],
-                              dur_rec["min"], dur_rec["max"], win_rec["merge"])
-    neg_counts = blast_counts(neg_files, args.sr, low_hz, high_hz, tiers["medium"],
-                              dur_rec["min"], dur_rec["max"], win_rec["merge"])
+    pos_pairs = blast_counts(pos_files, args.sr, low_hz, high_hz, tiers["medium"],
+                             dur_rec["min"], dur_rec["max"], win_rec["merge"])
+    neg_pairs = blast_counts(neg_files, args.sr, low_hz, high_hz, tiers["medium"],
+                             dur_rec["min"], dur_rec["max"], win_rec["merge"])
+    pos_counts = [c for _, c in pos_pairs]
+    neg_counts = [c for _, c in neg_pairs]
     min_blasts, mb_table = recommend_min_blasts(pos_counts, neg_counts, args.min_blasts)
     n_found = sum(1 for c in pos_counts if c >= 1)
     blast_recall = n_found / len(pos_counts) if pos_counts else 0.0
@@ -1041,6 +1103,32 @@ def main():
         print(f"      ≥{k} blast(s):  recall {rec:.0%}   precision {prec:.0%}{star}")
     if args.min_blasts:
         print(f"    (forced to {min_blasts} via --min-blasts)")
+
+    # Group clips into train *passes* by time — catching a pass once = caught it.
+    pass_info = pass_recall(pos_pairs, args.pass_gap_min)
+    if pass_info:
+        print(f"    train passes (clips within {pass_info['gap_min']} min = one train): "
+              f"{pass_info['detected']}/{pass_info['n_passes']} caught "
+              f"({pass_info['recall']:.0%} pass-level recall)")
+        if pass_info["untimed"]:
+            print(f"      ({pass_info['untimed']} clip(s) had no parseable timestamp "
+                  f"— excluded from grouping)")
+    else:
+        print("    (couldn't time-group clips — filenames lack parseable timestamps)")
+
+    # List the positives where no horn was found at all — worth a listen.
+    missed = [p for p, c in pos_pairs if c == 0]
+    if missed:
+        missed_path = outdir / "missed_positives.txt"
+        with open(missed_path, "w", encoding="utf-8") as fh:
+            fh.write(f"# {len(missed)} positive clip(s) with no horn blast detected "
+                     f"(band {low_hz:.0f}-{high_hz:.0f} Hz, tonality ≥ {tiers['medium']})\n")
+            fh.write("# Listen to these: genuinely faint/absent horn, mislabeled, or "
+                     "horn outside the band?\n")
+            for p in missed:
+                fh.write(Path(p).name + "\n")
+        print(f"    {len(missed)} positive(s) had no detected horn → wrote "
+              f"{missed_path.name} (worth a listen)")
     print()
 
     # Collect any caveats worth surfacing in the report / block.
@@ -1098,6 +1186,8 @@ def main():
                 {"k": k, "recall": rec, "precision": prec, "f1": f1}
                 for k, rec, prec, f1 in mb_table
             ],
+            "pass_level": pass_info,
+            "n_missed_positives": len(missed),
             "notes": notes,
         },
         "source": ({"corpus": str(Path(args.corpus).resolve()),
@@ -1145,6 +1235,9 @@ def main():
         validation = validate_detector(pos_files, neg_groups, json_path)
         validation["blast_level_recall"] = round(blast_recall, 3)
         validation["min_blasts"] = min_blasts
+        if pass_info:
+            validation["pass_level_recall"] = pass_info["recall"]
+            validation["n_passes"] = pass_info["n_passes"]
         profile["calibration"]["validation"] = validation
         for c in validation["by_category"]:
             if c["rate"] >= CONFUSABLE_RATE and c["false_alarms"]:
