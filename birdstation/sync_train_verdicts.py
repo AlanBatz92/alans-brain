@@ -114,7 +114,7 @@ def cmd_emit(args):
                  f"(expected a '{args.positive_label}/' folder and/or class folders).")
 
     out = Path(args.out)
-    with out.open("w", newline="") as fh:
+    with out.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["filename", "verdict", "category"])
         w.writerows(rows)
@@ -144,7 +144,7 @@ def cmd_apply(args):
     if not os.path.exists(args.csv):
         sys.exit(f"CSV not found: {args.csv}")
 
-    with open(args.csv, newline="") as fh:
+    with open(args.csv, newline="", encoding="utf-8") as fh:
         entries = [(r["filename"], r["verdict"], r.get("category") or "")
                    for r in csv.DictReader(fh)]
     if not entries:

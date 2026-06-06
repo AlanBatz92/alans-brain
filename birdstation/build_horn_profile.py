@@ -853,6 +853,15 @@ def accuracy_verdict(v: dict) -> str:
 # ---------------------------------------------------------------------------
 
 def main():
+    # Windows consoles can default to cp1252, which chokes on the arrows/emoji in
+    # the summaries. Force UTF-8 on stdout/stderr where supported (file writes
+    # below pass encoding="utf-8" explicitly).
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
     ap = argparse.ArgumentParser(
         description="Calibrate train_horn_detector.py from a labeled corpus.",
     )
@@ -1025,7 +1034,7 @@ def main():
 
     # --- write horn_profile.json (needed for the validation pass) ------------
     json_path = outdir / "horn_profile.json"
-    with open(json_path, "w") as f:
+    with open(json_path, "w", encoding="utf-8") as f:
         json.dump(profile, f, indent=2)
 
     # --- 4. End-to-end validation -------------------------------------------
@@ -1041,7 +1050,7 @@ def main():
                 notes.append(f"'{c['category']}' triggers the detector "
                              f"{c['rate']:.0%} of the time — your most confusable "
                              f"class; more such clips will help separate it.")
-        with open(json_path, "w") as f:  # re-dump with validation + late notes
+        with open(json_path, "w", encoding="utf-8") as f:  # re-dump w/ validation
             json.dump(profile, f, indent=2)
         print()
 
@@ -1049,7 +1058,7 @@ def main():
     block = build_parameter_block(profile, notes)
 
     report_path = outdir / "calibration_report.txt"
-    with open(report_path, "w") as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         f.write("Emmaus Observatory — train horn detector calibration\n")
         f.write(f"Generated {profile['generated']}\n\n")
         f.write(f"Corpus: {n_pos} trains, {n_neg} negatives "

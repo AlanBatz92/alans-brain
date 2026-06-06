@@ -260,8 +260,14 @@ def extract_horn_band_features(
     horn_energy = S[horn_mask, :].mean(axis=0)
     broad_energy = S[broad_mask, :].mean(axis=0)
 
-    # Tonality ratio (avoid divide-by-zero)
-    tonality = np.where(broad_energy > 1e-8, horn_energy / broad_energy, 0.0)
+    # Tonality ratio. Divide only where the denominator is non-trivial (silent
+    # frames have ~0 broadband energy); np.where would still evaluate the full
+    # division first and emit a spurious "invalid value in divide" warning.
+    tonality = np.divide(
+        horn_energy, broad_energy,
+        out=np.zeros_like(horn_energy),
+        where=broad_energy > 1e-8,
+    )
 
     # RMS in horn band per frame
     rms = horn_energy  # mean amplitude in horn band, proportional to RMS
