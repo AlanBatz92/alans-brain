@@ -74,25 +74,34 @@ negatives** into whichever folders fit.
 ## Step 1 — Pull a batch of recordings onto your PC
 
 Windows 11 already has `ssh` and `scp` built in, so this works in PowerShell with
-no extra installs. First, find where the AudioMoth WAVs live on the box (do this
-once and remember the path it prints):
+no extra installs. First, find where the WAVs live on the box. This command lists
+**every folder that holds `.wav` files, with a count, biggest first** — so the
+location is unmistakable no matter how the files are named or where they sit
+(do this once and remember the top path):
 
 ```powershell
-ssh alan@192.168.4.132 'find ~ -maxdepth 3 -name "20*_*.WAV" 2>/dev/null | head'
+ssh alan@192.168.4.132 'find /home /media /mnt -iname "*.wav" -printf "%h\n" 2>/dev/null | sort | uniq -c | sort -rn | head -20'
 ```
 
-(First connection asks you to type `yes` and your box password.) Then copy a date
-range into your staging folder. AudioMoth names files `YYYYMMDD_HHMMSS.WAV`, so
-"the first week of June" is a simple pattern:
+(First connection asks you to type `yes` and your box password.) You'll get
+something like `312 /home/alan/train_clips`. The live train detector saves its
+clips to **`/home/alan/train_clips`** (named `train_<date>.wav`), so that's a
+likely home for the corpus you've been vetting; a separate AudioMoth dump would
+show up as its own folder in the list.
+
+Then copy a batch into your staging folder. Match the **real** name pattern you
+saw above — for AudioMoth `YYYYMMDD_HHMMSS.WAV` files, "the first week of June" is:
 
 ```powershell
-# replace <RECORDINGS_DIR> with the path you found above
+# replace <RECORDINGS_DIR> with the top path from the command above
 scp 'alan@192.168.4.132:<RECORDINGS_DIR>/2026060[1-7]_*.WAV' C:\horn\corpus\_incoming\
 ```
 
+If the files are lowercase `.wav` or use a `train_` prefix (the live clips do),
+adjust the pattern — e.g. `train_2026-06-0[1-7]*.wav` — or just **grab the whole
+folder** and sort from there: `scp -r 'alan@192.168.4.132:<RECORDINGS_DIR>' C:\horn\corpus\_incoming\`.
 Keep the single quotes around the remote part — they let the **box** expand the
-`*` pattern. You already vetted through half of 6/1, so just grab from where you
-stopped; re-copying a file you've already sorted is harmless — you'll skip it.
+`*`. Re-copying a file you've already sorted is harmless — you'll skip it.
 
 *(No ssh/scp for some reason? You can also pull the SD card or use WinSCP's
 drag-and-drop GUI — anything that lands the WAVs in `C:\horn\corpus\_incoming\`.)*
@@ -275,7 +284,8 @@ C:\horn\env\Scripts\pip install librosa numpy scipy matplotlib soundfile
 mkdir C:\horn\corpus; cd C:\horn\corpus
 mkdir trains,vehicles,planes,gunshots,construction,other,unsure,_incoming
 
-# 1. pull a week of recordings (replace <RECORDINGS_DIR>)
+# 1. find where the WAVs live, then pull a batch (replace <RECORDINGS_DIR>)
+ssh alan@192.168.4.132 'find /home /media /mnt -iname "*.wav" -printf "%h\n" 2>/dev/null | sort | uniq -c | sort -rn | head -20'
 scp 'alan@192.168.4.132:<RECORDINGS_DIR>/2026060[1-7]_*.WAV' C:\horn\corpus\_incoming\
 
 # 2. sort in File Explorer + VLC/Audacity (trains\ = horns, everything else = negatives)
