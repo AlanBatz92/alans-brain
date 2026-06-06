@@ -262,17 +262,26 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
     run on demand. `train_horn_detector.py` scans a file/dir of WAVs (STFT → horn-band
     RMS + a tonality ratio; sustained blasts; 2+ within `CONFIRMATION_WINDOW_SEC` =
     train), parses AudioMoth `YYYYMMDD_HHMMSS.WAV` timestamps, optional CSV out.
-    `build_horn_profile.py` is the **one-time calibration**: feed it a folder of
-    confirmed horns + a folder of confirmed no-train clips and it derives the real
-    horn band (positive-vs-negative spectral contrast), calibrates the
-    tonality/duration/gap thresholds against the corpus (reusing the detector's own
-    feature fns), writes diagnostic PNGs + a parameter block + `horn_profile.json`.
-    The detector **auto-loads** a `horn_profile.json` sitting next to it (or via
-    `--profile`), so calibration flows into detection with no source edits. Deps:
-    `librosa numpy scipy` (+ `matplotlib` for the profiler's plots). The corpus WAVs
-    and generated `horn_profile.json` / `horn_profile_out/` are **gitignored**
-    (deployment-specific, like `*.db`); the param block is the durable record. Full
-    write-up in `Build History.md` (2026-06-06) and `birdstation/README.md`.
+    `build_horn_profile.py` is the **calibration**: it reads a **category-folder
+    corpus** (`--corpus ROOT` where `trains/` = positives and every other subfolder
+    = a labeled negative class — planes/vehicles/gunshots/…; or explicit
+    `--positives`/repeatable `--negatives`), derives the real horn band
+    (positive-vs-negative spectral contrast), calibrates the tonality/duration/gap
+    thresholds **at the operating threshold** (reusing the detector's own feature
+    fns), and writes diagnostic PNGs + a parameter block + `horn_profile.json`. A
+    **`--check`** mode just censuses the corpus and gives a GOOD/OK/THIN readiness
+    verdict (run mid-sort). It ends with an **end-to-end validation pass** — runs
+    the *real* detector over the labeled clips and reports recall/precision with a
+    **per-class false-alarm breakdown** (the honest "is it accurate" answer; it also
+    caught a duration-bound bug during the build). The detector **auto-loads** a
+    `horn_profile.json` sitting next to it (or via `--profile`), so calibration
+    flows into detection with no source edits. Deps: `librosa numpy scipy` (+
+    `matplotlib` for plots). Corpus WAVs and generated `horn_profile.json` /
+    `horn_profile_out/` are **gitignored** (deployment-specific, like `*.db`); the
+    param block is the durable record. **`birdstation/HORN-CORPUS-GUIDE.md`** is the
+    plain-English **Windows 11** runbook (pull recordings → sort in VLC/Audacity →
+    `--check` → calibrate → read accuracy → deploy). Full write-up in
+    `Build History.md` (2026-06-06).
   - `review_trains.py` — **manual** CLI on the box to vet pending train events (play clip → train/false/unsure → DB). Near-term vetting workflow; web UI is future (`PLAN-train-vetting.md`).
   - `purge_train_clips.py` — `purge-train-clips.timer` (**Sun 04:00**): deletes rejected + aged-orphan clips, keeps approved-train + still-pending. `--dry-run` supported.
   - `review_birds.py` — **manual** CLI on the box to confirm life-list detections from their archived clips (correct/wrong/unsure → `detections.verified`); `--stats` prints measured precision by confidence band (calibration data).

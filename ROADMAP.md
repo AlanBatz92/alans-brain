@@ -153,6 +153,12 @@ into the prose. More fragile; revisit only if the current style feels lacking.
   trains improve detection" loop (the *live-stream* `train_detector.service` vetting/tuning
   loop is still future). Generated profiles are gitignored; the param block is the durable
   record. Verified end-to-end on a synthetic corpus. See `Build History.md` (2026-06-06).
+  **Same day, management pass:** the profiler now reads a **category-folder corpus**
+  (`--corpus`: `trains/` = positives, every other folder = a labeled negative class), has a
+  **`--check`** readiness census, and ends with an **end-to-end validation** (real detector
+  over the labeled clips → recall/precision + per-class false-alarm breakdown; it caught a
+  duration-bound bug, fixed). Plus **`birdstation/HORN-CORPUS-GUIDE.md`**, a plain-English
+  **Windows 11** runbook (sort in VLC/Audacity → calibrate → read accuracy → deploy).
 
 - **2026-06-05** — Observatory: **"Almost a lifer" shelf** on the Birds tab — turns the
   life-list rule into a progress game. Surfaces species heard at 85%+ in the **rolling last

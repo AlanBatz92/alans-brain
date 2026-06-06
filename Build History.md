@@ -10,6 +10,49 @@
 
 ---
 
+## 2026-06-06 — P2 horn study: corpus management, validation, Windows runbook
+
+Follow-up to the same-day P2 build, in response to "make it idiot-proof to manage."
+Reworked `build_horn_profile.py` around how Alan actually works — he pulls a week of
+AudioMoth WAVs to a **Windows** PC and sorts them by ear (VLC/Audacity) into
+category folders (trains, planes, vehicles, gunshots, construction…), where
+everything that isn't a train is a negative.
+
+- **Category-folder corpus (`--corpus ROOT`):** `trains/` = positives, every other
+  subfolder = a labeled negative class (`unsure/`, `_*`, and the output dir are
+  skipped). Also accepts repeatable `--negatives DIR DIR…`. Matches the sort-into-
+  folders workflow with zero glue.
+- **`--check` readiness census:** counts each class and gives a plain verdict
+  (GOOD/OK/THIN + nudges like "only 12 trains — aim for 20+"). Runnable mid-sort,
+  no calibration — directly answers "do I have enough yet / is this strong enough."
+- **End-to-end validation pass:** after deriving the profile it runs the *real*
+  detector over the labeled clips and reports **recall / precision with a per-class
+  false-alarm breakdown** ("planes 2/40, gunshots 0/20") + a one-line verdict — the
+  honest "is it accurate" answer, in the user's own data.
+- **Calibration coherence fix (found by the new validation):** durations were
+  measured at a permissive setting but the detector runs at `medium`, and a tight
+  `BLAST_MAX` clipped the longest real horn blasts → they failed the 2-blast
+  confirmation (synthetic recall fell to 50%). Now blast geometry is measured **at
+  the derived operating threshold** (detector's own finder, duration filter opened
+  wide so the distribution isn't censored), and `recommend_durations` carries
+  headroom (min −30%, max +20%). Synthetic recall went 50% → 92% at 100% precision.
+  Refactor: replaced `file_metrics`/`collect_metrics`/`combine_metrics` with
+  `collect_tonality` (tiers/plots) + `measure_blasts_at` (operating-point geometry).
+  JSON gained `negative_categories` + `calibration.validation`.
+- **`HORN-CORPUS-GUIDE.md`** — a calm, linear **Windows 11** runbook (the user has
+  no Mac): one-time setup (`C:\horn`, venv, folders), pull recordings with the
+  built-in `scp`, sort in File Explorer + VLC/Audacity, `--check`, calibrate, read
+  the accuracy block, deploy the profile (next to the detector, or `scp` to the
+  box). Plus a cheat sheet and a "when something looks off" FAQ.
+
+**Verified** end-to-end on a synthetic Windows-shaped corpus (12 trains + planes/
+vehicles/gunshots negatives): `--check`, `--corpus`, explicit multi-`-n`, the
+validation pass, and the regenerated profile all behave; the detector still
+auto-loads the richer JSON (extra keys ignored). Docs synced (Current State,
+ROADMAP, README). The earlier Mac-flavored draft of the guide was replaced.
+
+---
+
 ## 2026-06-06 — P2 train horn study: offline detector + corpus calibration
 
 A second, **offline** train detector for the Emmaus Observatory's P2 freight

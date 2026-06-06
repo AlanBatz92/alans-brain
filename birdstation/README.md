@@ -29,7 +29,8 @@ birdstation/
   review_birds.py     # CLI: confirm lifers; --stats prints measured precision
   purge_low_confidence.py # CLI one-shot: drop detections below the 0.60 preserve floor
   train_horn_detector.py  # CLI: offline horn detection in AudioMoth WAVs (P2 study)
-  build_horn_profile.py   # CLI one-time: calibrate the horn detector from a labeled corpus
+  build_horn_profile.py   # CLI: calibrate the horn detector from a category-folder corpus
+  HORN-CORPUS-GUIDE.md    # the run-the-whole-thing runbook (Windows; sort→calibrate→run)
   schema.sql          # full birdnet.db schema + migration log
   systemd/            # .service / .timer units (templated — no inline secrets)
   link_units.sh       # symlink systemd/*.{service,timer} into /etc (run-from-clone units)
@@ -185,17 +186,23 @@ Both tools are **manual CLIs** (no systemd unit), run on demand:
 
 - **`train_horn_detector.py`** — scans a file or directory of AudioMoth WAVs and
   logs confirmed horn events (optionally to CSV). Needs `librosa numpy scipy`.
-- **`build_horn_profile.py`** — the **one-time calibration pass**. Point it at a
-  folder of confirmed horn WAVs and a folder of confirmed no-train WAVs; it finds
-  the real horn band for this mic, calibrates the tonality/duration/gap
-  thresholds against the corpus, writes diagnostic plots + `horn_profile.json`,
-  and prints a ready-to-paste parameter block. Also needs `matplotlib`.
+- **`build_horn_profile.py`** — the calibration pass. Reads a **category-folder
+  corpus** (`trains/` = positives, every other folder = a labeled negative class:
+  `planes/`, `vehicles/`, `gunshots/`, …), finds the real horn band for this mic
+  (positive-vs-negative spectral contrast), calibrates the tonality/duration/gap
+  thresholds **at the operating threshold**, and writes diagnostic plots +
+  `horn_profile.json` + a parameter block. A `--check` mode just censuses the
+  corpus and says whether it's strong enough. Ends with an **end-to-end
+  validation pass** — it runs the *real* detector over the labeled clips and
+  reports recall / precision with a per-class false-alarm breakdown (which sounds
+  fool it). Also needs `matplotlib`.
 
 ```bash
 # in a venv with librosa/numpy/scipy/matplotlib:
-python3 build_horn_profile.py -p ./horn_positives -n ./no_train -o ./profile_out
-# review profile_out/*.png, then activate the calibration for the detector:
-cp profile_out/horn_profile.json ~/alans-brain/birdstation/horn_profile.json
+python3 build_horn_profile.py --corpus ./corpus --check     # ready yet?
+python3 build_horn_profile.py --corpus ./corpus -o ./out    # calibrate + validate
+# review ./out/*.png + the accuracy block, then activate the profile:
+cp out/horn_profile.json ~/alans-brain/birdstation/horn_profile.json
 python3 train_horn_detector.py ~/audiomoth_recordings/ --output detections.csv
 ```
 
@@ -205,6 +212,11 @@ calibration flows straight into detection. The corpus WAVs and the generated
 `horn_profile.json` / `horn_profile_out/` are **gitignored** (deployment-specific
 data, like `*.db`); the durable record is the parameter block, pasted into
 `train_horn_detector.py` and logged in `Build History.md`.
+
+**→ The full, step-by-step workflow (pull recordings → sort on your Mac →
+calibrate → read accuracy → deploy) is in [`HORN-CORPUS-GUIDE.md`](HORN-CORPUS-GUIDE.md).**
+That's the doc to hand someone who just wants to run the system without learning
+its internals.
 
 > **Duplicate unit:** the box had both `train_detector.service` and
 > `traindetect.service` pointing at the same script (two detectors writing

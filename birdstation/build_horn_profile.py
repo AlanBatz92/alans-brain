@@ -35,10 +35,24 @@ re-implemented), so the numbers reflect what the deployed code will really do.
 Dependencies:
   pip install librosa numpy scipy matplotlib
 
-Usage (on the box):
-  python3 build_horn_profile.py --positives ./positives --negatives ./negatives
-  python3 build_horn_profile.py -p ./pos -n ./neg -o ./profile_out
-  python3 build_horn_profile.py -p ./pos -n ./neg --no-plots   # numbers only
+Corpus layout (the easy way) — one folder, a subfolder per sound class:
+  corpus/
+    trains/         <- confirmed horns (the positives)
+    vehicles/       <- everything else = a labeled negative class
+    planes/
+    gunshots/
+    construction/
+    unsure/         <- skipped (parking lot for "not sure yet")
+
+Usage:
+  # Am I ready? (census + verdict, no calibration — run it while still sorting)
+  python3 build_horn_profile.py --corpus ./corpus --check
+
+  # Full calibration (derives the band, picks thresholds, validates end-to-end)
+  python3 build_horn_profile.py --corpus ./corpus
+
+  # Or point at the two classes explicitly (negatives can be several dirs):
+  python3 build_horn_profile.py -p ./trains -n ./planes ./vehicles ./gunshots
 """
 
 import argparse
@@ -115,6 +129,13 @@ SPEC_WINDOW_SEC = 4.0
 SPEC_MAX_FREQ_HZ = 2000
 
 WAV_EXTENSIONS = (".wav", ".WAV")
+
+# Corpus layout for --corpus mode: one subfolder per sound class. The positive
+# folder holds confirmed horns; every other folder is a labeled negative class
+# (vehicles, planes, gunshots, construction, ...). These folder names are skipped
+# when collecting negatives (work-in-progress / tooling, not sound classes).
+DEFAULT_POSITIVE_LABEL = "trains"
+CORPUS_EXCLUDE = {"unsure", "_review", "horn_profile_out"}
 
 # Snapshot the detector's current constants so the parameter block can show
 # "was X" next to each measured value.
@@ -277,64 +298,62 @@ def derive_horn_band(pos_spec, neg_spec, freqs):
 # Threshold calibration — run the detector's features over the corpus
 # ---------------------------------------------------------------------------
 
-def file_metrics(y: np.ndarray, sr: int, low_hz: float, high_hz: float) -> dict:
+def collect_tonality(files: List[str], sr: int, low_hz: float, high_hz: float,
+                     label: str):
     """
-    Per-file calibration metrics, computed with the detector's own functions
-    over the derived horn band:
-      - tonality: the 95th-percentile tonality among the file's loudest frames
-        (what the detector gates on — it only fires on top-RMS frames)
-      - rms: peak horn-band RMS
-      - durations / gaps: from the detector's blast finder at low sensitivity
+    Per-file tonality + peak RMS over the derived band — what the tier selection
+    and the distribution plots run on. The tonality stat is the 95th-percentile
+    tonality among the file's loudest frames, mirroring the detector's gate (it
+    only fires on top-RMS frames). Returns (tonality_array, peak_rms_array).
     """
-    rms, tonality = extract_horn_band_features(y, sr, low_hz=low_hz, high_hz=high_hz)
-    if rms.size == 0:
-        return {"tonality": 0.0, "peak_rms": 0.0, "durations": [], "gaps": []}
-
-    loud = rms >= np.percentile(rms, RMS_THRESHOLD_PERCENTILE)
-    ton_loud = tonality[loud] if loud.any() else tonality
-    file_tonality = pct(ton_loud, TONALITY_PERCENTILE)
-
-    # Enumerate blasts permissively so durations/gaps reflect real horns, not a
-    # threshold we're still trying to choose.
-    blasts = find_horn_blasts(rms, tonality, sr, HOP_LENGTH, sensitivity="low")
-    durations = [b.duration for b in blasts]
-    gaps = [
-        blasts[i + 1].start_sec - blasts[i].end_sec
-        for i in range(len(blasts) - 1)
-    ]
-    return {
-        "tonality": file_tonality,
-        "peak_rms": float(rms.max()),
-        "durations": durations,
-        "gaps": gaps,
-    }
-
-
-def collect_metrics(files: List[str], sr: int, low_hz: float, high_hz: float,
-                    label: str) -> dict:
-    """Aggregate per-file metrics across a corpus."""
-    tonalities, peak_rms, durations, gaps = [], [], [], []
-    n_blasts_files = 0
+    tons, rmss = [], []
     for f in files:
         y = load_audio(f, sr)
         if y is None:
             continue
-        m = file_metrics(y, sr, low_hz, high_hz)
-        tonalities.append(m["tonality"])
-        peak_rms.append(m["peak_rms"])
-        durations.extend(m["durations"])
-        gaps.extend(m["gaps"])
-        if m["durations"]:
-            n_blasts_files += 1
-    print(f"    {label}: {len(tonalities)} files, "
-          f"{len(durations)} blast(s), {len(gaps)} inter-blast gap(s)")
-    return {
-        "tonality": np.array(tonalities, dtype=float),
-        "peak_rms": np.array(peak_rms, dtype=float),
-        "durations": np.array(durations, dtype=float),
-        "gaps": np.array(gaps, dtype=float),
-        "n_blast_files": n_blasts_files,
-    }
+        rms, tonality = extract_horn_band_features(y, sr, low_hz=low_hz, high_hz=high_hz)
+        if rms.size == 0:
+            continue
+        loud = rms >= np.percentile(rms, RMS_THRESHOLD_PERCENTILE)
+        ton_loud = tonality[loud] if loud.any() else tonality
+        tons.append(pct(ton_loud, TONALITY_PERCENTILE))
+        rmss.append(float(rms.max()))
+    print(f"    {label}: {len(tons)} file(s)")
+    return np.array(tons, dtype=float), np.array(rmss, dtype=float)
+
+
+def measure_blasts_at(files: List[str], sr: int, low_hz: float, high_hz: float,
+                      tonality_thresh: float):
+    """
+    Measure positive blast durations + inter-blast gaps **at the operating
+    threshold** the detector will actually run (the derived `medium` tonality),
+    with the detector's own blast finder but its duration filter opened wide — so
+    the raw run-length distribution isn't censored by the very bounds we're
+    trying to choose. (Measuring at a looser threshold over-estimates durations,
+    which is what made an early BLAST_MAX clip real horns.) Returns
+    (durations, gaps) as arrays of seconds.
+    """
+    import train_horn_detector as thd
+    saved = (thd.BLAST_MIN_DURATION_SEC, thd.BLAST_MAX_DURATION_SEC,
+             thd.TONALITY_RATIO_THRESHOLD)
+    durations, gaps = [], []
+    try:
+        thd.BLAST_MIN_DURATION_SEC = 0.0
+        thd.BLAST_MAX_DURATION_SEC = float("inf")
+        thd.TONALITY_RATIO_THRESHOLD = dict(saved[2], medium=tonality_thresh)
+        for f in files:
+            y = load_audio(f, sr)
+            if y is None:
+                continue
+            rms, ton = thd.extract_horn_band_features(y, sr, low_hz=low_hz, high_hz=high_hz)
+            blasts = thd.find_horn_blasts(rms, ton, sr, HOP_LENGTH, "medium")
+            durations += [b.duration for b in blasts]
+            gaps += [blasts[i + 1].start_sec - blasts[i].end_sec
+                     for i in range(len(blasts) - 1)]
+    finally:
+        (thd.BLAST_MIN_DURATION_SEC, thd.BLAST_MAX_DURATION_SEC,
+         thd.TONALITY_RATIO_THRESHOLD) = saved
+    return np.array(durations, dtype=float), np.array(gaps, dtype=float)
 
 
 def sweep_threshold(pos: np.ndarray, neg: np.ndarray):
@@ -598,12 +617,18 @@ def make_plots(outdir: Path, spectra: dict, band: dict, posm: dict, negm: dict,
 # ---------------------------------------------------------------------------
 
 def recommend_durations(pos_durations: np.ndarray) -> dict:
-    """Blast-duration bounds from the positive blasts (5th / 97th percentile)."""
+    """
+    Blast-duration bounds with headroom so they reject non-horn tones WITHOUT
+    clipping real horns: min ~30% below the 5th-percentile blast, max ~20% above
+    the longest. (A tight max once failed real multi-blast horns the 2-blast
+    confirmation, so the bounds deliberately stay generous toward keeping horns.)
+    """
     if pos_durations.size < 3:
         return {"min": DEFAULTS["blast_min_duration_sec"],
                 "max": DEFAULTS["blast_max_duration_sec"], "from_data": False}
-    lo = max(0.5, round(pct(pos_durations, 5), 1))
-    hi = round(pct(pos_durations, 97) * 2) / 2  # nearest 0.5
+    lo = max(0.4, round(pct(pos_durations, 5) * 0.7, 1))
+    dmax = max(pct(pos_durations, 99), float(pos_durations.max()))
+    hi = float(np.ceil(dmax * 1.2 * 2) / 2)  # +20% headroom, rounded up to 0.5
     hi = min(hi, 15.0)
     if hi <= lo:
         hi = lo + 1.0
@@ -669,6 +694,161 @@ def build_parameter_block(profile: dict, notes: List[str]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Corpus gathering, readiness, and end-to-end validation
+# ---------------------------------------------------------------------------
+
+def gather_corpus(args):
+    """
+    Resolve positives and *labeled* negative classes from either a --corpus root
+    (one subfolder per sound class; `trains/` = positives, every other folder = a
+    negative class) or explicit --positives / --negatives dirs.
+
+    Returns (pos_files, neg_groups) where neg_groups maps class name → file list.
+    """
+    neg_groups: dict = {}
+    if args.corpus:
+        root = Path(args.corpus)
+        if not root.is_dir():
+            sys.exit(f"--corpus is not a directory: {root}")
+        pos_dir = root / args.positive_label
+        if not pos_dir.is_dir():
+            sys.exit(
+                f"No '{args.positive_label}/' folder in {root}. Put confirmed "
+                f"horns there; every other subfolder becomes a negative class."
+            )
+        pos_files = list_wavs(str(pos_dir))
+        out_resolved = Path(args.output_dir).resolve()
+        for sub in sorted(p for p in root.iterdir() if p.is_dir()):
+            name = sub.name
+            if (name == args.positive_label or name in CORPUS_EXCLUDE
+                    or name.startswith((".", "_"))
+                    or sub.resolve() == out_resolved):
+                continue
+            files = list_wavs(str(sub))
+            if files:
+                neg_groups[name] = files
+    else:
+        if not args.positives or not args.negatives:
+            sys.exit("Give either --corpus ROOT, or both --positives and "
+                     "--negatives (one or more dirs).")
+        pos_files = list_wavs(args.positives)
+        for nd in args.negatives:
+            files = list_wavs(nd)
+            if files:
+                neg_groups.setdefault(Path(nd).name or nd, []).extend(files)
+    return pos_files, neg_groups
+
+
+def corpus_census(pos_files, neg_groups):
+    """Print the file counts per class; return (n_positives, total_negatives)."""
+    total_neg = sum(len(v) for v in neg_groups.values())
+    print(f"  {'trains (positives)':<22}{len(pos_files):>5}")
+    if neg_groups:
+        for name, files in sorted(neg_groups.items(), key=lambda kv: -len(kv[1])):
+            print(f"  {name + ' (negative)':<22}{len(files):>5}")
+        print(f"  {'— total negatives':<22}{total_neg:>5}")
+    else:
+        print("  (no negative classes found)")
+    return len(pos_files), total_neg
+
+
+def readiness_verdict(n_pos, neg_groups):
+    """A plain-English read on whether the corpus is strong enough to trust."""
+    total_neg = sum(len(v) for v in neg_groups.values())
+    n_cats = len(neg_groups)
+    msgs = []
+    if n_pos >= 20 and total_neg >= 30 and n_cats >= 3:
+        level, headline = "GOOD", "Solid dataset — calibrate away."
+    elif n_pos >= 10 and total_neg >= 15:
+        level, headline = "OK", ("Workable — it'll calibrate; more clips "
+                                 "(especially negatives) will firm up the numbers.")
+    else:
+        level, headline = "THIN", ("Thin — fine to experiment, but gather more "
+                                   "before trusting the numbers.")
+    if n_pos < 15:
+        msgs.append(f"Only {n_pos} train clip(s) — aim for 20+ so recall means something.")
+    if total_neg < 20:
+        msgs.append(f"Only {total_neg} negative(s) — aim for 30+ across a few classes.")
+    if neg_groups:
+        biggest = max(neg_groups.values(), key=len)
+        if total_neg and len(biggest) / total_neg > 0.8 and n_cats > 1:
+            msgs.append("Negatives are mostly one class — add variety so the "
+                        "detector learns what ISN'T a horn from several angles.")
+    if n_cats < 2 and total_neg:
+        msgs.append("Add a second kind of negative (planes, vehicles, gunshots…).")
+    return level, headline, msgs
+
+
+def validate_detector(pos_files, neg_groups, profile_path):
+    """
+    The truest accuracy check: apply the freshly-built profile and run the REAL
+    detector (full multi-blast confirmation) over the labeled corpus end to end.
+    Returns recall on positives plus a per-class false-alarm breakdown.
+    """
+    import train_horn_detector as thd
+    thd.load_profile(str(profile_path))  # apply derived constants to the detector
+
+    def fires(path):
+        try:
+            return len(thd.process_file(path, sensitivity="medium", verbose=False)) > 0
+        except Exception:  # noqa: BLE001 — a bad file shouldn't abort validation
+            return False
+
+    n_pos = len(pos_files)
+    pos_hit = sum(1 for f in pos_files if fires(f))
+
+    by_cat, total_neg, total_fp = [], 0, 0
+    for name, files in sorted(neg_groups.items(), key=lambda kv: -len(kv[1])):
+        fp = sum(1 for f in files if fires(f))
+        by_cat.append({"category": name, "n": len(files), "false_alarms": fp,
+                       "rate": round(fp / len(files), 3) if files else 0.0})
+        total_neg += len(files)
+        total_fp += fp
+
+    return {
+        "n_positives": n_pos,
+        "positives_detected": pos_hit,
+        "recall": round(pos_hit / n_pos, 3) if n_pos else 0.0,
+        "n_negatives": total_neg,
+        "false_alarms": total_fp,
+        "false_alarm_rate": round(total_fp / total_neg, 3) if total_neg else 0.0,
+        "precision": round(pos_hit / (pos_hit + total_fp), 3)
+        if (pos_hit + total_fp) else 1.0,
+        "by_category": by_cat,
+    }
+
+
+CONFUSABLE_RATE = 0.30  # a negative class fooling the detector this often = worth flagging
+
+
+def accuracy_lines(v: dict) -> List[str]:
+    """Plain-English accuracy summary lines (shared by console + report)."""
+    lines = [
+        f"  Trains caught:  {v['positives_detected']}/{v['n_positives']}"
+        f"   ({v['recall']:.0%} recall)",
+        f"  False alarms:   {v['false_alarms']}/{v['n_negatives']}"
+        f"   ({v['false_alarm_rate']:.0%}  →  {v['precision']:.0%} precision)",
+    ]
+    for c in v["by_category"]:
+        flag = "   <- most confusable" if (c["rate"] >= CONFUSABLE_RATE
+                                           and c["false_alarms"]) else ""
+        lines.append(f"    {c['category']:<14}{c['false_alarms']:>3}/{c['n']:<4}"
+                     f" ({c['rate']:.0%}){flag}")
+    return lines
+
+
+def accuracy_verdict(v: dict) -> str:
+    """One-line read on whether this profile is good enough."""
+    r, p = v["recall"], v["precision"]
+    if r >= 0.85 and p >= 0.90:
+        return "Strong — this profile is ready to use."
+    if r >= 0.70 and p >= 0.80:
+        return "Decent — usable; watch the confusable class(es) above."
+    return ("Needs work — gather more/varied clips, or the horn just isn't "
+            "separable from these sounds at this distance.")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -676,37 +856,62 @@ def main():
     ap = argparse.ArgumentParser(
         description="Calibrate train_horn_detector.py from a labeled corpus.",
     )
-    ap.add_argument("--positives", "-p", required=True,
-                    help="Directory of confirmed train-horn WAVs.")
-    ap.add_argument("--negatives", "-n", required=True,
-                    help="Directory of confirmed no-train WAVs.")
+    # Easy mode: one corpus folder with a subfolder per sound class.
+    ap.add_argument("--corpus", "-c", default=None,
+                    help="Corpus root with one subfolder per sound class: "
+                         "'trains/' = positives, every OTHER folder = a negative "
+                         "class (vehicles, planes, gunshots, construction...).")
+    # Or point at the two classes explicitly.
+    ap.add_argument("--positives", "-p", default=None,
+                    help="Directory of confirmed horn WAVs (instead of --corpus).")
+    ap.add_argument("--negatives", "-n", nargs="+", default=None,
+                    help="One or more dirs of no-train WAVs (instead of --corpus).")
+    ap.add_argument("--positive-label", default=DEFAULT_POSITIVE_LABEL,
+                    help=f"Corpus subfolder holding positives (default "
+                         f"'{DEFAULT_POSITIVE_LABEL}').")
     ap.add_argument("--output-dir", "-o", default="horn_profile_out",
                     help="Where to write plots, horn_profile.json, and the report "
                          "(default: ./horn_profile_out).")
     ap.add_argument("--sr", type=int, default=TARGET_SR,
                     help=f"Resample rate (default {TARGET_SR}, the detector's).")
+    ap.add_argument("--check", action="store_true",
+                    help="Just census the corpus and say if it's strong enough — "
+                         "no calibration. Fast; use it while you're still sorting.")
     ap.add_argument("--no-plots", action="store_true",
                     help="Skip the diagnostic plots (no matplotlib needed).")
+    ap.add_argument("--no-validate", action="store_true",
+                    help="Skip the end-to-end detector validation pass (faster).")
     ap.add_argument("--no-json", action="store_true",
-                    help="Don't write horn_profile.json.")
+                    help="Don't keep horn_profile.json after the run.")
     args = ap.parse_args()
 
-    pos_files = list_wavs(args.positives)
-    neg_files = list_wavs(args.negatives)
+    pos_files, neg_groups = gather_corpus(args)
     if not pos_files:
-        sys.exit(f"No WAV files in positives dir: {args.positives}")
-    if not neg_files:
-        sys.exit(f"No WAV files in negatives dir: {args.negatives}")
+        sys.exit("No positive (train) WAVs found — nothing to calibrate.")
 
+    # --- Corpus census + readiness (always shown) ----------------------------
+    print("Corpus census:")
+    n_pos, n_neg = corpus_census(pos_files, neg_groups)
+    level, headline, msgs = readiness_verdict(n_pos, neg_groups)
+    print(f"\nReadiness: {level} — {headline}")
+    for m in msgs:
+        print(f"  • {m}")
+    print()
+
+    if args.check:
+        return  # census-only; nothing written
+
+    if not neg_groups:
+        sys.exit("No negative WAVs found — calibration needs both classes "
+                 "(add some non-train folders / dirs).")
+
+    neg_files = [f for files in neg_groups.values() for f in files]
     outdir = Path(args.output_dir)
     outdir.mkdir(parents=True, exist_ok=True)
-
-    print(f"Positives: {len(pos_files)} file(s) in {args.positives}")
-    print(f"Negatives: {len(neg_files)} file(s) in {args.negatives}")
     print(f"Output dir: {outdir}\n")
 
     # --- 1. Spectral analysis ------------------------------------------------
-    print("[1/3] Spectral analysis — finding the horn band...")
+    print("[1/4] Spectral analysis — finding the horn band...")
     pos_spec, freqs = median_spectrum(pos_files, args.sr, "positive")
     neg_spec, _ = median_spectrum(neg_files, args.sr, "negative")
     if pos_spec is None or neg_spec is None:
@@ -719,14 +924,22 @@ def main():
           f"{'' if band_ok else '  [low confidence — kept default band]'}\n")
 
     # --- 2. Threshold calibration -------------------------------------------
-    print("[2/3] Threshold calibration — running detector features over corpus...")
-    posm = collect_metrics(pos_files, args.sr, low_hz, high_hz, "positives")
-    negm = collect_metrics(neg_files, args.sr, low_hz, high_hz, "negatives")
+    print("[2/4] Threshold calibration — running detector features over corpus...")
+    pos_ton, pos_rms = collect_tonality(pos_files, args.sr, low_hz, high_hz, "positives")
+    neg_ton, neg_rms = collect_tonality(neg_files, args.sr, low_hz, high_hz, "negatives")
 
-    tiers, med_p, med_r, ton_ok = pick_tonality_thresholds(
-        posm["tonality"], negm["tonality"])
-    dur_rec = recommend_durations(posm["durations"])
-    win_rec = recommend_window(posm["gaps"])
+    tiers, med_p, med_r, ton_ok = pick_tonality_thresholds(pos_ton, neg_ton)
+
+    # Measure blast geometry AT the chosen operating threshold (derived medium),
+    # so the duration/window bounds match how the detector will really run.
+    pos_dur, pos_gap = measure_blasts_at(pos_files, args.sr, low_hz, high_hz,
+                                         tiers["medium"])
+    dur_rec = recommend_durations(pos_dur)
+    win_rec = recommend_window(pos_gap)
+    posm = {"tonality": pos_ton, "peak_rms": pos_rms,
+            "durations": pos_dur, "gaps": pos_gap}
+    negm = {"tonality": neg_ton, "peak_rms": neg_rms,
+            "durations": np.array([]), "gaps": np.array([])}
     print(f"    tonality tiers: {tiers}  "
           f"(medium → precision {med_p:.0%}, recall {med_r:.0%})")
     print(f"    blast duration: {dur_rec['min']}–{dur_rec['max']}s"
@@ -750,12 +963,13 @@ def main():
         notes.append("Too few multi-blast files to calibrate the confirmation "
                      "window — kept default.")
 
-    # --- assemble the profile ------------------------------------------------
+    # --- assemble the profile (validation added after step 4) ----------------
     profile = {
         "generated": date.today().isoformat(),
         "detector": "train_horn_detector.py",
         "n_positives": len(pos_files),
-        "n_negatives": len(neg_files),
+        "n_negatives": n_neg,
+        "negative_categories": {k: len(v) for k, v in neg_groups.items()},
         "horn_freq_low_hz": round(low_hz),
         "horn_freq_high_hz": round(high_hz),
         "peak_freq_hz": round(peak_hz) if peak_hz else None,
@@ -778,21 +992,22 @@ def main():
             "neg_peak_rms_median": round(pct(negm["peak_rms"], 50), 6),
             "notes": notes,
         },
-        "source": {
-            "positives": str(Path(args.positives).resolve()),
-            "negatives": str(Path(args.negatives).resolve()),
-        },
+        "source": ({"corpus": str(Path(args.corpus).resolve()),
+                    "positive_label": args.positive_label}
+                   if args.corpus else
+                   {"positives": str(Path(args.positives).resolve()),
+                    "negatives": [str(Path(d).resolve()) for d in args.negatives]}),
     }
 
     # --- 3. Plots ------------------------------------------------------------
     saved_plots = []
     if args.no_plots:
-        print("[3/3] Plots skipped (--no-plots).\n")
+        print("[3/4] Plots skipped (--no-plots).\n")
     else:
-        print("[3/3] Rendering diagnostic plots...")
+        print("[3/4] Rendering diagnostic plots...")
         spectra = {
             "freqs": freqs, "pos": pos_spec, "neg": neg_spec,
-            "n_pos": len(pos_files), "n_neg": len(neg_files),
+            "n_pos": len(pos_files), "n_neg": n_neg,
         }
         band = {"low": low_hz, "high": high_hz, "peak_hz": peak_hz}
         try:
@@ -808,29 +1023,65 @@ def main():
             print("    ! matplotlib not installed — skipping plots "
                   "(rerun with --no-plots to silence)\n")
 
-    # --- write JSON + report + parameter block -------------------------------
-    block = build_parameter_block(profile, notes)
+    # --- write horn_profile.json (needed for the validation pass) ------------
+    json_path = outdir / "horn_profile.json"
+    with open(json_path, "w") as f:
+        json.dump(profile, f, indent=2)
 
-    if not args.no_json:
-        json_path = outdir / "horn_profile.json"
-        with open(json_path, "w") as f:
+    # --- 4. End-to-end validation -------------------------------------------
+    validation = None
+    if args.no_validate:
+        print("[4/4] Validation skipped (--no-validate).\n")
+    else:
+        print("[4/4] Validating — running the real detector over your corpus...")
+        validation = validate_detector(pos_files, neg_groups, json_path)
+        profile["calibration"]["validation"] = validation
+        for c in validation["by_category"]:
+            if c["rate"] >= CONFUSABLE_RATE and c["false_alarms"]:
+                notes.append(f"'{c['category']}' triggers the detector "
+                             f"{c['rate']:.0%} of the time — your most confusable "
+                             f"class; more such clips will help separate it.")
+        with open(json_path, "w") as f:  # re-dump with validation + late notes
             json.dump(profile, f, indent=2)
-        print(f"Wrote {json_path}")
+        print()
+
+    # --- report + parameter block + console ----------------------------------
+    block = build_parameter_block(profile, notes)
 
     report_path = outdir / "calibration_report.txt"
     with open(report_path, "w") as f:
         f.write("Emmaus Observatory — train horn detector calibration\n")
-        f.write(f"Generated {profile['generated']}\n")
-        f.write(f"Positives: {len(pos_files)}   Negatives: {len(neg_files)}\n\n")
+        f.write(f"Generated {profile['generated']}\n\n")
+        f.write(f"Corpus: {n_pos} trains, {n_neg} negatives "
+                f"across {len(neg_groups)} class(es)\n")
+        for name, files in sorted(neg_groups.items(), key=lambda kv: -len(kv[1])):
+            f.write(f"  {name}: {len(files)}\n")
+        f.write(f"Readiness: {level} — {headline}\n\n")
+        if validation:
+            f.write("Accuracy on your corpus (real detector, this profile):\n")
+            f.write("\n".join(accuracy_lines(validation)) + "\n")
+            f.write(f"Verdict: {accuracy_verdict(validation)}\n\n")
         f.write("Parameter block for train_horn_detector.py:\n\n")
         f.write(block + "\n\n")
         f.write("Full profile (horn_profile.json):\n\n")
         f.write(json.dumps(profile, indent=2) + "\n")
+
+    if args.no_json:
+        json_path.unlink(missing_ok=True)
+    else:
+        print(f"Wrote {json_path}")
     print(f"Wrote {report_path}")
     if saved_plots:
         print(f"Plots in {outdir}/")
 
-    # --- console: the deliverable --------------------------------------------
+    # --- console: the accuracy verdict + the pasteable block -----------------
+    if validation:
+        print("\n" + "=" * 64)
+        print("ACCURACY ON YOUR CORPUS  (real detector, this profile)")
+        print("=" * 64)
+        print("\n".join(accuracy_lines(validation)))
+        print(f"\n  Verdict: {accuracy_verdict(validation)}")
+
     print("\n" + "=" * 64)
     print("CALIBRATED PARAMETER BLOCK  (paste into train_horn_detector.py,")
     print("or just keep horn_profile.json next to it — the detector loads it)")
