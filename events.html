@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a0e1a">
-  <title>Pulse — Alan's Brain</title>
+  <title>What's On — Alan's Brain</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -31,7 +31,7 @@
       <a href="index.html" class="nav-logo">Alan's Brain <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Alan's_Brain/world-creativity-and-innovation-day.png" alt=""></a>
       <div class="nav-links">
         <a href="index.html">Home</a>
-        <a href="pulse.html" class="active">Pulse</a>
+        <a href="events.html" class="active">What's On</a>
         <div class="nav-dropdown">
           <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
             Explore <span class="nav-dropdown-arrow">&#9660;</span>
@@ -62,10 +62,9 @@
   <!-- Mobile menu overlay -->
   <div class="nav-mobile-overlay">
     <a href="index.html">Home</a>
-    <a href="pulse.html" class="active">Pulse</a>
+    <a href="events.html" class="active"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">🎬</span> What's On</a>
     <a href="techstack.html"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">⚙️</span> Stack</a>
     <span class="mobile-section-label">Explore</span>
-    <a href="events.html"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">🎬</span> What's On</a>
     <a href="youtube.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
     <a href="transart.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
     <a href="soundboards.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
@@ -81,33 +80,30 @@
 
     <!-- ══════ PAGE HERO ══════ -->
     <section class="page-hero">
-      <div class="page-hero-icon anim" style="animation-delay:0.1s"><span style="font-size:72px;line-height:1">📡</span></div>
+      <div class="page-hero-icon anim" style="animation-delay:0.1s"><span style="font-size:72px;line-height:1">🎬</span></div>
       <h1 class="anim" style="animation-delay:0.2s">
-        <span class="gradient-text">Pulse</span>
+        <span class="gradient-text">What's On</span>
       </h1>
-      <div class="page-hero-tagline anim" style="animation-delay:0.35s">the Lehigh Valley, as it happens</div>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">movies &amp; events around the Lehigh Valley</div>
+      <p class="page-hero-desc anim" style="animation-delay:0.45s" id="ev-note">A hand-picked sampling of upcoming happenings — always check each venue for the full, current schedule.</p>
     </section>
 
-    <!-- ══════ MORNING BRIEF ══════ -->
-    <section class="pulse-brief" id="pulse-brief" hidden></section>
+    <!-- ══════ VENUES ══════ -->
+    <div class="ev-venues" id="ev-venues"></div>
 
-    <!-- ══════ CONTROLS ══════ -->
-    <div class="tracker-controls" style="margin-top:10px">
-      <span class="tracker-updated" id="pulse-updated">Loading…</span>
-      <button class="tracker-refresh" id="pulse-refresh" aria-label="Refresh">&#8635;</button>
+    <!-- ══════ META ══════ -->
+    <div class="ev-metabar">
+      <span class="ev-updated" id="ev-updated">Loading…</span>
     </div>
-
-    <!-- ══════ SOURCE HEALTH ══════ -->
-    <div class="pulse-status" id="pulse-status"></div>
 
     <!-- ══════ FILTER + SEARCH ══════ -->
-    <div class="pulse-toolbar">
-      <input type="search" class="pulse-search" id="pulse-search" placeholder="Search headlines…" aria-label="Search headlines">
-      <div class="pulse-filters" id="pulse-filters"></div>
+    <div class="ev-toolbar">
+      <input type="search" class="ev-search" id="ev-search" placeholder="Search events…" aria-label="Search events">
+      <div class="ev-filters" id="ev-filters"></div>
     </div>
 
-    <!-- ══════ FEED ══════ -->
-    <div class="pulse-list" id="pulse-list"></div>
+    <!-- ══════ EVENTS ══════ -->
+    <div class="ev-list" id="ev-list"></div>
 
     <!-- ══════ FOOTER ══════ -->
     <footer class="site-footer">
@@ -130,7 +126,7 @@
 
   </div><!-- /.page -->
 
-  <script src="pulse.js"></script>
+  <script src="events.js"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');

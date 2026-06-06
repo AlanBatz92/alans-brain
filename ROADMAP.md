@@ -111,6 +111,16 @@ fetch. Build order: add `type`/`config`/`content_kind` to `feed_sources` + the
 card. Then the `scrape` adapter (AI-as-parser) for no-API sources like the Emmaus
 Theater calendar, and `pulse_add` paste-capture for one-offs / Bug Club.
 
+**Update (2026-06-06):** a **curated front-end events surface shipped** — `events.html`
+("What's On") reading `data/events.json` (Shankweiler's + The Emmaus Theatre) — because
+all three venue pages 403 a server fetch and the box can't be deployed from the web
+session. That's the front-end half of the "What's On" surface; the **box-side automated
+ingestion for these two venues stays blocked on fetchability** (Eventbrite org events need
+an owner token; TicketLeap has no public API). Build the `events` table + `/api/events`
+when a fetchable source (or a browser-capable fetch / `pulse_add`) is in hand — the
+renderer already swaps `data/events.json` → `/api/events` cleanly. Archer (Ticketmaster
+API) is still the cleanest *automated* first source. Details in `PLAN-ingestion.md`.
+
 ### 4b. Pulse hallucination — full-text scraping follow-up
 The 2026-06-04 grounding work (capture `content:encoded`, feed the digest real
 excerpts, harden enrich/digest prompts) is the zero-risk baseline. **Next, if the
@@ -141,6 +151,17 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-06** — **What's On**: a dedicated local-events page (`events.html` /
+  `events.js` / `data/events.json`, `.ev-*`) aggregating upcoming happenings at
+  **Shankweiler's Drive-In** and **The Emmaus Theatre**, extensible to more venues by
+  editing one JSON file. Curated-JSON (not auto-fetch): all three source pages 403 a
+  server fetch (TicketLeap / Eventbrite / own-site bot-protection) and the box isn't
+  reachable from the web session, so it ships as a thin static reader via Vercel — venue
+  filter + search, calendar-tile cards (per-venue accent), past events auto-hidden,
+  soonest-first. Surfaced as a top-level tab + home card + an Explore-dropdown entry on
+  every page. Renderer is built to later swap `data/events.json` → `GET /api/events`. See
+  Build History + `PLAN-ingestion.md` for the (still-blocked) automation path.
 
 - **2026-06-05** — Observatory: **"Almost a lifer" shelf** on the Birds tab — turns the
   life-list rule into a progress game. Surfaces species heard at 85%+ in the **rolling last

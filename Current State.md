@@ -22,6 +22,7 @@ a Google Sheet, and a home server called **birdstation**).
 |---|---|---|
 | Home | `index.html` | Landing page with Explore cards |
 | Pulse | `pulse.html` / `pulse.js` | Live Lehigh Valley news feed (see Pulse section) |
+| What's On | `events.html` / `events.js` | Aggregated local-events calendar — curated `data/events.json`; see What's On section |
 | YouTube Channels | `youtube.html` | 114 curated channels, JSON-driven |
 | Great & Free | `tools.html` | Tools + websites, searchable categories |
 | Soundboards | `soundboards.html` / `soundboards.js` | Categorized audio clips, rotating icons |
@@ -48,7 +49,7 @@ Shared front-end: `style.css` (theme variables + all component styles),
 - **Pages are JSON-driven** (`data/*.json`); adding content usually means editing a JSON file + dropping in media. See `README.md` "Adding Content".
 - **Admin tooling:** `admin.py` (CLI) and `admin-gui.py` (tkinter) manage soundboard clips/icons/media.
 - GoatCounter for analytics; `<audio>` elements for iOS silent-switch compatibility.
-- **Nav layout:** Home · My Week · Tasks · Explore ▼ · Stack — across all 15 pages. "Stack" is a direct `<a>` in `.nav-links` (not inside the dropdown). The mobile overlay places it before the Explore section label.
+- **Nav layout:** Home · My Week · Tasks · Explore ▼ · Stack — across all 15 pages. "Stack" is a direct `<a>` in `.nav-links` (not inside the dropdown). The mobile overlay places it before the Explore section label. **What's On (2026-06-06):** a new `events.html` is elevated as a top-level tab on its own page (like Pulse) and added as the first **Explore-dropdown + mobile-overlay** entry (🎬) on every page; the home Explore grid gets a matching card.
 
 ## Pulse subsystem (most active area)
 
@@ -65,6 +66,34 @@ AI enrichment, and the daily digest; the website just reads JSON and renders.
 - `escapeHtml()` is the shared sanitizer; all rendered strings go through it.
 - Category filter order mirrors birdstation's taxonomy via the `TAXONOMY` const in `pulse.js`.
 - **To add/remove a news source you do NOT touch the front-end** — it's a row in birdstation's `feed_sources` table.
+
+### What's On front-end (`events.html`, `events.js`, `.ev-*` in `style.css`)
+
+A standalone **local-events** surface, paired with Pulse (LV news) but **not** a
+birdstation reader — it's a thin static page over a **curated, committed
+`data/events.json`** (the site's JSON-driven content pattern). Prefix: **`ev-`**.
+
+- **Why static/curated:** the source venues' pages all **403 a server-side fetch**
+  (Shankweiler's → TicketLeap, The Emmaus Theatre → Eventbrite org `11934905594`,
+  `emmaustheatre.com`), so they can't be auto-scraped, and the box can't be deployed
+  from the web session. Adding/editing an event or venue = a one-file edit to
+  `data/events.json`; `events.js` is unchanged. (Automation path: `PLAN-ingestion.md`.)
+- **`data/events.json`:** `{updated, note, venues[], events[]}`. A **venue** =
+  `{key, name, short, location, emoji, color, url, tickets, blurb}` (`color` is a theme
+  token — teal/blue/purple/pink/green/yellow/red — fed to an inline `--ev-accent`, so a
+  new venue needs no CSS). An **event** = `{venue, title, date (YYYY-MM-DD), time,
+  category, detail, url, end?}`.
+- **Renders:** a data-driven venues strip (each links to its official full schedule) →
+  meta line → **venue filter** (All / per-venue + counts) + search → the **event list**
+  (calendar date-tile + title + detail + venue tag + category + time + relative "when").
+  Past events auto-hide; sorted soonest-first. "Today" is computed in **Eastern**
+  (`America/New_York`) and compared as a date string, so an all-day event stays visible
+  through its day regardless of the viewer's clock; badges/diffs are built at UTC-noon to
+  avoid off-by-one. Mirrors Pulse conventions (`escapeHtml`, chips, card list).
+- **Seeded** with real June–July 2026 listings for both venues (7 upcoming).
+- **Designed to upgrade:** swap `EVENTS_URL` (`data/events.json`) for a future
+  `GET /api/events` with no render changes — the item shape maps 1:1 to the planned
+  `events` table (see `PLAN-ingestion.md`).
 
 ### Observatory front-end (`observatory.html`, `observatory.js`, `.obs-*` in `style.css`)
 

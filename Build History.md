@@ -10,6 +10,62 @@
 
 ---
 
+## 2026-06-06 — What's On: a curated local-events page (Pulse's events companion)
+
+Added a dedicated **What's On** surface (`events.html` / `events.js`,
+`data/events.json`, `.ev-*` in `style.css`) aggregating upcoming happenings at local
+venues — launching with **Shankweiler's Drive-In** (Orefield) and **The Emmaus
+Theatre** (Emmaus), and built to take more venues by editing one JSON file.
+
+**Why curated JSON, not auto-fetch.** The ask was to pull events from the venues' own
+pages. Field-tested all three (Shankweiler's `…/events`, the Emmaus Theater's Eventbrite
+org `11934905594`, and `emmaustheatre.com`): **every one 403s a plain server-side fetch**
+(bot protection — the same wall the 2026-06-04 Archer finding hit), and birdstation can't
+be reached or deployed from the web session anyway. So, per Alan's call, the data lives in
+a committed **`data/events.json`** (venues + events) — the same JSON-driven pattern the
+rest of the site uses — and the page is a thin static reader that ships via Vercel with
+zero box dependency. Adding/editing an event or venue is a one-file edit; `events.js`
+doesn't change.
+
+**The page.** `page-hero` (🎬) → a data-driven **venues** strip (each links to its full
+official schedule) → a meta line → a **venue filter** (All / per-venue, with counts) +
+search box → the **event list**: one card per event with a calendar date tile
+(accent-colored per venue), title, detail, a venue tag, category, time, and a relative
+"when" ("in 2 days"). Past events auto-hide; everything sorts soonest-first. Dates are
+treated as Eastern (venue-local) and compared against "today in Eastern" so an all-day
+event stays visible through its day regardless of the viewer's clock; badges/diffs are
+built at UTC-noon to avoid off-by-one. Per-card accent comes from an inline `--ev-accent`
+set from each venue's `color` (a new venue needs no CSS). Mirrors Pulse's conventions
+(`escapeHtml`, filter chips, card list); prefix **`ev-`** (distinct from
+`pulse-`/`obs-`/`sl-`).
+
+**Seeded with real listings** (early June 2026): Shankweiler's — Retro Tuesday *RENT* (w/
+Bradbury-Sullivan LGBT Center), the Physical Media Market, the Farm & Food Summer Market,
+Retro Tuesday *Spirit*; Emmaus — *The Birdcage* 30th Anniversary, Julia Scotti (live),
+Floydian Trip (Pink Floyd tribute). 7 upcoming across both venues.
+
+**Discovery / nav.** New **events.html** elevated as a top-level tab on its own page (like
+Pulse), a **"What's On" card** in the home Explore grid (next to Pulse), and a **"What's
+On" entry added to the Explore dropdown + mobile overlay on all 16 other pages**
+(idempotent inserter; events.html omits the redundant self-link in its mobile overlay).
+Emoji 🎬 throughout.
+
+**Verified:** `node --check events.js`; `data/events.json` parses; `style.css`
+brace-balanced (all `.ev-*` rules present, cross-checked against the classes the JS emits);
+the date logic unit-checked against the seed (upcoming filter, soonest-first sort, weekday
+badges matching the real calendar, relative phrasing); and a **stubbed-DOM render harness**
+dumped the real `#ev-venues` / `#ev-filters` / `#ev-list` HTML (7 events, counts 4 + 3,
+correct accents/escaping). Front-end only — ships via Vercel, no box step.
+
+**Follow-up (documented in `PLAN-ingestion.md` / ROADMAP §4):** automating these two venues
+is still blocked on fetchability — Eventbrite's public event-search API is retired and an
+org token is owner-only (can't list a third party's events), TicketLeap has no public API,
+and the movie aggregators (CinemaClock/BigScreen/Atom) carry nightly showtimes but not the
+special events. The renderer is built to later swap `data/events.json` for a
+`GET /api/events` endpoint with no render changes.
+
+---
+
 ## 2026-06-05 — Personal Projects page: add the Observatory card
 
 Small navigation fix: `projects.html` (the "things I've built" hub) only listed

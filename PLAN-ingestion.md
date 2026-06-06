@@ -208,3 +208,35 @@ first).
   enrich/digest. Keep adapters isolated and individually health-reported.
 - After landing each phase: append to `Build History.md`, revise
   `Current State.md`.
+
+## Shipped 2026-06-06: curated "What's On" front-end (events surface, phase 4b-lite)
+
+The "What's On" website surface (above) shipped **ahead of** the box-side `events` store,
+as a **curated, static front-end** — because the two requested venues can't be auto-fetched
+yet and the box can't be deployed from the web session.
+
+- **What shipped:** `events.html` + `events.js` + `data/events.json` + `.ev-*` CSS — a
+  dedicated, JSON-driven events page aggregating **Shankweiler's Drive-In** (Orefield) and
+  **The Emmaus Theatre** (Emmaus), with a venue filter, search, calendar-tile cards,
+  past-event auto-hide, and a data-driven venues strip. Prefix `ev-`. New venues/events are
+  a one-file edit to `data/events.json`. Linked as a top-level tab + home Explore card + an
+  Explore-dropdown entry on every page.
+- **Field finding (re-confirmed 2026-06-06):** all three candidate pages **403 a plain
+  server-side fetch** — `shankweilers.com/events` (ticketing via **TicketLeap**,
+  `shankweilers.ticketleap.com`), the Emmaus Theater's **Eventbrite** org page
+  (`/o/the-emmaus-theater-11934905594`), and `emmaustheatre.com`. Same bot-protection wall
+  as the 2026-06-04 Archer test. So there's nothing for a server-side `scrape` adapter to read.
+- **Why no `api` adapter for these two (yet):** **Eventbrite** retired its public
+  event-search API, and the org-events endpoint needs a token belonging to *that* organizer
+  (owner-only) — a third party can't list the Emmaus Theater's events programmatically.
+  **TicketLeap** has no public API. Movie aggregators (CinemaClock, BigScreen, Atom Tickets,
+  IMDb) carry the nightly **showtimes** but not the **special events** (Retro Tuesdays, vendor
+  markets) that make these venues interesting.
+- **Path to automate later (unchanged spine):** when a fetchable/structured source exists — a
+  **browser-capable fetch** on the box (headless/rendered) for the bot-protected pages, an
+  **Eventbrite token** if Alan ever co-administers the org, or the **`pulse_add` paste-capture**
+  for manual entry — build the `events` table + router + `GET /api/events?upcoming=1` as
+  designed, and **point `EVENTS_URL` in `events.js` at it**. The renderer's item shape
+  (`{venue, title, date, time, category, detail, url}`) maps 1:1 to the planned `events` row,
+  so the swap is front-end-trivial. Archer Music Hall (Ticketmaster API) stays the cleanest
+  *automated* first source to prove the box-side pipeline.

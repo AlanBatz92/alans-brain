@@ -1,0 +1,93 @@
+{
+  "updated": "2026-06-06",
+  "note": "A hand-picked sampling of upcoming happenings — always check each venue for the full, current schedule.",
+  "venues": [
+    {
+      "key": "shankweilers",
+      "name": "Shankweiler's Drive-In",
+      "short": "Shankweiler's",
+      "location": "Orefield, PA",
+      "emoji": "🚗",
+      "color": "blue",
+      "url": "https://www.shankweilers.com/events",
+      "tickets": "https://shankweilers.ticketleap.com/",
+      "blurb": "The world's oldest continuously-operating drive-in, open since 1934."
+    },
+    {
+      "key": "emmaus",
+      "name": "The Emmaus Theatre",
+      "short": "Emmaus Theatre",
+      "location": "Emmaus, PA",
+      "emoji": "🎭",
+      "color": "purple",
+      "url": "https://www.emmaustheatre.com/",
+      "tickets": "https://www.eventbrite.com/o/the-emmaus-theater-11934905594",
+      "blurb": "A historic single-screen theatre — films, stand-up comedy & live music."
+    }
+  ],
+  "events": [
+    {
+      "venue": "emmaus",
+      "title": "The Birdcage — 30th Anniversary",
+      "date": "2026-06-07",
+      "time": "6:00 PM",
+      "category": "Film",
+      "detail": "A 30th-anniversary screening of the 1996 comedy classic.",
+      "url": "https://www.eventbrite.com/o/the-emmaus-theater-11934905594"
+    },
+    {
+      "venue": "shankweilers",
+      "title": "Retro Tuesday: RENT",
+      "date": "2026-06-09",
+      "time": "Gates 7:30 PM · Film 9:00 PM",
+      "category": "Film",
+      "detail": "A special Retro Tuesday screening in partnership with the Bradbury-Sullivan LGBT Community Center.",
+      "url": "https://shankweilers.ticketleap.com/"
+    },
+    {
+      "venue": "shankweilers",
+      "title": "Physical Media Market",
+      "date": "2026-06-13",
+      "time": "Daytime",
+      "category": "Market",
+      "detail": "A vendor market celebrating physical media — VHS, DVD, Blu-ray, vinyl, laserdisc & more.",
+      "url": "https://www.shankweilers.com/events"
+    },
+    {
+      "venue": "emmaus",
+      "title": "Julia Scotti (Live)",
+      "date": "2026-06-20",
+      "time": "7:00 PM",
+      "category": "Comedy",
+      "detail": "Stand-up comedy live at The Emmaus Theatre.",
+      "url": "https://www.eventbrite.com/o/the-emmaus-theater-11934905594"
+    },
+    {
+      "venue": "emmaus",
+      "title": "Floydian Trip — Pink Floyd Tribute",
+      "date": "2026-07-10",
+      "time": "8:00 PM",
+      "category": "Live Music",
+      "detail": "A Pink Floyd tribute show with projections, lasers and lights.",
+      "url": "https://www.eventbrite.com/e/floydian-trip-live-at-emmaus-theatre-july-10th-tickets-1963467966543"
+    },
+    {
+      "venue": "shankweilers",
+      "title": "Farm & Food Summer Market",
+      "date": "2026-07-12",
+      "time": "Daytime",
+      "category": "Market",
+      "detail": "A daytime summer market with Crooked Row Farm — local growers, food trucks and makers.",
+      "url": "https://www.shankweilers.com/events"
+    },
+    {
+      "venue": "shankweilers",
+      "title": "Retro Tuesday: Spirit — Stallion of the Cimarron",
+      "date": "2026-07-28",
+      "time": "Evening",
+      "category": "Film",
+      "detail": "A Retro Tuesday screening in partnership with Equi-Librium.",
+      "url": "https://shankweilers.ticketleap.com/"
+    }
+  ]
+}
