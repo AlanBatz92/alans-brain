@@ -10,6 +10,39 @@
 
 ---
 
+## 2026-06-06 — Horn calibration: blast-count diagnostic + MIN_BLASTS calibration
+
+First real-corpus run (97 trains / 66 negatives) gave 97% precision but only **58%
+recall** — the detector was *missing* trains, not confusing them. Root cause: the
+corpus is single-event clips (the live detector's catches), but the detector only
+confirms a train on **2+ horn blasts** (a rule meant for scanning continuous audio,
+where a pass sounds the full long-long-short-long sequence). Many clips have one
+blast → fail confirmation.
+
+Made `build_horn_profile.py` measure and fix this instead of guessing:
+- **`blast_counts()`** runs the detector's finder at the full operating config and
+  counts blasts per clip; **`recommend_min_blasts()`** scores ≥1/≥2/≥3 on the corpus
+  (recall from positives, precision from negatives) and picks best F1 (smaller k wins
+  ties). `--min-blasts {1,2,3}` forces it.
+- Calibration now reports **blast-level recall** ("horn found, ≥1 blast" — the blast
+  detector's true reach) vs **confirmed recall** (≥k), so a low confirmed number is
+  legible: detector working but the k-rule too strict, vs. the horn genuinely not
+  found. The chosen `min_blasts_for_confirmation` is written to `horn_profile.json`
+  (the detector already honors it via `load_profile`), added to the param block, and
+  the k-table + blast-level recall go into the JSON.
+- A note flags when k is lowered from 2, with the clip-vs-continuous caveat
+  (k=1 best for clips; k=2 safer against lone-blip false positives on long recordings).
+- Also (same session) fixed the Windows `UnicodeEncodeError` (UTF-8 on all file
+  writes + stdout/stderr reconfigure) and a spurious numpy divide warning
+  (`np.divide(..., where=)`), both verified.
+
+Verified the new path on the synthetic corpus (diagnostic prints, k-table, auto-pick,
+`--min-blasts` override, JSON fields, param block line). Expectation on the real
+corpus: blast-level recall ≫ 58% → auto-picking k=1 lifts confirmed recall with
+precision intact (negatives produced ~0 blasts at k=2).
+
+---
+
 ## 2026-06-06 — Train vetting → Observatory page bridge (verdicts + privacy + category)
 
 Connected the P2 corpus-sorting back to the live Observatory. The clips Alan is

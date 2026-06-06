@@ -356,6 +356,60 @@ def measure_blasts_at(files: List[str], sr: int, low_hz: float, high_hz: float,
     return np.array(durations, dtype=float), np.array(gaps, dtype=float)
 
 
+def blast_counts(files, sr, low_hz, high_hz, tonality_thresh, dur_min, dur_max,
+                 merge_gap):
+    """
+    Blasts found per clip at the full operating config (derived band + medium
+    tonality + the chosen duration bounds + merge gap). This is what decides how
+    many blasts a clip yields, which the 2-blast confirmation rule then gates on.
+    Returns a list of ints, one per loadable file.
+    """
+    import train_horn_detector as thd
+    saved = (thd.BLAST_MIN_DURATION_SEC, thd.BLAST_MAX_DURATION_SEC,
+             thd.BLAST_MERGE_GAP_SEC, thd.TONALITY_RATIO_THRESHOLD)
+    counts = []
+    try:
+        thd.BLAST_MIN_DURATION_SEC = dur_min
+        thd.BLAST_MAX_DURATION_SEC = dur_max
+        thd.BLAST_MERGE_GAP_SEC = merge_gap
+        thd.TONALITY_RATIO_THRESHOLD = dict(saved[3], medium=tonality_thresh)
+        for f in files:
+            y = load_audio(f, sr)
+            if y is None:
+                continue
+            rms, ton = thd.extract_horn_band_features(y, sr, low_hz=low_hz, high_hz=high_hz)
+            counts.append(len(thd.find_horn_blasts(rms, ton, sr, HOP_LENGTH, "medium")))
+    finally:
+        (thd.BLAST_MIN_DURATION_SEC, thd.BLAST_MAX_DURATION_SEC,
+         thd.BLAST_MERGE_GAP_SEC, thd.TONALITY_RATIO_THRESHOLD) = saved
+    return counts
+
+
+def recommend_min_blasts(pos_counts, neg_counts, override=None):
+    """
+    Decide MIN_BLASTS_FOR_CONFIRMATION from blasts-per-clip. The corpus is usually
+    individual event-clips (often a single blast), while the 2-blast rule is built
+    for scanning continuous audio — so on clips a high bar tanks recall. We score
+    k = 1/2/3 on this corpus (recall = positives with >=k blasts; precision from
+    negatives) and pick the best F1 (smaller k wins ties). `override` forces k.
+    Returns (k, table) with table rows (k, recall, precision, f1).
+    """
+    n_pos = len(pos_counts)
+    table = []
+    for k in (1, 2, 3):
+        tp = sum(1 for c in pos_counts if c >= k)
+        fp = sum(1 for c in neg_counts if c >= k)
+        recall = tp / n_pos if n_pos else 0.0
+        precision = tp / (tp + fp) if (tp + fp) else 1.0
+        f1 = (2 * precision * recall / (precision + recall)
+              if (precision + recall) else 0.0)
+        table.append((k, round(recall, 3), round(precision, 3), round(f1, 3)))
+    if override in (1, 2, 3):
+        return override, table
+    best = max(table, key=lambda r: (r[3], -r[0]))  # best F1, prefer smaller k
+    return best[0], table
+
+
 def sweep_threshold(pos: np.ndarray, neg: np.ndarray):
     """
     Sweep tonality thresholds and score each on this corpus. Returns a list of
@@ -686,6 +740,8 @@ def build_parameter_block(profile: dict, notes: List[str]) -> str:
         f"      # was {d['blast_merge_gap_sec']}",
         f"CONFIRMATION_WINDOW_SEC = {profile['confirmation_window_sec']:.0f}"
         f"     # was {d['confirmation_window_sec']:.0f}",
+        f"MIN_BLASTS_FOR_CONFIRMATION = {profile['min_blasts_for_confirmation']}"
+        f" # was {d['min_blasts_for_confirmation']}",
     ]
     block = "\n".join(lines)
     if notes:
@@ -823,9 +879,14 @@ CONFUSABLE_RATE = 0.30  # a negative class fooling the detector this often = wor
 
 def accuracy_lines(v: dict) -> List[str]:
     """Plain-English accuracy summary lines (shared by console + report)."""
-    lines = [
-        f"  Trains caught:  {v['positives_detected']}/{v['n_positives']}"
-        f"   ({v['recall']:.0%} recall)",
+    lines = []
+    if "blast_level_recall" in v:
+        lines.append(
+            f"  Horn found (≥1 blast):  {v['blast_level_recall']:.0%} of trains"
+            f"   — the blast detector's reach, before the ≥{v.get('min_blasts', 2)}-blast rule")
+    lines += [
+        f"  Trains confirmed:  {v['positives_detected']}/{v['n_positives']}"
+        f"   ({v['recall']:.0%} recall, at ≥{v.get('min_blasts', 2)} blast(s))",
         f"  False alarms:   {v['false_alarms']}/{v['n_negatives']}"
         f"   ({v['false_alarm_rate']:.0%}  →  {v['precision']:.0%} precision)",
     ]
@@ -886,6 +947,10 @@ def main():
     ap.add_argument("--check", action="store_true",
                     help="Just census the corpus and say if it's strong enough — "
                          "no calibration. Fast; use it while you're still sorting.")
+    ap.add_argument("--min-blasts", type=int, choices=[1, 2, 3], default=None,
+                    help="Force MIN_BLASTS_FOR_CONFIRMATION (default: auto from the "
+                         "data). 1 = a single horn blast confirms (best for clips); "
+                         "2 = needs a multi-blast pattern (safer on continuous audio).")
     ap.add_argument("--no-plots", action="store_true",
                     help="Skip the diagnostic plots (no matplotlib needed).")
     ap.add_argument("--no-validate", action="store_true",
@@ -955,10 +1020,38 @@ def main():
           f"{'' if dur_rec['from_data'] else '  [default — too few blasts]'}")
     print(f"    confirmation window: {win_rec['window']:.0f}s, "
           f"merge gap {win_rec['merge']}s"
-          f"{'' if win_rec['from_data'] else '  [default — too few gaps]'}\n")
+          f"{'' if win_rec['from_data'] else '  [default — too few gaps]'}")
+
+    # How many blasts each clip yields at this config — the 2-blast confirmation
+    # rule gates on this. A clip corpus is often single-blast, so requiring 2
+    # silently tanks recall; measure it and pick the requirement from the data.
+    pos_counts = blast_counts(pos_files, args.sr, low_hz, high_hz, tiers["medium"],
+                              dur_rec["min"], dur_rec["max"], win_rec["merge"])
+    neg_counts = blast_counts(neg_files, args.sr, low_hz, high_hz, tiers["medium"],
+                              dur_rec["min"], dur_rec["max"], win_rec["merge"])
+    min_blasts, mb_table = recommend_min_blasts(pos_counts, neg_counts, args.min_blasts)
+    n_found = sum(1 for c in pos_counts if c >= 1)
+    blast_recall = n_found / len(pos_counts) if pos_counts else 0.0
+    median_pos_blasts = float(np.median(pos_counts)) if pos_counts else 0.0
+    print(f"    horn found (≥1 blast) in {n_found}/{len(pos_counts)} positives "
+          f"({blast_recall:.0%}); median {median_pos_blasts:.0f} blast(s)/clip")
+    print("    blasts required to confirm a train (recall / precision on this corpus):")
+    for k, rec, prec, _ in mb_table:
+        star = "   ← chosen" if k == min_blasts else ""
+        print(f"      ≥{k} blast(s):  recall {rec:.0%}   precision {prec:.0%}{star}")
+    if args.min_blasts:
+        print(f"    (forced to {min_blasts} via --min-blasts)")
+    print()
 
     # Collect any caveats worth surfacing in the report / block.
     notes = []
+    if min_blasts != DEFAULTS["min_blasts_for_confirmation"]:
+        notes.append(
+            f"MIN_BLASTS_FOR_CONFIRMATION set to {min_blasts} (was "
+            f"{DEFAULTS['min_blasts_for_confirmation']}): your clips are single "
+            f"events, so requiring 2 blasts missed real horns. For scanning long "
+            f"*continuous* recordings, 2 is safer against lone-blip false positives "
+            f"— re-run with --min-blasts 2 to compare.")
     if not band_ok:
         notes.append("Weak positive/negative spectral separation — band kept at "
                      "the default; gather more contrasting negatives.")
@@ -988,7 +1081,7 @@ def main():
         "blast_max_duration_sec": dur_rec["max"],
         "blast_merge_gap_sec": win_rec["merge"],
         "confirmation_window_sec": win_rec["window"],
-        "min_blasts_for_confirmation": DEFAULTS["min_blasts_for_confirmation"],
+        "min_blasts_for_confirmation": min_blasts,
         "calibration": {
             "band_peak_contrast": round(peak_contrast, 3),
             "band_confident": band_ok,
@@ -999,6 +1092,12 @@ def main():
             "n_pos_gaps": int(posm["gaps"].size),
             "pos_peak_rms_median": round(pct(posm["peak_rms"], 50), 6),
             "neg_peak_rms_median": round(pct(negm["peak_rms"], 50), 6),
+            "blast_level_recall": round(blast_recall, 3),
+            "median_pos_blasts": median_pos_blasts,
+            "min_blasts_table": [
+                {"k": k, "recall": rec, "precision": prec, "f1": f1}
+                for k, rec, prec, f1 in mb_table
+            ],
             "notes": notes,
         },
         "source": ({"corpus": str(Path(args.corpus).resolve()),
@@ -1044,6 +1143,8 @@ def main():
     else:
         print("[4/4] Validating — running the real detector over your corpus...")
         validation = validate_detector(pos_files, neg_groups, json_path)
+        validation["blast_level_recall"] = round(blast_recall, 3)
+        validation["min_blasts"] = min_blasts
         profile["calibration"]["validation"] = validation
         for c in validation["by_category"]:
             if c["rate"] >= CONFUSABLE_RATE and c["false_alarms"]:
