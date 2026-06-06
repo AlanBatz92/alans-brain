@@ -142,6 +142,18 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-06** — **Train vetting → Observatory page bridge.** The P2 corpus clips are the
+  live detector's `train_events`, so `sync_train_verdicts.py` carries the sorted-folder
+  labels back into the DB (no second review): `emit` (PC) → CSV → `apply` (box) sets
+  verdict/category by exact-filename match. `train_events` gained `category` (fine class:
+  plane/vehicle/gunshot/… for future analytics) and `published` (default 0) — a confirmed
+  train **counts and shows** on the page but its **audio stays private** until explicitly
+  published (backyard mic). API clip gate now needs `verdict='train' AND published=1`;
+  `observatory.js?v=obs24` shows events without a dead player when private; migration is
+  idempotent at `birdapi` startup and preserves existing public clips. Advances ▶ Next #3
+  (vetting without per-clip SSH) and unblocks the gated train analytics (§3a). Verified on a
+  temp DB. See `Build History.md` (2026-06-06).
+
 - **2026-06-06** — Emmaus Observatory **P2 train horn study**: an offline AudioMoth horn
   detector (`train_horn_detector.py`, now version-controlled) plus the new
   **`build_horn_profile.py`** corpus-calibration pass. Point the profiler at confirmed-horn

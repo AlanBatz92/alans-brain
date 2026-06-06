@@ -30,6 +30,7 @@ birdstation/
   purge_low_confidence.py # CLI one-shot: drop detections below the 0.60 preserve floor
   train_horn_detector.py  # CLI: offline horn detection in AudioMoth WAVs (P2 study)
   build_horn_profile.py   # CLI: calibrate the horn detector from a category-folder corpus
+  sync_train_verdicts.py  # CLI: bridge a sorted corpus -> train_events verdicts (fills the Trains page)
   HORN-CORPUS-GUIDE.md    # the run-the-whole-thing runbook (Windows; sort→calibrate→run)
   schema.sql          # full birdnet.db schema + migration log
   systemd/            # .service / .timer units (templated — no inline secrets)

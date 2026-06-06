@@ -31,7 +31,9 @@ CREATE TABLE train_events (
     peak_db     REAL,
     clip_path   TEXT,
     reviewed    INTEGER DEFAULT 0,
-    verdict     TEXT
+    verdict     TEXT,             -- train / false_positive / unsure (drives the public page)
+    category    TEXT,             -- fine class from vetting: train / plane / vehicle / gunshot / ... (analytics)
+    published   INTEGER DEFAULT 0 -- 1 = clip audio is publicly servable; 0 = count the event, keep audio private
 );
 
 CREATE TABLE solar_telemetry (
@@ -97,6 +99,16 @@ CREATE TABLE feed_digests (
 -- birdnet_pipeline.init_db() also applies both idempotently on restart, so a
 -- routine `git pull` + `systemctl restart birdnet` migrates the live DB with no
 -- manual step. (The `week` column now stores BirdNET's 1-48 week, not ISO week.)
+
+-- migration 2026-06-06: train vetting bridge (category + published on train_events)
+-- ALTER TABLE train_events ADD COLUMN category TEXT;
+-- ALTER TABLE train_events ADD COLUMN published INTEGER DEFAULT 0;
+-- UPDATE train_events SET published = 1 WHERE verdict = 'train';   -- keep existing public clips servable
+-- bird_api.ensure_train_schema() applies all three idempotently at startup, so a
+-- plain `git pull` + `systemctl restart birdapi` migrates the live DB. `category`
+-- holds the fine vetting class (plane/vehicle/gunshot/...) for future train
+-- analytics; `published` decouples "is a train" (counts + shows) from "serve the
+-- audio" (default 0 = private, since clips are off a backyard mic).
 
 -- migration 2026-06-05: twice-daily digest (morning + evening, windowed "since
 -- the last brief"). feed_digests gains a `slot` column and a (date, slot) PK so

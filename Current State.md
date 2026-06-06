@@ -85,6 +85,18 @@ train data a home. ID/class prefix: **`obs-`**.
   the clip endpoint 403s anything not tied to an approved train, and stats show
   approved counts. Vetting is via `review_trains.py` on the box; clips auto-purge
   weekly. Full design in `PLAN-train-vetting.md`.
+- **Audio-private trains + category (2026-06-06).** `train_events` gained
+  `published` (default 0) and `category`. A confirmed train now **counts and shows**
+  on the page (time/duration/dB) but its **clip audio is served only when
+  `published=1`** — the clip endpoint requires `verdict='train' AND published=1`,
+  and `observatory.js` (`?v=obs24`) renders the `<audio>` only when `published`,
+  else a "🔒 audio kept private" note. `category` records the fine vetting class
+  (train/plane/vehicle/gunshot/…) for future train analytics. Migrated idempotently
+  by `bird_api.ensure_train_schema()` at startup (preserves any already-public
+  approved clip). `sync_train_verdicts.py` bridges a **sorted P2 corpus** into these
+  columns (see the birdstation P2 entry) so vetting fills the page without
+  re-reviewing; `--publish-trains` / the `publish` subcommand opt specific clips'
+  audio public.
 - **Confidence gate — three tiers (2026-06-03):** decoupled floors.
   (1) **Preserve 0.60** — the pipeline keeps detections ≥ 0.60 (was 0.35), cutting the
   worst noise but retaining sub-85% *diagnostic* hits. (2) **Display 0.85** — the page
@@ -282,6 +294,13 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
     plain-English **Windows 11** runbook (pull recordings → sort in VLC/Audacity →
     `--check` → calibrate → read accuracy → deploy). Full write-up in
     `Build History.md` (2026-06-06).
+  - **`sync_train_verdicts.py` (bridge, 2026-06-06):** because the sorted corpus
+    clips *are* the live detector's `train_events`, this carries the folder labels
+    back into the DB so vetting also **populates the Observatory Trains page** —
+    `emit` (PC) writes a verdicts CSV, `apply` (box) sets verdict/category/published
+    by exact filename match (audio private by default), `publish` opts a clip's
+    audio public. Pure stdlib. See the "Audio-private trains + category" bullet
+    above and `Build History.md` (2026-06-06).
   - `review_trains.py` — **manual** CLI on the box to vet pending train events (play clip → train/false/unsure → DB). Near-term vetting workflow; web UI is future (`PLAN-train-vetting.md`).
   - `purge_train_clips.py` — `purge-train-clips.timer` (**Sun 04:00**): deletes rejected + aged-orphan clips, keeps approved-train + still-pending. `--dry-run` supported.
   - `review_birds.py` — **manual** CLI on the box to confirm life-list detections from their archived clips (correct/wrong/unsure → `detections.verified`); `--stats` prints measured precision by confidence band (calibration data).

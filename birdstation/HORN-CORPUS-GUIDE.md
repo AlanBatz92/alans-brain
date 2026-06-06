@@ -235,6 +235,47 @@ re-running.
 
 ---
 
+## Step 8 — (optional) Send your confirmed trains to the Observatory page
+
+Your sorted clips *are* the live detector's events, so the same sorting can fill
+the **Trains tab** on the Observatory — without vetting twice. A small bridge,
+`sync_train_verdicts.py`, carries your folder labels into the box's database.
+
+```powershell
+# on your PC: turn the sorted folders into a verdicts file
+C:\horn\env\Scripts\python C:\Users\505ma\Documents\GitHub\alans-brain\birdstation\sync_train_verdicts.py emit --corpus C:\horn\corpus --out C:\horn\train_verdicts.csv
+
+# send it to the box
+scp C:\horn\train_verdicts.csv alan@192.168.4.132:~/
+```
+
+```bash
+# on the box: preview, then apply
+python3 ~/alans-brain/birdstation/sync_train_verdicts.py apply --csv ~/train_verdicts.csv --dry-run
+python3 ~/alans-brain/birdstation/sync_train_verdicts.py apply --csv ~/train_verdicts.csv
+```
+
+What this does: every clip in `trains\` is marked a confirmed train (it now shows
+on the page and counts toward stats); the others are recorded as their category
+(plane, vehicle, …) and stay hidden. **Audio stays private by default** — the
+event shows, but the backyard clip isn't served. To make one clip's audio public:
+
+```bash
+python3 ~/alans-brain/birdstation/sync_train_verdicts.py publish train_2026-06-01T08-30-00.wav
+```
+
+One-time, the box needs the updated API for the page to read the new fields:
+`cd ~/alans-brain && git pull && sudo systemctl restart birdapi`. The `apply` step
+backs up the database first and supports `--dry-run`. (Two rules: don't rename
+clips while sorting — the match is by filename — and clips that didn't come from
+this box's `train_clips` just won't match.)
+
+Richer train analytics (time-of-day, how often, typical gap between passes) are
+designed in `PLAN-train-analytics.md` and feed off exactly this vetted data — so
+the more you confirm, the sooner that view is worth building.
+
+---
+
 ## FAQ / when something looks off
 
 **How many clips do I really need?** Enough that `--check` says `OK`/`GOOD`

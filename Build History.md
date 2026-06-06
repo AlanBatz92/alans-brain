@@ -10,6 +10,53 @@
 
 ---
 
+## 2026-06-06 — Train vetting → Observatory page bridge (verdicts + privacy + category)
+
+Connected the P2 corpus-sorting back to the live Observatory. The clips Alan is
+sorting for calibration *are* the live detector's events (each has a `train_events`
+row), so one sorting pass can both calibrate the detector and populate the Trains
+page — without vetting twice. Two product decisions (asked): **keep the full
+category** in the DB, and **count confirmed trains but keep their audio private**
+by default (backyard mic).
+
+- **Schema (`train_events` += `category`, `published`):** `category` stores the
+  fine vetting class (train / plane / vehicle / gunshot / …) for future train
+  analytics; `published` (default 0) decouples "is a train" (counts + shows on the
+  page) from "serve the audio" (opt-in). `bird_api.ensure_train_schema()` applies
+  both idempotently at startup (so `git pull` + `systemctl restart birdapi`
+  migrates the live DB), and **preserves any already-public approved clip**
+  (`published=1 WHERE verdict='train'`) so nothing currently public breaks.
+- **`sync_train_verdicts.py` (new, pure stdlib — runs on the Windows PC and the
+  box, no venv):** `emit` walks the sorted corpus → `train_verdicts.csv`
+  (filename, verdict, category; `trains/`→train, other folders→false_positive with
+  the folder as category, `unsure/`+`_*` skipped). `apply` (box) matches each clip
+  to its `train_events` row **by exact basename** (not LIKE — clip names contain
+  underscores) and sets reviewed/verdict/category, leaving audio private unless
+  `--publish-trains`; backs up the DB first, supports `--dry-run`. `publish` flips
+  chosen clips' audio public later.
+- **API (`bird_api.py`):** the clip endpoint now also requires `published=1`, so a
+  confirmed-but-private train's audio 403s even with a direct URL. `/api/trains/recent`
+  already returns all columns (`dict(r)`), so `category`/`published` reach the
+  front-end with no handler change.
+- **Front-end (`observatory.js` `?v=obs24`):** the Trains list renders the
+  `<audio>` player only when `published`; otherwise the event still shows
+  (time/duration/dB) with a "🔒 audio kept private" note instead of a dead player.
+- **Verified** end-to-end on a temp DB seeded with the *old* schema: migration
+  added the columns + preserved a pre-existing public train, `emit`→`apply` set
+  verdict/category correctly, new trains landed private (`published=0`), the clip
+  gate served only published trains, and `publish` flipped one public. Python
+  compiles; `observatory.js` passes `node --check`.
+- **Deploy note:** these touch both tiers — restart `birdapi` on the box (picks up
+  the migration + clip gate) and deploy the site (`observatory.js?v=obs24`). Do the
+  box first so `/api/trains/recent` includes `published` before the new JS reads it.
+  Currently on the feature branch; needs to reach production to go live.
+
+Unblocks the designed-but-gated train analytics (`PLAN-train-analytics.md`) — the
+vetted, categorized events are exactly its input. `schema.sql` migration logged;
+`HORN-CORPUS-GUIDE.md` gained a "send confirmed trains to the page" step.
+
+---
+
 ## 2026-06-06 — P2 horn study: corpus management, validation, Windows runbook
 
 Follow-up to the same-day P2 build, in response to "make it idiot-proof to manage."
