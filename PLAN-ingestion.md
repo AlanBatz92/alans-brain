@@ -240,3 +240,47 @@ yet and the box can't be deployed from the web session.
   (`{venue, title, date, time, category, detail, url}`) maps 1:1 to the planned `events` row,
   so the swap is front-end-trivial. Archer Music Hall (Ticketmaster API) stays the cleanest
   *automated* first source to prove the box-side pipeline.
+
+## Shipped 2026-06-07: the box-side pipeline (Phase 4a + A/B + 4b)
+
+The automated ingestion designed above landed. Scope was set with Alan first — **(A)**
+ticketed events near Allentown (Ticketmaster), **(B)** Allentown + Emmaus civic meetings +
+election dates — with the two bot-walled venues left curated ("nice-to-have only if free,"
+and they're Eventbrite/TicketLeap, so they aren't).
+
+**What shipped**
+- **Adapter refactor (4a).** `pulse_fetcher.py` is a dispatcher; `feed_sources` gained
+  `type`/`config`/`content_kind`; a router sends adapter output to `feed_items` (news) or
+  the new `events` table. RSS unchanged (feedparser import made lazy). The pure
+  parsing/mapping is in **`pulse_adapters.py`** (stdlib-only, imported by the fetcher *and*
+  `bird_api.py`, unit-tested without feedparser/anthropic/fastapi).
+- **A — Ticketmaster `api` adapter**, valley-wide (geo radius + Music/Arts&Theatre segments).
+- **B — civic.** A new **`ics` adapter** (hand-rolled RFC-5545 parse, no dependency) for
+  Emmaus' CivicPlus calendar; a **Legistar** `api` provider for Allentown; `seed_civic_events.py`
+  for election dates.
+- **Surfaces (4b).** `GET /api/events?upcoming=1`; `events.js` **merges** curated + live;
+  the twice-daily brief is **event-aware** (`fetch_upcoming_events` → an id-less block → an
+  optional citation-free "On the calendar" section).
+
+**Deviations from the plan above (intentional)**
+- **New `api` and `ics` adapter types** carry the load; `scrape` (AI-as-parser) stays
+  deferred until a no-API source is actually fetchable from the box.
+- **Valley-wide Ticketmaster**, not Archer-only — closer to "what's on near me."
+- **B was new design** (the plan only sketched civic as "seeded `events` rows"): real
+  Legistar/CivicPlus feeds, fetchable on the box but **403 from the web session** (so the
+  feed URLs are `feed_sources` values Alan confirms on the box — a one-row edit, not code).
+- **Identity is `uid` (UNIQUE) → UPSERT**, replacing the planned `content_hash=sha1(id+date)`
+  so an edited/moved event updates in place instead of orphaning a row.
+- **Merge, not swap.** Because the two venues can't be automated, `events.js` keeps the
+  curated JSON *and* layers `/api/events` on top, instead of swapping `EVENTS_URL`.
+
+**Deploy (Alan, on the box — not doable from the web session):** `git pull`; add
+`TICKETMASTER_API_KEY` to `/etc/birdstation.env`; confirm the two civic feed URLs and insert
+the three `feed_sources` rows (templates in `schema.sql`); `python3
+birdstation/seed_civic_events.py`; `sudo systemctl restart birdapi` and the
+fetch/digest units. The migration self-applies on the next `pulse-fetch.timer`. Watch each
+new source's `last_status` in the Pulse health strip; a 403/empty there just means its URL
+needs the box-side tweak.
+
+**Remaining tail (deferred):** `scrape` adapter (AI-as-parser, hash-cached) for a fetchable
+no-API source; `pulse_add` paste CLI (4c); optional IMAP `email` adapter (4d).

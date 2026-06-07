@@ -1,23 +1,22 @@
 /* ──────────────────────────────────────────────────────────────
    What's On — local events aggregator
 
-   Thin, static reader. Reads a hand-curated data/events.json (venues
-   + upcoming events) and renders an aggregated, venue-filterable
-   calendar. No backend: it ships with the site and needs no box.
-
-   Why curated JSON rather than live fetching? The source venues
-   (Shankweiler's → TicketLeap, the Emmaus Theatre → Eventbrite) both
-   sit behind bot protection and 403 a server-side fetch, so they can't
-   be reliably auto-scraped. This file is the same JSON-driven pattern
-   the rest of the site uses; to add a venue or an event you edit
-   data/events.json — nothing here.
+   Reads two sources and merges them:
+     1. a hand-curated data/events.json — the two bot-walled venues
+        (Shankweiler's → TicketLeap, the Emmaus Theatre → Eventbrite, both 403 a
+        server fetch so they can't be auto-scraped). Ships with the site; edit the
+        JSON to add a venue/event. Always available, even if the box is down.
+     2. GET /api/events on birdstation — the *automated* buckets (Ticketmaster
+        events near Allentown, Allentown/Emmaus civic meetings, election dates),
+        served in the same {updated, venues[], events[]} shape.
+   Both are fetched independently (Promise.allSettled); either failing degrades to
+   the other rather than breaking the page (the box offline → curated-only).
 
    ID/class prefix: `ev-` (distinct from pulse-/obs-/sl-).
-   Designed to later swap EVENTS_URL for a GET /api/events endpoint
-   without touching the render code.
    ────────────────────────────────────────────────────────────── */
 
 const EVENTS_URL = 'data/events.json';
+const API_EVENTS_URL = 'https://birds.alansbrain.com/api/events?upcoming=1';
 const EV_TZ = 'America/New_York';   // venues are Eastern; "today" is computed there
 
 // Accent colors a venue may declare in JSON (maps to a theme var). Anything
@@ -207,34 +206,72 @@ function updateMeta(shown) {
 }
 
 /* ── Orchestrate ── */
+function fetchJson(url) {
+  return fetch(url, { cache: 'no-cache' }).then((resp) => {
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return resp.json();
+  });
+}
+
+/* Merge the curated + live payloads (each {venues[], events[]}). Venues dedupe by
+   key (curated wins); events dedupe by venue|date|title (the curated venues and the
+   box buckets are disjoint, so this only guards against an accidental overlap). */
+function mergeSources(curated, api) {
+  const venues = [];
+  const seenV = {};
+  [curated, api].forEach((d) => {
+    if (d && Array.isArray(d.venues)) {
+      d.venues.forEach((v) => {
+        if (v && v.key && !seenV[v.key]) { seenV[v.key] = 1; venues.push(v); }
+      });
+    }
+  });
+  const seenE = {};
+  const events = [].concat(
+    curated && Array.isArray(curated.events) ? curated.events : [],
+    api && Array.isArray(api.events) ? api.events : []
+  ).filter((e) => {
+    if (!e) return false;
+    const k = (e.venue || '') + '|' + (e.date || '') + '|' + (e.title || '');
+    if (seenE[k]) return false;
+    seenE[k] = 1;
+    return true;
+  });
+  return { venues: venues, events: events };
+}
+
 async function loadEvents() {
   const list = document.getElementById('ev-list');
   const meta = document.getElementById('ev-updated');
   if (meta) meta.textContent = 'Loading…';
   if (list) list.innerHTML = '<div class="ev-loading">Gathering the local calendar…</div>';
 
-  let data;
-  try {
-    const resp = await fetch(EVENTS_URL, { cache: 'no-cache' });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    data = await resp.json();
-  } catch (err) {
+  const [curatedR, apiR] = await Promise.allSettled([
+    fetchJson(EVENTS_URL),
+    fetchJson(API_EVENTS_URL)
+  ]);
+  const curated = curatedR.status === 'fulfilled' ? curatedR.value : null;
+  const api = apiR.status === 'fulfilled' ? apiR.value : null;
+
+  if (!curated && !api) {
     if (list) {
+      const msg = curatedR.reason ? curatedR.reason.message : 'unavailable';
       list.innerHTML = '<div class="ev-empty">Couldn’t load the events list — ' +
-                       escapeHtml(err.message) + '.</div>';
+                       escapeHtml(msg) + '.</div>';
     }
     if (meta) meta.textContent = 'Offline';
     return;
   }
 
-  state.venues = Array.isArray(data.venues) ? data.venues : [];
-  state.updated = data.updated || '';
+  const merged = mergeSources(curated, api);
+  state.venues = merged.venues;
   state.byKey = {};
   state.venues.forEach((v) => { state.byKey[v.key] = v; });
-  state.events = computeUpcoming(Array.isArray(data.events) ? data.events : [], easternToday());
+  state.updated = (curated && curated.updated) || (api && api.updated) || '';
+  state.events = computeUpcoming(merged.events, easternToday());
 
   const noteEl = document.getElementById('ev-note');
-  if (noteEl && data.note) noteEl.textContent = data.note;
+  if (noteEl && curated && curated.note) noteEl.textContent = curated.note;
 
   renderVenues();
   renderFilters();

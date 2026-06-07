@@ -45,13 +45,16 @@ CREATE TABLE solar_telemetry (
 
 -- ── Pulse (Lehigh Valley news) ──────────────────────────────
 CREATE TABLE feed_sources (
-    key         TEXT PRIMARY KEY,
-    label       TEXT NOT NULL,
-    url         TEXT NOT NULL,
-    enabled     INTEGER NOT NULL DEFAULT 1,
-    last_status TEXT,
-    last_count  INTEGER DEFAULT 0,
-    last_fetch  TEXT
+    key          TEXT PRIMARY KEY,
+    label        TEXT NOT NULL,
+    url          TEXT NOT NULL,            -- primary fetch endpoint (rss/ics feed, or api base)
+    enabled      INTEGER NOT NULL DEFAULT 1,
+    type         TEXT NOT NULL DEFAULT 'rss',   -- front-door adapter: 'rss' | 'api' | 'ics'
+    config       TEXT,                          -- JSON, adapter-specific (e.g. api provider/params)
+    content_kind TEXT NOT NULL DEFAULT 'news',  -- router: 'news' → feed_items | 'events' → events
+    last_status  TEXT,
+    last_count   INTEGER DEFAULT 0,
+    last_fetch   TEXT
 );
 
 -- NOTE: feed_items has NO integer id/link column. The PK is `url` (which is
@@ -84,6 +87,31 @@ CREATE TABLE feed_digests (
     PRIMARY KEY (date, slot)          -- two briefs per day coexist (2026-06-05)
 );
 
+-- ── Pulse events (What's On) — Phase 4, populated by pulse_fetcher.py ────────
+-- Future-dated happenings (concerts, civic meetings, elections) live here rather
+-- than in feed_items: they age out *after the event passes*, not after N days, and
+-- get their own "What's On" surface. The router sends an adapter's output here when
+-- the source's content_kind = 'events'. Identity is `uid` (the source's own stable
+-- id — Ticketmaster event id, iCalendar UID, Legistar EventId, or a seed key); we
+-- UPSERT on it so a re-sync is a no-op and an edited event updates in place. (This
+-- subsumes the plan's content_hash idea — hashing a stable id, not id+date, so a
+-- moved event doesn't orphan its old row.) Dates are naive *venue-local* wall time.
+CREATE TABLE events (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid         TEXT UNIQUE,        -- stable per-source identity; UPSERT key
+    source_key  TEXT NOT NULL,      -- feed_sources.key that produced it (also the front-end bucket)
+    title       TEXT NOT NULL,
+    start_date  TEXT NOT NULL,      -- "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM:SS" (local wall time)
+    end_date    TEXT,              -- optional, same shape
+    category    TEXT,              -- e.g. Concert, Theater, City Council, Election
+    location    TEXT,              -- real place, e.g. "PPL Center, Allentown"
+    detail      TEXT,
+    url         TEXT,
+    added_at    TEXT NOT NULL,
+    active      INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX idx_events_start ON events(start_date);
+
 -- ── Migrations ──────────────────────────────────────────────
 -- Apply each block once against the live ~/birdnet.db, then leave it here as a
 -- record. A fresh DB built from the CREATE statements above is already current.
@@ -111,3 +139,31 @@ CREATE TABLE feed_digests (
 --   SELECT date, 'morning', generated_at, headline, sections_json,
 --          citations_json, model, item_count FROM feed_digests_old;
 -- DROP TABLE feed_digests_old;
+
+-- migration 2026-06-07: Pulse Phase 4 — generalized ingestion + events store.
+-- feed_sources gains type/config/content_kind (pluggable adapters + news/events
+-- router); a new events table holds future-dated happenings ("What's On").
+-- pulse_fetcher.ensure_schema() applies this idempotently on every run (adds any
+-- missing column via ALTER, CREATE TABLE IF NOT EXISTS events), so a plain
+-- `git pull` + the next pulse-fetch.timer fire migrates the live DB — no manual SQL.
+-- ALTER TABLE feed_sources ADD COLUMN type         TEXT NOT NULL DEFAULT 'rss';
+-- ALTER TABLE feed_sources ADD COLUMN config       TEXT;
+-- ALTER TABLE feed_sources ADD COLUMN content_kind TEXT NOT NULL DEFAULT 'news';
+-- CREATE TABLE events ( ...see the CREATE above... );
+-- CREATE INDEX idx_events_start ON events(start_date);
+--
+-- New event sources are then inserted as feed_sources rows (Alan confirms the two
+-- civic feed URLs on the box first — they 403 a non-box fetch). With a free
+-- TICKETMASTER_API_KEY in /etc/birdstation.env:
+-- INSERT INTO feed_sources (key,label,url,type,config,content_kind) VALUES
+--  ('tm-lv','Lehigh Valley events',
+--   'https://app.ticketmaster.com/discovery/v2/events.json','api',
+--   '{"provider":"ticketmaster","params":{"latlong":"40.6084,-75.4902","radius":"20","unit":"miles","segmentId":["KZFzniwnSyZfZ7v7nJ","KZFzniwnSyZfZ7v7na"],"size":"100"}}',
+--   'events'),
+--  ('civic-allentown','Allentown — City meetings',
+--   'https://webapi.legistar.com/v1/allentownpa/Events','api',
+--   '{"provider":"legistar","client":"allentownpa"}','events'),
+--  ('civic-emmaus','Emmaus — Borough meetings',
+--   'https://www.emmauspa.gov/common/modules/iCalendar/iCalendar.aspx?catID=25&feed=calendar',
+--   'ics','{}','events');
+-- Election/voting dates: python3 birdstation/seed_civic_events.py  (idempotent).

@@ -21,6 +21,8 @@ from datetime import datetime, timedelta, timezone
 import anthropic
 from pydantic import BaseModel, Field
 
+import pulse_adapters as pa   # stdlib-only — friendly_time for the events block
+
 DB_PATH = os.path.expanduser("~/birdnet.db")
 MODEL = "claude-haiku-4-5"        # Haiku + extended thinking (see THINKING) — far
                                   # cheaper than Sonnet, and grounded enough now to
@@ -66,7 +68,13 @@ SYSTEM_PROMPT = (
     "than guessing; it is better to be vague than wrong. Never assert anything you "
     "cannot point to in a provided item, and use only the provided ids.\n\n"
     "Be factual and local. Lead with what's most significant to Lehigh Valley "
-    "residents."
+    "residents.\n\n"
+    "UPCOMING EVENTS: you may also be given a short list of upcoming local events "
+    "(concerts, civic meetings, election dates) that have NO ids. If that list is "
+    "present and has anything noteworthy, add ONE final short section (heading like "
+    "\"On the calendar\") noting the most relevant few in plain terms. Because these "
+    "have no ids, give that section an empty citation_ids list, and never place an "
+    "event in another section's citations. Do not invent events beyond those given."
 )
 
 
@@ -84,20 +92,38 @@ class Digest(BaseModel):
     sections: list[DigestSection]
 
 
-def generate(client, payload, use_thinking):
+def generate(client, user_content, use_thinking):
     """One digest call. `use_thinking` toggles extended thinking so the caller can
     retry without it on a model that rejects thinking entirely."""
     kwargs = dict(
         model=MODEL,
         max_tokens=16000,   # headroom for thinking + the citations output
         system=SYSTEM_PROMPT,
-        messages=[{"role": "user",
-                   "content": "Here are the latest items since the previous brief:\n" + payload}],
+        messages=[{"role": "user", "content": user_content}],
         output_format=Digest,
     )
     if use_thinking:
         kwargs["thinking"] = THINKING
     return client.messages.parse(**kwargs)
+
+
+def fetch_upcoming_events(conn, limit=12):
+    """A few soonest upcoming events so the brief can be civic/event-aware. Returns
+    [] when the events table is absent (pre-migration box) or nothing's upcoming,
+    so the digest behaves exactly as before in that case."""
+    has = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='events'"
+    ).fetchone()
+    if not has:
+        return []
+    today = datetime.now(EASTERN).strftime("%Y-%m-%d")
+    rows = conn.execute(
+        "SELECT title, start_date, end_date, category, location FROM events "
+        "WHERE active = 1 AND substr(COALESCE(end_date, start_date), 1, 10) >= ? "
+        "ORDER BY start_date ASC LIMIT ?",
+        (today, limit),
+    ).fetchall()
+    return [dict(r) for r in rows]
 
 
 def get_db():
@@ -182,17 +208,29 @@ def main():
         ensure_ascii=False,
     )
 
+    user_content = "Here are the latest items since the previous brief:\n" + payload
+    events = fetch_upcoming_events(conn)
+    if events:
+        ev_payload = json.dumps(
+            [{"title": e["title"], "date": (e["start_date"] or "")[:10],
+              "time": pa.friendly_time(e["start_date"]),
+              "category": e["category"], "where": e["location"]} for e in events],
+            ensure_ascii=False,
+        )
+        user_content += ("\n\nUPCOMING LOCAL EVENTS (no ids — for an optional "
+                         "\"On the calendar\" section):\n" + ev_payload)
+
     client = anthropic.Anthropic()
     try:
         try:
-            message = generate(client, payload, use_thinking=True)
+            message = generate(client, user_content, use_thinking=True)
         except anthropic.BadRequestError as ex:
             # If the model rejects thinking (e.g. an unsupported thinking type),
             # fall back to no thinking so a brief still gets written.
             if "thinking" not in str(ex).lower():
                 raise
             print(f"digest: thinking unsupported on {MODEL}, retrying without it")
-            message = generate(client, payload, use_thinking=False)
+            message = generate(client, user_content, use_thinking=False)
     except TRANSIENT_API_ERRORS as ex:
         conn.close()
         print(f"digest: API unavailable, retrying next run ({ex})")

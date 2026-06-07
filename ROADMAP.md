@@ -99,27 +99,28 @@ Bigger / more data or math:
 ✓ **Done from this backlog:** dawn-chorus shading on the hour chart (2026-06-05); the
 **"Almost a lifer" shelf** (2026-06-05) — both in "Done (recent)" above.
 
-### 4. Pulse ingestion — Phase 4 (full design in `PLAN-ingestion.md`)  **▶ first source decided**
-Generalize ingestion beyond RSS: pluggable adapters (**api**/scrape/email/manual), a
-separate `events` store + "What's On" surface, AI-as-parser (for scrape only).
-**First event source: Archer Music Hall (Allentown) via a new `api` adapter on the
-Ticketmaster Discovery API** — decided 2026-06-04 after testing showed every HTML
-source (official site, Bandsintown, JamBase, Concertfix, SeatGeek) 403s a server
-fetch. Build order: add `type`/`config`/`content_kind` to `feed_sources` + the
-`events` table + router → the `api` adapter → Archer row (needs a free
-`TICKETMASTER_API_KEY` in `/etc/birdstation.env`) → `GET /api/events` + a "What's On"
-card. Then the `scrape` adapter (AI-as-parser) for no-API sources like the Emmaus
-Theater calendar, and `pulse_add` paste-capture for one-offs / Bug Club.
+### 4. Pulse ingestion — Phase 4  (design in `PLAN-ingestion.md`)  **▶ 4a + A/B + 4b shipped 2026-06-07**
+The adapter refactor (`type`/`config`/`content_kind`; an `rss`/`api`/`ics` dispatcher +
+news/events router), the `events` table, **Ticketmaster** events (valley-wide near
+Allentown) and **civic** sources (Allentown Legistar + Emmaus CivicPlus + seeded
+elections), `GET /api/events`, the What's On **merge** (curated + live), and the
+**event-aware** brief all landed (see Done 2026-06-07).
 
-**Update (2026-06-06):** a **curated front-end events surface shipped** — `events.html`
-("What's On") reading `data/events.json` (Shankweiler's + The Emmaus Theatre) — because
-all three venue pages 403 a server fetch and the box can't be deployed from the web
-session. That's the front-end half of the "What's On" surface; the **box-side automated
-ingestion for these two venues stays blocked on fetchability** (Eventbrite org events need
-an owner token; TicketLeap has no public API). Build the `events` table + `/api/events`
-when a fetchable source (or a browser-capable fetch / `pulse_add`) is in hand — the
-renderer already swaps `data/events.json` → `/api/events` cleanly. Archer (Ticketmaster
-API) is still the cleanest *automated* first source. Details in `PLAN-ingestion.md`.
+**Box deploy still pending** (the web session can't reach/deploy birdstation): Alan adds
+`TICKETMASTER_API_KEY`, **confirms the two civic feed URLs** (every civic page 403s a
+non-box fetch — templates + the one OData fix are in `schema.sql`), inserts the three
+`feed_sources` rows, runs `seed_civic_events.py`, and restarts the units. The schema
+migration self-applies on the next `pulse-fetch.timer`.
+
+**Remaining tail (deferred):**
+- **`scrape` adapter** (AI-as-parser, hash-cached) — for a no-API source whose HTML is
+  actually fetchable *from the box*. Emmaus Theater stays the canonical example, still
+  blocked by its Eventbrite/own-site 403.
+- **`pulse_add` paste CLI (4c)** — URL/text → Claude → insert one item/event (Bug Club +
+  one-offs).
+- **`email` adapter (4d, optional)** — IMAP poll, only if paste proves tedious.
+- The two curated venues (Shankweiler's, The Emmaus Theatre) stay `data/events.json`
+  entries — no free structured source, and they're "nice-to-have only if free."
 
 ### 4b. Pulse hallucination — full-text scraping follow-up
 The 2026-06-04 grounding work (capture `content:encoded`, feed the digest real
@@ -151,6 +152,17 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-07** — **Pulse Phase 4: automated events pipeline (A+B).** Generalized ingestion
+  (`pulse_fetcher.py` is now a dispatcher over `rss`/`api`/`ics` adapters + a news/events
+  `content_kind` router; new stdlib-only `pulse_adapters.py`), an `events` table (uid-UPSERT,
+  auto-purge of past events), **Ticketmaster** events near Allentown (`api`), **Allentown
+  Legistar** + **Emmaus CivicPlus** civic meetings (`api`/`ics`) and seeded **election** dates
+  (`seed_civic_events.py`), `GET /api/events?upcoming=1`, `events.js` **merging** curated +
+  live (resilient when the box is offline), and an **event-aware** twice-daily brief. 30 local
+  tests pass (`test_event_adapters.py`, `test_fetcher_db.py`) + all box files compile; **box
+  deploy + civic-URL confirmation pending on Alan** (web session can't reach birdstation). See
+  Build History + `PLAN-ingestion.md`.
 
 - **2026-06-06** — **What's On**: a dedicated local-events page (`events.html` /
   `events.js` / `data/events.json`, `.ev-*`) aggregating upcoming happenings at

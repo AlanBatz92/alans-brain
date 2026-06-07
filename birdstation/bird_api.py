@@ -11,6 +11,8 @@ import sqlite3
 import os
 import json
 
+import pulse_adapters as pa   # stdlib-only; event-row → public shape + venue metadata
+
 app = FastAPI(title="Emmaus Bird Observatory API")
 
 ALLOWED_ORIGINS = [
@@ -82,6 +84,16 @@ def eastern_parts(uy, um, ud, uh):
     else:
         e = dt + timedelta(hours=(-4 if _is_us_edt(dt) else -5))
     return e.strftime("%Y-%m-%d"), e.hour
+
+
+def eastern_today():
+    """Today's date in Emmaus (Eastern), for the upcoming-events filter."""
+    now = datetime.now(timezone.utc)
+    if _EASTERN is not None:
+        now = now.astimezone(_EASTERN)
+    else:
+        now = now + timedelta(hours=(-4 if _is_us_edt(now) else -5))
+    return now.strftime("%Y-%m-%d")
 
 # ── API key auth (write routes only) ─────────────────────────
 _API_KEY = os.environ.get("BIRD_API_KEY", "")
@@ -455,6 +467,47 @@ def get_feed(limit: int = 80):
         "items":   [dict(r) for r in items],
         "sources": [dict(r) for r in sources],
     }
+
+
+# ─────────────────────────────────────────────────────────────
+# Pulse Events ("What's On") — populated by pulse_fetcher.py's events router
+# ─────────────────────────────────────────────────────────────
+
+@app.get("/api/events")
+def get_events(upcoming: int = 1):
+    """Future-dated happenings for the What's On page. Returns the same
+    {updated, venues[], events[]} shape as the curated data/events.json, so the
+    front-end merges the two sources symmetrically. Each event's `venue` is its
+    source bucket (Ticketmaster / civic / elections); `venues[]` carries that
+    bucket's display metadata. Tolerant of a box that hasn't migrated yet (no
+    events table → empty payload, page falls back to the curated JSON)."""
+    conn = get_db()
+    has_events = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='events'"
+    ).fetchone()
+    if not has_events:
+        conn.close()
+        return {"updated": None, "venues": [], "events": []}
+    rows = conn.execute(
+        "SELECT * FROM events WHERE active = 1 ORDER BY start_date ASC"
+    ).fetchall()
+    conn.close()
+
+    today = eastern_today()
+    events, keys = [], []
+    for r in rows:
+        d = dict(r)
+        if upcoming and not pa.is_upcoming(d.get("start_date"), d.get("end_date"), today):
+            continue
+        events.append(pa.to_public_event(d))
+        if d["source_key"] not in keys:
+            keys.append(d["source_key"])
+    return {
+        "updated": today,
+        "venues": [pa.venue_descriptor(k) for k in keys],
+        "events": events,
+    }
+
 
 # ─────────────────────────────────────────────────────────────
 # Train Detection Endpoints

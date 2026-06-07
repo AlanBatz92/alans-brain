@@ -22,7 +22,7 @@ a Google Sheet, and a home server called **birdstation**).
 |---|---|---|
 | Home | `index.html` | Landing page with Explore cards |
 | Pulse | `pulse.html` / `pulse.js` | Live Lehigh Valley news feed (see Pulse section) |
-| What's On | `events.html` / `events.js` | Aggregated local-events calendar — curated `data/events.json`; see What's On section |
+| What's On | `events.html` / `events.js` | Aggregated local-events calendar — curated `data/events.json` **merged with** live `GET /api/events`; see What's On section |
 | YouTube Channels | `youtube.html` | 114 curated channels, JSON-driven |
 | Great & Free | `tools.html` | Tools + websites, searchable categories |
 | Soundboards | `soundboards.html` / `soundboards.js` | Categorized audio clips, rotating icons |
@@ -69,15 +69,23 @@ AI enrichment, and the daily digest; the website just reads JSON and renders.
 
 ### What's On front-end (`events.html`, `events.js`, `.ev-*` in `style.css`)
 
-A standalone **local-events** surface, paired with Pulse (LV news) but **not** a
-birdstation reader — it's a thin static page over a **curated, committed
-`data/events.json`** (the site's JSON-driven content pattern). Prefix: **`ev-`**.
+A **local-events** surface paired with Pulse (LV news). As of **2026-06-07 it merges two
+sources**: the **curated, committed `data/events.json`** (the two bot-walled venues) and
+the **live `GET /api/events`** on birdstation (the automated buckets — Ticketmaster events,
+civic meetings, elections). Prefix: **`ev-`**.
 
-- **Why static/curated:** the source venues' pages all **403 a server-side fetch**
+- **Two sources, merged (`loadEvents` → `mergeSources`):** both are fetched independently
+  via `Promise.allSettled` (`EVENTS_URL` = `data/events.json`, `API_EVENTS_URL` =
+  `https://birds.alansbrain.com/api/events?upcoming=1`). Venues dedupe by `key` (curated
+  wins), events by `venue|date|title`. **Either failing degrades to the other** — the box
+  being offline just shows the curated venues; a missing/empty API is silent. `/api/events`
+  returns the **same `{updated, venues[], events[]}` shape** as the JSON, so the merge is
+  symmetric and the render code is untouched.
+- **Why the two venues stay curated:** their pages all **403 a server-side fetch**
   (Shankweiler's → TicketLeap, The Emmaus Theatre → Eventbrite org `11934905594`,
-  `emmaustheatre.com`), so they can't be auto-scraped, and the box can't be deployed
-  from the web session. Adding/editing an event or venue = a one-file edit to
-  `data/events.json`; `events.js` is unchanged. (Automation path: `PLAN-ingestion.md`.)
+  `emmaustheatre.com`) and have no free structured API, so they can't be auto-fetched.
+  Adding/editing one of them = a one-file edit to `data/events.json`; `events.js` unchanged.
+  The automated buckets come from the box (see Pulse events store below).
 - **`data/events.json`:** `{updated, note, venues[], events[]}`. A **venue** =
   `{key, name, short, location, emoji, color, url, tickets, blurb}` (`color` is a theme
   token — teal/blue/purple/pink/green/yellow/red — fed to an inline `--ev-accent`, so a
@@ -263,8 +271,9 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 
 - **API service:** `bird_api.py` — **FastAPI via uvicorn on `:8080`**, fronted at
   `https://birds.alansbrain.com`. CORS allows `alansbrain.com` / `www.alansbrain.com`.
-  Pulse uses `/api/feed` and `/api/digest`; the rest serve bird/train data
-  (`/api/detections`, `/api/today`, `/api/lifetime`, `/api/stats`,
+  Pulse uses `/api/feed`, `/api/digest`, and **`/api/events`** (What's On — returns
+  `{updated, venues[], events[]}`, mapping the `events` table via `pulse_adapters`); the
+  rest serve bird/train data (`/api/detections`, `/api/today`, `/api/lifetime`, `/api/stats`,
   `/api/detections/grouped`, `/api/species/{name}`, `/api/analytics`, `/api/trains/*`).
   `/api/analytics` returns Eastern-bucketed distributions (hour-of-day, species×hour,
   per-day volume + diversity, leaderboard) for the Analytics tab — aggregated server-side
@@ -274,11 +283,12 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 - **Storage:** SQLite at `~/birdnet.db` (full schema in `birdstation/schema.sql`).
   Bird/observatory tables: `detections`, `lifetime`, `train_events`, `solar_telemetry`.
   Pulse tables:
-  - `feed_sources` — `key` (PK), `label`, `url`, `enabled`, `last_status`, `last_count`, `last_fetch`.
+  - `feed_sources` — `key` (PK), `label`, `url`, `enabled`, `last_status`, `last_count`, `last_fetch`, **`type`** (`rss`|`api`|`ics`, the adapter), **`config`** (JSON, adapter params), **`content_kind`** (`news`|`events`, the router target) — last three added 2026-06-07, migrated idempotently by `pulse_fetcher.ensure_schema()`.
   - `feed_items` — **PK is `url`** (no integer id/link column; code uses `rowid AS id`). Columns: `title`, `source_key`, `source`, `published` (INTEGER), `fetched_at`, `summary`, `category`, `ai_summary`, `enriched_at`, `enrich_attempts`.
   - `feed_digests` — PK **`(date, slot)`** (was `date`; `slot ∈ {morning, evening}`, 2026-06-05), `generated_at`, `headline`, `sections_json`, `citations_json`, `model`, `item_count`. Migrated idempotently by `pulse_digest.ensure_schema()`.
+  - `events` (**2026-06-07, What's On**) — future-dated happenings. Columns: `id`, **`uid`** (UNIQUE, source-stable identity → UPSERT key, so re-syncs no-op and edits update in place), `source_key` (the producing source, also the front-end "venue"/bucket), `title`, `start_date` / `end_date` (naive venue-local "YYYY-MM-DD" or "...THH:MM:SS"), `category`, `location`, `detail`, `url`, `added_at`, `active`. Created/migrated by `pulse_fetcher.ensure_events_table()`; past rows auto-purged after they pass. `GET /api/events` maps these to the page shape via `pulse_adapters.to_public_event`.
 - **Jobs (systemd timers):**
-  - `pulse_fetcher.py` — `pulse-fetch.timer`, every 15 min: pulls every enabled source (feedparser), dedupes by `url`, stores, and **purges items older than 30 days** (`RETENTION_DAYS`). **Captures the fullest article text (2026-06-04):** `extract_body()` prefers `content:encoded` (feedparser `e.content[*].value`) over the teaser; cap raised 500 → 2000 (`BODY_CAP`). This richer body lands in `summary` and grounds the AI steps (reduces hallucination). Forward-looking only — existing rows are deduped by `url`, so the fuller body fills in on new items.
+  - `pulse_fetcher.py` — `pulse-fetch.timer`, every 15 min: **a dispatcher (2026-06-07).** Each `feed_sources` row's `type` selects an adapter — `rss` (feedparser → news) or `api`/`ics` (the stdlib-only `pulse_adapters.py` → events) — and `content_kind` routes the output to `feed_items` (dedupe by `url`; **purge > 30 days**, `RETENTION_DAYS`) or `events` (UPSERT by `uid`; **purge events once past**, `EVENT_GRACE_DAYS`). `api`/`ics` use **no AI** (the data is structured). One source failing never touches the others; the RSS path is byte-for-byte unchanged (its feedparser import is now lazy). Schema migration is idempotent via `ensure_schema()`. **Captures the fullest article text (2026-06-04):** `extract_body()` prefers `content:encoded` (feedparser `e.content[*].value`) over the teaser; cap raised 500 → 2000 (`BODY_CAP`). This richer body lands in `summary` and grounds the AI steps (reduces hallucination). Forward-looking only — existing rows are deduped by `url`, so the fuller body fills in on new items.
   - `pulse_enrich.py` — `pulse-enrich.timer` (every 20 min): batched (20/run) AI tagging + one-sentence summaries via **`claude-haiku-4-5`**, prompt-cached system prompt. Prompt has a **GROUNDING rule (2026-06-04):** summarize only from the provided headline/blurb; don't invent specifics. **Retry budget (`enrich_attempts`, cap 3) is only burned on a genuine per-item miss (2026-06-05):** a *successful* call that omits an item. Batch-level API/account/network failures (`anthropic.APIError` — billing, auth, rate-limit, 5xx, timeouts) roll back **without** bumping and retry next run, so an outage (e.g. an empty credit balance) can't permanently exclude the items it touched. (Previously any exception bumped the whole batch, so a billing outage silently capped items at `>=3` and they never re-enriched — fixed; one-time cleanup was `UPDATE feed_items SET enrich_attempts=0 WHERE enriched_at IS NULL`.)
   - `pulse_digest.py` — `pulse-digest.timer`, **twice daily (06:00 + 17:00 `America/New_York`, 2026-06-05)**: writes a sectioned brief via **`claude-haiku-4-5`** + **extended thinking** (`{"type":"enabled","budget_tokens":4000}` — Haiku 400s on `"adaptive"` thinking; the digest auto-falls-back to no thinking if a model rejects it) (was `claude-sonnet-4-6` — grounding lets Haiku do it at a fraction of the cost), structured output through `messages.parse()`. Skips a run with `<MIN_ITEMS` (3). **Window = "since the last brief" (2026-06-05):** selects items whose `enriched_at` is after the previous digest's `generated_at` (floored at `MAX_LOOKBACK_HOURS` = 24 so a first run / outage gap can't pull a huge backlog); windowed on `enriched_at` not `fetched_at` so late-enriched items aren't dropped — each brief is fresh, no re-tread. **Two briefs/day coexist:** stored by `(date, slot)` with `slot ∈ {morning, evening}` (Eastern date + noon split); `ensure_schema()` rebuilds the PK idempotently on first run (no manual SQL). **Grounding (2026-06-04):** the per-item payload carries an **`excerpt`** (richer `summary` body, capped 500/item) alongside the one-sentence `ai_summary`, and the prompt forbids invented figures/dates/names/quotes/causes/outcomes ("be vague rather than wrong"). API/account failures retry next run without crashing (`anthropic.APIError` guard).
 - **Observatory writers (long-running services, in `birdstation/`):**
@@ -289,7 +299,7 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
   - `review_birds.py` — **manual** CLI on the box to confirm life-list detections from their archived clips (correct/wrong/unsure → `detections.verified`); `--stats` prints measured precision by confidence band (calibration data).
   - `purge_bird_clips.py` — `purge-bird-clips.timer` (**daily 04:30**): deletes unreviewed bird clips older than 30 days + aged orphans, keeps labelled (reviewed) clips + recent unreviewed. `--dry-run` supported.
   - `purge_low_confidence.py` — **manual one-shot** (not timed): deletes `detections` with confidence below the preserve floor (default 0.60) — cleanup of the old ≥ 0.35 noise after the floor was raised. Backs the DB up first; `--dry-run` / `--floor` / `--no-backup`. Leaves `lifetime`, Pulse, and train tables untouched. New data stays clean on its own (the pipeline won't write below the floor).
-- **Secrets:** `ANTHROPIC_API_KEY` and `BIRD_API_KEY` live only on the box, moving to `/etc/birdstation.env` (chmod 600) referenced by `EnvironmentFile=`. Never committed; `.gitignore` blocks `*.env`/`*.db`. (The observatory services need no keys.)
+- **Secrets:** `ANTHROPIC_API_KEY`, `BIRD_API_KEY`, and **`TICKETMASTER_API_KEY`** (2026-06-07; the Ticketmaster events adapter — which no-ops with a clear `last_status` if it's absent, so the box never crashes on a missing key) live only on the box in `/etc/birdstation.env` (chmod 600) referenced by `EnvironmentFile=`. Never committed; `.gitignore` blocks `*.env`/`*.db`. (The observatory services need no keys.)
 
 ### Digest + citations (current behavior)
 
@@ -299,7 +309,13 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 ## Other version-controlled docs
 
 - `PLAN-pulse.md` — original Pulse design + phases.
-- `PLAN-ingestion.md` — **Phase 4 plan** (next up): generalize ingestion beyond RSS (pluggable adapters for **api**/scrape/email/manual, AI-as-parser for scrape, a separate `events` store + "What's On" surface, a paste-to-capture tool). Decisions settled: separate events store; paste-first email; **first event source is Archer Music Hall via an `api` adapter (Ticketmaster Discovery API)** — every HTML source (official site + Bandsintown/JamBase/Concertfix/SeatGeek) 403s a server fetch (tested 2026-06-04), so prefer APIs and verify fetchability before assuming a page is scrapable. Needs a free `TICKETMASTER_API_KEY` in `/etc/birdstation.env`.
+- `PLAN-ingestion.md` — **Phase 4 plan; 4a + A/B + 4b shipped 2026-06-07.** The adapter
+  refactor (`rss`/`api`/`ics` dispatcher + news/events router), the `events` store,
+  Ticketmaster + civic (Legistar/CivicPlus) + seeded-election sources, `GET /api/events`,
+  the What's On merge, and the event-aware brief all landed (box deploy + civic-URL
+  confirmation pending on Alan). Remaining tail (deferred): the `scrape` AI-as-parser
+  adapter for a no-API fetchable source, the `pulse_add` paste CLI (4c), and the optional
+  IMAP `email` adapter (4d). See the doc's "Shipped 2026-06-07" section.
 - `PLAN-train-analytics.md` — **designed, not started** (2026-06-05): a `Birds | Trains` toggle on the Analytics tab. Reuses the stat cards / hour chart / per-day chart; adds a day-of-week×hour heatmap, duration/loudness histograms, and a headway card; backed by a new approved-only `GET /api/trains/analytics`. **Gated on vetted train data** (ties to `PLAN-train-vetting.md`); the front-end scaffold can land first.
 - `PLAN-train-vetting.md` — train privacy gate + CLI review + purge (shipped); web review UI + detection-tuning loop are future.
 - `PLAN-spotify-setlist-tools.md`, `Spotify Setlist Tools Implementation.md`, `Task Tracker Write-Back Implementation.md` — design/implementation records for those features.

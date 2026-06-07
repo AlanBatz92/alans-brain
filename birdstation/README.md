@@ -20,10 +20,12 @@ changes" below) — but no copy step, so nothing drifts.
 
 ```
 birdstation/
-  pulse_fetcher.py    # timer: pull enabled feed_sources, dedupe, store, purge >30d
+  pulse_fetcher.py    # timer: dispatcher over rss/api/ics adapters → feed_items | events
+  pulse_adapters.py   # stdlib-only parsing/mapping (iCal, Ticketmaster, Legistar) — testable
   pulse_enrich.py     # timer: batched AI category + one-sentence summary (Haiku)
-  pulse_digest.py     # timer (6 AM + 5 PM ET): Claude brief w/ citations (Haiku), since-last-brief
-  bird_api.py         # FastAPI app: /api/feed, /api/digest, bird + train routes
+  pulse_digest.py     # timer (6 AM + 5 PM ET): Claude brief w/ citations (Haiku); event-aware
+  seed_civic_events.py # CLI: idempotently seed election/voting dates into the events table
+  bird_api.py         # FastAPI app: /api/feed, /api/digest, /api/events, bird + train routes
   birdnet_pipeline.py # birdnet.service: capture→analyze→log; life-list gate; clips
   purge_bird_clips.py # daily timer: age out unreviewed bird verification clips
   review_birds.py     # CLI: confirm lifers; --stats prints measured precision
@@ -46,6 +48,32 @@ sudo systemctl start  pulse-digest.service  # regenerate the brief now
 # schema.sql changed? bird columns auto-migrate via init_db on birdnet restart;
 #   pulse_digest.ensure_schema() migrates feed_digests on its next run; others by hand
 ```
+
+### Events / "What's On" (Phase 4, 2026-06-07)
+
+`pulse_fetcher.py` migrates `feed_sources` (adds `type`/`config`/`content_kind`) and
+creates the `events` table on its next run (`ensure_schema()`), so the migration is
+hands-off. To turn the pipeline on:
+
+```bash
+# 1. Free Ticketmaster Discovery API key (events adapter no-ops without it).
+echo 'TICKETMASTER_API_KEY=...' | sudo tee -a /etc/birdstation.env
+
+# 2. Add the source rows. The Ticketmaster row works as-is; CONFIRM the two civic
+#    feed URLs first (they 403 a non-box fetch) — templates are in schema.sql.
+sqlite3 ~/birdnet.db < /dev/stdin   # paste the INSERTs from schema.sql's 2026-06-07 block
+
+# 3. Seed election/voting dates (idempotent), then restart.
+python3 ~/alans-brain/birdstation/seed_civic_events.py
+sudo systemctl restart birdapi
+sudo systemctl start  pulse-fetch.service   # fetch now instead of waiting for the timer
+```
+
+`GET /api/events?upcoming=1` serves the result; the website's What's On page merges it
+with its curated JSON. Each source's `last_status` shows in the Pulse health strip — a
+403/empty there means that one feed URL needs a box-side tweak (a one-row `UPDATE`, no
+code change). Tests: `python3 birdstation/test_event_adapters.py` and
+`python3 birdstation/test_fetcher_db.py` (both stdlib-only, run anywhere).
 
 ### Deploying unit-file changes
 
@@ -77,6 +105,7 @@ Keys live **only on the box**, in an untracked env file the units reference:
 # /etc/birdstation.env   (chmod 600, NOT in git)
 ANTHROPIC_API_KEY=sk-ant-...
 BIRD_API_KEY=...            # rotate the one that leaked in chat 2026-05-30
+TICKETMASTER_API_KEY=...    # free Discovery API key; the events adapter no-ops if absent
 ```
 
 The committed units use `EnvironmentFile=/etc/birdstation.env` — no inline keys.

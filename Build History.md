@@ -10,6 +10,61 @@
 
 ---
 
+## 2026-06-07 — Pulse Phase 4: generalized ingestion + an automated events pipeline (A+B)
+
+Brought events and civic dates into Pulse as a real, self-updating pipeline on
+birdstation — the box-side half of "What's On" that the 2026-06-06 curated page was built
+to upgrade into. Scope was set with Alan first: **(A)** ticketed events near Allentown via
+the Ticketmaster Discovery API, **(B)** Allentown + Emmaus civic meetings and election
+dates; the two bot-walled venues stay curated (only worth automating "if free," and they're
+Eventbrite/TicketLeap, so they aren't).
+
+**Pluggable adapters → one spine (4a).** `pulse_fetcher.py` is now a dispatcher: each
+`feed_sources` row declares a `type` (`rss`|`api`|`ics`) and a `content_kind`
+(`news`→`feed_items` | `events`→new `events` table). RSS behavior is byte-for-byte
+unchanged (its feedparser import is now lazy). The pure parsing/mapping lives in a new
+**stdlib-only `pulse_adapters.py`** (imported by both the fetcher and the API, and
+unit-testable with no feedparser/anthropic/fastapi). No AI is used — `api`/`ics` data is
+already structured (the `scrape`/AI-as-parser adapter stays deferred to a no-API source).
+
+**A — Ticketmaster `api` adapter.** Valley-wide (geo radius around Allentown, Music +
+Arts & Theatre segments — a superset of the plan's Archer-only first cut, per Alan), mapped
+to event rows by venue-local `localDate`/`localTime` (no tz math). `TICKETMASTER_API_KEY`
+in `/etc/birdstation.env`; the adapter no-ops with a clear `last_status` if it's absent, so
+the box never crashes on a missing key.
+
+**B — civic.** A new hand-rolled **`ics` adapter** (RFC 5545 line-unfolding + DTSTART/
+SUMMARY/URL, no dependency) for Emmaus' CivicPlus calendar, and a **Legistar** `api`
+provider for Allentown's council (OData `/Events`, upcoming-filtered). Election/voting dates
+seed via **`seed_civic_events.py`** (idempotent, uid-keyed). Each civic feed URL is a
+`feed_sources.url`/`config` value, so confirming or swapping it on the box is a one-row
+edit, not a code change — important because **every civic fetch 403s from the web session**
+(same bot wall as the venues; the box, on a different egress, is the real verifier).
+
+**Events store + surfaces (4b).** New `events` table (`uid` UNIQUE → UPSERT, so a re-sync
+is a no-op and an edit updates in place — subsumes the plan's `content_hash`); past events
+auto-purge after they pass. New **`GET /api/events?upcoming=1`** returns the same
+`{updated, venues[], events[]}` shape as `data/events.json`, and **`events.js` now merges**
+the curated JSON (the two venues, always available) with the live box feed (the automated
+buckets) via `Promise.allSettled` — so the box being offline degrades to curated-only. This
+replaces the planned clean *swap* with a *merge*, keeping the venues working with zero box
+dependency. The twice-daily **brief is now event-aware**: upcoming events are passed as an
+id-less block and the model may add one "On the calendar" section (empty citations; robust
+if it strays).
+
+**Verified locally** (the box isn't reachable/deployable from here): two new standalone
+test suites, **30 checks**, all passing — `test_event_adapters.py` (iCal unfolding, UTC→
+Eastern, Ticketmaster/Legistar mapping, URL building — incl. an OData colon-encoding bug the
+test caught — and the event→public shape) and `test_fetcher_db.py` (idempotent migration,
+news dedup, event upsert/update, the row→`/api/events` contract, the election seed, purge).
+All box files `py_compile`; `events.js` passes `node --check`. **Deploy (Alan, on the box):**
+`git pull`; add `TICKETMASTER_API_KEY`; insert the three source rows (confirm the civic URLs
+first — templates in `schema.sql`); `python3 birdstation/seed_civic_events.py`; restart
+`birdapi` + the fetch/digest units. The schema migration applies itself on the next
+`pulse-fetch.timer` fire.
+
+---
+
 ## 2026-06-06 — What's On: a curated local-events page (Pulse's events companion)
 
 Added a dedicated **What's On** surface (`events.html` / `events.js`,
