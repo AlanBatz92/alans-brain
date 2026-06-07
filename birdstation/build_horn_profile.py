@@ -956,8 +956,11 @@ def accuracy_lines(v: dict) -> List[str]:
 
 
 def accuracy_verdict(v: dict) -> str:
-    """One-line read on whether this profile is good enough."""
-    r, p = v["recall"], v["precision"]
+    """One-line read on whether this profile is good enough. Uses pass-level recall
+    when available — catching a train in any one of its clips is catching it, so
+    that's the real-world recall; clip-level under-rates a clip corpus."""
+    r = v.get("pass_level_recall", v["recall"])
+    p = v["precision"]
     if r >= 0.85 and p >= 0.90:
         return "Strong — this profile is ready to use."
     if r >= 0.70 and p >= 0.80:
