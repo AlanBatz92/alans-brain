@@ -142,6 +142,16 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-07** — **Train detection: methodology doc + on-page panel.** Profile is strong
+  (94% passes / 96% precision on 131 horns + 109 negatives), so documented and surfaced the
+  method: `birdstation/DETECTION-METHODS.md` (acoustic method, calibration pipeline, the
+  repeatable refinement loop, confirmed-trains-preserved-for-analytics, two-detector reality +
+  convergence, caveats) and a collapsible **"ℹ️ How these are detected"** panel on the Trains
+  tab driven by `data/train-method.json` (`loadTrainMethod()`, `.obs-method*`, `?v=obs25`/`obs19`).
+  Next: **ship via PR to `main`** (box `git pull` + `restart birdapi`; site deploys the panel),
+  then the **train analytics view** (§3a) — now unblocked: the pass-grouping (clips within N min =
+  one train) is the counting logic, and the vetting bridge banks categorized, timestamped data.
+
 - **2026-06-06** — **Train vetting → Observatory page bridge.** The P2 corpus clips are the
   live detector's `train_events`, so `sync_train_verdicts.py` carries the sorted-folder
   labels back into the DB (no second review): `emit` (PC) → CSV → `apply` (box) sets

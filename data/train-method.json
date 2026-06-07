@@ -1,0 +1,31 @@
+{
+  "title": "How train events are detected",
+  "summary": "Each event is flagged by listening for a train horn, then confirmed by a human before it appears here. Only human-confirmed trains are shown, and clip audio is private by default.",
+  "method": [
+    "A microphone about 1,500–1,700 ft from the freight line records the soundscape.",
+    "Software scans for a train horn — sustained, tonal energy in a narrow frequency band. A horn is close to a pure tone; wind, planes, and engines are broadband noise, so a 'tonality' ratio separates them.",
+    "A stretch of horn-like tone becomes a 'blast'; horn blasts close together (within a few minutes) are grouped into one train pass.",
+    "Every candidate is reviewed by a human — only confirmed trains are published. The recordings come from a backyard mic, so audio stays private unless a clip is individually published."
+  ],
+  "parameters": {
+    "horn_band_hz": "300–520",
+    "tonality_ratio": "≥ 2.1 (horn vs. surrounding sound)",
+    "min_blast_duration_sec": 0.4,
+    "blasts_to_confirm": 1,
+    "same_train_window_min": 5,
+    "calibrated_from": "131 confirmed horns + 109 non-train clips"
+  },
+  "accuracy": {
+    "passes_caught": "94%",
+    "precision": "96%",
+    "note": "Measured for the tuned horn detector against the labeled examples (clips within 5 minutes counted as one train pass). The human review is the final guarantee on what's shown."
+  },
+  "caveats": [
+    "Distance: only the horn carries this far, so a quiet pass with no horn won't be caught.",
+    "One backyard mic: no train direction or speed, and audio can catch nearby conversation — which is why clips stay private unless individually published.",
+    "Look-alikes: planes and sirens can sound horn-like; the human review is the safeguard.",
+    "Counts reflect horn events we caught and confirmed — not necessarily every train that passed.",
+    "The automatic detector is still being refined from each new batch of confirmed examples, so the parameters above evolve."
+  ],
+  "updated": "2026-06-07"
+}

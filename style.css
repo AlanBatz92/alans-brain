@@ -4725,6 +4725,33 @@ nav {
   color: var(--text-dim);
 }
 
+/* ── Trains: "How these are detected" methodology panel ── */
+.obs-method {
+  margin: 6px 0 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.obs-method > summary {
+  cursor: pointer;
+  padding: 11px 15px;
+  font-weight: 600;
+  color: var(--text);
+  list-style: none;
+}
+.obs-method > summary::-webkit-details-marker { display: none; }
+.obs-method[open] > summary { border-bottom: 1px solid var(--border); }
+.obs-method-body { padding: 4px 15px 14px; color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
+.obs-method-body .obs-method-h { color: var(--text); margin: 14px 0 4px; font-size: 0.92rem; }
+.obs-method-summary { margin: 10px 0; }
+.obs-method-steps, .obs-method-caveats { margin: 4px 0; padding-left: 20px; }
+.obs-method-steps li, .obs-method-caveats li { margin: 4px 0; }
+.obs-method-params { width: 100%; border-collapse: collapse; margin: 4px 0; }
+.obs-method-params td { padding: 4px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.obs-method-params td:first-child { color: var(--text-dim); white-space: nowrap; text-transform: capitalize; }
+.obs-method-updated { font-size: 0.8rem; color: var(--text-dim); margin-top: 12px; }
+.obs-method-updated a { color: var(--teal); }
+
 /* ── Loading / empty states ── */
 .obs-loading,
 .obs-empty {

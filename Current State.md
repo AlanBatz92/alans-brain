@@ -117,8 +117,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs23` +
-  `style.css?v=obs18` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs25` +
+  `style.css?v=obs19` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -227,7 +227,15 @@ train data a home. ID/class prefix: **`obs-`**.
   vanilla, no deps; degrades to no shading if sun times are unavailable. Birds-only (the
   train-analytics toggle will skip it — see `PLAN-train-analytics.md`). *(First cut used
   per-column tints, which read as blocky/gappy; replaced with the single gradient.)*
-- Assets: `style.css?v=obs18`, `observatory.js?v=obs23`, `bird-info.js?v=obs6`.
+- **Trains "How these are detected" panel (2026-06-07):** a collapsible `<details>`
+  on the Trains tab (`#obs-train-method`, `.obs-method*`) rendered by
+  `loadTrainMethod()` from **`data/train-method.json`** (JSON-driven: summary, method,
+  parameters, accuracy, caveats) — so the page states exactly how detection works and
+  its caveats. Full long-form record in **`birdstation/DETECTION-METHODS.md`** (method,
+  calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
+  caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
+  silent if the JSON is missing.
+- Assets: `style.css?v=obs19`, `observatory.js?v=obs25`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

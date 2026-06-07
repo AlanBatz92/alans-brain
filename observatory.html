@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs18">
+  <link rel="stylesheet" href="style.css?v=obs19">
 </head>
 <body>
 
@@ -178,6 +178,11 @@
       <div class="obs-stats" id="obs-train-stats"></div>
       <p class="obs-note">Only train events reviewed and confirmed by a human are shown here.</p>
 
+      <details class="obs-method" id="obs-train-method">
+        <summary>ℹ️ How these are detected</summary>
+        <div class="obs-method-body" id="obs-train-method-body"></div>
+      </details>
+
       <h2 class="obs-heading">Recent events</h2>
       <div class="obs-list" id="obs-trains"></div>
     </section>
@@ -204,7 +209,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs24"></script>
+  <script src="observatory.js?v=obs25"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');

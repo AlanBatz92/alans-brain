@@ -580,6 +580,46 @@ function renderVerdict(r) {
   return v ? '<span class="obs-verdict ' + v.cls + '">' + v.text + '</span>' : '';
 }
 
+/* ── Trains: "How these are detected" methodology panel ──
+   Reads data/train-method.json (a static, JSON-driven record kept in sync with
+   birdstation/DETECTION-METHODS.md) so the page states exactly how detection
+   works, the active parameters, measured accuracy, and the caveats. A bonus
+   panel — it fails silently if the file is missing. */
+async function loadTrainMethod() {
+  const body = document.getElementById('obs-train-method-body');
+  if (!body) return;
+  let m;
+  try { m = await fetchJson('data/train-method.json'); }
+  catch (err) { return; }
+  let html = '';
+  if (m.summary) html += '<p class="obs-method-summary">' + escapeHtml(m.summary) + '</p>';
+  if (Array.isArray(m.method)) {
+    html += '<ol class="obs-method-steps">' +
+      m.method.map((s) => '<li>' + escapeHtml(s) + '</li>').join('') + '</ol>';
+  }
+  if (m.parameters) {
+    html += '<h4 class="obs-method-h">Parameters</h4><table class="obs-method-params">' +
+      Object.entries(m.parameters).map(([k, v]) =>
+        '<tr><td>' + escapeHtml(k.replace(/_/g, ' ')) + '</td><td>' +
+        escapeHtml(String(v)) + '</td></tr>').join('') + '</table>';
+  }
+  if (m.accuracy) {
+    html += '<h4 class="obs-method-h">Accuracy</h4><p>' + escapeHtml(
+      (m.accuracy.passes_caught || '') + ' of train passes caught, ' +
+      (m.accuracy.precision || '') + ' precision. ' + (m.accuracy.note || '')) + '</p>';
+  }
+  if (Array.isArray(m.caveats)) {
+    html += '<h4 class="obs-method-h">Caveats</h4><ul class="obs-method-caveats">' +
+      m.caveats.map((c) => '<li>' + escapeHtml(c) + '</li>').join('') + '</ul>';
+  }
+  if (m.updated) {
+    html += '<p class="obs-method-updated">Method updated ' + escapeHtml(m.updated) +
+      '. <a href="https://github.com/AlanBatz92/alans-brain/blob/main/birdstation/DETECTION-METHODS.md"' +
+      ' target="_blank" rel="noopener">Full methodology ↗</a></p>';
+  }
+  body.innerHTML = html;
+}
+
 /* ── Analytics ───────────────────────────────────────────────
    The Analytics tab visualizes detection *distributions* over a selected period,
    all from a single box-side aggregation (GET /api/analytics, Eastern-bucketed):
@@ -1150,7 +1190,7 @@ function loadAll() {
   // The bird grid + stats for the active period (Today included) all come from
   // loadPeriod now — one consistent Eastern-aligned path. Analytics is only
   // refreshed if it's already been opened (it lazy-loads on first tab open).
-  const refreshes = [loadPeriod(state.period), loadLife(), loadAlmost(), loadTrainStats(), loadTrains()];
+  const refreshes = [loadPeriod(state.period), loadLife(), loadAlmost(), loadTrainStats(), loadTrains(), loadTrainMethod()];
   if (state.an.loaded) refreshes.push(loadAnalytics(state.an.period));
 
   Promise.allSettled(refreshes).then(() => {

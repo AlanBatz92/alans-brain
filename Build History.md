@@ -10,6 +10,40 @@
 
 ---
 
+## 2026-06-07 — Train detection: methodology doc + on-page "how it works" panel
+
+With the profile strong (94% passes / 96% precision on 131 horns + 109 negatives),
+shifted from tuning to **documenting and surfacing** the method, per Alan's ask to
+make detection transparent on the page and establish a refinement pipeline.
+
+- **`birdstation/DETECTION-METHODS.md`** — the canonical, plain-English record: the
+  acoustic method (band → tonality → blasts → passes), the calibration pipeline
+  (`build_horn_profile.py`), the **repeatable refinement loop** (pull → sort →
+  calibrate → inspect misses → deploy → vet/publish → recalibrate), how **confirmed
+  trains are preserved as labeled analytics data** (`train_events` rows with
+  `category` + timestamps; pass-grouping = the analytics' counting logic), the
+  privacy/human-review gate, and the **caveats** (horn-bound recall, single mic,
+  look-alikes, clip-vs-stream, parameter drift). Also documents the **two-detector
+  reality** (loose live stream detector vs. the tuned offline horn detector) and the
+  convergence roadmap, so the page can be honest: "acoustic candidate **+ human
+  confirmation**."
+- **On-page methodology panel** — `data/train-method.json` (JSON-driven, like the
+  rest of the site; a condensed, machine-readable mirror of the doc: summary,
+  method, parameters, accuracy, caveats) rendered into a collapsible **"ℹ️ How these
+  are detected"** `<details>` on the Trains tab (`observatory.js` `loadTrainMethod()`,
+  `.obs-method*` styles, links to the full doc). Bonus panel — fails silent if the
+  JSON is absent. `observatory.js?v=obs25`, `style.css?v=obs19`.
+- **Plan for the rest of Alan's ask:** *ship it* via PR to `main` (the box picks up
+  the bridge/API on `git pull` + `restart birdapi`; the site deploys the panel);
+  the **analytics view** (frequency / headway / time-of-day, built on the
+  pass-grouping) is the next milestone, scaffold-ready and gated only on data flowing.
+
+`node --check` + JSON validation pass. Keep `data/train-method.json` and
+`DETECTION-METHODS.md` in sync on every recalibration (the displayed parameters are
+corpus-measured, not a live guarantee).
+
+---
+
 ## 2026-06-06 — Horn calibration: pass-level recall + missed-clip list
 
 Real corpus at MIN_BLASTS=1 hit **80% recall / 96% precision** — the gap is now
