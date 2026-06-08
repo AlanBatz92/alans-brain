@@ -530,10 +530,10 @@ async function loadTrains() {
     setMsg(el, "obs-empty", "Couldn't reach the observatory — it may be offline.");
     return;
   }
-  // Defense in depth: even if the API hands back un-approved rows (older box
-  // build that ignores ?approved=1), never render anything not explicitly
-  // marked verdict=train. Default-deny — nothing un-vetted reaches the page.
-  rows = (rows || []).filter((r) => r.reviewed && r.verdict === 'train');
+  // Show everything the detector confirmed (verdict='train'), whether auto-detected
+  // (reviewed=0) or human-verified (reviewed=1). Struck-off false positives
+  // (verdict='false_positive') are excluded. Audio is gated separately (published).
+  rows = (rows || []).filter((r) => r.verdict === 'train');
   rows = rows.slice(0, MAX_TRAINS);
   if (rows.length === 0) {
     setMsg(el, 'obs-empty', 'No confirmed train events yet.');
@@ -570,14 +570,12 @@ async function loadTrains() {
 }
 
 function renderVerdict(r) {
-  if (!r.reviewed) return '';
-  const map = {
-    train:          { cls: 'obs-verdict-train', text: '✓ train' },
-    false_positive: { cls: 'obs-verdict-false', text: '✗ false' },
-    unsure:         { cls: 'obs-verdict-unsure', text: '? unsure' },
-  };
-  const v = map[r.verdict];
-  return v ? '<span class="obs-verdict ' + v.cls + '">' + v.text + '</span>' : '';
+  // Only verdict='train' events reach the page. Distinguish auto-detected (the
+  // calibrated detector's call) from human-verified.
+  if (r.verdict !== 'train') return '';
+  return r.reviewed
+    ? '<span class="obs-verdict obs-verdict-train">✓ confirmed</span>'
+    : '<span class="obs-verdict obs-verdict-auto">● auto-detected</span>';
 }
 
 /* ── Trains: "How these are detected" methodology panel ──

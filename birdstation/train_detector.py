@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 """
-Train whistle detector — Emmaus Observatory P1 addon.
-Reads the /backyard Icecast stream, detects sustained tonal events
-in the 300-1500 Hz band characteristic of train whistles, saves a
-WAV clip for each event, and logs to birdnet.db.
+Train detector — Emmaus Observatory.
+Reads the /backyard Icecast stream and uses a two-stage cascade:
+  1. A loose, cheap trigger (sustained energy in 300-1500 Hz) decides when to
+     grab a candidate clip — high recall, over-triggers on purpose.
+  2. The calibrated horn detector (train_horn_detector + horn_profile.json)
+     confirms each clip — high precision. Confirmed events are written
+     verdict='train' (auto, shown on the page; audio kept private, published=0);
+     the rest are verdict='false_positive' (the trigger's noise) and their clip
+     is removed. No human pre-vetting — a person only strikes off the rare miss.
+If the calibrated detector's deps aren't installed, events are written *pending*
+(verdict NULL) and train_confirm.py scores them later.
 """
 
 import time
@@ -17,6 +24,16 @@ import fcntl
 import logging
 import numpy as np
 from datetime import datetime, timezone
+
+# The calibrated horn detector confirms each candidate inline (see confirm_clip).
+# Guarded import: if its deps (librosa/scipy) aren't in this venv yet, the service
+# still runs and writes candidates as *pending* for train_confirm.py to score later.
+try:
+    import train_horn_detector as _thd
+    _CONFIRM_ERR = None
+except Exception as _exc:  # noqa: BLE001
+    _thd = None
+    _CONFIRM_ERR = _exc
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 # Read the same mount the (working) BirdNET pipeline uses. The remote
@@ -68,13 +85,42 @@ def acquire_singleton_lock():
     return lock_file
 
 
-def db_insert(detected_at, duration_s, peak_db, clip_path):
+def ensure_train_columns(con):
+    """Idempotently add category + published (matches bird_api.ensure_train_schema)."""
+    cols = {r[1] for r in con.execute("PRAGMA table_info(train_events)")}
+    if "category" not in cols:
+        con.execute("ALTER TABLE train_events ADD COLUMN category TEXT")
+    if "published" not in cols:
+        con.execute("ALTER TABLE train_events ADD COLUMN published INTEGER DEFAULT 0")
+        con.execute("UPDATE train_events SET published = 1 WHERE verdict = 'train'")
+    con.commit()
+
+
+def confirm_clip(clip_path):
+    """
+    Run the calibrated horn detector on a candidate clip.
+    Returns 'train' (a horn was confirmed), 'false_positive' (no horn), or None if
+    confirmation isn't available (deps missing / no clip / score error) — in which
+    case the event is written pending for train_confirm.py to score later.
+    """
+    if _thd is None or not clip_path:
+        return None
+    try:
+        events = _thd.process_file(clip_path, verbose=False)
+        return "train" if events else "false_positive"
+    except Exception as exc:  # noqa: BLE001
+        log.warning("confirm error for %s: %s", clip_path, exc)
+        return None
+
+
+def db_insert(detected_at, duration_s, peak_db, clip_path, verdict):
     con = sqlite3.connect(DB_PATH)
     con.execute(
         """INSERT INTO train_events
-           (detected_at, duration_s, peak_db, clip_path)
-           VALUES (?, ?, ?, ?)""",
-        (detected_at, duration_s, peak_db, clip_path)
+           (detected_at, duration_s, peak_db, clip_path, reviewed, verdict, category, published)
+           VALUES (?, ?, ?, ?, 0, ?, ?, 0)""",
+        (detected_at, duration_s, peak_db, clip_path, verdict,
+         "train" if verdict == "train" else None)
     )
     con.commit()
     con.close()
@@ -196,7 +242,24 @@ def run():
     log.info("Clip dir: %s", CLIP_DIR)
     log.info("Thresholds: energy=%.2f  loudness=%.0fdB", ENERGY_THRESH, DB_THRESH_DB)
 
+    # Stage 2: load the calibration so inline confirmation matches what was tuned.
+    if _thd is not None:
+        prof = _thd.DEFAULT_PROFILE_PATH
+        if prof.exists():
+            _thd.load_profile(str(prof))
+            log.info("Confirm stage: calibrated horn detector (profile %s)", prof)
+        else:
+            log.warning("Confirm stage: no horn_profile.json next to "
+                        "train_horn_detector.py — confirming on UNCALIBRATED defaults.")
+    else:
+        log.warning("Confirm stage unavailable (%s) — writing events PENDING; "
+                    "install librosa/scipy and run train_confirm.py to score them.",
+                    _CONFIRM_ERR)
+
     os.makedirs(CLIP_DIR, exist_ok=True)
+    con = sqlite3.connect(DB_PATH)
+    ensure_train_columns(con)
+    con.close()
 
     # Rolling audio buffer: keeps last (CLIP_PRE_S + 90s) of audio
     max_chunks   = int((CLIP_PRE_S + 90) / CHUNK_SECONDS)
@@ -232,11 +295,17 @@ def run():
                                 ).isoformat()
 
                     clip_path = save_clip(audio_buffer, pending_start, last_detection_time)
-                    db_insert(ts_iso, round(duration, 1), round(pending_peak, 1), clip_path)
+
+                    # Stage 2: confirm the candidate with the calibrated detector.
+                    # Rejected clips are kept (hidden) until the weekly purge, so a
+                    # recalibration + train_confirm.py --rescore can recover them.
+                    verdict = confirm_clip(clip_path)
+                    db_insert(ts_iso, round(duration, 1), round(pending_peak, 1),
+                              clip_path, verdict)
 
                     log.info(
-                        "Train event logged: %s | %.1fs | %.1fdB | clip: %s",
-                        ts_iso, duration, pending_peak,
+                        "Candidate %s: %s | %.1fs | %.1fdB | clip: %s",
+                        verdict or "pending", ts_iso, duration, pending_peak,
                         os.path.basename(clip_path) if clip_path else "none"
                     )
 

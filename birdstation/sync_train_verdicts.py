@@ -236,6 +236,43 @@ def cmd_publish(args):
               + ", ".join(skipped[:8]) + (" …" if len(skipped) > 8 else ""))
 
 
+def cmd_reject(args):
+    """Strike off train events as false positives so they drop off the page — the
+    human exception-review path for the auto-detection model. Accepts clip
+    filenames and/or folders (every WAV in a folder is struck off)."""
+    if not os.path.exists(args.db):
+        sys.exit(f"database not found: {args.db}")
+    names = []
+    for fn in args.filenames:
+        p = Path(fn)
+        if p.is_dir():
+            names.extend(w.name for w in list_wavs(p))
+        else:
+            names.append(os.path.basename(fn))
+    conn = sqlite3.connect(args.db)
+    ensure_columns(conn)
+    idx = basename_index(conn)
+    if not args.no_backup:
+        backup_db(args.db)
+    struck, skipped = 0, []
+    for name in names:
+        ids = idx.get(name)
+        if not ids:
+            skipped.append(name)
+            continue
+        for rid in ids:
+            conn.execute("UPDATE train_events SET verdict='false_positive', "
+                         "reviewed=1 WHERE id=?", (rid,))
+            struck += 1
+    conn.commit()
+    conn.close()
+    print(f"Struck off {struck} event(s) — they no longer show on the page "
+          f"(the next clip purge removes their audio).")
+    if skipped:
+        print(f"Skipped {len(skipped)} (no matching event): "
+              + ", ".join(skipped[:8]) + (" …" if len(skipped) > 8 else ""))
+
+
 def main():
     ap = argparse.ArgumentParser(
         description="Bridge a sorted horn corpus into Observatory train verdicts.")
@@ -262,6 +299,14 @@ def main():
     p.add_argument("--db", default=DB_PATH, help=f"birdnet.db path (default {DB_PATH})")
     p.add_argument("--no-backup", action="store_true", help="skip the pre-write DB backup")
     p.set_defaults(func=cmd_publish)
+
+    r = sub.add_parser("reject", help="(box) strike off events as false positives "
+                                      "(exception review for the auto model)")
+    r.add_argument("filenames", nargs="+",
+                   help="clip filename(s) and/or folder(s) of clips to strike off")
+    r.add_argument("--db", default=DB_PATH, help=f"birdnet.db path (default {DB_PATH})")
+    r.add_argument("--no-backup", action="store_true", help="skip the pre-write DB backup")
+    r.set_defaults(func=cmd_reject)
 
     args = ap.parse_args()
     args.func(args)

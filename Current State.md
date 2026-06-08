@@ -79,24 +79,30 @@ train data a home. ID/class prefix: **`obs-`**.
   (every period, incl. Today — `&min_confidence=0.85`), `/api/lifetime`,
   `/api/species/{name}` (bird card); Trains → `/api/trains/stats`, `/api/trains/recent?approved=1`
   (+ inline `<audio>` clips at `/api/trains/clip/{file}`, basename of `clip_path`).
-- **Train privacy (2026-06-01) — default-deny.** Clips can capture conversation
-  near the mic, so the public page shows **only human-confirmed** events
-  (`verdict='train'`): the page requests `?approved=1` *and* re-filters client-side,
-  the clip endpoint 403s anything not tied to an approved train, and stats show
-  approved counts. Vetting is via `review_trains.py` on the box; clips auto-purge
-  weekly. Full design in `PLAN-train-vetting.md`.
+- **Automatic train detection — auto-publish + strike-off (2026-06-07).** The
+  model flipped from default-deny manual vetting to **post-moderation**:
+  `train_detector` runs a **cascade** (loose trigger grabs a candidate clip → the
+  calibrated `train_horn_detector` confirms it **inline**), auto-publishing
+  confirmed trains (`verdict='train'`, `reviewed=0`) in real time. The privacy that
+  forced pre-vetting is handled by `published` instead (below), so events flow
+  automatically and a human only **strikes off** false positives. The page filter
+  is now just `verdict='train'` (auto + human-verified show; only `false_positive`
+  hidden); `renderVerdict` badges **● auto-detected** vs **✓ confirmed**.
+  `train_confirm.py` (manual) backfills pending events and `--rescore` re-applies a
+  new profile to past machine calls (never touching `reviewed=1`).
 - **Audio-private trains + category (2026-06-06).** `train_events` gained
-  `published` (default 0) and `category`. A confirmed train now **counts and shows**
-  on the page (time/duration/dB) but its **clip audio is served only when
-  `published=1`** — the clip endpoint requires `verdict='train' AND published=1`,
-  and `observatory.js` (`?v=obs24`) renders the `<audio>` only when `published`,
-  else a "🔒 audio kept private" note. `category` records the fine vetting class
-  (train/plane/vehicle/gunshot/…) for future train analytics. Migrated idempotently
-  by `bird_api.ensure_train_schema()` at startup (preserves any already-public
-  approved clip). `sync_train_verdicts.py` bridges a **sorted P2 corpus** into these
-  columns (see the birdstation P2 entry) so vetting fills the page without
-  re-reviewing; `--publish-trains` / the `publish` subcommand opt specific clips'
-  audio public.
+  `published` (default 0) and `category`. A confirmed train **counts and shows**
+  (time/duration/dB) but its **clip audio is served only when `published=1`** — the
+  clip endpoint requires `verdict='train' AND published=1`, and `observatory.js`
+  (`?v=obs26`) renders the `<audio>` only when `published`, else a "🔒 audio kept
+  private" note. `category` records the fine class (train/plane/vehicle/…). Migrated
+  idempotently by `bird_api.ensure_train_schema()` + `train_detector`/`train_confirm`
+  at startup (preserves any already-public clip). `sync_train_verdicts.py`:
+  `reject` strikes off false positives (`verdict='false_positive'`, off the page),
+  `publish` opts a clip's audio public, and `emit`/`apply` still bridge a sorted
+  corpus → verdicts. **`data/train-method.json`** + the on-page "How these are
+  detected" panel state the live method/parameters/caveats (auto-publish + ~1-in-25
+  strike-off margin); full record in `birdstation/DETECTION-METHODS.md`.
 - **Confidence gate — three tiers (2026-06-03):** decoupled floors.
   (1) **Preserve 0.60** — the pipeline keeps detections ≥ 0.60 (was 0.35), cutting the
   worst noise but retaining sub-85% *diagnostic* hits. (2) **Display 0.85** — the page
@@ -117,8 +123,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs25` +
-  `style.css?v=obs19` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs26` +
+  `style.css?v=obs20` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -235,7 +241,7 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs19`, `observatory.js?v=obs25`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs20`, `observatory.js?v=obs26`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

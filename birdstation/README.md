@@ -28,9 +28,11 @@ birdstation/
   purge_bird_clips.py # daily timer: age out unreviewed bird verification clips
   review_birds.py     # CLI: confirm lifers; --stats prints measured precision
   purge_low_confidence.py # CLI one-shot: drop detections below the 0.60 preserve floor
-  train_horn_detector.py  # CLI: offline horn detection in AudioMoth WAVs (P2 study)
+  train_horn_detector.py  # library + offline CLI: the calibrated horn detector (confirm stage)
   build_horn_profile.py   # CLI: calibrate the horn detector from a category-folder corpus
-  sync_train_verdicts.py  # CLI: bridge a sorted corpus -> train_events verdicts (fills the Trains page)
+  train_confirm.py        # CLI: (re)score pending/past candidates after a recalibration
+  sync_train_verdicts.py  # CLI: bridge a sorted corpus -> verdicts; strike off / publish clips
+  DETECTION-METHODS.md    # how detection works (cascade, calibration, caveats) — page reads from it
   HORN-CORPUS-GUIDE.md    # the run-the-whole-thing runbook (Windows; sort→calibrate→run)
   schema.sql          # full birdnet.db schema + migration log
   systemd/            # .service / .timer units (templated — no inline secrets)
@@ -155,7 +157,7 @@ repo's `Build History.md`.
 |---|---|
 | `birdapi.service` | the FastAPI app (long-running, `:8080`) |
 | `birdnet.service` | BirdNET capture/analyze/log pipeline (long-running loop) |
-| `train_detector.service` | train-whistle detector (long-running loop) |
+| `train_detector.service` | train detector — loose trigger + **inline calibrated confirm**; auto-publishes confirmed trains (audio private). Needs `librosa scipy` in `train-env`. |
 | `purge-train-clips.timer` → `.service` | weekly purge of train clips (Sun 04:00) |
 | `purge-bird-clips.timer` → `.service` | daily purge of unreviewed bird clips (04:30) |
 | `pulse-fetch.timer` → `.service` | source fetch every 15 min (purges >30 days) |
@@ -218,6 +220,29 @@ data, like `*.db`); the durable record is the parameter block, pasted into
 calibrate → read accuracy → deploy) is in [`HORN-CORPUS-GUIDE.md`](HORN-CORPUS-GUIDE.md).**
 That's the doc to hand someone who just wants to run the system without learning
 its internals.
+
+### Automatic detection (live, auto-publish)
+
+`train_detector` now runs a **cascade**: its loose trigger grabs candidate clips
+and the calibrated horn detector confirms each **inline**, auto-publishing
+confirmed trains (audio private). No per-event human approval — a person only
+strikes off false positives. Full method: [`DETECTION-METHODS.md`](DETECTION-METHODS.md).
+
+One-time rollout on the box:
+
+```bash
+# 1. give the live detector the horn detector's deps + the tuned profile
+/home/alan/train-env/bin/pip install librosa scipy soundfile
+cp horn_profile.json ~/alans-brain/birdstation/horn_profile.json   # next to train_horn_detector.py
+cd ~/alans-brain && git pull && sudo systemctl restart birdapi train_detector
+# 2. (optional) apply the profile to events already in the DB
+/home/alan/train-env/bin/python3 ~/alans-brain/birdstation/train_confirm.py --rescore
+```
+
+Day-to-day: pull the confirmed clips, listen, and strike off the misses —
+`sync_train_verdicts.py reject <clip|folder> …`. After each recalibration, drop in
+the new `horn_profile.json`, restart `train_detector`, and `train_confirm.py
+--rescore`.
 
 > **Duplicate unit:** the box had both `train_detector.service` and
 > `traindetect.service` pointing at the same script (two detectors writing

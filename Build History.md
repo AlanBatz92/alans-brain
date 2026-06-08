@@ -10,6 +10,51 @@
 
 ---
 
+## 2026-06-07 — Automatic train detection (auto-publish + strike-off), one-process cascade
+
+Pivoted the train pipeline from **default-deny manual vetting** to **automatic
+detection with exception review**, at Alan's direction ("I'd much rather have data
+flow in automatically and live with a small margin of error"). The privacy reason
+for pre-vetting is already solved by the `published` flag, so we auto-publish the
+*event* while keeping *audio* private.
+
+- **One process, two stages (cascade).** Rather than add a second detector daemon,
+  folded the calibrated confirm into the live detector (Alan's call — "why two
+  processes?"). `train_detector.py` keeps its loose trigger as a cheap high-recall
+  "grab a clip" gate, then runs `train_horn_detector.process_file()` (the tuned,
+  ~96%-precision detector + `horn_profile.json`) **inline**: confirmed →
+  `verdict='train'`, auto-published (audio private, `published=0`); not a horn →
+  `verdict='false_positive'`. `reviewed` stays 0 (machine call). Guarded import +
+  profile auto-load at startup; if librosa/scipy are missing it writes events
+  *pending* and warns. `train_horn_detector.py` is thus a shared library, not a
+  second process.
+- **`train_confirm.py` demoted from a timer to a manual utility** (the 5-min
+  `train-confirm.timer/.service` were never shipped — removed): backfills pending
+  events and, with `--rescore`, re-applies a fresh profile to past **machine**
+  decisions (reviewed=0) after a recalibration. **Never overwrites human decisions
+  (reviewed=1).**
+- **Exception review / strike-off.** `sync_train_verdicts.py reject <clip|folder>…`
+  sets `verdict='false_positive'`, `reviewed=1` → off the page (weekly purge
+  removes the audio). Rejected candidate clips are **kept until the purge** so a
+  recalibration + `--rescore` can recover a wrongly-rejected train.
+- **Page (`?v=obs26`/`obs20`).** Client filter relaxed from "reviewed && train" to
+  just `verdict='train'` (auto + human-verified show; only false positives hidden);
+  `renderVerdict` badges **● auto-detected** vs **✓ confirmed**; the note now reads
+  "detected automatically … a human strikes off the occasional false positive."
+- **Docs/method synced to the new model:** `DETECTION-METHODS.md` (cascade,
+  post-moderation, the convergence is now *done*), `data/train-method.json` + the
+  on-page panel (auto-publish + ~1-in-25 strike-off margin), README (rollout: install
+  `librosa scipy` in `train-env`, deploy the profile, restart, `--rescore`).
+
+**Verified** the confirm cascade end-to-end on a temp DB + synthetic clips: horn →
+`train` (category=train, audio private), noise → `false_positive`, missing skipped,
+human `reviewed=1` row untouched, and `--rescore` re-applies a profile. `train_detector.py`
+compiles; the live streaming path itself needs a box check (can't drive the stream
+from here). **Deploy is the one-time rollout above** — until then events still flow
+the old way. Big step toward ▶ Next #3's "automated detection" goal.
+
+---
+
 ## 2026-06-07 — Train detection: methodology doc + on-page "how it works" panel
 
 With the profile strong (94% passes / 96% precision on 131 horns + 109 negatives),

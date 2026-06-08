@@ -142,6 +142,19 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-07** — **Automatic train detection (auto-publish + strike-off).** Flipped from
+  default-deny manual vetting to post-moderation, per Alan: trains flow onto the page in
+  real time and a human only strikes off false positives. **One process, two stages** —
+  `train_detector` keeps its loose trigger as a "grab a clip" gate and runs the calibrated
+  `train_horn_detector` **inline** to confirm (auto-publish `verdict='train'`, audio private)
+  or reject. `train_confirm.py` becomes a manual backfill / `--rescore` utility (re-applies a
+  new profile to past machine calls; never touches human decisions). `sync_train_verdicts.py
+  reject` strikes off; page badges auto-detected vs ✓ confirmed (`?v=obs26`/`obs20`). Method
+  docs/panel updated to the auto model. **Substantially addresses ▶ Next #3** (automated
+  detection / "known trains improve detection" loop). Deploy = one-time rollout (install
+  `librosa scipy` in `train-env`, drop in the profile, restart, `--rescore`). Verified the
+  confirm cascade on a temp DB; live streaming path needs a box check. See `Build History.md`.
+
 - **2026-06-07** — **Train detection: methodology doc + on-page panel.** Profile is strong
   (94% passes / 96% precision on 131 horns + 109 negatives), so documented and surfaced the
   method: `birdstation/DETECTION-METHODS.md` (acoustic method, calibration pipeline, the

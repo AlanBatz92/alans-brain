@@ -1,11 +1,12 @@
 {
   "title": "How train events are detected",
-  "summary": "Each event is flagged by listening for a train horn, then confirmed by a human before it appears here. Only human-confirmed trains are shown, and clip audio is private by default.",
+  "summary": "Trains are detected automatically and appear here right away — no per-event human approval. A calibrated horn detector keeps the page clean; a person only strikes off the occasional false positive. Clip audio is private by default.",
   "method": [
     "A microphone about 1,500–1,700 ft from the freight line records the soundscape.",
-    "Software scans for a train horn — sustained, tonal energy in a narrow frequency band. A horn is close to a pure tone; wind, planes, and engines are broadband noise, so a 'tonality' ratio separates them.",
-    "A stretch of horn-like tone becomes a 'blast'; horn blasts close together (within a few minutes) are grouped into one train pass.",
-    "Every candidate is reviewed by a human — only confirmed trains are published. The recordings come from a backyard mic, so audio stays private unless a clip is individually published."
+    "A loose first-pass listens for sustained energy and grabs a candidate clip whenever something might be a train (it over-triggers on purpose — better to look than miss).",
+    "A calibrated horn detector then confirms each clip: it needs tonal energy in a narrow band (a horn is near a pure tone; wind, planes, and engines are broadband). Confirmed → the event is published automatically; not a horn → discarded.",
+    "Audio comes from a backyard mic, so a confirmed train's clip audio is NOT served publicly unless individually published — the event still shows and counts.",
+    "A human reviews the confirmed events out-of-band and strikes off any false positive, which removes it from the page."
   ],
   "parameters": {
     "horn_band_hz": "300–520",
@@ -18,14 +19,14 @@
   "accuracy": {
     "passes_caught": "94%",
     "precision": "96%",
-    "note": "Measured for the tuned horn detector against the labeled examples (clips within 5 minutes counted as one train pass). The human review is the final guarantee on what's shown."
+    "note": "Measured for the calibrated detector against the labeled examples (clips within 5 minutes counted as one train pass). ~1 in 25 shown events is a false positive a human later strikes off; the detector improves as more examples are confirmed."
   },
   "caveats": [
-    "Distance: only the horn carries this far, so a quiet pass with no horn won't be caught.",
-    "One backyard mic: no train direction or speed, and audio can catch nearby conversation — which is why clips stay private unless individually published.",
-    "Look-alikes: planes and sirens can sound horn-like; the human review is the safeguard.",
-    "Counts reflect horn events we caught and confirmed — not necessarily every train that passed.",
-    "The automatic detector is still being refined from each new batch of confirmed examples, so the parameters above evolve."
+    "Automatic, with a small margin of error: roughly 1 in 25 shown events is a false positive until it's struck off, and a quiet pass with no horn can be missed.",
+    "Distance: only the horn carries this far, so counts reflect horn events — not necessarily every train that passed.",
+    "One backyard mic: no train direction or speed, and audio can catch nearby conversation — which is why clip audio stays private unless individually published.",
+    "Look-alikes: planes and sirens can sound horn-like; the detector pushes them down (planes currently 0 of 50 in testing) but a few slip through and get struck off.",
+    "The detector is recalibrated from each new batch of confirmed examples, so the parameters above evolve over time."
   ],
   "updated": "2026-06-07"
 }
