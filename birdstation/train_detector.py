@@ -246,8 +246,12 @@ def run():
     if _thd is not None:
         prof = _thd.DEFAULT_PROFILE_PATH
         if prof.exists():
-            _thd.load_profile(str(prof))
-            log.info("Confirm stage: calibrated horn detector (profile %s)", prof)
+            try:
+                _thd.load_profile(str(prof))
+                log.info("Confirm stage: calibrated horn detector (profile %s)", prof)
+            except Exception as exc:  # bad/corrupt profile must not crash-loop the service
+                log.warning("Confirm stage: couldn't load %s (%s) — using defaults.",
+                            prof, exc)
         else:
             log.warning("Confirm stage: no horn_profile.json next to "
                         "train_horn_detector.py — confirming on UNCALIBRATED defaults.")
