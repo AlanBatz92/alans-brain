@@ -79,12 +79,30 @@ train data a home. ID/class prefix: **`obs-`**.
   (every period, incl. Today — `&min_confidence=0.85`), `/api/lifetime`,
   `/api/species/{name}` (bird card); Trains → `/api/trains/stats`, `/api/trains/recent?approved=1`
   (+ inline `<audio>` clips at `/api/trains/clip/{file}`, basename of `clip_path`).
-- **Train privacy (2026-06-01) — default-deny.** Clips can capture conversation
-  near the mic, so the public page shows **only human-confirmed** events
-  (`verdict='train'`): the page requests `?approved=1` *and* re-filters client-side,
-  the clip endpoint 403s anything not tied to an approved train, and stats show
-  approved counts. Vetting is via `review_trains.py` on the box; clips auto-purge
-  weekly. Full design in `PLAN-train-vetting.md`.
+- **Automatic train detection — auto-publish + strike-off (2026-06-07).** The
+  model flipped from default-deny manual vetting to **post-moderation**:
+  `train_detector` runs a **cascade** (loose trigger grabs a candidate clip → the
+  calibrated `train_horn_detector` confirms it **inline**), auto-publishing
+  confirmed trains (`verdict='train'`, `reviewed=0`) in real time. The privacy that
+  forced pre-vetting is handled by `published` instead (below), so events flow
+  automatically and a human only **strikes off** false positives. The page filter
+  is now just `verdict='train'` (auto + human-verified show; only `false_positive`
+  hidden); `renderVerdict` badges **● auto-detected** vs **✓ confirmed**.
+  `train_confirm.py` (manual) backfills pending events and `--rescore` re-applies a
+  new profile to past machine calls (never touching `reviewed=1`).
+- **Audio-private trains + category (2026-06-06).** `train_events` gained
+  `published` (default 0) and `category`. A confirmed train **counts and shows**
+  (time/duration/dB) but its **clip audio is served only when `published=1`** — the
+  clip endpoint requires `verdict='train' AND published=1`, and `observatory.js`
+  (`?v=obs26`) renders the `<audio>` only when `published`, else a "🔒 audio kept
+  private" note. `category` records the fine class (train/plane/vehicle/…). Migrated
+  idempotently by `bird_api.ensure_train_schema()` + `train_detector`/`train_confirm`
+  at startup (preserves any already-public clip). `sync_train_verdicts.py`:
+  `reject` strikes off false positives (`verdict='false_positive'`, off the page),
+  `publish` opts a clip's audio public, and `emit`/`apply` still bridge a sorted
+  corpus → verdicts. **`data/train-method.json`** + the on-page "How these are
+  detected" panel state the live method/parameters/caveats (auto-publish + ~1-in-25
+  strike-off margin); full record in `birdstation/DETECTION-METHODS.md`.
 - **Confidence gate — three tiers (2026-06-03):** decoupled floors.
   (1) **Preserve 0.60** — the pipeline keeps detections ≥ 0.60 (was 0.35), cutting the
   worst noise but retaining sub-85% *diagnostic* hits. (2) **Display 0.85** — the page
@@ -105,8 +123,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs23` +
-  `style.css?v=obs18` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs26` +
+  `style.css?v=obs20` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -215,7 +233,15 @@ train data a home. ID/class prefix: **`obs-`**.
   vanilla, no deps; degrades to no shading if sun times are unavailable. Birds-only (the
   train-analytics toggle will skip it — see `PLAN-train-analytics.md`). *(First cut used
   per-column tints, which read as blocky/gappy; replaced with the single gradient.)*
-- Assets: `style.css?v=obs18`, `observatory.js?v=obs23`, `bird-info.js?v=obs6`.
+- **Trains "How these are detected" panel (2026-06-07):** a collapsible `<details>`
+  on the Trains tab (`#obs-train-method`, `.obs-method*`) rendered by
+  `loadTrainMethod()` from **`data/train-method.json`** (JSON-driven: summary, method,
+  parameters, accuracy, caveats) — so the page states exactly how detection works and
+  its caveats. Full long-form record in **`birdstation/DETECTION-METHODS.md`** (method,
+  calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
+  caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
+  silent if the JSON is missing.
+- Assets: `style.css?v=obs20`, `observatory.js?v=obs26`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 
@@ -255,6 +281,40 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 - **Observatory writers (long-running services, in `birdstation/`):**
   - `birdnet_pipeline.py` — `birdnet.service`: captures 15 s chunks off the Icecast `/backyard` stream (`localhost:8000`), runs BirdNET-Analyzer (its own `~/BirdNET-Analyzer/birdnet-env` venv), writes `detections` (confidence ≥ `MIN_CONFIDENCE` **0.60** — the *preserve* floor, raised from 0.35 on 2026-06-03 to cut noise while keeping sub-85% diagnostic hits; also passed to BirdNET as `--min_conf`. The public page filters separately at the 0.85 display floor). **Life-list gate (2026-06-02):** a *new* species joins `lifetime` after **`LIFE_LIST_MIN_HITS` = 3** detections at ≥ `LIFE_LIST_MIN_CONFIDENCE` **0.85** within a **rolling 24h window** (`datetime(timestamp) >= datetime('now','-24 hours')`), **or a single ≥ `LIFE_LIST_INSTANT_CONFIDENCE` 0.995 (~100%) hit** (instant-add, bypasses the multi-hit rule). **Life-list tally (fixed 2026-06-03):** `total_detections` is **recomputed live from `COUNT(*)` of the species' ≥ 0.85 detections** — both in the pipeline (on each new hit, self-healing the stored column) and, authoritatively, in `/api/lifetime` (derived at read time, so the displayed total is always truthful and consistent with the page's other ≥0.85 views). This replaced a `+1` counter that drifted low (showed a lifetime total below a single day's count). BirdNET runs with lat/lon **and** `--week` (BirdNET's 1-48 week, `USE_WEEK_FILTER`), so both location and season filter the species list. **Verifiable lifers (2026-06-02):** each life-list-qualifying hit (≥ 0.85) also archives one WAV to `~/bird_clips` (capped one per species/day; `clip_path` + `verified` columns on `detections`), labelled via `review_birds.py` (`--stats` = measured precision by confidence band) and aged out by `purge-bird-clips.timer` — **local-only, never served** (backyard-mic privacy). (CSV reader fixed 2026-05-30 to `delimiter=","`.) Wipe bird tables for a clean start with `birdstation/reset_birds.sh` (backs up first; leaves Pulse + trains intact).
   - `train_detector.py` — `train_detector.service` (own `~/train-env` venv, needs numpy): reads `localhost:8000/backyard`, pipes it through **ffmpeg → mono s16le PCM** (must decode the MP3 — reading raw stream bytes as PCM was the long-standing reason `train_events` stayed empty; fixed 2026-06-01), detects sustained energy in the 300–1500 Hz band, writes `train_events` + a WAV clip in `~/train_clips`. Every event starts un-reviewed/hidden (see Train privacy above). **NB:** a duplicate `traindetect.service` existed for the same script — `train_detector.service` is canonical; the dup is removed.
+  - **P2 train horn study (offline, manual CLIs — added 2026-06-06):** a *second*
+    train detector that works on **recorded AudioMoth WAVs**, not the live stream —
+    an AudioMoth ~1500–1700 ft from the tracks keying on the **horn** (tonal energy
+    ~250–600 Hz, 2+ blasts within a window) rather than rumble. **No systemd unit;**
+    run on demand. `train_horn_detector.py` scans a file/dir of WAVs (STFT → horn-band
+    RMS + a tonality ratio; sustained blasts; 2+ within `CONFIRMATION_WINDOW_SEC` =
+    train), parses AudioMoth `YYYYMMDD_HHMMSS.WAV` timestamps, optional CSV out.
+    `build_horn_profile.py` is the **calibration**: it reads a **category-folder
+    corpus** (`--corpus ROOT` where `trains/` = positives and every other subfolder
+    = a labeled negative class — planes/vehicles/gunshots/…; or explicit
+    `--positives`/repeatable `--negatives`), derives the real horn band
+    (positive-vs-negative spectral contrast), calibrates the tonality/duration/gap
+    thresholds **at the operating threshold** (reusing the detector's own feature
+    fns), and writes diagnostic PNGs + a parameter block + `horn_profile.json`. A
+    **`--check`** mode just censuses the corpus and gives a GOOD/OK/THIN readiness
+    verdict (run mid-sort). It ends with an **end-to-end validation pass** — runs
+    the *real* detector over the labeled clips and reports recall/precision with a
+    **per-class false-alarm breakdown** (the honest "is it accurate" answer; it also
+    caught a duration-bound bug during the build). The detector **auto-loads** a
+    `horn_profile.json` sitting next to it (or via `--profile`), so calibration
+    flows into detection with no source edits. Deps: `librosa numpy scipy` (+
+    `matplotlib` for plots). Corpus WAVs and generated `horn_profile.json` /
+    `horn_profile_out/` are **gitignored** (deployment-specific, like `*.db`); the
+    param block is the durable record. **`birdstation/HORN-CORPUS-GUIDE.md`** is the
+    plain-English **Windows 11** runbook (pull recordings → sort in VLC/Audacity →
+    `--check` → calibrate → read accuracy → deploy). Full write-up in
+    `Build History.md` (2026-06-06).
+  - **`sync_train_verdicts.py` (bridge, 2026-06-06):** because the sorted corpus
+    clips *are* the live detector's `train_events`, this carries the folder labels
+    back into the DB so vetting also **populates the Observatory Trains page** —
+    `emit` (PC) writes a verdicts CSV, `apply` (box) sets verdict/category/published
+    by exact filename match (audio private by default), `publish` opts a clip's
+    audio public. Pure stdlib. See the "Audio-private trains + category" bullet
+    above and `Build History.md` (2026-06-06).
   - `review_trains.py` — **manual** CLI on the box to vet pending train events (play clip → train/false/unsure → DB). Near-term vetting workflow; web UI is future (`PLAN-train-vetting.md`).
   - `purge_train_clips.py` — `purge-train-clips.timer` (**Sun 04:00**): deletes rejected + aged-orphan clips, keeps approved-train + still-pending. `--dry-run` supported.
   - `review_birds.py` — **manual** CLI on the box to confirm life-list detections from their archived clips (correct/wrong/unsure → `detections.verified`); `--stats` prints measured precision by confidence band (calibration data).

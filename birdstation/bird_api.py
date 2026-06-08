@@ -99,6 +99,34 @@ def get_db():
     return conn
 
 
+def ensure_train_schema():
+    """
+    Idempotently add the train_events columns the vetting bridge writes:
+      category  — fine class (train / plane / vehicle / gunshot / ...) for analytics
+      published — 1 = clip audio is publicly servable; 0 = count the event but keep
+                  the backyard audio private (the default for new verdicts)
+    Runs at startup so a plain `git pull` + restart migrates the live DB (same
+    pattern as birdnet_pipeline.init_db). Existing approved trains are set
+    published=1 so their clips stay reachable — only *new* verdicts default to
+    private (count, don't serve).
+    """
+    try:
+        conn = get_db()
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(train_events)")}
+        if "category" not in cols:
+            conn.execute("ALTER TABLE train_events ADD COLUMN category TEXT")
+        if "published" not in cols:
+            conn.execute("ALTER TABLE train_events ADD COLUMN published INTEGER DEFAULT 0")
+            conn.execute("UPDATE train_events SET published = 1 WHERE verdict = 'train'")
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass  # never block API startup on a migration hiccup
+
+
+ensure_train_schema()
+
+
 # ─────────────────────────────────────────────────────────────
 # Bird Detection Endpoints
 # ─────────────────────────────────────────────────────────────
@@ -547,12 +575,14 @@ def get_clip(filename: str):
     path     = os.path.join(CLIP_DIR, filename)
     if not os.path.exists(path):
         return JSONResponse({"error": "clip not found"}, status_code=404)
-    # Privacy gate: only serve a clip that belongs to a human-approved train
-    # event. Un-reviewed / false-positive clips (which can contain conversation
-    # the mic picked up) are never downloadable, even with a direct URL.
+    # Privacy gate: only serve a clip for a human-approved train event that has
+    # also been explicitly published (published=1). Un-reviewed, false-positive,
+    # or count-only ("private") clips — which can contain conversation the mic
+    # picked up — are never downloadable, even with a direct URL.
     conn = get_db()
     row = conn.execute(
-        "SELECT 1 FROM train_events WHERE clip_path LIKE ? AND verdict = 'train' LIMIT 1",
+        "SELECT 1 FROM train_events "
+        "WHERE clip_path LIKE ? AND verdict = 'train' AND published = 1 LIMIT 1",
         (f"%{filename}",)
     ).fetchone()
     conn.close()

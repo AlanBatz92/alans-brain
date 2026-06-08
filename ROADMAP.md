@@ -142,6 +142,59 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-07** — **Automatic train detection (auto-publish + strike-off).** Flipped from
+  default-deny manual vetting to post-moderation, per Alan: trains flow onto the page in
+  real time and a human only strikes off false positives. **One process, two stages** —
+  `train_detector` keeps its loose trigger as a "grab a clip" gate and runs the calibrated
+  `train_horn_detector` **inline** to confirm (auto-publish `verdict='train'`, audio private)
+  or reject. `train_confirm.py` becomes a manual backfill / `--rescore` utility (re-applies a
+  new profile to past machine calls; never touches human decisions). `sync_train_verdicts.py
+  reject` strikes off; page badges auto-detected vs ✓ confirmed (`?v=obs26`/`obs20`). Method
+  docs/panel updated to the auto model. **Substantially addresses ▶ Next #3** (automated
+  detection / "known trains improve detection" loop). Deploy = one-time rollout (install
+  `librosa scipy` in `train-env`, drop in the profile, restart, `--rescore`). Verified the
+  confirm cascade on a temp DB; live streaming path needs a box check. See `Build History.md`.
+
+- **2026-06-07** — **Train detection: methodology doc + on-page panel.** Profile is strong
+  (94% passes / 96% precision on 131 horns + 109 negatives), so documented and surfaced the
+  method: `birdstation/DETECTION-METHODS.md` (acoustic method, calibration pipeline, the
+  repeatable refinement loop, confirmed-trains-preserved-for-analytics, two-detector reality +
+  convergence, caveats) and a collapsible **"ℹ️ How these are detected"** panel on the Trains
+  tab driven by `data/train-method.json` (`loadTrainMethod()`, `.obs-method*`, `?v=obs25`/`obs19`).
+  Next: **ship via PR to `main`** (box `git pull` + `restart birdapi`; site deploys the panel),
+  then the **train analytics view** (§3a) — now unblocked: the pass-grouping (clips within N min =
+  one train) is the counting logic, and the vetting bridge banks categorized, timestamped data.
+
+- **2026-06-06** — **Train vetting → Observatory page bridge.** The P2 corpus clips are the
+  live detector's `train_events`, so `sync_train_verdicts.py` carries the sorted-folder
+  labels back into the DB (no second review): `emit` (PC) → CSV → `apply` (box) sets
+  verdict/category by exact-filename match. `train_events` gained `category` (fine class:
+  plane/vehicle/gunshot/… for future analytics) and `published` (default 0) — a confirmed
+  train **counts and shows** on the page but its **audio stays private** until explicitly
+  published (backyard mic). API clip gate now needs `verdict='train' AND published=1`;
+  `observatory.js?v=obs24` shows events without a dead player when private; migration is
+  idempotent at `birdapi` startup and preserves existing public clips. Advances ▶ Next #3
+  (vetting without per-clip SSH) and unblocks the gated train analytics (§3a). Verified on a
+  temp DB. See `Build History.md` (2026-06-06).
+
+- **2026-06-06** — Emmaus Observatory **P2 train horn study**: an offline AudioMoth horn
+  detector (`train_horn_detector.py`, now version-controlled) plus the new
+  **`build_horn_profile.py`** corpus-calibration pass. Point the profiler at confirmed-horn
+  and no-train folders → it derives the real horn band from positive/negative spectral
+  contrast, calibrates the tonality/duration/gap thresholds against the labelled corpus
+  (reusing the detector's own feature fns), and emits diagnostic plots + a ready-to-paste
+  parameter block + `horn_profile.json` that the detector auto-loads. Both are manual
+  birdstation CLIs (no unit). This is the offline-study analogue of ▶ Next #3's "known
+  trains improve detection" loop (the *live-stream* `train_detector.service` vetting/tuning
+  loop is still future). Generated profiles are gitignored; the param block is the durable
+  record. Verified end-to-end on a synthetic corpus. See `Build History.md` (2026-06-06).
+  **Same day, management pass:** the profiler now reads a **category-folder corpus**
+  (`--corpus`: `trains/` = positives, every other folder = a labeled negative class), has a
+  **`--check`** readiness census, and ends with an **end-to-end validation** (real detector
+  over the labeled clips → recall/precision + per-class false-alarm breakdown; it caught a
+  duration-bound bug, fixed). Plus **`birdstation/HORN-CORPUS-GUIDE.md`**, a plain-English
+  **Windows 11** runbook (sort in VLC/Audacity → calibrate → read accuracy → deploy).
+
 - **2026-06-05** — Observatory: **"Almost a lifer" shelf** on the Birds tab — turns the
   life-list rule into a progress game. Surfaces species heard at 85%+ in the **rolling last
   24h** but not yet listed and short of the 3-hit bar, as cards with a green **"N of 3"**

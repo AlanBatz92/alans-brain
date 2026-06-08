@@ -10,6 +10,280 @@
 
 ---
 
+## 2026-06-07 — Automatic train detection (auto-publish + strike-off), one-process cascade
+
+Pivoted the train pipeline from **default-deny manual vetting** to **automatic
+detection with exception review**, at Alan's direction ("I'd much rather have data
+flow in automatically and live with a small margin of error"). The privacy reason
+for pre-vetting is already solved by the `published` flag, so we auto-publish the
+*event* while keeping *audio* private.
+
+- **One process, two stages (cascade).** Rather than add a second detector daemon,
+  folded the calibrated confirm into the live detector (Alan's call — "why two
+  processes?"). `train_detector.py` keeps its loose trigger as a cheap high-recall
+  "grab a clip" gate, then runs `train_horn_detector.process_file()` (the tuned,
+  ~96%-precision detector + `horn_profile.json`) **inline**: confirmed →
+  `verdict='train'`, auto-published (audio private, `published=0`); not a horn →
+  `verdict='false_positive'`. `reviewed` stays 0 (machine call). Guarded import +
+  profile auto-load at startup; if librosa/scipy are missing it writes events
+  *pending* and warns. `train_horn_detector.py` is thus a shared library, not a
+  second process.
+- **`train_confirm.py` demoted from a timer to a manual utility** (the 5-min
+  `train-confirm.timer/.service` were never shipped — removed): backfills pending
+  events and, with `--rescore`, re-applies a fresh profile to past **machine**
+  decisions (reviewed=0) after a recalibration. **Never overwrites human decisions
+  (reviewed=1).**
+- **Exception review / strike-off.** `sync_train_verdicts.py reject <clip|folder>…`
+  sets `verdict='false_positive'`, `reviewed=1` → off the page (weekly purge
+  removes the audio). Rejected candidate clips are **kept until the purge** so a
+  recalibration + `--rescore` can recover a wrongly-rejected train.
+- **Page (`?v=obs26`/`obs20`).** Client filter relaxed from "reviewed && train" to
+  just `verdict='train'` (auto + human-verified show; only false positives hidden);
+  `renderVerdict` badges **● auto-detected** vs **✓ confirmed**; the note now reads
+  "detected automatically … a human strikes off the occasional false positive."
+- **Docs/method synced to the new model:** `DETECTION-METHODS.md` (cascade,
+  post-moderation, the convergence is now *done*), `data/train-method.json` + the
+  on-page panel (auto-publish + ~1-in-25 strike-off margin), README (rollout: install
+  `librosa scipy` in `train-env`, deploy the profile, restart, `--rescore`).
+
+**Verified** the confirm cascade end-to-end on a temp DB + synthetic clips: horn →
+`train` (category=train, audio private), noise → `false_positive`, missing skipped,
+human `reviewed=1` row untouched, and `--rescore` re-applies a profile. `train_detector.py`
+compiles; the live streaming path itself needs a box check (can't drive the stream
+from here). **Deploy is the one-time rollout above** — until then events still flow
+the old way. Big step toward ▶ Next #3's "automated detection" goal.
+
+---
+
+## 2026-06-07 — Train detection: methodology doc + on-page "how it works" panel
+
+With the profile strong (94% passes / 96% precision on 131 horns + 109 negatives),
+shifted from tuning to **documenting and surfacing** the method, per Alan's ask to
+make detection transparent on the page and establish a refinement pipeline.
+
+- **`birdstation/DETECTION-METHODS.md`** — the canonical, plain-English record: the
+  acoustic method (band → tonality → blasts → passes), the calibration pipeline
+  (`build_horn_profile.py`), the **repeatable refinement loop** (pull → sort →
+  calibrate → inspect misses → deploy → vet/publish → recalibrate), how **confirmed
+  trains are preserved as labeled analytics data** (`train_events` rows with
+  `category` + timestamps; pass-grouping = the analytics' counting logic), the
+  privacy/human-review gate, and the **caveats** (horn-bound recall, single mic,
+  look-alikes, clip-vs-stream, parameter drift). Also documents the **two-detector
+  reality** (loose live stream detector vs. the tuned offline horn detector) and the
+  convergence roadmap, so the page can be honest: "acoustic candidate **+ human
+  confirmation**."
+- **On-page methodology panel** — `data/train-method.json` (JSON-driven, like the
+  rest of the site; a condensed, machine-readable mirror of the doc: summary,
+  method, parameters, accuracy, caveats) rendered into a collapsible **"ℹ️ How these
+  are detected"** `<details>` on the Trains tab (`observatory.js` `loadTrainMethod()`,
+  `.obs-method*` styles, links to the full doc). Bonus panel — fails silent if the
+  JSON is absent. `observatory.js?v=obs25`, `style.css?v=obs19`.
+- **Plan for the rest of Alan's ask:** *ship it* via PR to `main` (the box picks up
+  the bridge/API on `git pull` + `restart birdapi`; the site deploys the panel);
+  the **analytics view** (frequency / headway / time-of-day, built on the
+  pass-grouping) is the next milestone, scaffold-ready and gated only on data flowing.
+
+`node --check` + JSON validation pass. Keep `data/train-method.json` and
+`DETECTION-METHODS.md` in sync on every recalibration (the displayed parameters are
+corpus-measured, not a live guarantee).
+
+---
+
+## 2026-06-06 — Horn calibration: pass-level recall + missed-clip list
+
+Real corpus at MIN_BLASTS=1 hit **80% recall / 96% precision** — the gap is now
+"horn found in only 80% of clips" (19/97 yield no blast at all), not the
+confirmation rule. Two diagnostics to chase that, the first from Alan's insight
+that clips minutes apart are the same train:
+- **Pass-level recall:** `parse_clip_time()` reads the timestamp from each clip name
+  (live `train_2026-06-01T08-30-00.wav` or AudioMoth `20260601_083000.WAV`),
+  `pass_recall()` groups clips within `--pass-gap-min` (default 5) into train
+  *passes*, and a pass counts as caught if ANY of its clips has a horn. That's the
+  number that matters (catching a train once = caught it) and it's how the webpage
+  should later *count* trains (dedup clips → passes; feeds frequency/headway). Shown
+  in the console + ACCURACY block, stored in the profile.
+- **`missed_positives.txt`:** lists the positive clips that yielded zero blasts, so
+  they can be listened to — genuinely faint/absent horn, mislabeled, or horn outside
+  the band. Tells us whether to widen the band / lower tonality next, or accept them.
+`blast_counts()` now returns (path, count) pairs so both can map back to filenames.
+
+## 2026-06-06 — Horn calibration: blast-count diagnostic + MIN_BLASTS calibration
+
+First real-corpus run (97 trains / 66 negatives) gave 97% precision but only **58%
+recall** — the detector was *missing* trains, not confusing them. Root cause: the
+corpus is single-event clips (the live detector's catches), but the detector only
+confirms a train on **2+ horn blasts** (a rule meant for scanning continuous audio,
+where a pass sounds the full long-long-short-long sequence). Many clips have one
+blast → fail confirmation.
+
+Made `build_horn_profile.py` measure and fix this instead of guessing:
+- **`blast_counts()`** runs the detector's finder at the full operating config and
+  counts blasts per clip; **`recommend_min_blasts()`** scores ≥1/≥2/≥3 on the corpus
+  (recall from positives, precision from negatives) and picks best F1 (smaller k wins
+  ties). `--min-blasts {1,2,3}` forces it.
+- Calibration now reports **blast-level recall** ("horn found, ≥1 blast" — the blast
+  detector's true reach) vs **confirmed recall** (≥k), so a low confirmed number is
+  legible: detector working but the k-rule too strict, vs. the horn genuinely not
+  found. The chosen `min_blasts_for_confirmation` is written to `horn_profile.json`
+  (the detector already honors it via `load_profile`), added to the param block, and
+  the k-table + blast-level recall go into the JSON.
+- A note flags when k is lowered from 2, with the clip-vs-continuous caveat
+  (k=1 best for clips; k=2 safer against lone-blip false positives on long recordings).
+- Also (same session) fixed the Windows `UnicodeEncodeError` (UTF-8 on all file
+  writes + stdout/stderr reconfigure) and a spurious numpy divide warning
+  (`np.divide(..., where=)`), both verified.
+
+Verified the new path on the synthetic corpus (diagnostic prints, k-table, auto-pick,
+`--min-blasts` override, JSON fields, param block line). Expectation on the real
+corpus: blast-level recall ≫ 58% → auto-picking k=1 lifts confirmed recall with
+precision intact (negatives produced ~0 blasts at k=2).
+
+---
+
+## 2026-06-06 — Train vetting → Observatory page bridge (verdicts + privacy + category)
+
+Connected the P2 corpus-sorting back to the live Observatory. The clips Alan is
+sorting for calibration *are* the live detector's events (each has a `train_events`
+row), so one sorting pass can both calibrate the detector and populate the Trains
+page — without vetting twice. Two product decisions (asked): **keep the full
+category** in the DB, and **count confirmed trains but keep their audio private**
+by default (backyard mic).
+
+- **Schema (`train_events` += `category`, `published`):** `category` stores the
+  fine vetting class (train / plane / vehicle / gunshot / …) for future train
+  analytics; `published` (default 0) decouples "is a train" (counts + shows on the
+  page) from "serve the audio" (opt-in). `bird_api.ensure_train_schema()` applies
+  both idempotently at startup (so `git pull` + `systemctl restart birdapi`
+  migrates the live DB), and **preserves any already-public approved clip**
+  (`published=1 WHERE verdict='train'`) so nothing currently public breaks.
+- **`sync_train_verdicts.py` (new, pure stdlib — runs on the Windows PC and the
+  box, no venv):** `emit` walks the sorted corpus → `train_verdicts.csv`
+  (filename, verdict, category; `trains/`→train, other folders→false_positive with
+  the folder as category, `unsure/`+`_*` skipped). `apply` (box) matches each clip
+  to its `train_events` row **by exact basename** (not LIKE — clip names contain
+  underscores) and sets reviewed/verdict/category, leaving audio private unless
+  `--publish-trains`; backs up the DB first, supports `--dry-run`. `publish` flips
+  chosen clips' audio public later.
+- **API (`bird_api.py`):** the clip endpoint now also requires `published=1`, so a
+  confirmed-but-private train's audio 403s even with a direct URL. `/api/trains/recent`
+  already returns all columns (`dict(r)`), so `category`/`published` reach the
+  front-end with no handler change.
+- **Front-end (`observatory.js` `?v=obs24`):** the Trains list renders the
+  `<audio>` player only when `published`; otherwise the event still shows
+  (time/duration/dB) with a "🔒 audio kept private" note instead of a dead player.
+- **Verified** end-to-end on a temp DB seeded with the *old* schema: migration
+  added the columns + preserved a pre-existing public train, `emit`→`apply` set
+  verdict/category correctly, new trains landed private (`published=0`), the clip
+  gate served only published trains, and `publish` flipped one public. Python
+  compiles; `observatory.js` passes `node --check`.
+- **Deploy note:** these touch both tiers — restart `birdapi` on the box (picks up
+  the migration + clip gate) and deploy the site (`observatory.js?v=obs24`). Do the
+  box first so `/api/trains/recent` includes `published` before the new JS reads it.
+  Currently on the feature branch; needs to reach production to go live.
+
+Unblocks the designed-but-gated train analytics (`PLAN-train-analytics.md`) — the
+vetted, categorized events are exactly its input. `schema.sql` migration logged;
+`HORN-CORPUS-GUIDE.md` gained a "send confirmed trains to the page" step.
+
+---
+
+## 2026-06-06 — P2 horn study: corpus management, validation, Windows runbook
+
+Follow-up to the same-day P2 build, in response to "make it idiot-proof to manage."
+Reworked `build_horn_profile.py` around how Alan actually works — he pulls a week of
+AudioMoth WAVs to a **Windows** PC and sorts them by ear (VLC/Audacity) into
+category folders (trains, planes, vehicles, gunshots, construction…), where
+everything that isn't a train is a negative.
+
+- **Category-folder corpus (`--corpus ROOT`):** `trains/` = positives, every other
+  subfolder = a labeled negative class (`unsure/`, `_*`, and the output dir are
+  skipped). Also accepts repeatable `--negatives DIR DIR…`. Matches the sort-into-
+  folders workflow with zero glue.
+- **`--check` readiness census:** counts each class and gives a plain verdict
+  (GOOD/OK/THIN + nudges like "only 12 trains — aim for 20+"). Runnable mid-sort,
+  no calibration — directly answers "do I have enough yet / is this strong enough."
+- **End-to-end validation pass:** after deriving the profile it runs the *real*
+  detector over the labeled clips and reports **recall / precision with a per-class
+  false-alarm breakdown** ("planes 2/40, gunshots 0/20") + a one-line verdict — the
+  honest "is it accurate" answer, in the user's own data.
+- **Calibration coherence fix (found by the new validation):** durations were
+  measured at a permissive setting but the detector runs at `medium`, and a tight
+  `BLAST_MAX` clipped the longest real horn blasts → they failed the 2-blast
+  confirmation (synthetic recall fell to 50%). Now blast geometry is measured **at
+  the derived operating threshold** (detector's own finder, duration filter opened
+  wide so the distribution isn't censored), and `recommend_durations` carries
+  headroom (min −30%, max +20%). Synthetic recall went 50% → 92% at 100% precision.
+  Refactor: replaced `file_metrics`/`collect_metrics`/`combine_metrics` with
+  `collect_tonality` (tiers/plots) + `measure_blasts_at` (operating-point geometry).
+  JSON gained `negative_categories` + `calibration.validation`.
+- **`HORN-CORPUS-GUIDE.md`** — a calm, linear **Windows 11** runbook (the user has
+  no Mac): one-time setup (`C:\horn`, venv, folders), pull recordings with the
+  built-in `scp`, sort in File Explorer + VLC/Audacity, `--check`, calibrate, read
+  the accuracy block, deploy the profile (next to the detector, or `scp` to the
+  box). Plus a cheat sheet and a "when something looks off" FAQ.
+
+**Verified** end-to-end on a synthetic Windows-shaped corpus (12 trains + planes/
+vehicles/gunshots negatives): `--check`, `--corpus`, explicit multi-`-n`, the
+validation pass, and the regenerated profile all behave; the detector still
+auto-loads the richer JSON (extra keys ignored). Docs synced (Current State,
+ROADMAP, README). The earlier Mac-flavored draft of the guide was replaced.
+
+---
+
+## 2026-06-06 — P2 train horn study: offline detector + corpus calibration
+
+A second, **offline** train detector for the Emmaus Observatory's P2 freight
+study — distinct from the live `train_detector.service` on the Icecast stream.
+An AudioMoth ~1500–1700 ft from the tracks records to WAV; these tools analyse
+those recordings in batch, keying on the **train horn** (tonal energy ~250–600 Hz,
+2+ blasts within a window) rather than the broadband rumble that's too faint at
+that distance. Both are **manual CLIs** in `birdstation/` (no systemd unit).
+
+**`train_horn_detector.py`** — the detector (drafted in a prior session), now
+version-controlled. Per file: STFT → horn-band RMS + a **tonality ratio**
+(horn-band energy / 100–1200 Hz broadband energy; tonal horn = high, wind/thunder
+= low), find sustained blasts, confirm a train when 2+ blasts fall within the
+window. Parses AudioMoth `YYYYMMDD_HHMMSS.WAV` names for wall-clock timestamps;
+optional CSV out. **Added a runtime-profile hook:** `load_profile()` + a
+`--profile` flag (and auto-discovery of a `horn_profile.json` next to the script)
+override the built-in constants, and `extract_horn_band_features()` gained
+optional `low_hz`/`high_hz` args (backward-compatible) so a calibrated band can
+be applied without editing source.
+
+**`build_horn_profile.py`** — the new one-time calibration pass (the actual ask).
+Takes a folder of confirmed horn WAVs and a folder of confirmed no-train WAVs and:
+- **Spectral analysis** — builds each file's representative spectrum from its
+  loudest frames, takes the median across positives vs negatives, and derives the
+  real horn band from the **positive/negative contrast** (the frequencies where
+  horns carry energy the negatives don't — may be narrower than the 250–600 Hz
+  default). Plots the spectrum overlay (band shaded) + an **onset-aligned average
+  spectrogram** so the signature is visually obvious.
+- **Threshold calibration** — runs the detector's *own* feature functions
+  (imported, not re-implemented) over every file to compare positives vs
+  negatives on tonality ratio, blast duration, inter-blast gap, and horn-band
+  RMS. Sweeps tonality thresholds and picks low/medium/high tiers from the
+  separation (medium = best F1; low = most sensitive still-precise split; high =
+  strictest split still catching most horns), reporting the precision/recall each
+  would give. Duration bounds from positive-blast percentiles; confirmation
+  window from observed inter-blast spacing.
+- **Outputs** — a ready-to-paste parameter block (with `# was X` deltas), six
+  diagnostic PNGs, a `calibration_report.txt`, and `horn_profile.json` (which the
+  detector auto-loads). Degrades gracefully: per-file load errors are skipped,
+  `--no-plots` drops the matplotlib dependency, and thin corpora fall back to
+  defaults with a flagged note instead of inventing a number.
+
+**Conventions/wiring:** modern Python 3 + type hints (matches the other box
+scripts), `librosa numpy scipy` (+ `matplotlib` for plots, headless `Agg`).
+Generated `horn_profile.json` / `horn_profile_out/` are **gitignored**
+(deployment-specific, like `*.db`); the durable record is the committed parameter
+block. **Verified** end-to-end against a synthetic corpus (8 horn-like positives /
+6 broadband negatives): the profiler recovered the planted band (355–415 Hz vs a
+350–420 Hz fundamental), separated the classes cleanly, wrote all artifacts, and
+the detector then loaded the profile and fired on positives / stayed silent on
+negatives. `birdstation/README.md` gained a "Train horn study (P2)" section.
+
+---
+
 ## 2026-06-05 — Personal Projects page: add the Observatory card
 
 Small navigation fix: `projects.html` (the "things I've built" hub) only listed

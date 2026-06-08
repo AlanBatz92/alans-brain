@@ -530,10 +530,10 @@ async function loadTrains() {
     setMsg(el, "obs-empty", "Couldn't reach the observatory — it may be offline.");
     return;
   }
-  // Defense in depth: even if the API hands back un-approved rows (older box
-  // build that ignores ?approved=1), never render anything not explicitly
-  // marked verdict=train. Default-deny — nothing un-vetted reaches the page.
-  rows = (rows || []).filter((r) => r.reviewed && r.verdict === 'train');
+  // Show everything the detector confirmed (verdict='train'), whether auto-detected
+  // (reviewed=0) or human-verified (reviewed=1). Struck-off false positives
+  // (verdict='false_positive') are excluded. Audio is gated separately (published).
+  rows = (rows || []).filter((r) => r.verdict === 'train');
   rows = rows.slice(0, MAX_TRAINS);
   if (rows.length === 0) {
     setMsg(el, 'obs-empty', 'No confirmed train events yet.');
@@ -545,10 +545,18 @@ async function loadTrains() {
     const dur  = r.duration_s != null ? Number(r.duration_s).toFixed(1) + 's' : '';
     const db   = r.peak_db    != null ? Math.round(r.peak_db) + ' dB' : '';
     const file = r.clip_path ? r.clip_path.split('/').pop() : '';
-    const clip = file
-      ? '<audio class="obs-clip" controls preload="none" src="' +
-          API_BASE + '/api/trains/clip/' + encodeURIComponent(file) + '"></audio>'
-      : '<div class="obs-clip-missing">clip unavailable</div>';
+    // Audio shows only for events explicitly published (r.published). Otherwise
+    // the event still appears (time/duration/dB) but its backyard audio stays
+    // private — the clip endpoint 403s, so we don't render a dead player.
+    let clip;
+    if (file && r.published) {
+      clip = '<audio class="obs-clip" controls preload="none" src="' +
+        API_BASE + '/api/trains/clip/' + encodeURIComponent(file) + '"></audio>';
+    } else if (file) {
+      clip = '<div class="obs-clip-missing">🔒 audio kept private</div>';
+    } else {
+      clip = '<div class="obs-clip-missing">clip unavailable</div>';
+    }
     return '<div class="obs-train">' +
         '<div class="obs-train-head">' +
           (when ? '<span class="obs-train-when">' + escapeHtml(when) + '</span>' : '') +
@@ -562,14 +570,52 @@ async function loadTrains() {
 }
 
 function renderVerdict(r) {
-  if (!r.reviewed) return '';
-  const map = {
-    train:          { cls: 'obs-verdict-train', text: '✓ train' },
-    false_positive: { cls: 'obs-verdict-false', text: '✗ false' },
-    unsure:         { cls: 'obs-verdict-unsure', text: '? unsure' },
-  };
-  const v = map[r.verdict];
-  return v ? '<span class="obs-verdict ' + v.cls + '">' + v.text + '</span>' : '';
+  // Only verdict='train' events reach the page. Distinguish auto-detected (the
+  // calibrated detector's call) from human-verified.
+  if (r.verdict !== 'train') return '';
+  return r.reviewed
+    ? '<span class="obs-verdict obs-verdict-train">✓ confirmed</span>'
+    : '<span class="obs-verdict obs-verdict-auto">● auto-detected</span>';
+}
+
+/* ── Trains: "How these are detected" methodology panel ──
+   Reads data/train-method.json (a static, JSON-driven record kept in sync with
+   birdstation/DETECTION-METHODS.md) so the page states exactly how detection
+   works, the active parameters, measured accuracy, and the caveats. A bonus
+   panel — it fails silently if the file is missing. */
+async function loadTrainMethod() {
+  const body = document.getElementById('obs-train-method-body');
+  if (!body) return;
+  let m;
+  try { m = await fetchJson('data/train-method.json'); }
+  catch (err) { return; }
+  let html = '';
+  if (m.summary) html += '<p class="obs-method-summary">' + escapeHtml(m.summary) + '</p>';
+  if (Array.isArray(m.method)) {
+    html += '<ol class="obs-method-steps">' +
+      m.method.map((s) => '<li>' + escapeHtml(s) + '</li>').join('') + '</ol>';
+  }
+  if (m.parameters) {
+    html += '<h4 class="obs-method-h">Parameters</h4><table class="obs-method-params">' +
+      Object.entries(m.parameters).map(([k, v]) =>
+        '<tr><td>' + escapeHtml(k.replace(/_/g, ' ')) + '</td><td>' +
+        escapeHtml(String(v)) + '</td></tr>').join('') + '</table>';
+  }
+  if (m.accuracy) {
+    html += '<h4 class="obs-method-h">Accuracy</h4><p>' + escapeHtml(
+      (m.accuracy.passes_caught || '') + ' of train passes caught, ' +
+      (m.accuracy.precision || '') + ' precision. ' + (m.accuracy.note || '')) + '</p>';
+  }
+  if (Array.isArray(m.caveats)) {
+    html += '<h4 class="obs-method-h">Caveats</h4><ul class="obs-method-caveats">' +
+      m.caveats.map((c) => '<li>' + escapeHtml(c) + '</li>').join('') + '</ul>';
+  }
+  if (m.updated) {
+    html += '<p class="obs-method-updated">Method updated ' + escapeHtml(m.updated) +
+      '. <a href="https://github.com/AlanBatz92/alans-brain/blob/main/birdstation/DETECTION-METHODS.md"' +
+      ' target="_blank" rel="noopener">Full methodology ↗</a></p>';
+  }
+  body.innerHTML = html;
 }
 
 /* ── Analytics ───────────────────────────────────────────────
@@ -1142,7 +1188,7 @@ function loadAll() {
   // The bird grid + stats for the active period (Today included) all come from
   // loadPeriod now — one consistent Eastern-aligned path. Analytics is only
   // refreshed if it's already been opened (it lazy-loads on first tab open).
-  const refreshes = [loadPeriod(state.period), loadLife(), loadAlmost(), loadTrainStats(), loadTrains()];
+  const refreshes = [loadPeriod(state.period), loadLife(), loadAlmost(), loadTrainStats(), loadTrains(), loadTrainMethod()];
   if (state.an.loaded) refreshes.push(loadAnalytics(state.an.period));
 
   Promise.allSettled(refreshes).then(() => {

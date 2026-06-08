@@ -1,0 +1,32 @@
+{
+  "title": "How train events are detected",
+  "summary": "Trains are detected automatically and appear here right away — no per-event human approval. A calibrated horn detector keeps the page clean; a person only strikes off the occasional false positive. Clip audio is private by default.",
+  "method": [
+    "A microphone about 1,500–1,700 ft from the freight line records the soundscape.",
+    "A loose first-pass listens for sustained energy and grabs a candidate clip whenever something might be a train (it over-triggers on purpose — better to look than miss).",
+    "A calibrated horn detector then confirms each clip: it needs tonal energy in a narrow band (a horn is near a pure tone; wind, planes, and engines are broadband). Confirmed → the event is published automatically; not a horn → discarded.",
+    "Audio comes from a backyard mic, so a confirmed train's clip audio is NOT served publicly unless individually published — the event still shows and counts.",
+    "A human reviews the confirmed events out-of-band and strikes off any false positive, which removes it from the page."
+  ],
+  "parameters": {
+    "horn_band_hz": "300–520",
+    "tonality_ratio": "≥ 2.1 (horn vs. surrounding sound)",
+    "min_blast_duration_sec": 0.4,
+    "blasts_to_confirm": 1,
+    "same_train_window_min": 5,
+    "calibrated_from": "131 confirmed horns + 109 non-train clips"
+  },
+  "accuracy": {
+    "passes_caught": "94%",
+    "precision": "96%",
+    "note": "Measured for the calibrated detector against the labeled examples (clips within 5 minutes counted as one train pass). ~1 in 25 shown events is a false positive a human later strikes off; the detector improves as more examples are confirmed."
+  },
+  "caveats": [
+    "Automatic, with a small margin of error: roughly 1 in 25 shown events is a false positive until it's struck off, and a quiet pass with no horn can be missed.",
+    "Distance: only the horn carries this far, so counts reflect horn events — not necessarily every train that passed.",
+    "One backyard mic: no train direction or speed, and audio can catch nearby conversation — which is why clip audio stays private unless individually published.",
+    "Look-alikes: planes and sirens can sound horn-like; the detector pushes them down (planes currently 0 of 50 in testing) but a few slip through and get struck off.",
+    "The detector is recalibrated from each new batch of confirmed examples, so the parameters above evolve over time."
+  ],
+  "updated": "2026-06-07"
+}
