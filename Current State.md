@@ -126,8 +126,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs27` +
-  `style.css?v=obs21` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs28` +
+  `style.css?v=obs22` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -138,9 +138,12 @@ train data a home. ID/class prefix: **`obs-`**.
   hook. `GET /api/species/{name}` serves history. Degrades gracefully if either source
   is offline. CC BY-SA attribution shown. Classes: `.obs-bcard-*`.
 - **Lifer tags + scoring explainer (2026-06-08):** species-grid cards for birds already on
-  the life list carry a small **"★ Lifer"** pill (`.obs-lifer-tag`; `lifeNameSet()` matches
-  common **or** scientific name; the grid re-renders once `/api/lifetime` lands since the two
-  fetch in parallel). A collapsible **"ℹ️ How confidence & the life list work"** panel
+  the life list carry a small **"★ Lifer"** pill (`.obs-lifer-tag`; `isLiferGroup()` matches
+  common **or** scientific name against `lifeNameSet()`; the grid re-renders once `/api/lifetime`
+  lands since the two fetch in parallel). The period heading also shows a **"★ N of M on the
+  life list"** summary (`#obs-period-lifers`, `.obs-lifer-summary`) that respects the active
+  search / 100%-only filters (it counts the displayed `groups`). A collapsible
+  **"ℹ️ How confidence & the life list work"** panel
   (`#obs-bird-method`, static HTML reusing `.obs-method*`) sits below the Birds stat cards and
   documents BirdNET's score (model certainty, *not* a calibrated probability), the
   display/preserve floors, and the three life-list paths.
@@ -254,7 +257,7 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs21`, `observatory.js?v=obs27`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs22`, `observatory.js?v=obs28`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

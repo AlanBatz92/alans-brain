@@ -157,8 +157,9 @@ into the prose. More fragile; revisit only if the current style feels lacking.
   qualifying path** (box): a species also lists once it has **≥ 8 detections at ≥ 0.70
   all-time, no time window** (`birdnet_pipeline.py`; gate now fires on any hit ≥ 0.70). A
   one-shot **`backfill_life_list.py`** catches up species that already qualify. `/api/species`
-  now returns cumulative progress. Front-end (`?v=obs27`/`obs21`): a **"★ Lifer"** tag on
-  species-grid cards, an updated bird-card status line (both routes), and a collapsible
+  now returns cumulative progress. Front-end (`?v=obs28`/`obs22`): a **"★ Lifer"** tag on
+  species-grid cards + a **"★ N of M on the life list"** filter-aware summary in the period
+  heading, an updated bird-card status line (both routes), and a collapsible
   **"ℹ️ How confidence & the life list work"** explainer on the Birds tab. Verified on temp
   DBs. **Deploy:** box `git pull` → restart `birdnet`/`birdapi` → run `backfill_life_list.py`
   once. Addresses §3 below (life-list tuning).

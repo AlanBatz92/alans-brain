@@ -4545,6 +4545,15 @@ nav {
   padding: 1px 7px;
   white-space: nowrap;
 }
+/* "N of M on the life list" summary in the period heading — small green accent,
+   reflects the active search / 100%-only filters (counts the displayed species). */
+.obs-lifer-summary {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--green);
+  white-space: nowrap;
+}
 .obs-species-sci {
   font-size: 0.76rem;
   font-style: italic;

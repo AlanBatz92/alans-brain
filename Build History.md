@@ -38,9 +38,11 @@ confidence is calculated** on the page. Alan picked the **cumulative-evidence** 
   `life_list_cumulative_hits`, `life_list_cumulative_confidence` alongside the existing
   `hits_24h` / `life_list_min_hits`, so the bird card can show progress on whichever route
   is closer.
-- **Front-end (`?v=obs27`/`obs21`).** (a) **"★ Lifer" tag** on species-grid cards already
-  on the life list — `lifeNameSet()` + a re-render of the grid once `/api/lifetime` lands
-  (the two fetch in parallel). (b) **Bird-card status** now reads "Not yet a lifer — N of 3
+- **Front-end (`?v=obs28`/`obs22`).** (a) **"★ Lifer" tag** on species-grid cards already
+  on the life list — `lifeNameSet()`/`isLiferGroup()` + a re-render of the grid once
+  `/api/lifetime` lands (the two fetch in parallel) — plus a **"★ N of M on the life list"**
+  summary in the period heading that respects the active search / 100%-only filters (counts
+  the displayed species). (b) **Bird-card status** now reads "Not yet a lifer — N of 3
   confident hits (≥85%) in 24h, or M of 8 lifetime hits (≥70%)". (c) **On-page explainer** —
   a collapsible "ℹ️ How confidence & the life list work" panel on the Birds tab (reusing the
   Trains panel's `.obs-method*` styling) covering BirdNET's score (model certainty, not a

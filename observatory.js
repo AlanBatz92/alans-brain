@@ -331,6 +331,12 @@ function lifeNameSet() {
   return s;
 }
 
+// Is this period-group species on the life list? Matches common OR scientific name.
+function isLiferGroup(g, lifers) {
+  return lifers.has((g.common_name || '').toLowerCase()) ||
+    (g.scientific_name ? lifers.has(g.scientific_name.toLowerCase()) : false);
+}
+
 function renderPeriodGroups() {
   const el      = document.getElementById('obs-today');
   const countEl = document.getElementById('obs-period-count');
@@ -347,6 +353,16 @@ function renderPeriodGroups() {
     groups = groups.filter((g) => (g.best_confidence || 0) >= PERFECT_CONFIDENCE);
   }
   if (countEl) countEl.textContent = groups.length ? '(' + groups.length + ')' : '';
+  // "N of M on the life list" summary for the current filtered set. Only shown once
+  // the life list has loaded (so it doesn't briefly read "0 of M"); respects the
+  // search + 100%-only filters because it counts the already-filtered `groups`.
+  const lifersEl = document.getElementById('obs-period-lifers');
+  if (lifersEl) {
+    lifersEl.textContent = (state.lifeLoaded && groups.length)
+      ? '★ ' + groups.filter((g) => isLiferGroup(g, lifers)).length +
+        ' of ' + groups.length + ' on the life list'
+      : '';
+  }
   if (groups.length === 0) {
     let msg;
     if (q) msg = 'No species match "' + q + '".';
@@ -358,8 +374,7 @@ function renderPeriodGroups() {
   el.innerHTML = groups.map((g) => {
     const pct    = Math.round((g.best_confidence || 0) * 100);
     const lastMs = parseTime(g.last_heard);
-    const isLifer = lifers.has((g.common_name || '').toLowerCase()) ||
-      (g.scientific_name && lifers.has(g.scientific_name.toLowerCase()));
+    const isLifer = isLiferGroup(g, lifers);
     return '<div class="obs-species" role="button" tabindex="0"' +
         ' data-name="' + escapeAttr(g.common_name) + '" data-sci="' + escapeAttr(g.scientific_name || '') + '">' +
         '<div class="obs-species-top">' +
