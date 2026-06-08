@@ -35,6 +35,15 @@ LIFE_LIST_MIN_HITS = 3           # ...and a NEW species needs this many such hit
                                  #    within a rolling 24h window to join the life list
 LIFE_LIST_INSTANT_CONFIDENCE = 0.995  # ...unless a single hit is this confident
                                       #    (~100%), which lists the species at once
+# Cumulative-evidence path: a persistent, moderate-confidence species earns a spot
+# once it accumulates LIFE_LIST_CUMULATIVE_HITS detections at or above
+# LIFE_LIST_CUMULATIVE_CONFIDENCE — all-time, with NO 24h window. The reasoning:
+# the 24h rule misses a real bird that's heard often but never quite hits 0.85
+# (e.g. a Downy Woodpecker heard 10× averaging ~76%); many independent moderate
+# detections are very unlikely to ALL be misfires, so the weight of evidence lists
+# it. The floor sits above the preserve floor (0.60) so pure noise still can't pile up.
+LIFE_LIST_CUMULATIVE_CONFIDENCE = 0.70
+LIFE_LIST_CUMULATIVE_HITS = 8
 
 # Seasonal filter: pass BirdNET's week-of-year so it filters the species list by
 # season as well as by location (lat/lon). Cuts out-of-season false positives.
@@ -152,12 +161,18 @@ def parse_and_log(result_file):
                 # Life list gate. Every preserved detection (>= MIN_CONFIDENCE, 0.60)
                 # is logged and surfaces on the bird card's diagnostic hit list; the
                 # main page shows only the >= 0.85 ones. A species earns a *permanent*
-                # lifetime entry once it also clears the stricter life-list gate:
-                # LIFE_LIST_MIN_HITS hits at or above LIFE_LIST_MIN_CONFIDENCE (0.85)
-                # within a rolling 24-hour window, OR a single near-certain hit
-                # (>= LIFE_LIST_INSTANT_CONFIDENCE, ~100%). The multi-hit rule filters
-                # one-off mis-IDs; the instant rule fast-tracks a near-certain detection.
-                if confidence >= LIFE_LIST_MIN_CONFIDENCE:
+                # lifetime entry once it clears ANY of three paths:
+                #   (1) LIFE_LIST_MIN_HITS hits at/above LIFE_LIST_MIN_CONFIDENCE (0.85)
+                #       within a rolling 24-hour window — filters one-off mis-IDs;
+                #   (2) a single near-certain hit (>= LIFE_LIST_INSTANT_CONFIDENCE,
+                #       ~100%) — fast-tracks an unmistakable detection;
+                #   (3) LIFE_LIST_CUMULATIVE_HITS hits at/above
+                #       LIFE_LIST_CUMULATIVE_CONFIDENCE (0.70) all-time, no window —
+                #       persistent moderate evidence (a bird heard often but never quite
+                #       at 0.85 is still very unlikely to be repeated noise).
+                # The gate is evaluated for any hit that can contribute to path 3, i.e.
+                # at/above the cumulative floor (0.70).
+                if confidence >= LIFE_LIST_CUMULATIVE_CONFIDENCE:
                     c.execute("SELECT total_detections FROM lifetime WHERE common_name=?", (common_name,))
                     existing = c.fetchone()
                     if existing:
@@ -184,10 +199,16 @@ def parse_and_log(result_file):
                             (common_name, LIFE_LIST_MIN_CONFIDENCE)
                         )
                         hits_24h = c.fetchone()[0]
+                        # Cumulative path: all-time hits at/above the cumulative floor.
+                        c.execute(
+                            "SELECT COUNT(*) FROM detections WHERE common_name=? AND confidence>=?",
+                            (common_name, LIFE_LIST_CUMULATIVE_CONFIDENCE)
+                        )
+                        cumulative = c.fetchone()[0]
                         instant = confidence >= LIFE_LIST_INSTANT_CONFIDENCE
-                        if instant or hits_24h >= LIFE_LIST_MIN_HITS:
+                        if instant or hits_24h >= LIFE_LIST_MIN_HITS or cumulative >= LIFE_LIST_CUMULATIVE_HITS:
                             # Seed the tally with the true all-time count of qualifying
-                            # hits (>= life-list floor), not just the 24h window.
+                            # hits (>= life-list display floor), not just the 24h window.
                             c.execute(
                                 "SELECT COUNT(*) FROM detections WHERE common_name=? AND confidence>=?",
                                 (common_name, LIFE_LIST_MIN_CONFIDENCE)
@@ -197,7 +218,12 @@ def parse_and_log(result_file):
                                 "INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections) VALUES (?,?,?,?)",
                                 (common_name, scientific_name, now, total_qual)
                             )
-                            why = "instant ~100%" if instant else f"{hits_24h} hits/24h"
+                            if instant:
+                                why = "instant ~100%"
+                            elif hits_24h >= LIFE_LIST_MIN_HITS:
+                                why = f"{hits_24h} hits/24h"
+                            else:
+                                why = f"{cumulative} hits >= {LIFE_LIST_CUMULATIVE_CONFIDENCE:.0%} (cumulative)"
                             print(f"  *** NEW SPECIES: {common_name} ({why}) ***")
 
                 # Verification clip for life-list-qualifying hits — one per species

@@ -38,8 +38,10 @@ events → schedule prior → acoustic fingerprint (details in the plan).
 ## ◷ Soon
 
 ### 3. Confidence-tuning follow-ups (life list)
-- **Current gate (2026-06-02):** a new species joins after **3 detections at
-  ≥ 0.85 within a rolling 24h window, or one ~100% (≥ 0.995) hit** (instant).
+- **Current gate (2026-06-08):** a new species joins after **3 detections at
+  ≥ 0.85 within a rolling 24h window**, **one ~100% (≥ 0.995) hit** (instant), **or
+  ≥ 8 detections at ≥ 0.70 all-time** (cumulative-evidence path, no time window — added
+  2026-06-08 to catch persistent moderate-confidence birds like the Downy Woodpecker).
 - **Three-tier floors (2026-06-03):** preserve 0.60 (box keeps, for diagnostics) /
   display 0.85 (page + analytics) / life-list 0.85 + count. `purge_low_confidence.py`
   clears old < 0.60 noise. Watch: the 0.60 preserve floor still discards the very
@@ -58,6 +60,13 @@ events → schedule prior → acoustic fingerprint (details in the plan).
 - **Watch:** see how the 3-hits/24h rule feels — a genuinely rare flyover heard
   once or twice still won't list. If too strict, revisit the window or a tier.
   Also watch whether the season filter ever hides a real off-season vagrant.
+- **Watch (cumulative path, 2026-06-08):** the new ≥ 8 @ ≥ 0.70 all-time rule trades a
+  little strictness for catching persistent moderate birds. Watch for the opposite failure —
+  a consistently mis-IDed call (e.g. one species reliably confused for another at ~0.70+)
+  could now accumulate its way onto the list. If that shows up, raise `LIFE_LIST_CUMULATIVE_HITS`
+  / `LIFE_LIST_CUMULATIVE_CONFIDENCE`, or gate the cumulative path on `review_birds.py` labels.
+  A cumulative-path lifer with no ≥ 0.85 hits also shows **no ×count badge** on the life list
+  (the tally counts ≥ 0.85); revisit if that reads oddly.
 - **Later:** per-species thresholds (some calls are easier to ID than others).
 
 ### 3a. Train analytics — `Birds | Trains` toggle on the Analytics tab  (design: `PLAN-train-analytics.md`)
@@ -141,6 +150,18 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-08** — Observatory: **life list cumulative-evidence path + "Lifer" tags + scoring
+  explainer.** From a note that the life list was too restrictive (the Downy Woodpecker — ~10
+  detections averaging ~76%, never 3×≥85% in 24h — never qualified). Added a **third
+  qualifying path** (box): a species also lists once it has **≥ 8 detections at ≥ 0.70
+  all-time, no time window** (`birdnet_pipeline.py`; gate now fires on any hit ≥ 0.70). A
+  one-shot **`backfill_life_list.py`** catches up species that already qualify. `/api/species`
+  now returns cumulative progress. Front-end (`?v=obs27`/`obs21`): a **"★ Lifer"** tag on
+  species-grid cards, an updated bird-card status line (both routes), and a collapsible
+  **"ℹ️ How confidence & the life list work"** explainer on the Birds tab. Verified on temp
+  DBs. **Deploy:** box `git pull` → restart `birdnet`/`birdapi` → run `backfill_life_list.py`
+  once. Addresses §3 below (life-list tuning).
 
 - **2026-06-07** — **Automatic train detection (auto-publish + strike-off).** Flipped from
   default-deny manual vetting to post-moderation, per Alan: trains flow onto the page in

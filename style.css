@@ -4527,6 +4527,24 @@ nav {
   color: var(--teal);
   flex-shrink: 0;
 }
+/* "Lifer" tag on a species card — flags birds already on the life list at a glance.
+   Inline after the name so it flows/wraps with it (the name span is the flex item). */
+.obs-lifer-tag {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--green);
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
 .obs-species-sci {
   font-size: 0.76rem;
   font-style: italic;

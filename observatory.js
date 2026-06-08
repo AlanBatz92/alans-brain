@@ -70,6 +70,11 @@ const PERFECT_CONFIDENCE = 0.995;
 // partway there — 1..MIN_HITS-1 qualifying hits, not yet listed.
 const LIFE_LIST_MIN_HITS = 3;
 const LIFE_LIST_WINDOW_HOURS = 24;
+// Cumulative-evidence path (mirrors birdnet_pipeline): a species also lists once it
+// has LIFE_LIST_CUMULATIVE_HITS detections at ≥ LIFE_LIST_CUMULATIVE_CONFIDENCE
+// all-time, no time window — so a persistent moderate-confidence bird earns a spot.
+const LIFE_LIST_CUMULATIVE_HITS = 8;
+const LIFE_LIST_CUMULATIVE_CONFIDENCE = 0.70;
 
 /* ── Helpers ── */
 
@@ -314,10 +319,23 @@ function sortLifeList(species, sortKey) {
   return copy.sort((a, b) => (parseTime(b.first_seen) || 0) - (parseTime(a.first_seen) || 0));
 }
 
+// Lowercased set of life-list names (common + scientific) so the species grid can
+// tag the birds that are already on the life list ("Lifer" at a glance). Rebuilt
+// from state.life on each render — cheap (N = lifer count).
+function lifeNameSet() {
+  const s = new Set();
+  state.life.forEach((sp) => {
+    if (sp.common_name)     s.add(sp.common_name.toLowerCase());
+    if (sp.scientific_name) s.add(sp.scientific_name.toLowerCase());
+  });
+  return s;
+}
+
 function renderPeriodGroups() {
   const el      = document.getElementById('obs-today');
   const countEl = document.getElementById('obs-period-count');
   const q      = state.searchQuery.trim().toLowerCase();
+  const lifers = lifeNameSet();
   const sorted = sortGroups(state.periodGroups, state.periodSort);
   let groups = q
     ? sorted.filter((g) =>
@@ -340,10 +358,14 @@ function renderPeriodGroups() {
   el.innerHTML = groups.map((g) => {
     const pct    = Math.round((g.best_confidence || 0) * 100);
     const lastMs = parseTime(g.last_heard);
+    const isLifer = lifers.has((g.common_name || '').toLowerCase()) ||
+      (g.scientific_name && lifers.has(g.scientific_name.toLowerCase()));
     return '<div class="obs-species" role="button" tabindex="0"' +
         ' data-name="' + escapeAttr(g.common_name) + '" data-sci="' + escapeAttr(g.scientific_name || '') + '">' +
         '<div class="obs-species-top">' +
-          '<span class="obs-species-name">' + escapeHtml(g.common_name) + '</span>' +
+          '<span class="obs-species-name">' + escapeHtml(g.common_name) +
+            (isLifer ? ' <span class="obs-lifer-tag" title="On the life list">★ Lifer</span>' : '') +
+          '</span>' +
           '<span class="obs-species-count">×' + g.count + '</span>' +
         '</div>' +
         (g.scientific_name ? '<div class="obs-species-sci">' + escapeHtml(g.scientific_name) + '</div>' : '') +
@@ -414,8 +436,12 @@ async function loadLife() {
   state.life = d.species || [];
   state.lifeLoaded = true;
   renderBirdStats();
-  renderLife();    // owns the life-list count (reflects the 100%-only filter)
-  renderAlmost();  // the shelf excludes listed species, so refresh it once life is known
+  renderLife();          // owns the life-list count (reflects the 100%-only filter)
+  // Re-tag the species grid now that the life list is known — but only if the
+  // period data has already landed (otherwise loadPeriod is still loading and will
+  // render with tags itself; re-rendering here would clobber its loading state).
+  if (state.periodGroups.length) renderPeriodGroups();
+  renderAlmost();        // the shelf excludes listed species, so refresh it once life is known
 }
 
 /* ── Birds: "Almost a lifer" shelf ──
@@ -1033,14 +1059,20 @@ function birdCardContent(commonName, scientificName, wiki, hist) {
   // but not on the life list simply hasn't logged enough qualifying hits within
   // the rolling 24h window yet (e.g. 2 of 3), or its hits are spread too far apart.
   if (hist && Array.isArray(hist.recent) && hist.recent.length > 0) {
-    const need = hist.life_list_min_hits || 3;
+    const need    = hist.life_list_min_hits || 3;
+    const cumNeed = hist.life_list_cumulative_hits || LIFE_LIST_CUMULATIVE_HITS;
+    const cumPct  = Math.round((hist.life_list_cumulative_confidence || LIFE_LIST_CUMULATIVE_CONFIDENCE) * 100);
     let status;
     if (hist.on_life_list) {
       status = '<div class="obs-bcard-status obs-bcard-status--on">✓ On the life list</div>';
     } else {
-      const got = Math.min(hist.hits_24h || 0, need);
+      // Two routes in — show progress on both (whichever fills first lists it):
+      // 3 confident hits (≥85%) within 24h, or 8 lifetime hits at ≥70%.
+      const got    = Math.min(hist.hits_24h || 0, need);
+      const cumGot = Math.min(hist.hits_cumulative || 0, cumNeed);
       status = '<div class="obs-bcard-status">Not yet a lifer — ' + got + ' of ' + need +
-        ' qualifying hits (≥85%) in the last 24h</div>';
+        ' confident hits (≥85%) in 24h, or ' + cumGot + ' of ' + cumNeed +
+        ' lifetime hits (≥' + cumPct + '%)</div>';
     }
     const items = hist.recent.map((h) => {
       const ms   = parseTime(h.timestamp);

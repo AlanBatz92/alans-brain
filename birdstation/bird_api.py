@@ -35,11 +35,14 @@ CLIP_DIR = "/home/alan/train_clips"
 #   DISPLAY   (0.85) — what the public page/analytics show (front-end passes it).
 #   LIFE-LIST (0.85 + count rule) — a new species lists after LIFE_LIST_MIN_HITS
 #                      hits at/above LIFE_LIST_MIN_CONFIDENCE within a rolling 24h,
-#                      or one ~100% hit.
+#                      one ~100% hit, OR (cumulative path) LIFE_LIST_CUMULATIVE_HITS
+#                      hits at/above LIFE_LIST_CUMULATIVE_CONFIDENCE all-time.
 # Keep these in sync with the pipeline.
 PRESERVE_MIN_CONFIDENCE  = 0.60
 LIFE_LIST_MIN_CONFIDENCE = 0.85
 LIFE_LIST_MIN_HITS = 3
+LIFE_LIST_CUMULATIVE_CONFIDENCE = 0.70
+LIFE_LIST_CUMULATIVE_HITS = 8
 
 # ── Eastern-time bucketing (analytics) ───────────────────────
 # The observatory lives in Emmaus, PA and the box stores *naive UTC* timestamps,
@@ -240,13 +243,21 @@ def species_history(name: str, min_confidence: float = 0.85):
         {"timestamp": r["timestamp"], "confidence": round(r["confidence"], 3)}
         for r in recent_rows
     ]
-    # Life-list progress: this species' qualifying hits (>= the life-list floor)
-    # within the rolling 24h window the writer uses, and whether it's listed yet.
+    # Life-list progress, both paths the writer uses:
+    #   • hits_24h     — qualifying hits (>= the 0.85 floor) within the rolling 24h
+    #   • hits_cumulative — all-time hits at/above the cumulative floor (0.70), the
+    #                    persistent-moderate-evidence path (no time window)
+    # plus whether it's listed yet. The bird card shows whichever path is closer.
     hits_24h = conn.execute(
         "SELECT COUNT(*) FROM detections "
         "WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ? "
         "AND datetime(timestamp) >= datetime('now','-24 hours')",
         (common, scientific, LIFE_LIST_MIN_CONFIDENCE)
+    ).fetchone()[0]
+    hits_cumulative = conn.execute(
+        "SELECT COUNT(*) FROM detections "
+        "WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ?",
+        (common, scientific, LIFE_LIST_CUMULATIVE_CONFIDENCE)
     ).fetchone()[0]
     on_life_list = conn.execute(
         "SELECT 1 FROM lifetime WHERE common_name = ? OR scientific_name = ? LIMIT 1",
@@ -264,6 +275,9 @@ def species_history(name: str, min_confidence: float = 0.85):
         "recent":             recent,
         "hits_24h":           hits_24h,
         "life_list_min_hits": LIFE_LIST_MIN_HITS,
+        "hits_cumulative":         hits_cumulative,
+        "life_list_cumulative_hits": LIFE_LIST_CUMULATIVE_HITS,
+        "life_list_cumulative_confidence": LIFE_LIST_CUMULATIVE_CONFIDENCE,
         "on_life_list":       on_life_list,
     }
 

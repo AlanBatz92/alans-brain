@@ -10,6 +10,49 @@
 
 ---
 
+## 2026-06-08 — Life list: cumulative-evidence path + "Lifer" tags + on-page scoring explainer
+
+From a handwritten note: the life list felt **too restrictive** — a backyard regular
+like the **Downy Woodpecker** (heard ~10× averaging ~76%, never 3× ≥85% in 24h) never
+qualified — plus a wish to **tag lifers on the species grid** and to **document how
+confidence is calculated** on the page. Alan picked the **cumulative-evidence** approach
+(over an average-confidence or probabilistic combination).
+
+- **New third qualifying path (box, `birdnet_pipeline.py`).** A species now joins the
+  life list on **any** of: (1) 3 hits ≥ 0.85 in a rolling 24h, (2) one ~100% hit, or
+  (3) **≥ `LIFE_LIST_CUMULATIVE_HITS` (8) detections at ≥ `LIFE_LIST_CUMULATIVE_CONFIDENCE`
+  (0.70) all-time, no time window**. Reasoning: many independent moderate detections are
+  very unlikely to *all* be misfires, so the weight of evidence lists a persistent bird the
+  24h rule kept missing. The gate is now evaluated for any hit ≥ 0.70 (was ≥ 0.85), so a
+  moderate hit can be the one that crosses the cumulative bar. The 0.70 floor sits above the
+  0.60 preserve floor, so pure noise still can't pile up. Tally semantics unchanged
+  (`total_detections` derived live as the ≥ 0.85 count) — a cumulative-path lifer with no
+  ≥ 0.85 hits shows no count badge (the front-end already hides `×0`).
+- **One-shot backfill (`birdstation/backfill_life_list.py`).** The pipeline only evaluates
+  the gate on a *new* detection, so existing persistent species wouldn't list until next
+  heard. This scans `detections` and inserts the missing `lifetime` rows for anything that
+  already qualifies under any path (cumulative ≥ 8 @ ≥ 0.70, one ~100%, or — retroactively —
+  ≥ 3 @ ≥ 0.85 all-time). Backs up the DB first; `--dry-run`. Run once on the box after
+  deploy so the Downy (and friends) list immediately.
+- **`/api/species/{name}` surfaces both paths** (`bird_api.py`): added `hits_cumulative`,
+  `life_list_cumulative_hits`, `life_list_cumulative_confidence` alongside the existing
+  `hits_24h` / `life_list_min_hits`, so the bird card can show progress on whichever route
+  is closer.
+- **Front-end (`?v=obs27`/`obs21`).** (a) **"★ Lifer" tag** on species-grid cards already
+  on the life list — `lifeNameSet()` + a re-render of the grid once `/api/lifetime` lands
+  (the two fetch in parallel). (b) **Bird-card status** now reads "Not yet a lifer — N of 3
+  confident hits (≥85%) in 24h, or M of 8 lifetime hits (≥70%)". (c) **On-page explainer** —
+  a collapsible "ℹ️ How confidence & the life list work" panel on the Birds tab (reusing the
+  Trains panel's `.obs-method*` styling) covering BirdNET's score (model certainty, not a
+  calibrated probability), the display/preserve floors, and the three life-list paths. The
+  life-list popout note was updated to mention the cumulative path too.
+- **Verified on temp DBs:** the backfill qualification logic (Downy via cumulative, a
+  confident bird via the retro 0.85 path; a sub-0.70 bird and a 7-hit bird correctly
+  excluded) and the live gate (lists the Downy on its 8th ≥0.70 hit, never lists a
+  below-floor bird).
+- **Deploy:** box `git pull` → restart `birdnet.service` + `birdapi` → run
+  `backfill_life_list.py` once. Site deploys the page assets.
+
 ## 2026-06-07 — Automatic train detection (auto-publish + strike-off), one-process cascade
 
 Pivoted the train pipeline from **default-deny manual vetting** to **automatic

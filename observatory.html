@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs20">
+  <link rel="stylesheet" href="style.css?v=obs21">
 </head>
 <body>
 
@@ -102,6 +102,37 @@
     <!-- ══════ BIRDS PANEL ══════ -->
     <section class="obs-panel" id="obs-panel-birds" role="tabpanel" aria-labelledby="obs-tab-birds">
       <div class="obs-stats" id="obs-bird-stats"></div>
+
+      <!-- How confidence + the life list work — a collapsible explainer so the page
+           documents its own scoring (matches the Trains "How these are detected" panel). -->
+      <details class="obs-method" id="obs-bird-method">
+        <summary>ℹ️ How confidence &amp; the life list work</summary>
+        <div class="obs-method-body">
+          <p class="obs-method-summary">Every 15-second clip is run through
+            <strong>BirdNET</strong>, which scores how sure it is (0–100%) for each species it
+            thinks it hears. That score is the model's certainty — <em>not</em> a calibrated
+            probability — and distance from the mic, overlapping calls, wind, and traffic all
+            drag it down.</p>
+          <h4 class="obs-method-h">What the page shows</h4>
+          <ul class="obs-method-caveats">
+            <li>The species grid and analytics show detections at <strong>85%+</strong> (the
+              display floor), for clean local data.</li>
+            <li>The box quietly keeps everything down to <strong>60%</strong>, so a bird card's
+              "recent hits" can show the lower, less-certain detections — which is exactly what
+              explains why a frequently-heard bird isn't a lifer yet.</li>
+          </ul>
+          <h4 class="obs-method-h">Making the life list (any one of three)</h4>
+          <ul class="obs-method-caveats">
+            <li><strong>3 detections at 85%+</strong> within a rolling 24 hours — a sustained,
+              confident presence in one day.</li>
+            <li><strong>One ~100% detection</strong> — an unmistakable single hit.</li>
+            <li><strong>8 detections at 70%+</strong>, all-time, with no time limit — the
+              cumulative-evidence path. A bird heard often but never quite at 85% (a backyard
+              regular like the Downy Woodpecker) is still very unlikely to be repeated noise, so
+              the weight of evidence earns it a spot.</li>
+          </ul>
+        </div>
+      </details>
 
       <!-- "Almost a lifer" shelf — species on the cusp of the life list (rolling 24h).
            Hidden by default; observatory.js reveals it only when something's close. -->
@@ -209,7 +240,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs26"></script>
+  <script src="observatory.js?v=obs27"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');
@@ -256,7 +287,7 @@
     <div class="obs-life-modal-head">
       <button class="obs-bcard-close obs-life-modal-close" aria-label="Close">✕</button>
       <h2 class="obs-life-modal-title">Life list <span class="obs-heading-count" id="obs-life-count"></span></h2>
-      <p class="obs-life-modal-note">A species joins after 3 detections at 85%+ within 24 hours — or a single 100% detection.</p>
+      <p class="obs-life-modal-note">A species joins after 3 detections at 85%+ within 24 hours, a single 100% detection, or 8 detections at 70%+ over all time.</p>
       <div class="obs-life-modal-controls">
         <button class="obs-perfect-toggle" id="obs-life-perfect" type="button" aria-pressed="false" title="Show only lifers heard at 100% confidence">💯 100% only</button>
         <select class="obs-sort-select" id="obs-life-sort" aria-label="Sort life list">
