@@ -31,6 +31,7 @@ birdstation/
   train_horn_detector.py  # library + offline CLI: the calibrated horn detector (confirm stage)
   build_horn_profile.py   # CLI: calibrate the horn detector from a category-folder corpus
   train_confirm.py        # CLI: (re)score pending/past candidates after a recalibration
+  train_inspect.py        # CLI: what did the detector see/decide around a time? (forensics)
   sync_train_verdicts.py  # CLI: bridge a sorted corpus -> verdicts; strike off / publish clips
   DETECTION-METHODS.md    # how detection works (cascade, calibration, caveats) — page reads from it
   HORN-CORPUS-GUIDE.md    # the run-the-whole-thing runbook (Windows; sort→calibrate→run)
