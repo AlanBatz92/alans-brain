@@ -38,6 +38,7 @@ const MIN_CONFIDENCE = 0.85;
 const EP = {
   lifetime:     API_BASE + '/api/lifetime',
   trainStats:   API_BASE + '/api/trains/stats',
+  trainsAnalytics: API_BASE + '/api/trains/analytics',
   // Privacy: only events a human has explicitly approved (verdict=train) are
   // ever shown publicly. We ask the API for approved-only AND filter again
   // client-side, so an un-reviewed clip (which could contain conversation
@@ -543,21 +544,100 @@ async function loadAlmost() {
 }
 
 /* ── Trains: stats ── */
-async function loadTrainStats() {
-  const el = document.getElementById('obs-train-stats');
+// Train analytics: counts are TRAINS (passes — clips within a few minutes grouped
+// into one), not raw clips. Powers the headline cards + the "when" charts from one
+// call (GET /api/trains/analytics).
+async function loadTrainAnalytics() {
+  const statsEl = document.getElementById('obs-train-stats');
+  let a;
   try {
-    const d = await fetchJson(EP.trainStats);
-    // Show only confirmed-train counts publicly (the API exposes approved_*
-    // alongside the raw totals; fall back gracefully on an older box build).
-    const confirmed = d.approved_total != null ? d.approved_total : d.total_events;
-    const today     = d.approved_today != null ? d.approved_today : d.today_count;
-    renderStats(el, [
-      { label: 'Confirmed trains', value: (confirmed || 0).toLocaleString() },
-      { label: 'Today',            value: today || 0 },
-    ]);
+    a = await fetchJson(EP.trainsAnalytics);
   } catch (err) {
-    setMsg(el, 'obs-empty', 'Train stats unavailable — the box may be offline.');
+    setMsg(statsEl, 'obs-empty', 'Train stats unavailable — the box may be offline.');
+    return;
   }
+  const gap = a.median_headway_min;
+  const gapLabel = gap == null ? '—'
+    : (gap >= 90 ? (gap / 60).toFixed(1) + ' hr' : Math.round(gap) + ' min');
+  renderStats(statsEl, [
+    { label: 'Trains',       value: (a.total_passes || 0).toLocaleString() },
+    { label: 'Today',        value: a.passes_today || 0 },
+    { label: 'Busiest hour', value: a.busiest_hour == null ? '—' : hourLabel(a.busiest_hour, true), small: true },
+    { label: 'Typical gap',  value: gapLabel, small: true },
+  ]);
+  renderTrainHours(a.by_hour || []);
+  renderTrainDaily(a.by_day || {});
+  renderTrainDow(a.by_dow_hour || []);
+}
+
+// Hour-of-day: when do trains pass (Eastern). Reuses the analytics bar styling.
+function renderTrainHours(byHour) {
+  const el = document.getElementById('obs-train-an-hours');
+  if (!el) return;
+  const max = byHour.reduce((m, n) => Math.max(m, n), 0);
+  if (!max) { setMsg(el, 'obs-empty', 'No trains detected yet.'); return; }
+  const busiest = byHour.indexOf(max);
+  let html = '';
+  for (let h = 0; h < 24; h++) {
+    const n = byHour[h];
+    const pct = Math.round((n / max) * 100);
+    html += '<div class="obs-an-hbar-wrap" title="' +
+        escapeAttr(hourLabel(h, true) + ' — ' + nbCount(n, 'train')) + '">' +
+        '<div class="obs-an-hbar-track"><div class="obs-an-hbar' +
+          (h === busiest ? ' obs-an-hbar-peak' : '') + '" style="height:' + pct + '%"></div></div>' +
+        '<div class="obs-an-haxis">' + (h % 6 === 0 ? hourLabel(h, false) : '') + '</div>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+}
+
+// Trains per calendar day (Eastern). by_day is a {date: count} object.
+function renderTrainDaily(byDayObj) {
+  const section = document.getElementById('obs-train-an-daily-section');
+  const el = document.getElementById('obs-train-an-daily');
+  if (!el) return;
+  const days = Object.keys(byDayObj).sort();
+  if (days.length <= 1) { if (section) section.hidden = true; return; }
+  if (section) section.hidden = false;
+  const max = days.reduce((m, d) => Math.max(m, byDayObj[d]), 0) || 1;
+  const bars = days.map((d) => {
+    const pct = Math.round((byDayObj[d] / max) * 100);
+    return '<div class="obs-an-dbar-wrap" title="' +
+        escapeAttr(ymdLabel(d) + ' — ' + nbCount(byDayObj[d], 'train')) + '">' +
+        '<div class="obs-an-dbar-track"><div class="obs-an-dbar" style="height:' + pct + '%"></div></div>' +
+      '</div>';
+  }).join('');
+  el.innerHTML = '<div class="obs-an-daily-bars">' + bars + '</div>' +
+    '<div class="obs-an-daily-axis"><span>' + escapeHtml(ymdLabel(days[0])) + '</span><span>' +
+      escapeHtml(ymdLabel(days[days.length - 1])) + '</span></div>';
+}
+
+// Day-of-week × hour heatmap (one global color scale so volume compares across
+// days). by_dow_hour is [7][24], row 0 = Monday (Python weekday()).
+function renderTrainDow(dowHour) {
+  const el = document.getElementById('obs-train-an-dow');
+  if (!el) return;
+  const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  let gmax = 0;
+  dowHour.forEach((row) => row.forEach((n) => { if (n > gmax) gmax = n; }));
+  if (!gmax) { setMsg(el, 'obs-empty', 'Not enough data yet for the weekly view.'); return; }
+  let head = '<div class="obs-an-hm-row obs-an-hm-head"><div class="obs-an-hm-label"></div><div class="obs-an-hm-cells">';
+  for (let h = 0; h < 24; h++) head += '<div class="obs-an-hm-tick">' + (h % 6 === 0 ? hourLabel(h, false) : '') + '</div>';
+  head += '</div></div>';
+  const rows = dowHour.map((row, di) => {
+    let cells = '';
+    for (let h = 0; h < 24; h++) {
+      const n = row[h];
+      const alpha = n ? (0.14 + 0.86 * (n / gmax)) : 0;
+      cells += '<div class="obs-an-hm-cell" title="' +
+        escapeAttr(DOW[di] + ' ' + hourLabel(h, true) + ' — ' + nbCount(n, 'train')) + '"' +
+        (alpha ? ' style="background:rgba(45,212,191,' + alpha.toFixed(3) + ')"' : '') + '></div>';
+    }
+    return '<div class="obs-an-hm-row"><div class="obs-an-hm-label">' +
+        '<span class="obs-an-hm-name">' + DOW[di] + '</span></div>' +
+        '<div class="obs-an-hm-cells">' + cells + '</div></div>';
+  }).join('');
+  el.innerHTML = head + rows;
 }
 
 /* ── Trains: recent events with playable clips ── */
@@ -586,18 +666,13 @@ async function loadTrains() {
     const dur  = r.duration_s != null ? Number(r.duration_s).toFixed(1) + 's' : '';
     const db   = r.peak_db    != null ? Math.round(r.peak_db) + ' dB' : '';
     const file = r.clip_path ? r.clip_path.split('/').pop() : '';
-    // Audio shows only for events explicitly published (r.published). Otherwise
-    // the event still appears (time/duration/dB) but its backyard audio stays
-    // private — the clip endpoint 403s, so we don't render a dead player.
-    let clip;
-    if (file && r.published) {
-      clip = '<audio class="obs-clip" controls preload="none" src="' +
-        API_BASE + '/api/trains/clip/' + encodeURIComponent(file) + '"></audio>';
-    } else if (file) {
-      clip = '<div class="obs-clip-missing">🔒 audio kept private</div>';
-    } else {
-      clip = '<div class="obs-clip-missing">clip unavailable</div>';
-    }
+    // Audio is shown only for events explicitly published; otherwise the event
+    // stands on its own (time/duration/dB) with no audio element and no note —
+    // private-by-default is the norm, not worth calling out on every row.
+    const clip = (file && r.published)
+      ? '<audio class="obs-clip" controls preload="none" src="' +
+          API_BASE + '/api/trains/clip/' + encodeURIComponent(file) + '"></audio>'
+      : '';
     return '<div class="obs-train">' +
         '<div class="obs-train-head">' +
           (when ? '<span class="obs-train-when">' + escapeHtml(when) + '</span>' : '') +
@@ -1235,7 +1310,7 @@ function loadAll() {
   // The bird grid + stats for the active period (Today included) all come from
   // loadPeriod now — one consistent Eastern-aligned path. Analytics is only
   // refreshed if it's already been opened (it lazy-loads on first tab open).
-  const refreshes = [loadPeriod(state.period), loadLife(), loadAlmost(), loadTrainStats(), loadTrains(), loadTrainMethod()];
+  const refreshes = [loadPeriod(state.period), loadLife(), loadAlmost(), loadTrainAnalytics(), loadTrains(), loadTrainMethod()];
   if (state.an.loaded) refreshes.push(loadAnalytics(state.an.period));
 
   Promise.allSettled(refreshes).then(() => {

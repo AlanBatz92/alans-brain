@@ -94,8 +94,12 @@ train data a home. ID/class prefix: **`obs-`**.
   `published` (default 0) and `category`. A confirmed train **counts and shows**
   (time/duration/dB) but its **clip audio is served only when `published=1`** — the
   clip endpoint requires `verdict='train' AND published=1`, and `observatory.js`
-  (`?v=obs26`) renders the `<audio>` only when `published`, else a "🔒 audio kept
-  private" note. `category` records the fine class (train/plane/vehicle/…). Migrated
+  (`?v=obs30`) renders the `<audio>` only when `published`, else **nothing** (no
+  per-row note — private is the norm; 2026-06-08). `train_events.detected_at` is
+  tz-aware UTC ISO, so `/api/trains/stats` + `/api/trains/today` count **today in
+  Eastern** via `eastern_today_bounds()` + `datetime(detected_at)` (was a UTC-day
+  `LIKE`, which read 0 every evening once UTC rolled past midnight).
+  `category` records the fine class (train/plane/vehicle/…). Migrated
   idempotently by `bird_api.ensure_train_schema()` + `train_detector`/`train_confirm`
   at startup (preserves any already-public clip). `sync_train_verdicts.py`:
   `reject` strikes off false positives (`verdict='false_positive'`, off the page),
@@ -103,6 +107,14 @@ train data a home. ID/class prefix: **`obs-`**.
   corpus → verdicts. **`data/train-method.json`** + the on-page "How these are
   detected" panel state the live method/parameters/caveats (auto-publish + ~1-in-25
   strike-off margin); full record in `birdstation/DETECTION-METHODS.md`.
+- **Train analytics — count trains + when (2026-06-08).** `GET /api/trains/analytics`
+  groups approved events into **passes** (clips within `pass_gap_min`, default 5 min,
+  = one train) and returns Eastern buckets: `by_hour[24]`, `by_day`, `by_dow_hour[7][24]`,
+  `total_passes`/`passes_today`, `busiest_hour`, `median_headway_min`. The Trains tab
+  (`loadTrainAnalytics()`, `?v=obs30`) shows **pass** counts in the headline cards
+  (Trains / Today / Busiest hour / Typical gap — *not* clip counts) + three charts —
+  **"When trains pass"** (hour-of-day), **"Trains per day"** (>1 day), **"When across
+  the week"** (day×hour heatmap) — reusing the `obs-an-*` analytics CSS.
 - **Confidence gate — three tiers (2026-06-03):** decoupled floors.
   (1) **Preserve 0.60** — the pipeline keeps detections ≥ 0.60 (was 0.35), cutting the
   worst noise but retaining sub-85% *diagnostic* hits. (2) **Display 0.85** — the page
