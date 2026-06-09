@@ -4520,40 +4520,38 @@ nav {
   color: var(--text);
   line-height: 1.15;
 }
+/* Top-right corner group on a species card — the heard-count and, for lifers, a star. */
+.obs-species-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
 .obs-species-count {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--teal);
-  flex-shrink: 0;
 }
-/* "Lifer" tag on a species card — flags birds already on the life list at a glance.
-   Inline after the name so it flows/wraps with it (the name span is the flex item). */
-.obs-lifer-tag {
-  display: inline-block;
-  vertical-align: middle;
-  margin-left: 6px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 0.58rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+/* Lifer star — a small green ★ in the card's top-right corner marks a bird already
+   on the life list, replacing the old "★ Lifer" text pill (less clutter). */
+.obs-lifer-star {
+  font-size: 0.92rem;
+  line-height: 1;
   color: var(--green);
-  background: var(--green-bg);
-  border: 1px solid var(--green-border);
-  border-radius: 999px;
-  padding: 1px 7px;
-  white-space: nowrap;
+  cursor: help;
 }
-/* "N of M on the life list" summary in the period heading — small green accent,
-   reflects the active search / 100%-only filters (counts the displayed species). */
+/* "N of M on the life list" summary — its own caption line under the heading row
+   (no longer crammed beside the 100%-only toggle). Reflects the active search /
+   100%-only filters (counts the displayed species); hidden when there's nothing to say. */
 .obs-lifer-summary {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--green);
-  white-space: nowrap;
+  margin: 8px 0 0;
 }
+.obs-lifer-summary:empty { display: none; }
 .obs-species-sci {
   font-size: 0.76rem;
   font-style: italic;
@@ -4993,6 +4991,64 @@ nav {
 .obs-bcard-status--on {
   color: var(--green);
   font-weight: 700;
+}
+/* "How it makes the life list" — the three qualifying paths with this bird's count
+   in each; the path(s) it currently meets are tinted green and marked ✓. */
+.obs-bcard-method-cap {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin: 5px 0 8px;
+}
+.obs-bcard-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.obs-bcard-method {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  padding: 8px 12px;
+}
+.obs-bcard-method--met { background: var(--green-bg); }
+.obs-bcard-method-mark {
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+  font-weight: 800;
+  color: var(--text-dim);
+}
+.obs-bcard-method-mark--met { color: var(--green); }
+.obs-bcard-method-label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  color: var(--text);
+  line-height: 1.25;
+}
+.obs-bcard-method-note {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+.obs-bcard-method-count {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.obs-bcard-method--met .obs-bcard-method-count { color: var(--green); }
+/* Recent-hits caption — grounds the % pills as BirdNET "confidence". */
+.obs-bcard-hits-note {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 4px;
 }
 .obs-bcard-hits {
   display: flex;

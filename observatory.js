@@ -158,7 +158,7 @@ function truncateExtract(text) {
 }
 
 function confPill(conf) {
-  return '<span class="obs-conf ' + confClass(conf) + '">' +
+  return '<span class="obs-conf ' + confClass(conf) + '" title="BirdNET confidence">' +
            Math.round((conf || 0) * 100) + '%</span>';
 }
 
@@ -379,10 +379,11 @@ function renderPeriodGroups() {
     return '<div class="obs-species" role="button" tabindex="0"' +
         ' data-name="' + escapeAttr(g.common_name) + '" data-sci="' + escapeAttr(g.scientific_name || '') + '">' +
         '<div class="obs-species-top">' +
-          '<span class="obs-species-name">' + escapeHtml(g.common_name) +
-            (isLifer ? ' <span class="obs-lifer-tag" title="On the life list">★ Lifer</span>' : '') +
+          '<span class="obs-species-name">' + escapeHtml(g.common_name) + '</span>' +
+          '<span class="obs-species-meta">' +
+            '<span class="obs-species-count">×' + g.count + '</span>' +
+            (isLifer ? '<span class="obs-lifer-star" title="On the life list" aria-label="On the life list">★</span>' : '') +
           '</span>' +
-          '<span class="obs-species-count">×' + g.count + '</span>' +
         '</div>' +
         (g.scientific_name ? '<div class="obs-species-sci">' + escapeHtml(g.scientific_name) + '</div>' : '') +
         '<div class="obs-bar"><div class="obs-bar-fill ' + confClass(g.best_confidence) +
@@ -1090,6 +1091,64 @@ function birdCardSkeleton() {
   '</div>';
 }
 
+// The three ways onto the life list, with this bird's standing in each (the count
+// it has and whether that path's bar is met). Answers "how it makes the life list"
+// and surfaces a per-method count, as asked. The 24h figure is the live rolling
+// window; the ~100% and 70%+ figures are all-time. Derived from data /api/species
+// already returns (no box change): ~100% hits come from confidence_series, the 24h
+// and cumulative counts from hits_24h / hits_cumulative.
+function lifeListBreakdown(hist) {
+  const need    = hist.life_list_min_hits || LIFE_LIST_MIN_HITS;
+  const cumNeed = hist.life_list_cumulative_hits || LIFE_LIST_CUMULATIVE_HITS;
+  const cumPct  = Math.round((hist.life_list_cumulative_confidence || LIFE_LIST_CUMULATIVE_CONFIDENCE) * 100);
+  const dispPct = Math.round(MIN_CONFIDENCE * 100);  // 85
+  const hits100 = (hist.confidence_series || []).filter((c) => c >= PERFECT_CONFIDENCE).length;
+  const hits24h = hist.hits_24h || 0;
+  const hitsCum = hist.hits_cumulative || 0;
+  const onList  = !!hist.on_life_list;
+
+  const methods = [
+    { met: hits100 >= 1,       got: hits100, need: 1,
+      label: 'One detection at ~100%',                       note: 'an unmistakable single hit' },
+    { met: hits24h >= need,    got: hits24h, need: need,
+      label: need + ' detections at ' + dispPct + '%+ in 24h', note: 'a confident burst in one day' },
+    { met: hitsCum >= cumNeed, got: hitsCum, need: cumNeed,
+      label: cumNeed + ' detections at ' + cumPct + '%+, all-time', note: 'weight of evidence over time' },
+  ];
+
+  const rows = methods.map((m) => {
+    const mark = m.met
+      ? '<span class="obs-bcard-method-mark obs-bcard-method-mark--met">✓</span>'
+      : '<span class="obs-bcard-method-mark">·</span>';
+    // Met → show the actual count (✓ implies the bar is cleared); not yet → "got / need".
+    const val = m.met ? String(m.got) : m.got + ' / ' + m.need;
+    return '<div class="obs-bcard-method' + (m.met ? ' obs-bcard-method--met' : '') + '">' +
+        mark +
+        '<span class="obs-bcard-method-label">' + escapeHtml(m.label) +
+          '<span class="obs-bcard-method-note">' + escapeHtml(m.note) + '</span>' +
+        '</span>' +
+        '<span class="obs-bcard-method-count">' + escapeHtml(val) + '</span>' +
+      '</div>';
+  }).join('');
+
+  const metCount = methods.filter((m) => m.met).length;
+  let head, caption;
+  if (onList) {
+    head = '<div class="obs-bcard-status obs-bcard-status--on">✓ On the life list</div>';
+    caption = metCount > 0
+      ? 'Currently meets the path' + (metCount > 1 ? 's' : '') + ' marked ✓ below.'
+      : 'It qualified earlier — the counts below are its current standing.';
+  } else {
+    head = '<div class="obs-bcard-status">Not yet a lifer</div>';
+    caption = 'Any one of these three paths earns a spot:';
+  }
+
+  return '<div class="obs-bcard-hits-head">How it makes the life list</div>' +
+    head +
+    '<div class="obs-bcard-method-cap">' + escapeHtml(caption) + '</div>' +
+    '<div class="obs-bcard-methods">' + rows + '</div>';
+}
+
 function birdCardContent(commonName, scientificName, wiki, hist) {
   const hasPhoto = wiki && wiki.photo;
   let html = '';
@@ -1144,26 +1203,14 @@ function birdCardContent(commonName, scientificName, wiki, hist) {
     '</div>';
   }
 
-  // Recent hits — the last 10 detections (newest first), each with its confidence
-  // and time. Makes the life-list math legible at a glance: a species shown here
-  // but not on the life list simply hasn't logged enough qualifying hits within
-  // the rolling 24h window yet (e.g. 2 of 3), or its hits are spread too far apart.
+  // How it makes the life list — the three qualifying paths, this bird's count in
+  // each, and which it currently meets (✓). Replaces the old single-line status.
+  // Followed by recent hits — the last 10 detections (newest first) with confidence
+  // + time, reaching down to the 0.60 preserve floor so the lower diagnostic hits
+  // that explain a not-yet-lifer are visible.
   if (hist && Array.isArray(hist.recent) && hist.recent.length > 0) {
-    const need    = hist.life_list_min_hits || 3;
-    const cumNeed = hist.life_list_cumulative_hits || LIFE_LIST_CUMULATIVE_HITS;
-    const cumPct  = Math.round((hist.life_list_cumulative_confidence || LIFE_LIST_CUMULATIVE_CONFIDENCE) * 100);
-    let status;
-    if (hist.on_life_list) {
-      status = '<div class="obs-bcard-status obs-bcard-status--on">✓ On the life list</div>';
-    } else {
-      // Two routes in — show progress on both (whichever fills first lists it):
-      // 3 confident hits (≥85%) within 24h, or 8 lifetime hits at ≥70%.
-      const got    = Math.min(hist.hits_24h || 0, need);
-      const cumGot = Math.min(hist.hits_cumulative || 0, cumNeed);
-      status = '<div class="obs-bcard-status">Not yet a lifer — ' + got + ' of ' + need +
-        ' confident hits (≥85%) in 24h, or ' + cumGot + ' of ' + cumNeed +
-        ' lifetime hits (≥' + cumPct + '%)</div>';
-    }
+    html += lifeListBreakdown(hist);
+
     const items = hist.recent.map((h) => {
       const ms   = parseTime(h.timestamp);
       const when = ms != null ? shortDate(ms) + ' · ' + clockTime(ms) : '';
@@ -1175,7 +1222,9 @@ function birdCardContent(commonName, scientificName, wiki, hist) {
     html += '<div class="obs-bcard-hits-head">Recent hits' +
         '<span class="obs-bcard-hits-sub">last ' + hist.recent.length + '</span>' +
       '</div>' +
-      status +
+      // Grounds the percentages as "confidence" right where they're listed, so a
+      // visitor who meets the word cold elsewhere on the page has the context.
+      '<div class="obs-bcard-hits-note">Each detection’s confidence — how sure BirdNET was — newest first.</div>' +
       '<div class="obs-bcard-hits">' + items + '</div>';
   }
 

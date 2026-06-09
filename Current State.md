@@ -138,8 +138,8 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs28` +
-  `style.css?v=obs22` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs31` +
+  `style.css?v=obs23` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -149,30 +149,43 @@ train data a home. ID/class prefix: **`obs-`**.
   `bird-info.js` handles fetch + 30-day localStorage cache + `data/bird-overrides.json`
   hook. `GET /api/species/{name}` serves history. Degrades gracefully if either source
   is offline. CC BY-SA attribution shown. Classes: `.obs-bcard-*`.
-- **Lifer tags + scoring explainer (2026-06-08):** species-grid cards for birds already on
-  the life list carry a small **"★ Lifer"** pill (`.obs-lifer-tag`; `isLiferGroup()` matches
-  common **or** scientific name against `lifeNameSet()`; the grid re-renders once `/api/lifetime`
-  lands since the two fetch in parallel). The period heading also shows a **"★ N of M on the
-  life list"** summary (`#obs-period-lifers`, `.obs-lifer-summary`) that respects the active
-  search / 100%-only filters (it counts the displayed `groups`). A collapsible
+- **Lifer star + scoring explainer (2026-06-08; star + own-line summary 2026-06-09):**
+  species-grid cards for birds already on the life list carry a small green **★** in the
+  card's top-right corner next to the ×count (`.obs-species-meta` group + `.obs-lifer-star`;
+  replaced the old wordy "★ Lifer" pill for less clutter; `isLiferGroup()` matches common
+  **or** scientific name against `lifeNameSet()`; the grid re-renders once `/api/lifetime`
+  lands since the two fetch in parallel). A **"★ N of M on the life list"** summary
+  (`#obs-period-lifers`, `.obs-lifer-summary`) — respecting the active search / 100%-only
+  filters — now sits on **its own caption line under the heading row** (was crammed into the
+  `<h2>` beside the "💯 100% only" toggle; block-level, `:empty`-hidden). A collapsible
   **"ℹ️ How confidence & the life list work"** panel
   (`#obs-bird-method`, static HTML reusing `.obs-method*`) sits below the Birds stat cards and
   documents BirdNET's score (model certainty, *not* a calibrated probability), the
   display/preserve floors, and the three life-list paths.
-- **Recent hits on the bird card (2026-06-03; cumulative path 2026-06-08):** below the stats
-  grid, each card lists the **last 10 detections** (newest first) with a confidence pill +
-  date·time, plus a one-line life-list status — either "✓ On the life list" or "Not yet a
-  lifer — N of 3 confident hits (≥85%) in 24h, or M of 8 lifetime hits (≥70%)" (both
-  qualifying routes, from `/api/species`'s `hits_24h` + `hits_cumulative`). The list reaches down to the **0.60 preserve
-  floor** (separate query in `/api/species`), so sub-85% diagnostic hits are visible
-  (colour-graded mid/low) — making the life-list math legible at a glance (why a
-  heard-but-unlisted species hasn't qualified). The card's summary stats (Heard Here /
-  Best ID) stay at the 0.85 display floor. `/api/species/{name}` returns `recent[]`
-  (last 10 `{timestamp, confidence}` ≥ 0.60), `hits_24h` (≥ 0.85 in 24h),
-  `life_list_min_hits`, `hits_cumulative` (≥ 0.70 all-time) + `life_list_cumulative_hits`
-  / `life_list_cumulative_confidence` (the cumulative-evidence path), and `on_life_list`.
-  Classes: `.obs-bcard-hits*`, `.obs-bcard-status*`, `.obs-lifer-tag`.
-  Next: step 4 detail view (sparkline + by-hour histogram).
+- **Life-list breakdown + recent hits on the bird card (2026-06-03; cumulative path 2026-06-08;
+  three-path breakdown 2026-06-09):** below the stats grid, a **"How it makes the life list"**
+  mini-panel (`lifeListBreakdown()`, `.obs-bcard-method*`) lists the **three qualifying paths**,
+  **each with this bird's count** and a green **✓** on the path(s) it currently meets — One
+  detection at ~100% (count of ≥ 0.995 hits, derived client-side from `confidence_series`),
+  3 at 85%+ in 24h (`hits_24h`), 8 at 70%+ all-time (`hits_cumulative`). A lifer reads "✓ On the
+  life list" + "Currently meets the path(s) marked ✓"; a lifer that qualified earlier but is
+  quiet now (no path met live) gets an honest "it qualified earlier" caption instead of a
+  contradiction; a non-lifer sees the rows as progress ("2 / 3", "5 / 8"). This replaced the
+  old single status line and surfaces *which* method(s) qualify it + each method's count.
+  Below it, each card lists the **last 10 detections** (newest first) with a confidence pill +
+  date·time, under a caption — "Each detection's confidence — how sure BirdNET was — newest
+  first" — that **grounds the % as "confidence"** (every `confPill` also gained a
+  `title="BirdNET confidence"`). The hits list reaches down to the **0.60 preserve floor**
+  (separate query in `/api/species`), so sub-85% diagnostic hits are visible (colour-graded
+  mid/low) — making the life-list math legible at a glance. The card's summary stats (Heard
+  Here / Best ID) stay at the 0.85 display floor. `/api/species/{name}` returns `recent[]`
+  (last 10 `{timestamp, confidence}` ≥ 0.60), `confidence_series` (all ≥ 0.85, for the ~100%
+  count), `hits_24h` (≥ 0.85 in 24h), `life_list_min_hits`, `hits_cumulative` (≥ 0.70 all-time)
+  + `life_list_cumulative_hits` / `life_list_cumulative_confidence` (the cumulative-evidence
+  path), and `on_life_list`. Classes: `.obs-bcard-hits*`, `.obs-bcard-status*`,
+  `.obs-bcard-method*`, `.obs-lifer-star`. Next: step 4 detail view (sparkline + by-hour
+  histogram); optional box-side "record the qualifying method at insert" for exact historical
+  attribution (ROADMAP §3).
 - **Timeline + search (2026-06-01; period-aware stats 2026-06-02):** period selector
   (Today / Yesterday / This week / This month / This year / All) above the species grid;
   search input filters by name client-side. `GET /api/detections/grouped?start=&end=&min_confidence=`
@@ -269,7 +282,7 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs22`, `observatory.js?v=obs28`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs23`, `observatory.js?v=obs31`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

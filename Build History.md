@@ -10,6 +10,47 @@
 
 ---
 
+## 2026-06-09 — Observatory Birds: lifer star, life-list breakdown on the card, less-crowded heading, "confidence" grounded
+
+Four front-end tweaks to the Birds tab from Alan's notes, all in `observatory.js`
+(`?v=obs31`) + `style.css` (`?v=obs23`) — **no box change** (everything reuses what
+`/api/species` and `/api/lifetime` already return):
+
+- **Lifer star instead of "★ Lifer" text.** The species-grid cards dropped the
+  word-pill for a small green **★** tucked into the card's top-right corner next to
+  the ×count (`.obs-species-meta` group + `.obs-lifer-star`; the old `.obs-lifer-tag`
+  pill CSS is gone). Less clutter, same at-a-glance "this one's a lifer" read.
+- **"How it makes the life list" breakdown on the expanded bird card.** Replaced the
+  single status line with a three-row mini-panel (`lifeListBreakdown()`,
+  `.obs-bcard-method*`) — the three qualifying paths, **each with this bird's count**
+  and a green **✓** on the one(s) it currently meets:
+  - **One detection at ~100%** — count of ≥ `PERFECT_CONFIDENCE` (0.995) hits, all-time
+    (derived client-side from `confidence_series`).
+  - **3 detections at 85%+ in 24h** — the live rolling-24h count (`hits_24h`).
+  - **8 detections at 70%+, all-time** — `hits_cumulative`.
+  A lifer reads "✓ On the life list" + "Currently meets the path(s) marked ✓"; if it
+  qualified earlier and is quiet now (no path met live) the caption honestly says so
+  rather than contradicting itself. A non-lifer sees the same three rows as progress
+  ("2 / 3", "5 / 8"). This shows *which* method(s) qualify it and folds each method's
+  count onto the card, per the note. (Pinpointing the exact *historical* trigger, and a
+  cumulative "qualified N times" tally, would need a box-side change — record the
+  qualifying method on the `lifetime` row at insert; deferred, noted in ROADMAP §3.)
+- **Less-crowded heading.** The "★ N of M on the life list" summary moved out of the
+  `<h2>` (where it sat right beside the "💯 100% only" toggle) onto its **own caption
+  line** under the heading row (`.obs-lifer-summary` is now block-level, hidden via
+  `:empty` when there's nothing to show).
+- **"Confidence" grounded where the numbers are.** Visitors meet "confidence" cold in
+  the explainer title. Now the bird card's recent-hits list carries a caption — "Each
+  detection's confidence — how sure BirdNET was — newest first" — right above the %
+  pills, and every `confPill` gained a `title="BirdNET confidence"`, so the term has
+  context the first time it's seen.
+
+Verified the breakdown logic on a standalone harness across five scenarios (lifer via
+each path, the Downy-style cumulative case, a quiet "qualified earlier" lifer, and a
+not-yet-lifer); `node --check` clean. Addresses the Observatory items in ROADMAP §3.
+
+---
+
 ## 2026-06-08 — `train_inspect.py`: forensic "why was this train missed?" tool
 
 After a real train ~10:30 PM didn't appear on the dashboard, Alan wanted a way to

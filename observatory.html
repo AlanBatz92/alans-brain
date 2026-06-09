@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs22">
+  <link rel="stylesheet" href="style.css?v=obs23">
 </head>
 <body>
 
@@ -155,7 +155,7 @@
       </div>
 
       <div class="obs-heading-row">
-        <h2 class="obs-heading"><span id="obs-period-heading">Heard today</span> <span class="obs-heading-count" id="obs-period-count"></span> <span class="obs-lifer-summary" id="obs-period-lifers"></span></h2>
+        <h2 class="obs-heading"><span id="obs-period-heading">Heard today</span> <span class="obs-heading-count" id="obs-period-count"></span></h2>
         <div class="obs-heading-controls">
           <button class="obs-perfect-toggle" id="obs-perfect" type="button" aria-pressed="false" title="Show only species heard at 100% confidence">💯 100% only</button>
           <select class="obs-sort-select" id="obs-period-sort" aria-label="Sort species">
@@ -165,6 +165,7 @@
           </select>
         </div>
       </div>
+      <p class="obs-lifer-summary" id="obs-period-lifers"></p>
       <div class="obs-species-grid" id="obs-today"></div>
     </section>
 
@@ -251,7 +252,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs30"></script>
+  <script src="observatory.js?v=obs31"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');
