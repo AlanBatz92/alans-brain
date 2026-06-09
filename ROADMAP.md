@@ -151,6 +151,15 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-08** — **Train analytics: count trains + when** (largely lands §3a). New
+  `GET /api/trains/analytics` groups detection clips into **passes** (clips within ~5 min =
+  one train) and returns Eastern hour/day/day-of-week buckets + median headway. The Trains tab
+  now leads with **pass** counts (Trains / Today / Busiest hour / Typical gap) and three charts —
+  "When trains pass" (hour), "Trains per day", and a "When across the week" day×hour heatmap —
+  reusing the `obs-an-*` analytics styling (`?v=obs30`). Fixes the "221 clips looks like a lot"
+  by counting de-duped passes. Also same-day: auto-detection went live + post-deploy fixes
+  (Eastern "today" count, dropped the per-row audio-private note). See `Build History.md`.
+
 - **2026-06-08** — Observatory: **life list cumulative-evidence path + "Lifer" tags + scoring
   explainer.** From a note that the life list was too restrictive (the Downy Woodpecker — ~10
   detections averaging ~76%, never 3×≥85% in 24h — never qualified). Added a **third

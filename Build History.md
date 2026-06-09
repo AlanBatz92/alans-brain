@@ -10,6 +10,32 @@
 
 ---
 
+## 2026-06-08 — Train analytics: count trains (passes) + when they pass
+
+Alan: "I'm interested in counting trains and when they pass through more than
+anything else." Built the pass-grouped analytics that turn raw detection *clips*
+into actual *trains*.
+
+- **`GET /api/trains/analytics`** — approved train events grouped into **passes**
+  (clips within `pass_gap_min`, default 5 min, are the same train — one pass can
+  fire several horn-blast clips), then bucketed **Eastern**: `by_hour[24]`,
+  `by_day{date:count}`, `by_dow_hour[7][24]`, plus `total_passes`, `passes_today`,
+  `busiest_hour`, and the **median headway** (typical wait between trains). All in
+  Python (train volume is low); detected_at parsed via `fromisoformat` → Eastern.
+  Verified the grouping (5 clips incl. a 3-clip burst → 3 passes) + buckets.
+- **Trains tab** (`observatory.js?v=obs30`): `loadTrainAnalytics()` replaces the
+  clip-count stat cards with **pass** counts — *Trains / Today / Busiest hour /
+  Typical gap* — and renders **"When trains pass"** (hour-of-day), **"Trains per
+  day"** (hidden until >1 day), and a **"When across the week"** day×hour heatmap,
+  reusing the bird-analytics CSS (`obs-an-*`). This also fixes the "221 looks like a
+  lot" confusion: the headline is now passes (de-duped), not clips.
+
+The detector logs confirmed the live cascade is healthy (real-time "Candidate
+train" / "Candidate false_positive"). Needs `birdapi` restarted on the box; site
+auto-deploys `?v=obs30`. Largely lands ▶ Next #3a (train analytics).
+
+---
+
 ## 2026-06-08 — Trains: post-deploy fixes (Eastern "today" + drop per-row audio note)
 
 After auto-detection went live (PR #8), the Trains tab showed **0 today** despite

@@ -580,6 +580,82 @@ def trains_today():
     return [dict(r) for r in rows]
 
 
+@app.get("/api/trains/analytics")
+def trains_analytics(pass_gap_min: float = 5.0):
+    """
+    Approved train events grouped into *passes* — clips within `pass_gap_min`
+    minutes are the same train (one pass can fire several clips) — then bucketed
+    by Eastern hour-of-day, calendar day, and day-of-week×hour, plus the median
+    *headway* (typical wait between passes). This is the "count trains and when
+    they pass" view; counts are PASSES, not raw clips.
+    """
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT detected_at, duration_s, peak_db FROM train_events "
+        "WHERE verdict = 'train' ORDER BY detected_at ASC"
+    ).fetchall()
+    conn.close()
+
+    def to_eastern(dt):
+        return dt.astimezone(_EASTERN) if _EASTERN is not None else dt.astimezone(timezone.utc)
+
+    # Group consecutive events into passes.
+    gap = timedelta(minutes=pass_gap_min)
+    passes = []            # each: {start (UTC aware), clips, peak_db, max_dur}
+    last = None
+    for r in rows:
+        try:
+            dt = datetime.fromisoformat(r["detected_at"])
+        except (ValueError, TypeError):
+            continue
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        dur, db = (r["duration_s"] or 0.0), r["peak_db"]
+        if last is None or dt - last > gap:
+            passes.append({"start": dt, "clips": 1, "peak_db": db, "max_dur": dur})
+        else:
+            p = passes[-1]
+            p["clips"] += 1
+            if db is not None and (p["peak_db"] is None or db > p["peak_db"]):
+                p["peak_db"] = db
+            p["max_dur"] = max(p["max_dur"], dur)
+        last = dt
+
+    # Eastern buckets.
+    by_hour = [0] * 24
+    by_dow_hour = [[0] * 24 for _ in range(7)]   # 0=Mon … 6=Sun (Python weekday)
+    by_day = {}
+    for p in passes:
+        e = to_eastern(p["start"])
+        by_hour[e.hour] += 1
+        by_dow_hour[e.weekday()][e.hour] += 1
+        d = e.date().isoformat()
+        by_day[d] = by_day.get(d, 0) + 1
+
+    # Headway: minutes between consecutive pass starts (median = typical wait).
+    starts = [p["start"] for p in passes]
+    headways = sorted((starts[i + 1] - starts[i]).total_seconds() / 60.0
+                      for i in range(len(starts) - 1))
+    median_headway = headways[len(headways) // 2] if headways else None
+
+    start_iso, end_iso = eastern_today_bounds()
+    e_start, e_end = datetime.fromisoformat(start_iso), datetime.fromisoformat(end_iso)
+    passes_today = sum(1 for p in passes if e_start <= p["start"] < e_end)
+
+    return {
+        "pass_gap_min":       pass_gap_min,
+        "total_passes":       len(passes),
+        "total_clips":        len(rows),
+        "passes_today":       passes_today,
+        "by_hour":            by_hour,
+        "by_dow_hour":        by_dow_hour,
+        "by_day":             dict(sorted(by_day.items())),
+        "median_headway_min": round(median_headway, 1) if median_headway is not None else None,
+        "busiest_hour":       max(range(24), key=lambda h: by_hour[h]) if any(by_hour) else None,
+        "peak_day":           max(by_day.items(), key=lambda kv: kv[1])[0] if by_day else None,
+    }
+
+
 @app.get("/api/trains/clips", dependencies=[Depends(require_key)])
 def list_clips():
     # Reviewer-only: lists every clip on disk (including un-vetted ones), so it's
