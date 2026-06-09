@@ -69,15 +69,25 @@ events → schedule prior → acoustic fingerprint (details in the plan).
   (the tally counts ≥ 0.85); revisit if that reads oddly.
 - **Later:** per-species thresholds (some calls are easier to ID than others).
 
-### 3a. Train analytics — `Birds | Trains` toggle on the Analytics tab  (design: `PLAN-train-analytics.md`)
-**New (2026-06-05).** Add a `Birds | Trains` toggle to the Analytics tab that swaps the
-dataset and re-renders — reusing the stat cards, hour chart, and per-day chart, swapping
-in a **day-of-week × hour heatmap**, **duration/loudness histograms**, and a **headway**
-("typical wait between passes") card. Backed by a new approved-only
-`GET /api/trains/analytics` (mirrors `/api/analytics`' Eastern bucketing). **Gated on train
-data:** the detector must be producing **vetted** events first (ties to ▶ Next #3 / the
-`PLAN-train-vetting.md` review loop). Front-end scaffold (the toggle + empty state) can land
-ahead of the data. Full build order + endpoint shape in `PLAN-train-analytics.md`.
+### 3a. Train analytics — **foundation shipped 2026-06-08**, next additions below  (design: `PLAN-train-analytics.md`)
+**Foundation done:** `GET /api/trains/analytics` (events → **passes**; Eastern hour / day /
+day-of-week buckets + median headway) and a Trains-tab section — pass counts (Trains / Today /
+Busiest hour / Typical gap), an hour-of-day chart, a per-day chart, and a day×hour heatmap.
+
+**Next additions (queued 2026-06-08, all build on the pass + timestamp data):**
+- **Headway over time / "next train usually around…"** — predictive: from the timestamps,
+  surface the typical times trains come (and when one's "due"). Per-hour/day headway trend.
+- **Duration & loudness distributions** — how long / how loud passes are (`duration_s`,
+  `peak_db` already on every event); histograms + maybe a loudness-over-time view.
+- **"Compared to usual"** — today's pass count vs. a trailing baseline ("8 trains today ·
+  typically ~12"). Needs a baseline computation (shared idea with the birds backlog §3b).
+- **Weather correlation** — join pass volume/timing against `weather.js` data
+  (temp/wind/precip). The most *uniquely yours* one (stitches two home-grown systems); needs a
+  weather-history join. Also tracked in §3b for birds — could share the join.
+
+**Original idea (still open):** fold trains into the Analytics tab as a `Birds | Trains`
+toggle (vs. the current dedicated Trains-tab section). Optional re-placement; full design in
+`PLAN-train-analytics.md`.
 
 ### 3b. Observatory ideas backlog — re-prioritized 2026-06-05
 Building on the Analytics tab / `GET /api/analytics` / bird cards. Tags: **[new]** = added
