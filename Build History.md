@@ -10,6 +10,25 @@
 
 ---
 
+## 2026-06-08 — `train_inspect.py`: forensic "why was this train missed?" tool
+
+After a real train ~10:30 PM didn't appear on the dashboard, Alan wanted a way to
+replay what the detector saw and decided. New `train_inspect.py` (pure stdlib, on
+the box): give it an Eastern time (`"10:30pm"`, `22:30`, `"2026-06-08 22:30"`, or
+nothing = now) and a ±window, and it lists the `train_events` candidates around it —
+**confirmed AND rejected** — with verdict, peak dB, duration, and clip (incl. an
+on-disk/purged marker; `--play` plays each). Box clock is UTC, so it converts
+Eastern → UTC for you. The output pinpoints the failure stage: **nothing in the
+window** = a stage-1 trigger miss (no clip was ever saved — the horn didn't trip
+the loose trigger); a candidate with **✗ rejected** = the calibrated confirm turned
+down a real horn (add it to the corpus + recalibrate); **✓ train** = it was detected,
+so a no-show is a display/timezone issue. Empty windows also print the nearest
+candidate before/after. Verified locally (windowed view, empty/trigger-miss case,
+all time-parse forms). Documents the one real gap: a stage-1 miss leaves no audio
+to replay (the stream isn't continuously recorded).
+
+---
+
 ## 2026-06-08 — Train analytics: count trains (passes) + when they pass
 
 Alan: "I'm interested in counting trains and when they pass through more than
