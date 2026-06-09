@@ -94,8 +94,12 @@ train data a home. ID/class prefix: **`obs-`**.
   `published` (default 0) and `category`. A confirmed train **counts and shows**
   (time/duration/dB) but its **clip audio is served only when `published=1`** — the
   clip endpoint requires `verdict='train' AND published=1`, and `observatory.js`
-  (`?v=obs26`) renders the `<audio>` only when `published`, else a "🔒 audio kept
-  private" note. `category` records the fine class (train/plane/vehicle/…). Migrated
+  (`?v=obs29`) renders the `<audio>` only when `published`, else **nothing** (no
+  per-row note — private is the norm; 2026-06-08). `train_events.detected_at` is
+  tz-aware UTC ISO, so `/api/trains/stats` + `/api/trains/today` count **today in
+  Eastern** via `eastern_today_bounds()` + `datetime(detected_at)` (was a UTC-day
+  `LIKE`, which read 0 every evening once UTC rolled past midnight).
+  `category` records the fine class (train/plane/vehicle/…). Migrated
   idempotently by `bird_api.ensure_train_schema()` + `train_detector`/`train_confirm`
   at startup (preserves any already-public clip). `sync_train_verdicts.py`:
   `reject` strikes off false positives (`verdict='false_positive'`, off the page),

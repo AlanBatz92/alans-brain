@@ -10,6 +10,36 @@
 
 ---
 
+## 2026-06-08 — Trains: post-deploy fixes (Eastern "today" + drop per-row audio note)
+
+After auto-detection went live (PR #8), the Trains tab showed **0 today** despite
+many Jun-8 events, and every row carried a "🔒 audio kept private" label.
+
+- **"Today" now means today in Eastern.** `/api/trains/stats` (`today_count`,
+  `approved_today`) and `/api/trains/today` used a **UTC-day** `detected_at LIKE
+  '<utc-date>%'`, so once UTC rolled past midnight (evening Eastern) all
+  Eastern-today events fell off → 0. New `eastern_today_bounds()` computes the UTC
+  window for the Eastern day and queries `datetime(detected_at) >= datetime(?) AND
+  < datetime(?)` — same fix the bird endpoints already use. `train_events.detected_at`
+  is **tz-aware** UTC ISO (`…+00:00`); verified SQLite `datetime()` parses the offset
+  and the window counts correctly.
+- **Dropped the per-row "audio kept private" note** (`observatory.js?v=obs29`): a
+  confirmed train with no published audio now just shows its time/duration/dB —
+  audio-private is the default, not worth labeling on every row. Audio still renders
+  only when `published=1`.
+
+Both verified locally (SQLite window test; `node --check`). **Needs `birdapi`
+restarted on the box** to take effect; the site auto-deploys `?v=obs29`.
+
+**Note on the 221 "confirmed trains":** that count came from `train_confirm.py
+--rescore` scoring the **backlog** of 565 pending candidates the live detector had
+saved since May 31 (221 confirmed, 344 rejected) — not a single day. It also counts
+*events/clips*, and one train pass can span several clips (>30s apart), so the real
+number of train *passes* is lower; pass-level dedup is part of the planned train
+analytics view. Worth spot-checking a sample and striking off any false positives.
+
+---
+
 ## 2026-06-08 — Life list: cumulative-evidence path + "Lifer" tags + on-page scoring explainer
 
 From a handwritten note: the life list felt **too restrictive** — a backyard regular

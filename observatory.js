@@ -586,18 +586,13 @@ async function loadTrains() {
     const dur  = r.duration_s != null ? Number(r.duration_s).toFixed(1) + 's' : '';
     const db   = r.peak_db    != null ? Math.round(r.peak_db) + ' dB' : '';
     const file = r.clip_path ? r.clip_path.split('/').pop() : '';
-    // Audio shows only for events explicitly published (r.published). Otherwise
-    // the event still appears (time/duration/dB) but its backyard audio stays
-    // private — the clip endpoint 403s, so we don't render a dead player.
-    let clip;
-    if (file && r.published) {
-      clip = '<audio class="obs-clip" controls preload="none" src="' +
-        API_BASE + '/api/trains/clip/' + encodeURIComponent(file) + '"></audio>';
-    } else if (file) {
-      clip = '<div class="obs-clip-missing">🔒 audio kept private</div>';
-    } else {
-      clip = '<div class="obs-clip-missing">clip unavailable</div>';
-    }
+    // Audio is shown only for events explicitly published; otherwise the event
+    // stands on its own (time/duration/dB) with no audio element and no note —
+    // private-by-default is the norm, not worth calling out on every row.
+    const clip = (file && r.published)
+      ? '<audio class="obs-clip" controls preload="none" src="' +
+          API_BASE + '/api/trains/clip/' + encodeURIComponent(file) + '"></audio>'
+      : '';
     return '<div class="obs-train">' +
         '<div class="obs-train-head">' +
           (when ? '<span class="obs-train-when">' + escapeHtml(when) + '</span>' : '') +

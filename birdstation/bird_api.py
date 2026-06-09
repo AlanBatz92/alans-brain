@@ -502,25 +502,41 @@ def get_feed(limit: int = 80):
 # Train Detection Endpoints
 # ─────────────────────────────────────────────────────────────
 
+def eastern_today_bounds():
+    """UTC ISO bounds [start, end) for 'today' in America/New_York, so train
+    counts follow the page's Eastern day rather than the box's UTC day (evening-
+    Eastern events are already next-day UTC and would otherwise drop off). train
+    detected_at is tz-aware UTC ISO; compare with SQLite datetime() on both sides."""
+    if _EASTERN is not None:
+        start = (datetime.now(_EASTERN)
+                 .replace(hour=0, minute=0, second=0, microsecond=0)
+                 .astimezone(timezone.utc))
+    else:
+        start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    return start.isoformat(), (start + timedelta(days=1)).isoformat()
+
+
 @app.get("/api/trains/stats")
 def trains_stats():
-    today = datetime.now(timezone.utc).date().isoformat()
+    start, end = eastern_today_bounds()
     conn  = get_db()
     total = conn.execute("SELECT COUNT(*) FROM train_events").fetchone()[0]
     today_count = conn.execute(
-        "SELECT COUNT(*) FROM train_events WHERE detected_at LIKE ?",
-        (f"{today}%",)
+        "SELECT COUNT(*) FROM train_events "
+        "WHERE datetime(detected_at) >= datetime(?) AND datetime(detected_at) < datetime(?)",
+        (start, end)
     ).fetchone()[0]
     unreviewed = conn.execute(
         "SELECT COUNT(*) FROM train_events WHERE reviewed = 0"
     ).fetchone()[0]
-    # Approved-only counts for the public page (a human marked verdict='train').
+    # Approved-only counts for the public page (verdict='train', auto or verified).
     approved_total = conn.execute(
         "SELECT COUNT(*) FROM train_events WHERE verdict = 'train'"
     ).fetchone()[0]
     approved_today = conn.execute(
-        "SELECT COUNT(*) FROM train_events WHERE verdict = 'train' AND detected_at LIKE ?",
-        (f"{today}%",)
+        "SELECT COUNT(*) FROM train_events WHERE verdict = 'train' "
+        "AND datetime(detected_at) >= datetime(?) AND datetime(detected_at) < datetime(?)",
+        (start, end)
     ).fetchone()[0]
     conn.close()
     return {
@@ -551,13 +567,14 @@ def trains_recent(limit: int = 20, approved: int = 0):
 
 @app.get("/api/trains/today")
 def trains_today():
-    today = datetime.now(timezone.utc).date().isoformat()
+    start, end = eastern_today_bounds()
     conn  = get_db()
     rows  = conn.execute(
         """SELECT * FROM train_events
-           WHERE detected_at LIKE ? AND verdict = 'train'
+           WHERE verdict = 'train'
+             AND datetime(detected_at) >= datetime(?) AND datetime(detected_at) < datetime(?)
            ORDER BY detected_at ASC""",
-        (f"{today}%",)
+        (start, end)
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
