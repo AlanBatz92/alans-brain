@@ -31,7 +31,9 @@ def make_db():
         common_name TEXT,
         scientific_name TEXT,
         first_seen TEXT,
-        total_detections INTEGER DEFAULT 1
+        total_detections INTEGER DEFAULT 1,
+        qualified_via TEXT,
+        qualified_at TEXT
     )""")
     return conn
 
@@ -92,10 +94,13 @@ def species_history(conn, name, min_confidence=0.85):
         "AND datetime(timestamp) >= datetime('now','-24 hours')",
         (common, scientific, LIFE_LIST_MIN_CONFIDENCE),
     ).fetchone()[0]
-    on_life_list = conn.execute(
-        "SELECT 1 FROM lifetime WHERE common_name = ? OR scientific_name = ? LIMIT 1",
+    # SELECT * + dict().get() so a DB predating the qualified_* columns yields None.
+    life_row = conn.execute(
+        "SELECT * FROM lifetime WHERE common_name = ? OR scientific_name = ? LIMIT 1",
         (common, scientific),
-    ).fetchone() is not None
+    ).fetchone()
+    life_d = dict(life_row) if life_row else {}
+    on_life_list = life_row is not None
     return {
         "common_name":        common,
         "scientific_name":    scientific,
@@ -108,6 +113,8 @@ def species_history(conn, name, min_confidence=0.85):
         "hits_24h":           hits_24h,
         "life_list_min_hits": LIFE_LIST_MIN_HITS,
         "on_life_list":       on_life_list,
+        "qualified_via":      life_d.get("qualified_via"),
+        "qualified_at":       life_d.get("qualified_at"),
     }
 
 
@@ -471,6 +478,75 @@ def test_grouped_late_night_eastern_boundary():
     assert r2[0]["common_name"] == "Barred Owl"
 
 
+# ── qualified_via: how a species made the life list (backfill + passthrough) ──
+
+# Import the real classifier so the test tracks the script, not a copy. When this
+# file is run directly, sys.path[0] is birdstation/, so the sibling import resolves.
+from backfill_qualified_via import classify_via
+
+
+def test_classify_grandfathered_grackle():
+    # The motivating case: on the list from before the 0.85 bar. Best 0.90 (< ~100%),
+    # 2 hits >= 0.85 (< 3), 6 hits >= 0.70 (< 8) → meets no current path.
+    assert classify_via(0.90, 2, 6) == "grandfathered"
+
+
+def test_classify_instant_100():
+    assert classify_via(0.997, 1, 1) == "instant_100"
+
+
+def test_classify_burst_24h():
+    assert classify_via(0.93, 4, 4) == "burst_24h"
+
+
+def test_classify_cumulative_70():
+    # Never confident (best 0.82 → 0 hits >= 0.85), but 9 hits >= 0.70 → cumulative.
+    assert classify_via(0.82, 0, 9) == "cumulative_70"
+
+
+def test_classify_order_prefers_instant_then_burst():
+    # A ~100% hit wins even if cumulative also satisfied; burst wins over cumulative.
+    assert classify_via(0.999, 5, 20) == "instant_100"
+    assert classify_via(0.90, 3, 20) == "burst_24h"
+
+
+def test_species_returns_qualified_via():
+    conn = make_db()
+    seed(conn, [("2026-06-01 07:00:00", "Common Grackle", "Quiscalus quiscula", 0.90)])
+    # not listed yet → no method
+    r = species_history(conn, "Common Grackle")
+    assert r["on_life_list"] is False
+    assert r["qualified_via"] is None
+    # listed + labelled grandfathered → passes through to the card
+    conn.execute(
+        "INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections, qualified_via) "
+        "VALUES (?,?,?,?,?)",
+        ("Common Grackle", "Quiscalus quiscula", "2026-06-01 07:00:00", 2, "grandfathered"),
+    )
+    conn.commit()
+    r2 = species_history(conn, "Common Grackle")
+    assert r2["on_life_list"] is True
+    assert r2["qualified_via"] == "grandfathered"
+
+
+def test_species_qualified_via_absent_column_is_none():
+    # A DB that predates the qualified_* columns must not error — SELECT * + .get().
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+    conn.execute("CREATE TABLE detections (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                 "timestamp TEXT, common_name TEXT, scientific_name TEXT, confidence REAL)")
+    conn.execute("CREATE TABLE lifetime (common_name TEXT, scientific_name TEXT, "
+                 "first_seen TEXT, total_detections INTEGER)")
+    conn.execute("INSERT INTO detections (timestamp, common_name, scientific_name, confidence) "
+                 "VALUES ('2026-06-01 07:00:00','American Robin','Turdus migratorius',0.90)")
+    conn.execute("INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections) "
+                 "VALUES ('American Robin','Turdus migratorius','2026-06-01 07:00:00',1)")
+    conn.commit()
+    r = species_history(conn, "American Robin")
+    assert r["on_life_list"] is True
+    assert r["qualified_via"] is None   # column absent → None, no crash
+
+
 if __name__ == "__main__":
     tests = [
         test_found_by_common_name,
@@ -496,6 +572,13 @@ if __name__ == "__main__":
         test_grouped_multi_day_accumulates,
         test_grouped_iso_t_timestamps_eastern_boundary,
         test_grouped_late_night_eastern_boundary,
+        test_classify_grandfathered_grackle,
+        test_classify_instant_100,
+        test_classify_burst_24h,
+        test_classify_cumulative_70,
+        test_classify_order_prefers_instant_then_burst,
+        test_species_returns_qualified_via,
+        test_species_qualified_via_absent_column_is_none,
     ]
     failed = 0
     for t in tests:

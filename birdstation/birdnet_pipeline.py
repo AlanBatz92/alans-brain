@@ -68,6 +68,15 @@ def init_db():
             c.execute(f"ALTER TABLE detections ADD COLUMN {col} {decl}")
         except sqlite3.OperationalError:
             pass
+    # lifetime: record HOW/WHEN a species made the life list, so the bird card can
+    # state the exact qualifying path — and flag pre-rules "grandfathered" lifers
+    # (added before the 0.85 bar) instead of showing them as meeting nothing.
+    for col, decl in (("qualified_via", "TEXT"),   # instant_100 / burst_24h / cumulative_70 / grandfathered
+                      ("qualified_at",  "TEXT")):   # ISO timestamp of the qualifying hit
+        try:
+            c.execute(f"ALTER TABLE lifetime ADD COLUMN {col} {decl}")
+        except sqlite3.OperationalError:
+            pass
     conn.commit()
     conn.close()
 
@@ -214,16 +223,21 @@ def parse_and_log(result_file):
                                 (common_name, LIFE_LIST_MIN_CONFIDENCE)
                             )
                             total_qual = c.fetchone()[0]
-                            c.execute(
-                                "INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections) VALUES (?,?,?,?)",
-                                (common_name, scientific_name, now, total_qual)
-                            )
+                            # Which path tipped it — stored on the row (qualified_via)
+                            # so the bird card can state exactly how it qualified, and
+                            # so a current qualifier is distinguishable from a pre-rules
+                            # grandfathered lifer.
                             if instant:
-                                why = "instant ~100%"
+                                via, why = "instant_100", "instant ~100%"
                             elif hits_24h >= LIFE_LIST_MIN_HITS:
-                                why = f"{hits_24h} hits/24h"
+                                via, why = "burst_24h", f"{hits_24h} hits/24h"
                             else:
-                                why = f"{cumulative} hits >= {LIFE_LIST_CUMULATIVE_CONFIDENCE:.0%} (cumulative)"
+                                via, why = "cumulative_70", f"{cumulative} hits >= {LIFE_LIST_CUMULATIVE_CONFIDENCE:.0%} (cumulative)"
+                            c.execute(
+                                "INSERT INTO lifetime (common_name, scientific_name, first_seen, total_detections, qualified_via, qualified_at) "
+                                "VALUES (?,?,?,?,?,?)",
+                                (common_name, scientific_name, now, total_qual, via, now)
+                            )
                             print(f"  *** NEW SPECIES: {common_name} ({why}) ***")
 
                 # Verification clip for life-list-qualifying hits — one per species

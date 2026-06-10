@@ -1091,6 +1091,14 @@ function birdCardSkeleton() {
   '</div>';
 }
 
+// qualified_via codes the box records on the lifetime row → a human phrase for the
+// card. 'grandfathered' (joined before the current rules) is handled separately.
+const VIA_LABEL = {
+  instant_100:   'a single ~100% detection',
+  burst_24h:     '3 detections at 85%+ within 24 hours',
+  cumulative_70: '8 detections at 70%+ over time',
+};
+
 // The three ways onto the life list, with this bird's standing in each (the count
 // it has and whether that path's bar is met). Answers "how it makes the life list"
 // and surfaces a per-method count, as asked. The 24h figure is the live rolling
@@ -1106,6 +1114,7 @@ function lifeListBreakdown(hist) {
   const hits24h = hist.hits_24h || 0;
   const hitsCum = hist.hits_cumulative || 0;
   const onList  = !!hist.on_life_list;
+  const via     = hist.qualified_via || null;
 
   const methods = [
     { met: hits100 >= 1,       got: hits100, need: 1,
@@ -1135,9 +1144,23 @@ function lifeListBreakdown(hist) {
   let head, caption;
   if (onList) {
     head = '<div class="obs-bcard-status obs-bcard-status--on">✓ On the life list</div>';
-    caption = metCount > 0
-      ? 'Currently meets the path' + (metCount > 1 ? 's' : '') + ' marked ✓ below.'
-      : 'It qualified earlier — the counts below are its current standing.';
+    if (via === 'grandfathered') {
+      // The Grackle case: joined under an earlier, lower bar, so it meets none of the
+      // current paths. State the history instead of showing three "failed" rows.
+      caption = 'On the list from before the current rules — it joined under an earlier, ' +
+        'lower confidence bar. Its standing under today’s three paths:';
+    } else if (via && VIA_LABEL[via]) {
+      // Box recorded exactly how it qualified.
+      const qMs  = parseTime(hist.qualified_at);
+      const when = qMs != null ? ' on ' + shortDate(qMs) : '';
+      caption = 'Made the life list by ' + VIA_LABEL[via] + when +
+        '. Its standing under today’s three paths:';
+    } else {
+      // No durable record yet (DB not backfilled / older API) — infer from standing.
+      caption = metCount > 0
+        ? 'Currently meets the path' + (metCount > 1 ? 's' : '') + ' marked ✓ below.'
+        : 'It qualified earlier — the counts below are its current standing.';
+    }
   } else {
     head = '<div class="obs-bcard-status">Not yet a lifer</div>';
     caption = 'Any one of these three paths earns a spot:';

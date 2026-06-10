@@ -130,6 +130,32 @@ def ensure_train_schema():
 ensure_train_schema()
 
 
+def ensure_life_schema():
+    """
+    Idempotently add the lifetime columns that record HOW/WHEN a species made the
+    life list:
+      qualified_via — instant_100 / burst_24h / cumulative_70 / grandfathered
+      qualified_at  — ISO timestamp of the qualifying hit
+    Runs at startup so a plain `git pull` + restart migrates the live DB (same
+    pattern as ensure_train_schema / birdnet_pipeline.init_db). Existing lifers are
+    labelled by the one-shot backfill_qualified_via.py; new ones the pipeline writes.
+    """
+    try:
+        conn = get_db()
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(lifetime)")}
+        if "qualified_via" not in cols:
+            conn.execute("ALTER TABLE lifetime ADD COLUMN qualified_via TEXT")
+        if "qualified_at" not in cols:
+            conn.execute("ALTER TABLE lifetime ADD COLUMN qualified_at TEXT")
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass  # never block API startup on a migration hiccup
+
+
+ensure_life_schema()
+
+
 # ─────────────────────────────────────────────────────────────
 # Bird Detection Endpoints
 # ─────────────────────────────────────────────────────────────
@@ -259,10 +285,15 @@ def species_history(name: str, min_confidence: float = 0.85):
         "WHERE (common_name = ? OR scientific_name = ?) AND confidence >= ?",
         (common, scientific, LIFE_LIST_CUMULATIVE_CONFIDENCE)
     ).fetchone()[0]
-    on_life_list = conn.execute(
-        "SELECT 1 FROM lifetime WHERE common_name = ? OR scientific_name = ? LIMIT 1",
+    # Life-list row (if any) — SELECT * + dict().get() so a DB that predates the
+    # qualified_* columns simply yields None rather than erroring. qualified_via tells
+    # the card exactly how it qualified (and flags a grandfathered, pre-rules lifer).
+    life_row = conn.execute(
+        "SELECT * FROM lifetime WHERE common_name = ? OR scientific_name = ? LIMIT 1",
         (common, scientific)
-    ).fetchone() is not None
+    ).fetchone()
+    life_d = dict(life_row) if life_row else {}
+    on_life_list = life_row is not None
     conn.close()
     return {
         "common_name":        common,
@@ -279,6 +310,8 @@ def species_history(name: str, min_confidence: float = 0.85):
         "life_list_cumulative_hits": LIFE_LIST_CUMULATIVE_HITS,
         "life_list_cumulative_confidence": LIFE_LIST_CUMULATIVE_CONFIDENCE,
         "on_life_list":       on_life_list,
+        "qualified_via":      life_d.get("qualified_via"),
+        "qualified_at":       life_d.get("qualified_at"),
     }
 
 

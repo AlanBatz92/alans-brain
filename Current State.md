@@ -138,7 +138,7 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs31` +
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs32` +
   `style.css?v=obs23` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
@@ -149,7 +149,7 @@ train data a home. ID/class prefix: **`obs-`**.
   `bird-info.js` handles fetch + 30-day localStorage cache + `data/bird-overrides.json`
   hook. `GET /api/species/{name}` serves history. Degrades gracefully if either source
   is offline. CC BY-SA attribution shown. Classes: `.obs-bcard-*`.
-- **Lifer star + scoring explainer (2026-06-08; star + own-line summary 2026-06-09):**
+- **Lifer star + scoring explainer (2026-06-08; star + own-line summary 2026-06-10):**
   species-grid cards for birds already on the life list carry a small green **★** in the
   card's top-right corner next to the ×count (`.obs-species-meta` group + `.obs-lifer-star`;
   replaced the old wordy "★ Lifer" pill for less clutter; `isLiferGroup()` matches common
@@ -163,15 +163,20 @@ train data a home. ID/class prefix: **`obs-`**.
   documents BirdNET's score (model certainty, *not* a calibrated probability), the
   display/preserve floors, and the three life-list paths.
 - **Life-list breakdown + recent hits on the bird card (2026-06-03; cumulative path 2026-06-08;
-  three-path breakdown 2026-06-09):** below the stats grid, a **"How it makes the life list"**
-  mini-panel (`lifeListBreakdown()`, `.obs-bcard-method*`) lists the **three qualifying paths**,
-  **each with this bird's count** and a green **✓** on the path(s) it currently meets — One
-  detection at ~100% (count of ≥ 0.995 hits, derived client-side from `confidence_series`),
-  3 at 85%+ in 24h (`hits_24h`), 8 at 70%+ all-time (`hits_cumulative`). A lifer reads "✓ On the
-  life list" + "Currently meets the path(s) marked ✓"; a lifer that qualified earlier but is
-  quiet now (no path met live) gets an honest "it qualified earlier" caption instead of a
-  contradiction; a non-lifer sees the rows as progress ("2 / 3", "5 / 8"). This replaced the
-  old single status line and surfaces *which* method(s) qualify it + each method's count.
+  three-path breakdown + durable `qualified_via` 2026-06-10):** below the stats grid, a
+  **"How it makes the life list"** mini-panel (`lifeListBreakdown()`, `.obs-bcard-method*`) lists
+  the **three qualifying paths**, **each with this bird's count** and a green **✓** on the path(s)
+  it currently meets — One detection at ~100% (count of ≥ 0.995 hits, derived client-side from
+  `confidence_series`), 3 at 85%+ in 24h (`hits_24h`), 8 at 70%+ all-time (`hits_cumulative`).
+  The caption leads with the **durable record** the box stores (`qualified_via` / `qualified_at`
+  on the `lifetime` row): "Made the life list by *<path>* on *<date>*", or for a **grandfathered**
+  lifer (joined before the current rules — the Common Grackle, on the list but meeting none of
+  today's paths) "On the list from before the current rules — it joined under an earlier, lower
+  confidence bar." The three rows then read as "its standing under today's three paths" (not
+  pass/fail). Falls back to inference ("Currently meets…" / "It qualified earlier…") when
+  `qualified_via` is absent (pre-backfill / older API). A non-lifer sees the rows as progress
+  ("2 / 3", "5 / 8"). This replaced the old single status line and surfaces *which* method(s)
+  qualify it + each method's count.
   Below it, each card lists the **last 10 detections** (newest first) with a confidence pill +
   date·time, under a caption — "Each detection's confidence — how sure BirdNET was — newest
   first" — that **grounds the % as "confidence"** (every `confPill` also gained a
@@ -182,8 +187,9 @@ train data a home. ID/class prefix: **`obs-`**.
   (last 10 `{timestamp, confidence}` ≥ 0.60), `confidence_series` (all ≥ 0.85, for the ~100%
   count), `hits_24h` (≥ 0.85 in 24h), `life_list_min_hits`, `hits_cumulative` (≥ 0.70 all-time)
   + `life_list_cumulative_hits` / `life_list_cumulative_confidence` (the cumulative-evidence
-  path), and `on_life_list`. Classes: `.obs-bcard-hits*`, `.obs-bcard-status*`,
-  `.obs-bcard-method*`, `.obs-lifer-star`. Next: step 4 detail view (sparkline + by-hour
+  path), `on_life_list`, and `qualified_via` / `qualified_at` (how/when it made the list —
+  `instant_100` / `burst_24h` / `cumulative_70` / `grandfathered`). Classes: `.obs-bcard-hits*`,
+  `.obs-bcard-status*`, `.obs-bcard-method*`, `.obs-lifer-star`. Next: step 4 detail view (sparkline + by-hour
   histogram); optional box-side "record the qualifying method at insert" for exact historical
   attribution (ROADMAP §3).
 - **Timeline + search (2026-06-01; period-aware stats 2026-06-02):** period selector
@@ -282,7 +288,7 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs23`, `observatory.js?v=obs31`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs23`, `observatory.js?v=obs32`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 
@@ -361,6 +367,7 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
   - `review_birds.py` — **manual** CLI on the box to confirm life-list detections from their archived clips (correct/wrong/unsure → `detections.verified`); `--stats` prints measured precision by confidence band (calibration data).
   - `purge_bird_clips.py` — `purge-bird-clips.timer` (**daily 04:30**): deletes unreviewed bird clips older than 30 days + aged orphans, keeps labelled (reviewed) clips + recent unreviewed. `--dry-run` supported.
   - `backfill_life_list.py` — **manual one-shot** (not timed): scans `detections` and inserts the missing `lifetime` rows for species that already qualify under any path (cumulative ≥ 8 @ ≥ 0.70, one ~100%, or retroactively ≥ 3 @ ≥ 0.85 all-time). The pipeline only evaluates the gate on a *new* detection, so this catches up persistent species (e.g. the Downy) after the cumulative path shipped. Backs the DB up first; `--dry-run`. Leaves `detections`/Pulse/trains untouched.
+  - `backfill_qualified_via.py` — **manual one-shot** (not timed; 2026-06-10): labels existing `lifetime` rows with **how they qualified** (`qualified_via`: `instant_100` / `burst_24h` / `cumulative_70`, or **`grandfathered`** when a lifer meets none of the current paths — it joined under an earlier, lower bar, e.g. the Common Grackle). Classifies from each species' all-time detection aggregates, mirroring `backfill_life_list.find_qualifiers`' order. Idempotent (only NULL rows), backs up the DB first, `--dry-run`. New lifers get `qualified_via`/`qualified_at` straight from the pipeline; this is just the catch-up for pre-existing ones. The `lifetime.qualified_via`/`qualified_at` columns are added idempotently by `birdnet_pipeline.init_db()` + `bird_api.ensure_life_schema()` at startup, and surfaced by `/api/species` + `/api/lifetime`.
   - `purge_low_confidence.py` — **manual one-shot** (not timed): deletes `detections` with confidence below the preserve floor (default 0.60) — cleanup of the old ≥ 0.35 noise after the floor was raised. Backs the DB up first; `--dry-run` / `--floor` / `--no-backup`. Leaves `lifetime`, Pulse, and train tables untouched. New data stays clean on its own (the pipeline won't write below the floor).
 - **Secrets:** `ANTHROPIC_API_KEY` and `BIRD_API_KEY` live only on the box, moving to `/etc/birdstation.env` (chmod 600) referenced by `EnvironmentFile=`. Never committed; `.gitignore` blocks `*.env`/`*.db`. (The observatory services need no keys.)
 

@@ -21,7 +21,9 @@ CREATE TABLE lifetime (
     common_name TEXT PRIMARY KEY,
     scientific_name TEXT,
     first_seen TEXT,
-    total_detections INTEGER DEFAULT 1
+    total_detections INTEGER DEFAULT 1,
+    qualified_via TEXT,    -- how it made the list: instant_100 / burst_24h / cumulative_70 / grandfathered
+    qualified_at  TEXT     -- ISO timestamp of the qualifying hit (NULL for backfilled/grandfathered)
 );
 
 CREATE TABLE train_events (
@@ -109,6 +111,15 @@ CREATE TABLE feed_digests (
 -- holds the fine vetting class (plane/vehicle/gunshot/...) for future train
 -- analytics; `published` decouples "is a train" (counts + shows) from "serve the
 -- audio" (default 0 = private, since clips are off a backyard mic).
+
+-- migration 2026-06-10: record HOW/WHEN a species made the life list
+-- ALTER TABLE lifetime ADD COLUMN qualified_via TEXT;   -- instant_100 / burst_24h / cumulative_70 / grandfathered
+-- ALTER TABLE lifetime ADD COLUMN qualified_at  TEXT;   -- ISO timestamp of the qualifying hit
+-- Both applied idempotently at startup by birdnet_pipeline.init_db() AND
+-- bird_api.ensure_life_schema(), so a plain `git pull` + restart of either service
+-- migrates the live DB. birdnet_pipeline.py sets them for NEW lifers; the one-shot
+-- backfill_qualified_via.py labels existing rows (grandfathered = on the list but
+-- meeting none of the current paths — joined under an earlier, lower confidence bar).
 
 -- migration 2026-06-05: twice-daily digest (morning + evening, windowed "since
 -- the last brief"). feed_digests gains a `slot` column and a (date, slot) PK so

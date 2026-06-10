@@ -10,7 +10,48 @@
 
 ---
 
-## 2026-06-09 — Observatory Birds: lifer star, life-list breakdown on the card, less-crowded heading, "confidence" grounded
+## 2026-06-10 — Observatory: durable "how it qualified" record (qualified_via) + grandfathered lifers
+
+Follow-up to the bird-card breakdown. The breakdown computed which of the three
+life-list paths a bird *currently* meets — which read as a contradiction for a
+**grandfathered** lifer like the **Common Grackle**: on the list, but (because it
+joined back when the bar was 0.75, before the 0.85 floor went in 2026-06-03) it
+meets none of today's paths, so the card showed "✓ On the life list" above three
+unmet rows. Alan asked how to handle it; we chose the **durable box record** (vs. a
+front-end-only note) so the card can state the truth definitively.
+
+- **Schema (`lifetime`):** two idempotent columns — `qualified_via`
+  (`instant_100` / `burst_24h` / `cumulative_70` / `grandfathered`) and `qualified_at`
+  (ISO timestamp of the qualifying hit). Added by **`birdnet_pipeline.init_db()`** and a
+  new **`bird_api.ensure_life_schema()`** (mirrors `ensure_train_schema`), so a plain
+  `git pull` + restart of *either* service migrates the live DB.
+- **Pipeline writes them for new lifers** — `birdnet_pipeline.py` already derived the
+  qualifying reason for its log line; now it also stores the path code + timestamp on
+  the `INSERT INTO lifetime`.
+- **`/api/species` returns `qualified_via` + `qualified_at`** — read with `SELECT *` +
+  `dict().get()` so a DB that predates the columns yields `None` rather than 500-ing.
+  `/api/lifetime` already `SELECT *`s, so the fields flow through there too.
+- **Backfill (`backfill_qualified_via.py`, new one-shot):** labels existing lifers from
+  their detection history (instant → burst → cumulative → else **grandfathered**),
+  mirroring `backfill_life_list.find_qualifiers`' order. Idempotent (only NULL rows),
+  backs up the DB first, `--dry-run` / `--no-backup`. The Grackle → `grandfathered`.
+- **Front-end (`observatory.js` `?v=obs32`):** `lifeListBreakdown()` now leads with the
+  durable fact — "Made the life list by *<path>* on *<date>*" for a recorded method, or
+  for grandfathered: "On the list from before the current rules — it joined under an
+  earlier, lower confidence bar." The three rows are reframed as "its standing under
+  today's three paths" (not pass/fail). Falls back to the old inference when
+  `qualified_via` is absent (pre-backfill / older API), so nothing breaks before deploy.
+
+Verified: 30 box tests pass (7 new — classifier incl. the grandfathered Grackle, the
+`qualified_via` passthrough, and the absent-column safety); a temp-DB integration run of
+the backfill CLI (old schema → migrate → label instant/burst/cumulative/grandfathered →
+idempotent re-run); and a JS caption harness across all paths. **Deploy:** box `git pull`
+→ restart `birdnet` + `birdapi` → run `backfill_qualified_via.py` once. Closes the
+ROADMAP §3 "record how a species made the list" item.
+
+---
+
+## 2026-06-10 — Observatory Birds: lifer star, life-list breakdown on the card, less-crowded heading, "confidence" grounded
 
 Four front-end tweaks to the Birds tab from Alan's notes, all in `observatory.js`
 (`?v=obs31`) + `style.css` (`?v=obs23`) — **no box change** (everything reuses what

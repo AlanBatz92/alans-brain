@@ -68,13 +68,12 @@ events → schedule prior → acoustic fingerprint (details in the plan).
   A cumulative-path lifer with no ≥ 0.85 hits also shows **no ×count badge** on the life list
   (the tally counts ≥ 0.85); revisit if that reads oddly.
 - **Later:** per-species thresholds (some calls are easier to ID than others).
-- **Optional (box-side) — record *how* a species made the list.** The bird card's "How it
-  makes the life list" breakdown (2026-06-09) shows the three paths + which the bird *currently*
-  meets, derived front-end from `/api/species`. To show the exact **historical** trigger (and a
-  cumulative "qualified N times" tally), record the qualifying method on the `lifetime` row at
-  insert (`birdnet_pipeline.py` + an idempotent column) and return it from `/api/species`
-  /`/api/lifetime`; backfill existing lifers by replaying `detections`. Small, deferred until
-  wanted — the front-end already answers the common case honestly.
+- **✓ Done (2026-06-10) — record *how* a species made the list.** `lifetime` now carries
+  `qualified_via` / `qualified_at`; the pipeline stamps new lifers with the exact path, the
+  one-shot `backfill_qualified_via.py` labels existing ones (incl. **`grandfathered`** for
+  pre-rules lifers like the Grackle), `/api/species` returns them, and the bird card states it.
+  See "Done (recent)". *(Still open if wanted: a cumulative "qualified N times" tally — counting
+  non-overlapping qualifying events over time, not just the first/why.)*
 
 ### 3a. Train analytics — **foundation shipped 2026-06-08**, next additions below  (design: `PLAN-train-analytics.md`)
 **Foundation done:** `GET /api/trains/analytics` (events → **passes**; Eastern hour / day /
@@ -168,7 +167,19 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
-- **2026-06-09** — Observatory Birds polish from Alan's notes (front-end only, no box change;
+- **2026-06-10** — Observatory: **durable "how it qualified" record + grandfathered lifers.**
+  From the Common Grackle reading "✓ On the life list" above three unmet paths (it joined before
+  the 0.85 bar). `lifetime` gained **`qualified_via`** (`instant_100` / `burst_24h` /
+  `cumulative_70` / `grandfathered`) + **`qualified_at`**, migrated idempotently by
+  `birdnet_pipeline.init_db()` + new `bird_api.ensure_life_schema()`. The pipeline stamps new
+  lifers; **`backfill_qualified_via.py`** (new one-shot) labels existing ones; `/api/species`
+  returns both. The bird card (`?v=obs32`) now leads with the durable fact — "Made the life list
+  by *<path>* on *<date>*", or for grandfathered "joined under an earlier, lower confidence bar"
+  — and reframes the three rows as "current standing". 30 box tests (7 new) + a backfill
+  integration run + a JS caption harness. **Deploy:** box `git pull` → restart `birdnet`+`birdapi`
+  → run `backfill_qualified_via.py`. Closes the §3 "record how a species made the list" item.
+
+- **2026-06-10** — Observatory Birds polish from Alan's notes (front-end only, no box change;
   `?v=obs31`/`obs23`): (1) lifer cards now wear a small green **★ in the corner** instead of the
   "★ Lifer" text pill; (2) the bird card gained a **"How it makes the life list" breakdown** —
   the three qualifying paths, each with this bird's count and a ✓ on the path(s) it currently
@@ -176,8 +187,7 @@ into the prose. More fragile; revisit only if the current style feels lacking.
   qualifies it; (3) the **"N of M on the life list" summary moved to its own line** under the
   heading (was crowding the "100% only" toggle); (4) **"confidence" is grounded** where the
   numbers are — a caption over the bird-card recent-hits ("Each detection's confidence — how
-  sure BirdNET was") + a `title` on every % pill. Optional box-side follow-up (exact historical
-  trigger + a "qualified N times" tally) noted in §3. Lands the Observatory items in §3.
+  sure BirdNET was") + a `title` on every % pill. Lands the Observatory items in §3.
 
 - **2026-06-08** — **Train analytics: count trains + when** (largely lands §3a). New
   `GET /api/trains/analytics` groups detection clips into **passes** (clips within ~5 min =
