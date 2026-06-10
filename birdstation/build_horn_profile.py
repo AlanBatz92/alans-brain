@@ -969,6 +969,30 @@ def accuracy_verdict(v: dict) -> str:
             "separable from these sounds at this distance.")
 
 
+def missed_dominant_freqs(files, sr):
+    """
+    For each missed positive (no horn detected), the frequency where its loudest
+    tonal moment sits — searched over 100–1500 Hz. If these cluster outside the
+    chosen horn band, the band is too narrow for that kind of horn; if they're
+    in-band, the clip is faint/short or mislabeled. Returns [(path, freq_hz)].
+    """
+    out = []
+    for f in files:
+        y = load_audio(f, sr)
+        if y is None:
+            continue
+        S = np.abs(librosa.stft(y, n_fft=N_FFT, hop_length=HOP_LENGTH))
+        fr = librosa.fft_frequencies(sr=sr, n_fft=N_FFT)
+        band = (fr >= 100) & (fr <= 1500)
+        if not band.any() or S.shape[1] == 0:
+            continue
+        loud = int(np.argmax(S[band, :].sum(axis=0)))   # loudest frame in-range
+        bidx = np.where(band)[0]
+        peak = bidx[int(np.argmax(S[bidx, loud]))]
+        out.append((f, float(fr[peak])))
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -1014,6 +1038,10 @@ def main():
     ap.add_argument("--pass-gap-min", type=float, default=5.0,
                     help="Clips within this many minutes count as one train pass "
                          "(default 5) — used for pass-level recall.")
+    ap.add_argument("--band", nargs=2, type=float, metavar=("LOW", "HIGH"), default=None,
+                    help="Force the horn band (Hz) instead of auto-deriving it — e.g. "
+                         "--band 180 640 to widen and catch horns the auto band misses. "
+                         "Watch the validation recall/precision tradeoff.")
     ap.add_argument("--no-plots", action="store_true",
                     help="Skip the diagnostic plots (no matplotlib needed).")
     ap.add_argument("--no-validate", action="store_true",
@@ -1056,9 +1084,16 @@ def main():
 
     low_hz, high_hz, peak_hz, peak_contrast, contrast, band_ok = \
         derive_horn_band(pos_spec, neg_spec, freqs)
-    print(f"    derived band: {low_hz:.0f}–{high_hz:.0f} Hz "
-          f"(peak {peak_hz:.0f} Hz, contrast {peak_contrast:.2f}×)"
-          f"{'' if band_ok else '  [low confidence — kept default band]'}\n")
+    if args.band:
+        # Manual override — experiment with a wider band to catch missed horns,
+        # then watch the validation recall/precision tradeoff.
+        low_hz, high_hz, band_ok = float(args.band[0]), float(args.band[1]), True
+        print(f"    forced band: {low_hz:.0f}–{high_hz:.0f} Hz (--band; "
+              f"auto would have been around {peak_hz:.0f} Hz peak)\n")
+    else:
+        print(f"    derived band: {low_hz:.0f}–{high_hz:.0f} Hz "
+              f"(peak {peak_hz:.0f} Hz, contrast {peak_contrast:.2f}×)"
+              f"{'' if band_ok else '  [low confidence — kept default band]'}\n")
 
     # --- 2. Threshold calibration -------------------------------------------
     print("[2/4] Threshold calibration — running detector features over corpus...")
@@ -1119,19 +1154,44 @@ def main():
     else:
         print("    (couldn't time-group clips — filenames lack parseable timestamps)")
 
-    # List the positives where no horn was found at all — worth a listen.
+    # The positives where no horn was found — diagnose WHERE their loudest tone
+    # sits, so a too-narrow band is obvious (and a wider --band is suggested).
     missed = [p for p, c in pos_pairs if c == 0]
     if missed:
+        mfreqs = missed_dominant_freqs(missed, args.sr)
+        below = sum(1 for _, fq in mfreqs if fq < low_hz)
+        above = sum(1 for _, fq in mfreqs if fq > high_hz)
+        inband = len(mfreqs) - below - above
+        suggestion = None
+        if mfreqs and (below + above) >= max(3, len(mfreqs) // 3):
+            fqs = sorted(fq for _, fq in mfreqs)
+            sug_lo = min(low_hz, float(np.floor(pct(fqs, 10) / 10) * 10))
+            sug_hi = max(high_hz, float(np.ceil(pct(fqs, 90) / 10) * 10))
+            suggestion = (sug_lo, sug_hi)
+
         missed_path = outdir / "missed_positives.txt"
         with open(missed_path, "w", encoding="utf-8") as fh:
             fh.write(f"# {len(missed)} positive clip(s) with no horn blast detected "
-                     f"(band {low_hz:.0f}-{high_hz:.0f} Hz, tonality ≥ {tiers['medium']})\n")
-            fh.write("# Listen to these: genuinely faint/absent horn, mislabeled, or "
-                     "horn outside the band?\n")
+                     f"(band {low_hz:.0f}-{high_hz:.0f} Hz, tonality >= {tiers['medium']})\n")
+            fh.write("# 'peak_hz' = where each clip's loudest tone sits (100-1500 Hz "
+                     "search). Outside the band -> the band is too narrow for that horn; "
+                     "in-band -> too faint/short, or mislabeled. Give them a listen.\n")
+            fmap = dict(mfreqs)
             for p in missed:
-                fh.write(Path(p).name + "\n")
+                fq = fmap.get(p)
+                fh.write(f"{Path(p).name}\t{('%.0f Hz' % fq) if fq else '?'}\n")
+
         print(f"    {len(missed)} positive(s) had no detected horn → wrote "
-              f"{missed_path.name} (worth a listen)")
+              f"{missed_path.name}")
+        if mfreqs:
+            print(f"      loudest tone sits: {below} below {low_hz:.0f}Hz · "
+                  f"{inband} in band · {above} above {high_hz:.0f}Hz")
+            if suggestion:
+                print(f"      → many missed horns peak OUTSIDE the band. Re-run with "
+                      f"--band {suggestion[0]:.0f} {suggestion[1]:.0f} to test catching them.")
+            else:
+                print("      → mostly in-band: likely too faint/short, or mislabeled "
+                      "(listen + remove any non-horns from trains/).")
     print()
 
     # Collect any caveats worth surfacing in the report / block.

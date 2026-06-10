@@ -10,6 +10,28 @@
 
 ---
 
+## 2026-06-09 — Horn calibration: missed-horn frequency diagnostic + `--band` override
+
+Recall plateaued (~78% clip / 93% pass): adding a few outlier horn clips to the
+corpus didn't move the auto-derived band (it fits the *median* contrast, so a
+handful of outliers don't shift it), so the same horns kept getting missed. Gave
+`build_horn_profile.py` the means to diagnose and break that plateau:
+- **Missed-horn frequency diagnosis:** for each missed positive,
+  `missed_dominant_freqs()` finds where its loudest tone sits (100–1500 Hz search)
+  and the run reports `N below / in band / M above` the chosen band — with a
+  concrete **`--band LOW HIGH`** suggestion when many peak outside. `missed_positives.txt`
+  now lists each clip with its `peak_hz`, so "the band is too narrow for that horn"
+  vs "too faint/short or mislabeled" is obvious at a glance.
+- **`--band LOW HIGH` override:** force the horn band instead of auto-deriving, to
+  test catching the missed horns and watch the validation recall/precision tradeoff.
+
+Verified on the synthetic corpus (diagnosis reports in/below/above correctly;
+`--band 200 700` overrides + recalibrates and shows the tradeoff). The fix is a
+recurring need for the live refinement loop. (Reminder: the verdict label keys off
+pass-level recall — a stale local clone reads "Decent"; `git pull` → "Strong".)
+
+---
+
 ## 2026-06-08 — `train_inspect.py`: forensic "why was this train missed?" tool
 
 After a real train ~10:30 PM didn't appear on the dashboard, Alan wanted a way to
