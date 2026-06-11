@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs23">
+  <link rel="stylesheet" href="style.css?v=obs24">
 </head>
 <body>
 
@@ -171,10 +171,19 @@
 
     <!-- ══════ ANALYTICS PANEL ══════ -->
     <section class="obs-panel" id="obs-panel-analytics" role="tabpanel" aria-labelledby="obs-tab-analytics" hidden>
-      <div class="obs-stats" id="obs-an-stats"></div>
-      <p class="obs-note">All times in Eastern (Emmaus, PA). Only detections at 85%+ confidence are counted.</p>
 
-      <div class="obs-period-bar">
+      <!-- Dataset switch: the same analytics surface for either signal. Birds is the
+           default; Trains swaps in the train passes (and hides the bird-only views). -->
+      <div class="obs-an-modes" id="obs-an-modes" role="tablist" aria-label="Analytics dataset">
+        <button class="obs-an-mode obs-an-mode-active" id="obs-an-mode-birds" data-mode="birds" role="tab" aria-selected="true">🐦 Birds</button>
+        <button class="obs-an-mode" id="obs-an-mode-trains" data-mode="trains" role="tab" aria-selected="false">🚂 Trains</button>
+      </div>
+
+      <div class="obs-stats" id="obs-an-stats"></div>
+      <p class="obs-note" id="obs-an-note">All times in Eastern (Emmaus, PA). Only detections at 85%+ confidence are counted.</p>
+      <p class="obs-an-hint">Tap any chart to open it larger, with every label and number.</p>
+
+      <div class="obs-period-bar" id="obs-an-period-bar">
         <div class="obs-period-tabs" id="obs-an-periods" role="tablist" aria-label="Analytics time period">
           <button class="obs-period-tab" data-period="today" role="tab" aria-selected="false">Today</button>
           <button class="obs-period-tab" data-period="yesterday" role="tab" aria-selected="false">Yesterday</button>
@@ -185,46 +194,74 @@
         </div>
       </div>
 
-      <h2 class="obs-heading">When the birds sing <span class="obs-heading-count">by hour of day</span></h2>
-      <p class="obs-an-caption">The daily rhythm of the backyard — the dawn chorus and the quiet hours.
-        Columns are shaded by Emmaus' day/night cycle (dawn picked out in gold).</p>
-      <div class="obs-an-hours" id="obs-an-hours"></div>
-      <div class="obs-an-suninfo" id="obs-an-suninfo"></div>
+      <!-- ── Birds dataset ── -->
+      <div id="obs-an-birds">
+        <div class="obs-an-chart-head">
+          <h2 class="obs-heading">When the birds sing <span class="obs-heading-count">by hour of day</span></h2>
+          <button class="obs-an-expand" type="button" data-chart="hours" aria-label="Open this chart larger">⤢</button>
+        </div>
+        <p class="obs-an-caption">The daily rhythm of the backyard — the dawn chorus and the quiet hours.
+          Columns are shaded by Emmaus' day/night cycle (dawn picked out in gold).</p>
+        <div class="obs-an-hours obs-an-tappable" id="obs-an-hours" data-chart="hours" role="button" tabindex="0" aria-label="Open the hourly chart larger"></div>
+        <div class="obs-an-suninfo" id="obs-an-suninfo"></div>
 
-      <h2 class="obs-heading">Who sings when <span class="obs-heading-count">top species × hour</span></h2>
-      <p class="obs-an-caption">Each row is shaded by that species' own busiest hour, so you can see its
-        daily pattern — owls after dark, robins at dawn. Tap a name for its card.</p>
-      <div class="obs-an-heatmap-scroll"><div class="obs-an-heatmap" id="obs-an-heatmap"></div></div>
+        <div class="obs-an-chart-head">
+          <h2 class="obs-heading">Who sings when <span class="obs-heading-count">top species × hour</span></h2>
+          <button class="obs-an-expand" type="button" data-chart="heatmap" aria-label="Open this chart larger">⤢</button>
+        </div>
+        <p class="obs-an-caption">Each row is shaded by that species' own busiest hour, so you can see its
+          daily pattern — owls after dark, robins at dawn. Tap a name for its card.</p>
+        <div class="obs-an-heatmap-scroll"><div class="obs-an-heatmap" id="obs-an-heatmap"></div></div>
 
-      <h2 class="obs-heading">Most heard <span class="obs-heading-count" id="obs-an-top-count"></span></h2>
-      <div class="obs-an-leaderboard" id="obs-an-top"></div>
+        <div class="obs-an-chart-head">
+          <h2 class="obs-heading">Most heard <span class="obs-heading-count" id="obs-an-top-count"></span></h2>
+          <button class="obs-an-expand" type="button" data-chart="leaderboard" aria-label="Open this chart larger">⤢</button>
+        </div>
+        <div class="obs-an-leaderboard" id="obs-an-top"></div>
 
-      <div id="obs-an-daily-section">
-        <h2 class="obs-heading">Activity over time <span class="obs-heading-count">detections per day</span></h2>
-        <div class="obs-an-daily" id="obs-an-daily"></div>
+        <div id="obs-an-daily-section">
+          <div class="obs-an-chart-head">
+            <h2 class="obs-heading">Activity over time <span class="obs-heading-count">detections per day</span></h2>
+            <button class="obs-an-expand" type="button" data-chart="daily" aria-label="Open this chart larger">⤢</button>
+          </div>
+          <div class="obs-an-daily obs-an-tappable" id="obs-an-daily" data-chart="daily" role="button" tabindex="0" aria-label="Open the per-day chart larger"></div>
+        </div>
+      </div>
+
+      <!-- ── Trains dataset (hidden until the Trains switch is on) ── -->
+      <div id="obs-an-trains" hidden>
+        <div class="obs-an-chart-head">
+          <h2 class="obs-heading">When trains pass <span class="obs-heading-count">by hour, Eastern</span></h2>
+          <button class="obs-an-expand" type="button" data-chart="train-hours" aria-label="Open this chart larger">⤢</button>
+        </div>
+        <p class="obs-an-caption">When trains roll through, by hour of day — across all the data so far.</p>
+        <div class="obs-an-hours obs-an-tappable" id="obs-train-an-hours" data-chart="train-hours" role="button" tabindex="0" aria-label="Open the hourly chart larger"></div>
+
+        <div id="obs-train-an-daily-section" hidden>
+          <div class="obs-an-chart-head">
+            <h2 class="obs-heading">Trains per day</h2>
+            <button class="obs-an-expand" type="button" data-chart="train-daily" aria-label="Open this chart larger">⤢</button>
+          </div>
+          <div class="obs-an-daily obs-an-tappable" id="obs-train-an-daily" data-chart="train-daily" role="button" tabindex="0" aria-label="Open the per-day chart larger"></div>
+        </div>
+
+        <div class="obs-an-chart-head">
+          <h2 class="obs-heading">When across the week <span class="obs-heading-count">day × hour</span></h2>
+          <button class="obs-an-expand" type="button" data-chart="train-dow" aria-label="Open this chart larger">⤢</button>
+        </div>
+        <p class="obs-an-caption">The weekly pattern — each cell is a day-of-week and hour, shaded by how many trains passed then.</p>
+        <div class="obs-an-heatmap-scroll"><div class="obs-an-heatmap" id="obs-train-an-dow"></div></div>
       </div>
     </section>
 
     <!-- ══════ TRAINS PANEL ══════ -->
     <section class="obs-panel" id="obs-panel-trains" role="tabpanel" aria-labelledby="obs-tab-trains" hidden>
-      <div class="obs-stats" id="obs-train-stats"></div>
-      <p class="obs-note">Counted as <em>passes</em> — clips within a few minutes are the same train. Detected automatically; a human strikes off the occasional false positive.</p>
+      <p class="obs-note">Recent confirmed train passes. Detected automatically; a human strikes off the occasional false positive. For counts and charts — when they pass, the weekly rhythm — see the 📊 Analytics tab (🚂 Trains).</p>
 
       <details class="obs-method" id="obs-train-method">
         <summary>ℹ️ How these are detected</summary>
         <div class="obs-method-body" id="obs-train-method-body"></div>
       </details>
-
-      <h2 class="obs-heading">When trains pass <span class="obs-heading-count">by hour, Eastern</span></h2>
-      <div class="obs-an-hours" id="obs-train-an-hours"></div>
-
-      <div id="obs-train-an-daily-section" hidden>
-        <h2 class="obs-heading">Trains per day</h2>
-        <div class="obs-an-daily" id="obs-train-an-daily"></div>
-      </div>
-
-      <h2 class="obs-heading">When across the week <span class="obs-heading-count">day × hour</span></h2>
-      <div class="obs-an-heatmap-scroll"><div class="obs-an-heatmap" id="obs-train-an-dow"></div></div>
 
       <h2 class="obs-heading">Recent events</h2>
       <div class="obs-list" id="obs-trains"></div>
@@ -252,7 +289,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs32"></script>
+  <script src="observatory.js?v=obs33"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');
@@ -312,6 +349,21 @@
     <div class="obs-life-modal-body">
       <div class="obs-life" id="obs-life"></div>
     </div>
+  </div>
+</div>
+
+<!-- Chart detail popout — tapping any analytics chart opens an enlarged, fully
+     labeled version (every axis label + a number on each bar). Reuses the life
+     modal shell (bottom sheet on mobile, centered on desktop). -->
+<div id="obs-chart-modal" class="obs-chart-overlay">
+  <div class="obs-chart-backdrop"></div>
+  <div class="obs-chart-sheet" role="dialog" aria-modal="true" aria-label="Chart detail">
+    <div class="obs-chart-modal-head">
+      <button class="obs-bcard-close obs-chart-modal-close" aria-label="Close">✕</button>
+      <h2 class="obs-chart-modal-title" id="obs-chart-title"></h2>
+      <p class="obs-chart-modal-sub" id="obs-chart-sub"></p>
+    </div>
+    <div class="obs-chart-modal-body" id="obs-chart-body"></div>
   </div>
 </div>
 

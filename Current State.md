@@ -33,7 +33,7 @@ a Google Sheet, and a home server called **birdstation**).
 | Setlist to Spotify | `setlist-spotify.html` / `setlist-spotify.js` | Setlists → Spotify playlist |
 | My Week | `weather.html` / `weather.js` | Weather outlook + running/drone scoring |
 | Household Task Tracker | `tasks.html` / `tasks.js` | Passphrase-gated, reads/writes a Google Sheet |
-| Observatory | `observatory.html` / `observatory.js` | BirdNET + train detections from birdstation. Three tabs: 🐦 Birds / 📊 Analytics / 🚂 Trains. Linked from the home Explore grid + nav dropdown. |
+| Observatory | `observatory.html` / `observatory.js` | BirdNET + train detections from birdstation. Three tabs: 🐦 Birds / 📊 Analytics / 🚂 Trains. **Analytics is unified** — a `🐦 Birds \| 🚂 Trains` switch on the Analytics tab (2026-06-11), so train *analytics* live there (not on the Trains tab, which is now just the raw recent-events feed + method panel). Linked from the home Explore grid + nav dropdown. |
 | Tech Stack | `techstack.html` | Interactive SVG node-graph of the full site/hardware stack. Self-contained (inline CSS + JS). Public, no gate. See Tech Stack section below. |
 
 Shared front-end: `style.css` (theme variables + all component styles),
@@ -107,14 +107,18 @@ train data a home. ID/class prefix: **`obs-`**.
   corpus → verdicts. **`data/train-method.json`** + the on-page "How these are
   detected" panel state the live method/parameters/caveats (auto-publish + ~1-in-25
   strike-off margin); full record in `birdstation/DETECTION-METHODS.md`.
-- **Train analytics — count trains + when (2026-06-08).** `GET /api/trains/analytics`
-  groups approved events into **passes** (clips within `pass_gap_min`, default 5 min,
-  = one train) and returns Eastern buckets: `by_hour[24]`, `by_day`, `by_dow_hour[7][24]`,
-  `total_passes`/`passes_today`, `busiest_hour`, `median_headway_min`. The Trains tab
-  (`loadTrainAnalytics()`, `?v=obs30`) shows **pass** counts in the headline cards
-  (Trains / Today / Busiest hour / Typical gap — *not* clip counts) + three charts —
-  **"When trains pass"** (hour-of-day), **"Trains per day"** (>1 day), **"When across
-  the week"** (day×hour heatmap) — reusing the `obs-an-*` analytics CSS.
+- **Train analytics — count trains + when (2026-06-08; unified into the Analytics tab
+  2026-06-11).** `GET /api/trains/analytics` groups approved events into **passes**
+  (clips within `pass_gap_min`, default 5 min, = one train) and returns Eastern buckets:
+  `by_hour[24]`, `by_day`, `by_dow_hour[7][24]`, `total_passes`/`passes_today`,
+  `busiest_hour`, `median_headway_min` (all-time; the endpoint is **not** period-scoped).
+  These now render under **Analytics → 🚂 Trains** (`loadTrainAnalytics()`, called by
+  `loadAnalytics()` when the mode switch is on Trains), **not** on the Trains tab: the
+  headline cards (Trains / Today / Busiest hour / Typical gap — *not* clip counts) +
+  three charts — **"When trains pass"** (hour-of-day), **"Trains per day"** (>1 day),
+  **"When across the week"** (day×hour heatmap) — reuse the `obs-an-*` analytics CSS.
+  The Trains tab is now the **raw feed** (recent events + the "How these are detected"
+  panel) only.
 - **Confidence gate — three tiers (2026-06-03):** decoupled floors.
   (1) **Preserve 0.60** — the pipeline keeps detections ≥ 0.60 (was 0.35), cutting the
   worst noise but retaining sub-85% *diagnostic* hits. (2) **Display 0.85** — the page
@@ -138,8 +142,21 @@ train data a home. ID/class prefix: **`obs-`**.
 - **Times render in Eastern** (`OBS_TZ = America/New_York`). The box runs UTC and
   writes *naive* ISO timestamps; `parseTime` appends `Z` to tz-less values so they
   aren't read in the viewer's local zone (train stamps carry an offset, untouched).
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs32` +
-  `style.css?v=obs23` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Analytics dataset switch + tap-to-detail + numbers on bars (2026-06-11).** The
+  Analytics tab carries a `🐦 Birds | 🚂 Trains` segmented switch (`.obs-an-modes`,
+  `state.an.mode`; `setAnMode()`); `loadAnalytics()` branches by mode (birds →
+  `/api/analytics`, period-scoped; trains → `/api/trains/analytics`, all-time, period
+  bar hidden). Each mode caches its data; `state.an.data` mirrors the active one.
+  **Every bar chart prints its count** above the bar (`.obs-an-bar-num`; bars scale to
+  `BAR_HEADROOM_PCT` 86% so labels don't clip; `compactNum()` → "1.3k"; the per-day
+  chart shows numbers only for ≤ 31 days). **Any chart is tappable** (a ⤢ button in
+  each heading + the bar charts themselves) → `openChartDetail()` opens an enlarged,
+  fully-labeled popout (`#obs-chart-modal`, reuses the life-modal shell; `detailBars` /
+  `detailHeatmap`) — every axis tick, full numbers, cell counts on the train heatmap,
+  the full leaderboard; horizontally scrollable. This is the **mobile** read path (no
+  hover on touch). Shared builders: `hourBarsHtml()` / `dailyChartHtml()`.
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs33` +
+  `style.css?v=obs24` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -288,7 +305,7 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs23`, `observatory.js?v=obs32`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs24`, `observatory.js?v=obs33`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

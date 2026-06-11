@@ -91,9 +91,13 @@ Busiest hour / Typical gap), an hour-of-day chart, a per-day chart, and a day×h
   (temp/wind/precip). The most *uniquely yours* one (stitches two home-grown systems); needs a
   weather-history join. Also tracked in §3b for birds — could share the join.
 
-**Original idea (still open):** fold trains into the Analytics tab as a `Birds | Trains`
-toggle (vs. the current dedicated Trains-tab section). Optional re-placement; full design in
-`PLAN-train-analytics.md`.
+**✓ Done (2026-06-11) — folded trains into the Analytics tab** as a `🐦 Birds | 🚂 Trains`
+switch (the train analytics no longer live on the Trains tab, which is now the raw
+recent-events feed + method panel). Same change added **numbers on every bar** and a
+**tap-any-chart detail popout** (the mobile read path, since hover tooltips don't fire on
+touch). Front-end only; see "Done (recent)" + `Build History.md` (2026-06-11). The
+remaining "Next additions" above (headway-over-time, duration/loudness, compared-to-usual,
+weather) still want a box-side `/api/trains/analytics` expansion + a period-scoped query.
 
 ### 3b. Observatory ideas backlog — re-prioritized 2026-06-05
 Building on the Analytics tab / `GET /api/analytics` / bird cards. Tags: **[new]** = added
@@ -166,6 +170,15 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-11** — Observatory: **unified Analytics + chart polish.** A `🐦 Birds | 🚂 Trains`
+  switch on the Analytics tab folds train analytics in (the Trains tab is now just the raw
+  recent-events feed + method panel — convention now matches birds). Plus **a number on every
+  bar** (`compactNum`, headroom-scaled so labels don't clip) and **tap-any-chart → enlarged
+  detail popout** with full labels/numbers (also the mobile read path — hover tooltips never
+  fire on touch). Front-end only (`?v=obs33` / `obs24`), reuses `/api/analytics` +
+  `/api/trains/analytics`; verified with a builder harness (15) + a DOM/fetch integration
+  harness (18). Lands the §3a "fold trains into the Analytics tab" idea.
 
 - **2026-06-10** — Observatory: **durable "how it qualified" record + grandfathered lifers.**
   From the Common Grackle reading "✓ On the life list" above three unmet paths (it joined before

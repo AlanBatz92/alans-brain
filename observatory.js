@@ -57,7 +57,11 @@ const state = { life: [], lifeLoaded: false, periodGroups: [], period: 'today', 
   // life list at render time (so it tracks whichever of the two loads last).
   almost: [],
   // Analytics tab — lazy-loaded on first open, scoped by its own period selector.
-  an: { period: 'week', data: null, loaded: false } };
+  // `mode` is the dataset switch (🐦 birds / 🚂 trains); each keeps its own last
+  // response so toggling back doesn't necessarily refetch. `data` mirrors the
+  // active mode's data for the chart-detail popout.
+  an: { period: 'week', mode: 'birds', data: null, loaded: false,
+        birds: { data: null }, trains: { data: null } } };
 
 // A detection "reads as 100%" when it rounds to 100% — i.e. >= 0.995, the same
 // threshold the box uses to instant-add a lifer. The 100%-only filter keeps
@@ -544,23 +548,32 @@ async function loadAlmost() {
   renderAlmost();
 }
 
-/* ── Trains: stats ── */
-// Train analytics: counts are TRAINS (passes — clips within a few minutes grouped
-// into one), not raw clips. Powers the headline cards + the "when" charts from one
-// call (GET /api/trains/analytics).
+/* ── Trains: analytics ──
+   Train analytics live on the Analytics tab now (🚂 Trains switch), mirroring the
+   bird analytics rather than crowding the Trains tab. Counts are TRAINS (passes —
+   clips within a few minutes grouped into one), not raw clips, from a single call
+   (GET /api/trains/analytics, all-time). `loadAnalytics` calls this when the switch
+   is on Trains; it renders the headline cards + the "when" charts into the shared
+   analytics containers. Returns false if the box is unreachable (leaves the tab
+   unloaded so a refresh retries). */
 async function loadTrainAnalytics() {
-  const statsEl = document.getElementById('obs-train-stats');
+  setMsg(document.getElementById('obs-train-an-hours'), 'obs-loading', 'Crunching the numbers…');
   let a;
   try {
     a = await fetchJson(EP.trainsAnalytics);
   } catch (err) {
-    setMsg(statsEl, 'obs-empty', 'Train stats unavailable — the box may be offline.');
-    return;
+    setMsg(document.getElementById('obs-train-an-hours'), 'obs-empty',
+      'Train analytics unavailable — the box may be offline.');
+    const statsEl = document.getElementById('obs-an-stats');
+    if (statsEl) statsEl.innerHTML = '';
+    return false;
   }
+  state.an.trains.data = a;
+  state.an.data = a;
   const gap = a.median_headway_min;
   const gapLabel = gap == null ? '—'
     : (gap >= 90 ? (gap / 60).toFixed(1) + ' hr' : Math.round(gap) + ' min');
-  renderStats(statsEl, [
+  renderStats(document.getElementById('obs-an-stats'), [
     { label: 'Trains',       value: (a.total_passes || 0).toLocaleString() },
     { label: 'Today',        value: a.passes_today || 0 },
     { label: 'Busiest hour', value: a.busiest_hour == null ? '—' : hourLabel(a.busiest_hour, true), small: true },
@@ -569,27 +582,18 @@ async function loadTrainAnalytics() {
   renderTrainHours(a.by_hour || []);
   renderTrainDaily(a.by_day || {});
   renderTrainDow(a.by_dow_hour || []);
+  return true;
 }
 
-// Hour-of-day: when do trains pass (Eastern). Reuses the analytics bar styling.
+// Hour-of-day: when do trains pass (Eastern). Reuses the analytics bar styling,
+// with a count drawn above each bar and the custom hover tooltip.
 function renderTrainHours(byHour) {
   const el = document.getElementById('obs-train-an-hours');
   if (!el) return;
   const max = byHour.reduce((m, n) => Math.max(m, n), 0);
   if (!max) { setMsg(el, 'obs-empty', 'No trains detected yet.'); return; }
   const busiest = byHour.indexOf(max);
-  let html = '';
-  for (let h = 0; h < 24; h++) {
-    const n = byHour[h];
-    const pct = Math.round((n / max) * 100);
-    html += '<div class="obs-an-hbar-wrap" title="' +
-        escapeAttr(hourLabel(h, true) + ' — ' + nbCount(n, 'train')) + '">' +
-        '<div class="obs-an-hbar-track"><div class="obs-an-hbar' +
-          (h === busiest ? ' obs-an-hbar-peak' : '') + '" style="height:' + pct + '%"></div></div>' +
-        '<div class="obs-an-haxis">' + (h % 6 === 0 ? hourLabel(h, false) : '') + '</div>' +
-      '</div>';
-  }
-  el.innerHTML = html;
+  el.innerHTML = hourBarsHtml(byHour, 'train', busiest);
 }
 
 // Trains per calendar day (Eastern). by_day is a {date: count} object.
@@ -600,17 +604,10 @@ function renderTrainDaily(byDayObj) {
   const days = Object.keys(byDayObj).sort();
   if (days.length <= 1) { if (section) section.hidden = true; return; }
   if (section) section.hidden = false;
-  const max = days.reduce((m, d) => Math.max(m, byDayObj[d]), 0) || 1;
-  const bars = days.map((d) => {
-    const pct = Math.round((byDayObj[d] / max) * 100);
-    return '<div class="obs-an-dbar-wrap" title="' +
-        escapeAttr(ymdLabel(d) + ' — ' + nbCount(byDayObj[d], 'train')) + '">' +
-        '<div class="obs-an-dbar-track"><div class="obs-an-dbar" style="height:' + pct + '%"></div></div>' +
-      '</div>';
-  }).join('');
-  el.innerHTML = '<div class="obs-an-daily-bars">' + bars + '</div>' +
-    '<div class="obs-an-daily-axis"><span>' + escapeHtml(ymdLabel(days[0])) + '</span><span>' +
-      escapeHtml(ymdLabel(days[days.length - 1])) + '</span></div>';
+  const items = days.map((d) => ({
+    date: d, count: byDayObj[d], tip: ymdLabel(d) + ' — ' + nbCount(byDayObj[d], 'train'),
+  }));
+  el.innerHTML = dailyChartHtml(items);
 }
 
 // Day-of-week × hour heatmap (one global color scale so volume compares across
@@ -630,7 +627,7 @@ function renderTrainDow(dowHour) {
     for (let h = 0; h < 24; h++) {
       const n = row[h];
       const alpha = n ? (0.14 + 0.86 * (n / gmax)) : 0;
-      cells += '<div class="obs-an-hm-cell" title="' +
+      cells += '<div class="obs-an-hm-cell" data-tip="' +
         escapeAttr(DOW[di] + ' ' + hourLabel(h, true) + ' — ' + nbCount(n, 'train')) + '"' +
         (alpha ? ' style="background:rgba(45,212,191,' + alpha.toFixed(3) + ')"' : '') + '></div>';
     }
@@ -765,6 +762,19 @@ function nbCount(n, singular, plural) {
   return n.toLocaleString() + '\u00A0' + (n === 1 ? singular : (plural || singular + 's'));
 }
 
+// A short label for a number drawn directly on a bar, so a big count (1,284) stays
+// legible in a narrow column: 1k+ collapses to "1.3k" / "12k". Tooltips and the
+// chart-detail popout still show the full number; this is just the inline label.
+function compactNum(n) {
+  if (n < 1000) return String(n);
+  const k = n / 1000;
+  return (k >= 10 ? Math.round(k) : (Math.round(k * 10) / 10)) + 'k';
+}
+
+// Bar charts scale to this share of the track height (not the full 100%), leaving
+// a top band for the number printed above each bar so the tallest one never clips.
+const BAR_HEADROOM_PCT = 86;
+
 /* \u2500\u2500 Dawn-chorus shading \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
    The hour-chart caption talks about "the dawn chorus and the quiet hours"; this
    shades the 24 columns by Emmaus' real day/night cycle so you can *see* it. Sun
@@ -872,7 +882,9 @@ function hideTip() {
 // Wire delegated hover tooltips on the chart containers (they persist across
 // re-renders, so one listener each survives every period change).
 function initAnTooltips() {
-  ['obs-an-hours', 'obs-an-heatmap', 'obs-an-daily'].forEach((id) => {
+  ['obs-an-hours', 'obs-an-heatmap', 'obs-an-daily',
+   'obs-train-an-hours', 'obs-train-an-daily', 'obs-train-an-dow',
+   'obs-chart-body'].forEach((id) => {
     const c = document.getElementById(id);
     if (!c) return;
     c.addEventListener('mousemove', (e) => {
@@ -897,6 +909,48 @@ function renderAnStats(a) {
   ]);
 }
 
+// Shared inner markup for the 24-bar hour-of-day charts (birds + trains): a count
+// printed above each bar (compact so it stays legible in a narrow column) and the
+// custom hover tooltip. Bars scale to BAR_HEADROOM_PCT so the top number can't clip.
+function hourBarsHtml(byHour, unit, peak) {
+  const max = byHour.reduce((m, n) => Math.max(m, n), 0) || 1;
+  let html = '';
+  for (let h = 0; h < 24; h++) {
+    const n = byHour[h];
+    const pct = Math.round((n / max) * BAR_HEADROOM_PCT);
+    const tip = hourLabel(h, true) + ' — ' + nbCount(n, unit);
+    html += '<div class="obs-an-hbar-wrap" data-tip="' + escapeAttr(tip) + '">' +
+        '<div class="obs-an-hbar-track">' +
+          '<div class="obs-an-hbar' + (h === peak ? ' obs-an-hbar-peak' : '') +
+            '" style="height:' + pct + '%">' +
+            (n > 0 ? '<span class="obs-an-bar-num">' + escapeHtml(compactNum(n)) + '</span>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="obs-an-haxis">' + (h % 6 === 0 ? hourLabel(h, false) : '') + '</div>' +
+      '</div>';
+  }
+  return html;
+}
+
+// Shared per-day bar chart (birds + trains). items: [{date, count, tip}]. Numbers
+// are drawn above each bar only when there are ≤ 31 of them, so a month-or-less
+// reads cleanly while a year's worth stays uncluttered (the detail popout labels all).
+function dailyChartHtml(items) {
+  const max = items.reduce((m, it) => Math.max(m, it.count), 0) || 1;
+  const showNums = items.length <= 31;
+  const bars = items.map((it) => {
+    const pct = Math.round((it.count / max) * BAR_HEADROOM_PCT);
+    return '<div class="obs-an-dbar-wrap" data-tip="' + escapeAttr(it.tip) + '">' +
+        '<div class="obs-an-dbar-track"><div class="obs-an-dbar" style="height:' + pct + '%">' +
+          (showNums && it.count > 0 ? '<span class="obs-an-bar-num">' + escapeHtml(compactNum(it.count)) + '</span>' : '') +
+        '</div></div>' +
+      '</div>';
+  }).join('');
+  return '<div class="obs-an-daily-bars">' + bars + '</div>' +
+    '<div class="obs-an-daily-axis"><span>' + escapeHtml(ymdLabel(items[0].date)) + '</span><span>' +
+      escapeHtml(ymdLabel(items[items.length - 1].date)) + '</span></div>';
+}
+
 // Hour-of-day activity — 24 vertical bars, the busiest hour highlighted, over a
 // continuous day/night "sky" gradient (dawn glow at sunrise, warm dusk at sunset).
 function renderHourChart(byHour) {
@@ -917,22 +971,10 @@ function renderHourChart(byHour) {
   const busiest = byHour.indexOf(max);
   // One continuous gradient layer behind all the columns, rather than per-column
   // tints (which read as gappy blocks). The bars sit above it (z-index in CSS).
-  let html = shade
+  const bg = shade
     ? '<div class="obs-an-hours-bg" style="background:' + sunGradient(sr, ss) + '"></div>'
     : '';
-  for (let h = 0; h < 24; h++) {
-    const n = byHour[h];
-    const pct = Math.round((n / max) * 100);
-    const tip = hourLabel(h, true) + ' — ' + nbCount(n, 'detection');
-    html += '<div class="obs-an-hbar-wrap" data-tip="' + escapeAttr(tip) + '">' +
-        '<div class="obs-an-hbar-track">' +
-          '<div class="obs-an-hbar' + (h === busiest ? ' obs-an-hbar-peak' : '') +
-            '" style="height:' + pct + '%"></div>' +
-        '</div>' +
-        '<div class="obs-an-haxis">' + (h % 6 === 0 ? hourLabel(h, false) : '') + '</div>' +
-      '</div>';
-  }
-  el.innerHTML = html;
+  el.innerHTML = bg + hourBarsHtml(byHour, 'detection', busiest);
   if (sunEl) {
     sunEl.innerHTML = shade
       ? '<span class="obs-an-suninfo-item">🌅 ' + escapeHtml(clockTime(sun.sunrise.getTime())) + '</span>' +
@@ -1022,23 +1064,53 @@ function renderDaily(byDay) {
   if (!el || !section) return;
   if (!byDay || byDay.length <= 1) { section.hidden = true; return; }
   section.hidden = false;
-  const max = byDay.reduce((m, d) => Math.max(m, d.count), 0) || 1;
-  const bars = byDay.map((d) => {
-    const pct = Math.round((d.count / max) * 100);
-    const tip = escapeAttr(ymdLabel(d.date) + ' — ' +
-      nbCount(d.count, 'detection') + ', ' + nbCount(d.species, 'species', 'species'));
-    return '<div class="obs-an-dbar-wrap" data-tip="' + tip + '">' +
-        '<div class="obs-an-dbar-track"><div class="obs-an-dbar" style="height:' + pct + '%"></div></div>' +
-      '</div>';
-  }).join('');
-  const first = ymdLabel(byDay[0].date);
-  const last  = ymdLabel(byDay[byDay.length - 1].date);
-  el.innerHTML = '<div class="obs-an-daily-bars">' + bars + '</div>' +
-    '<div class="obs-an-daily-axis"><span>' + escapeHtml(first) + '</span><span>' +
-      escapeHtml(last) + '</span></div>';
+  const items = byDay.map((d) => ({
+    date: d.date, count: d.count,
+    tip: ymdLabel(d.date) + ' — ' + nbCount(d.count, 'detection') + ', ' +
+      nbCount(d.species, 'species', 'species'),
+  }));
+  el.innerHTML = dailyChartHtml(items);
+}
+
+// Switch the analytics dataset (🐦 birds / 🚂 trains). Toggles the mode buttons,
+// shows the matching section set + note, hides the bird-only period bar for trains
+// (the train endpoint is all-time), and (re)loads that dataset.
+function setAnMode(mode) {
+  if (mode !== 'trains') mode = 'birds';
+  state.an.mode = mode;
+  state.an.data = mode === 'trains' ? state.an.trains.data : state.an.birds.data;
+
+  document.querySelectorAll('#obs-an-modes .obs-an-mode').forEach((b) => {
+    const on = b.getAttribute('data-mode') === mode;
+    b.classList.toggle('obs-an-mode-active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  const birdsWrap = document.getElementById('obs-an-birds');
+  const trainsWrap = document.getElementById('obs-an-trains');
+  if (birdsWrap)  birdsWrap.hidden  = mode !== 'birds';
+  if (trainsWrap) trainsWrap.hidden = mode !== 'trains';
+
+  // Trains analytics are all-time (the box endpoint isn't period-scoped), so the
+  // period selector only applies to birds — hide it (and reframe the note) on trains.
+  const periodBar = document.getElementById('obs-an-period-bar');
+  if (periodBar) periodBar.hidden = mode === 'trains';
+  const note = document.getElementById('obs-an-note');
+  if (note) {
+    note.textContent = mode === 'trains'
+      ? 'All times in Eastern (Emmaus, PA). Counted as passes — clips within a few minutes are one train. All-time.'
+      : 'All times in Eastern (Emmaus, PA). Only detections at 85%+ confidence are counted.';
+  }
+
+  loadAnalytics(state.an.period);
 }
 
 async function loadAnalytics(period) {
+  if (state.an.mode === 'trains') {
+    const ok = await loadTrainAnalytics();
+    if (ok) state.an.loaded = true;
+    return;
+  }
+
   const { start, end, label } = periodDates(period);
   state.an.period = period;
   state.an.label  = label;
@@ -1070,6 +1142,7 @@ async function loadAnalytics(period) {
     setMsg(hoursEl, 'obs-empty', 'Couldn\'t reach the observatory — it may be offline.');
     return;  // leave state.an.loaded false so reopening/refresh retries
   }
+  state.an.birds.data = a;
   state.an.data = a;
   state.an.loaded = true;
   renderAnStats(a);
@@ -1077,6 +1150,162 @@ async function loadAnalytics(period) {
   renderHeatmap(a.species_hours || []);
   renderLeaderboard(a.top_species || []);
   renderDaily(a.by_day || []);
+}
+
+/* ── Chart detail popout ──────────────────────────────────────
+   Tapping any analytics chart (or its ⤢ button) opens an enlarged, fully-labeled
+   version: every axis tick, a number on each bar, and the full (un-truncated) list
+   for the heatmaps / leaderboard. This is the on-touch path too — the hover tooltip
+   never fires on a phone, so this is how mobile reads the per-bar numbers. */
+
+// Build a big, horizontally-scrollable bar chart for the detail popout. items:
+// [{label, count, tip}]; every bar is numbered and every column labeled.
+function detailBars(items, peakIdx) {
+  const max = items.reduce((m, it) => Math.max(m, it.count), 0) || 1;
+  const colW = items.length > 40 ? 22 : 34;   // narrower columns when there are many
+  const bars = items.map((it, i) => {
+    const pct = Math.round((it.count / max) * BAR_HEADROOM_PCT);
+    return '<div class="obs-an-hbar-wrap" data-tip="' + escapeAttr(it.tip) + '">' +
+        '<div class="obs-an-hbar-track"><div class="obs-an-hbar' +
+          (i === peakIdx ? ' obs-an-hbar-peak' : '') + '" style="height:' + pct + '%">' +
+          (it.count > 0 ? '<span class="obs-an-bar-num">' + escapeHtml(it.count.toLocaleString()) + '</span>' : '') +
+        '</div></div>' +
+        '<div class="obs-an-haxis obs-an-haxis-all">' + escapeHtml(it.label) + '</div>' +
+      '</div>';
+  }).join('');
+  return '<div class="obs-chart-scroll"><div class="obs-an-hours obs-an-hours-detail" style="min-width:' +
+    (items.length * colW) + 'px">' + bars + '</div></div>';
+}
+
+// Heatmap (species×hour or dow×hour) for the popout — larger cells, optional count
+// printed in each cell. rows: [{label, sub, cells:[24], rowMax|globalMax}].
+function detailHeatmap(rows, globalMax, showCellNums) {
+  let head = '<div class="obs-an-hm-row obs-an-hm-head"><div class="obs-an-hm-label"></div><div class="obs-an-hm-cells">';
+  for (let h = 0; h < 24; h++) head += '<div class="obs-an-hm-tick">' + hourLabel(h, false) + '</div>';
+  head += '</div></div>';
+  const body = rows.map((r) => {
+    const max = globalMax || r.cells.reduce((m, n) => Math.max(m, n), 0) || 1;
+    let cells = '';
+    for (let h = 0; h < 24; h++) {
+      const n = r.cells[h];
+      const alpha = n ? (0.14 + 0.86 * (n / max)) : 0;
+      cells += '<div class="obs-an-hm-cell" data-tip="' + escapeAttr(r.label + ' · ' + hourLabel(h, true) + ' — ' + nbCount(n, 'count')) + '"' +
+        (alpha ? ' style="background:rgba(45,212,191,' + alpha.toFixed(3) + ')"' : '') + '>' +
+        (showCellNums && n > 0 ? '<span class="obs-an-hm-num">' + n + '</span>' : '') + '</div>';
+    }
+    return '<div class="obs-an-hm-row"><div class="obs-an-hm-label">' +
+        '<span class="obs-an-hm-name">' + escapeHtml(r.label) + '</span>' +
+        (r.sub ? '<span class="obs-an-hm-total">' + escapeHtml(r.sub) + '</span>' : '') +
+      '</div><div class="obs-an-hm-cells">' + cells + '</div></div>';
+  }).join('');
+  return '<div class="obs-chart-scroll"><div class="obs-an-heatmap obs-an-heatmap-detail">' + head + body + '</div></div>';
+}
+
+const DOW_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+// Open the popout for one chart, built from the active mode's cached data.
+function openChartDetail(key) {
+  const modal = document.getElementById('obs-chart-modal');
+  const titleEl = document.getElementById('obs-chart-title');
+  const subEl = document.getElementById('obs-chart-sub');
+  const body = document.getElementById('obs-chart-body');
+  if (!modal || !body) return;
+  const a = state.an.data;
+  if (!a) return;
+  let title = '', sub = '', html = '';
+
+  if (key === 'hours' || key === 'train-hours') {
+    const byHour = a.by_hour || [];
+    const unit = key === 'train-hours' ? 'train' : 'detection';
+    const max = byHour.reduce((m, n) => Math.max(m, n), 0);
+    const items = byHour.map((n, h) => ({
+      label: hourLabel(h, false), count: n, tip: hourLabel(h, true) + ' — ' + nbCount(n, unit),
+    }));
+    title = key === 'train-hours' ? 'When trains pass' : 'When the birds sing';
+    sub = 'By hour of day, Eastern' + (max ? ' · busiest ' + hourLabel(byHour.indexOf(max), true) : '');
+    html = max ? detailBars(items, byHour.indexOf(max)) : '<p class="obs-empty">No data yet.</p>';
+
+  } else if (key === 'daily' || key === 'train-daily') {
+    const unit = key === 'train-daily' ? 'train' : 'detection';
+    let items;
+    if (key === 'train-daily') {
+      const obj = a.by_day || {};
+      items = Object.keys(obj).sort().map((d) => ({
+        label: ymdLabel(d), count: obj[d], tip: ymdLabel(d) + ' — ' + nbCount(obj[d], unit),
+      }));
+    } else {
+      items = (a.by_day || []).map((d) => ({
+        label: ymdLabel(d.date), count: d.count,
+        tip: ymdLabel(d.date) + ' — ' + nbCount(d.count, unit) +
+          (d.species != null ? ', ' + nbCount(d.species, 'species', 'species') : ''),
+      }));
+    }
+    title = key === 'train-daily' ? 'Trains per day' : 'Activity over time';
+    sub = items.length + ' days';
+    const peak = items.reduce((pi, it, i, arr) => it.count > arr[pi].count ? i : pi, 0);
+    html = items.length ? detailBars(items, peak) : '<p class="obs-empty">No data yet.</p>';
+
+  } else if (key === 'heatmap') {
+    const sh = a.species_hours || [];
+    title = 'Who sings when';
+    sub = sh.length + ' species · each row shaded to its own busiest hour';
+    html = sh.length
+      ? detailHeatmap(sh.map((s) => ({ label: s.common_name, sub: '×' + s.total, cells: s.hours })), null, false)
+      : '<p class="obs-empty">Not enough data yet.</p>';
+
+  } else if (key === 'train-dow') {
+    const dh = a.by_dow_hour || [];
+    let gmax = 0;
+    dh.forEach((row) => row.forEach((n) => { if (n > gmax) gmax = n; }));
+    title = 'When across the week';
+    sub = 'Day-of-week × hour · numbers shown where trains passed';
+    html = gmax
+      ? detailHeatmap(dh.map((row, di) => ({ label: DOW_NAMES[di], cells: row })), gmax, true)
+      : '<p class="obs-empty">Not enough data yet for the weekly view.</p>';
+
+  } else if (key === 'leaderboard') {
+    const top = a.top_species || [];
+    title = 'Most heard';
+    sub = top.length + ' species';
+    if (!top.length) {
+      html = '<p class="obs-empty">No species in this period.</p>';
+    } else {
+      const max = top[0].count || 1;
+      html = '<div class="obs-an-leaderboard obs-an-leaderboard-detail">' + top.map((s, i) => {
+        const pct = Math.round((s.count / max) * 100);
+        return '<div class="obs-an-lb-row" role="button" tabindex="0"' +
+            ' data-name="' + escapeAttr(s.common_name) + '" data-sci="' + escapeAttr(s.scientific_name || '') + '">' +
+            '<span class="obs-an-lb-rank">' + (i + 1) + '</span>' +
+            '<div class="obs-an-lb-main"><div class="obs-an-lb-top">' +
+              '<span class="obs-an-lb-name">' + escapeHtml(s.common_name) + '</span>' +
+              '<span class="obs-an-lb-count">' + s.count.toLocaleString() + '</span>' +
+            '</div><div class="obs-an-lb-track"><div class="obs-an-lb-fill" style="width:' + pct + '%"></div></div></div>' +
+          '</div>';
+      }).join('') + '</div>';
+    }
+  } else {
+    return;
+  }
+
+  titleEl.textContent = title;
+  subEl.textContent = sub;
+  body.innerHTML = html;
+  body.scrollTop = 0;
+  modal.classList.add('obs-chart-open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeChartDetail() {
+  const modal = document.getElementById('obs-chart-modal');
+  if (modal) modal.classList.remove('obs-chart-open');
+  // Don't unlock the page if a bird card is open on top (leaderboard → card).
+  const card = document.getElementById('obs-bird-modal');
+  if (!(card && card.classList.contains('obs-bcard-open'))) document.body.style.overflow = '';
+}
+
+function chartModalOpen() {
+  const m = document.getElementById('obs-chart-modal');
+  return m && m.classList.contains('obs-chart-open');
 }
 
 /* ── Bird card quick-view ── */
@@ -1285,9 +1514,10 @@ function lifeModalOpen() {
 function closeBirdCard() {
   const modal = document.getElementById('obs-bird-modal');
   if (modal) modal.classList.remove('obs-bcard-open');
-  // A bird card can layer over the open life list; only release the page scroll
-  // lock if no other modal is still up.
-  document.body.style.overflow = lifeModalOpen() ? 'hidden' : '';
+  // A bird card can layer over the open life list or the chart popout (its
+  // leaderboard rows open cards); only release the page scroll lock if nothing else
+  // is still up.
+  document.body.style.overflow = (lifeModalOpen() || chartModalOpen()) ? 'hidden' : '';
 }
 
 /* ── Life list popout ──
@@ -1380,9 +1610,11 @@ function loadAll() {
   if (btn) btn.classList.add('spinning');
 
   // The bird grid + stats for the active period (Today included) all come from
-  // loadPeriod now — one consistent Eastern-aligned path. Analytics is only
-  // refreshed if it's already been opened (it lazy-loads on first tab open).
-  const refreshes = [loadPeriod(state.period), loadLife(), loadAlmost(), loadTrainAnalytics(), loadTrains(), loadTrainMethod()];
+  // loadPeriod now — one consistent Eastern-aligned path. The Trains tab is the raw
+  // feed (recent events + method); train *analytics* live on the Analytics tab.
+  // Analytics is only refreshed if it's already been opened (it lazy-loads on first
+  // open) — and then in whichever mode (birds/trains) is active.
+  const refreshes = [loadPeriod(state.period), loadLife(), loadAlmost(), loadTrains(), loadTrainMethod()];
   if (state.an.loaded) refreshes.push(loadAnalytics(state.an.period));
 
   Promise.allSettled(refreshes).then(() => {
@@ -1413,7 +1645,43 @@ function initObservatory() {
     tab.addEventListener('click', () => loadAnalytics(tab.getAttribute('data-period')));
   });
 
-  // Instant hover tooltips on the analytics charts (hour bars, heatmap cells, daily bars)
+  // Analytics dataset switch (🐦 Birds / 🚂 Trains)
+  document.querySelectorAll('#obs-an-modes .obs-an-mode').forEach((btn) => {
+    btn.addEventListener('click', () => setAnMode(btn.getAttribute('data-mode')));
+  });
+
+  // Tap any chart (or its ⤢ button) to open the enlarged detail popout. Delegated on
+  // the whole analytics panel so it survives every re-render; the ⤢ buttons and the
+  // tappable hour/daily charts both carry data-chart. (Heatmap rows / leaderboard
+  // rows keep their own data-name → bird-card click, so we only open the detail from
+  // an explicit [data-chart] target, never a stray tap inside the heatmap.)
+  const anPanel = document.getElementById('obs-panel-analytics');
+  if (anPanel) {
+    anPanel.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-chart]');
+      if (t) openChartDetail(t.getAttribute('data-chart'));
+    });
+    anPanel.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const t = e.target.closest('.obs-an-tappable[data-chart], .obs-an-expand[data-chart]');
+      if (t) { e.preventDefault(); openChartDetail(t.getAttribute('data-chart')); }
+    });
+  }
+
+  // Chart detail popout: backdrop / × close; leaderboard rows inside still open cards
+  const chartModal = document.getElementById('obs-chart-modal');
+  if (chartModal) {
+    chartModal.querySelector('.obs-chart-backdrop').addEventListener('click', closeChartDetail);
+    chartModal.querySelector('.obs-chart-modal-close').addEventListener('click', closeChartDetail);
+  }
+  const chartBody = document.getElementById('obs-chart-body');
+  if (chartBody) {
+    chartBody.addEventListener('click', handleCardActivate);
+    chartBody.addEventListener('keydown', handleCardActivate);
+  }
+
+  // Instant hover tooltips on the analytics charts (hour bars, heatmap cells, daily
+  // bars) — birds, trains, and the detail popout body.
   initAnTooltips();
 
   // Species search (client-side filter, no refetch)
@@ -1514,11 +1782,13 @@ function initObservatory() {
     lifeModal.querySelector('.obs-life-modal-close').addEventListener('click', closeLifeModal);
   }
 
-  // Escape closes the topmost open modal (bird card layers over the life list)
+  // Escape closes the topmost open modal (bird card layers over the life list /
+  // chart popout)
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     const card = document.getElementById('obs-bird-modal');
     if (card && card.classList.contains('obs-bcard-open')) closeBirdCard();
+    else if (chartModalOpen()) closeChartDetail();
     else if (lifeModalOpen()) closeLifeModal();
   });
 

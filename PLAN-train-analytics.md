@@ -1,9 +1,14 @@
 # PLAN — Train analytics (Analytics tab, Birds | Trains toggle)
 
-> Status: **designed, not started** (2026-06-05). Front-end scaffolding can land
-> ahead of data; the box endpoint + real charts wait on the train detector
-> producing a useful volume of **vetted** events. Keep this doc in sync as pieces
-> land (mirror the convention in `PLAN-train-vetting.md`).
+> Status: **shipped** (2026-06-11) — the `🐦 Birds | 🚂 Trains` toggle is live on the
+> Analytics tab. Train analytics (the existing all-time `/api/trains/analytics` — pass
+> counts, hour-of-day, per-day, day-of-week×hour heatmap) render there now, and the
+> Trains tab is the raw recent-events feed. Same change added numbers on every bar and a
+> tap-any-chart detail popout. **Still open** (the "new train-only visuals" below):
+> duration/loudness histograms, a headway card, and a **period-scoped** train endpoint —
+> all need a box-side `/api/trains/analytics` expansion. See `Build History.md`
+> (2026-06-11) and ROADMAP §3a. (Earlier status: designed 2026-06-05; foundation
+> endpoint + Trains-tab charts shipped 2026-06-08.)
 
 ## Why
 

@@ -5324,6 +5324,7 @@ nav {
   align-items: flex-end;
 }
 .obs-an-hbar {
+  position: relative;   /* anchors the value label drawn above the bar */
   width: 100%;
   min-height: 2px;
   background: var(--teal);
@@ -5333,6 +5334,23 @@ nav {
 }
 .obs-an-hbar-wrap:hover .obs-an-hbar { opacity: 0.9; }
 .obs-an-hbar-peak { opacity: 1; background: var(--green); }
+
+/* Count printed just above each bar (hour + daily charts). Sits in the headroom
+   the bars leave (they scale to ~86%), centered, never wrapping. compactNum keeps
+   it short (1.3k) so it stays legible even in a narrow 24-column mobile chart. */
+.obs-an-bar-num {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translate(-50%, -1px);
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  line-height: 1;
+  color: var(--text-muted);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.obs-an-hbar-peak .obs-an-bar-num { color: var(--green); }
 
 /* Dawn-chorus shading — one continuous day/night "sky" gradient behind the bars
    (built in JS from Emmaus' sunrise/sunset). Spans the columns' content box; the
@@ -5517,6 +5535,7 @@ nav {
 }
 .obs-an-dbar-track { width: 100%; height: 100%; display: flex; align-items: flex-end; }
 .obs-an-dbar {
+  position: relative;   /* anchors the value label drawn above the bar */
   width: 100%;
   min-height: 2px;
   background: var(--teal);
@@ -5561,3 +5580,172 @@ nav {
   transition: opacity 0.1s ease, transform 0.1s ease;
 }
 .obs-an-tip-show { opacity: 1; transform: translateY(0); }
+
+/* ── Analytics: dataset switch (🐦 Birds / 🚂 Trains) ──
+   A segmented pill control above the analytics surface; swaps the whole dataset
+   (the bird-only and train-only section sets toggle behind it). */
+.obs-an-modes {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 6px 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.obs-an-mode {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 18px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.obs-an-mode:hover { color: var(--text); }
+.obs-an-mode-active { color: var(--bg-deep); background: var(--teal); }
+
+/* "Tap any chart to open it larger" hint under the stat cards. */
+.obs-an-hint {
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  margin: -4px 0 0;
+}
+
+/* Chart heading row — the <h2> plus a ⤢ expand button on the right. */
+.obs-an-chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 22px;
+}
+.obs-an-chart-head .obs-heading { margin: 0; }
+.obs-an-expand {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, transform 0.12s;
+}
+.obs-an-expand:hover { color: var(--teal); border-color: var(--teal); transform: scale(1.06); }
+
+/* Charts with no inner click target (hour + daily) are themselves tappable. */
+.obs-an-tappable { cursor: zoom-in; }
+.obs-an-tappable:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+/* ── Chart detail popout ──
+   Reuses the life-modal shell (bottom sheet on mobile, centered on desktop). It's
+   how mobile reads the per-bar numbers — the hover tooltip never fires on touch. */
+.obs-chart-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 390;
+  align-items: flex-end;
+  justify-content: center;
+}
+.obs-chart-overlay.obs-chart-open { display: flex; }
+.obs-chart-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 8, 20, 0.78);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.obs-chart-sheet {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 88vh;
+  overflow: hidden;
+  animation: obs-bcard-up 0.22s ease;
+}
+.obs-chart-modal-head {
+  position: relative;
+  flex-shrink: 0;
+  padding: 18px 56px 12px 18px;   /* right padding clears the ✕ */
+  border-bottom: 1px solid var(--border);
+}
+.obs-chart-modal-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.obs-chart-modal-sub {
+  margin: 6px 0 0;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+.obs-chart-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 16px 18px 22px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+/* Horizontal scroll wrapper for the enlarged bar charts / heatmaps. */
+.obs-chart-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+/* Enlarged hour/daily bar chart — taller, every column labeled, numbers always on. */
+.obs-an-hours-detail {
+  height: 280px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 26px 0 0;   /* top room for the value labels */
+  overflow: visible;
+  gap: 4px;
+}
+.obs-an-hours-detail .obs-an-bar-num { font-size: 0.62rem; color: var(--text); }
+.obs-an-haxis-all {
+  height: auto;
+  padding-top: 4px;
+  white-space: nowrap;
+}
+/* Enlarged heatmap — bigger cells, with the count inside where space allows. */
+.obs-an-heatmap-detail { min-width: 660px; }
+.obs-an-heatmap-detail .obs-an-hm-cell {
+  min-width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.obs-an-hm-num {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.obs-an-leaderboard-detail { gap: 6px; }
+
+@media (min-width: 600px) {
+  .obs-chart-overlay { align-items: center; }
+  .obs-chart-sheet {
+    border-radius: 20px;
+    width: min(760px, 92vw);
+    max-height: 88vh;
+  }
+}

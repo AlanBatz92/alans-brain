@@ -10,6 +10,58 @@
 
 ---
 
+## 2026-06-11 — Observatory: unified Analytics (🐦 Birds | 🚂 Trains switch), tap-to-detail charts, numbers on bars
+
+Brought train analytics into the Analytics tab so it follows the same convention as
+birds, per Alan: "the analytics page should have a switch for me to look at train
+data … all train data, including advanced analytics, lives under the train tab,
+which does not follow the convention." Plus two cross-cutting polish asks — every
+bar graph shows its number, and any chart can be tapped to see it in detail
+(parity with what the bird analytics offers, and the fix for mobile, where hover
+tooltips never fire). Front-end only — no box change (reuses the existing
+`/api/analytics` and `/api/trains/analytics`). `?v=obs33` / `style.css?v=obs24`.
+
+- **`🐦 Birds | 🚂 Trains` dataset switch** (`.obs-an-modes`, `state.an.mode`) at the
+  top of the Analytics tab. `setAnMode()` toggles the section sets, swaps the note,
+  and reloads. `loadAnalytics()` branches on mode: birds → `/api/analytics`
+  (unchanged, period-scoped); trains → `loadTrainAnalytics()` → `/api/trains/analytics`.
+  Each mode caches its last response (`state.an.birds.data` / `state.an.trains.data`)
+  and `state.an.data` mirrors the active one for the detail popout.
+- **Train analytics moved off the Trains tab.** The Trains tab is now the **raw feed**
+  — "Recent events" + the "How these are detected" panel (mirrors the Birds tab being
+  the raw/today view). The pass-count stat cards + the hour / per-day / day-of-week×hour
+  charts now live under Analytics → 🚂 Trains, reusing the same `obs-an-*` chart
+  containers (IDs unchanged, relocated in the HTML). The Trains note points at the
+  Analytics tab. Train analytics are all-time (the box endpoint isn't period-scoped),
+  so the period selector is hidden in Trains mode and the note says "All-time".
+- **Numbers on every bar.** New shared `hourBarsHtml()` / `dailyChartHtml()` (birds +
+  trains) print the count above each bar via `.obs-an-bar-num`; bars now scale to
+  `BAR_HEADROOM_PCT` (86%) so the top label never clips. `compactNum()` keeps inline
+  labels short (1.3k / 12k) so a busy 24-column chart stays legible; the per-day chart
+  only prints numbers for ≤ 31 days (a year stays uncluttered — the detail popout
+  labels them all). Tooltips/detail still show the full number.
+- **Tap any chart → detail popout** (`#obs-chart-modal`, reuses the life-modal shell).
+  Each chart heading has a ⤢ button and the bar charts are themselves tappable
+  (`.obs-an-tappable`); `openChartDetail(key)` builds an enlarged, fully-labeled
+  version from the active mode's cached data — every axis tick, a full number on each
+  bar (`detailBars`), the complete heatmap with counts in the cells (`detailHeatmap`,
+  shown for the train day×hour), and the full (un-truncated) leaderboard. Charts scroll
+  horizontally inside the sheet. This is also the **mobile** read path (no hover on
+  touch). Leaderboard rows inside the popout still open the bird card (layered on top);
+  Escape closes the topmost modal.
+- **Responsive:** the mode pill, chart-head + ⤢ row, and the popout all collapse to a
+  bottom sheet on mobile / centered (≤ 760px) on desktop; detail charts scroll-x.
+
+**Verified:** `node --check`; a sandboxed builder harness (15 checks — compactNum,
+bar numbers, peak class, ≤31-day number gate, detail full-numbers + every-column
+axis, heatmap cell numbers); and a DOM+fetch integration harness (18 checks) driving
+the real `loadTrainAnalytics` → stat cards / charts and `openChartDetail` for every
+train key, proving the `state.an.data` wiring. CSS braces balanced. Lands the
+"original idea (still open)" in ROADMAP §3a (fold trains into the Analytics tab via a
+toggle). Not yet exercised against the live box from here; deploys via Vercel.
+
+---
+
 ## 2026-06-10 — Observatory: durable "how it qualified" record (qualified_via) + grandfathered lifers
 
 Follow-up to the bird-card breakdown. The breakdown computed which of the three
