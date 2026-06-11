@@ -27,8 +27,11 @@ refetch). Sort controls added (Recent / Most heard / Least heard).
 
 ### 3. Train vetting — more robust workflow  (design: `PLAN-train-vetting.md`)
 Privacy gate + CLI review (`review_trains.py`) + weekly purge shipped 2026-06-01.
-Next: a **passphrase-gated web review page** (like `tasks.html`) so vetting
-doesn't need SSH — reuse `POST /api/trains/{id}/verdict`, hold the key safely
+**Admin-tool workflow shipped 2026-06-11** — `admin.py box` + the **Trains / Box**
+GUI panel one-click the pull → sort → calibrate → deploy → sync loop (see
+`ADMIN.md` / `COMMANDS.md`), so the day-to-day no longer means remembering CLIs.
+Still open: a **passphrase-gated web review page** (like `tasks.html`) so vetting
+doesn't need SSH at all — reuse `POST /api/trains/{id}/verdict`, hold the key safely
 (don't ship it in static JS), maybe add a key-gated `/api/trains/pending`. Then
 the **"known trains improve detection"** loop: tune thresholds from labelled
 events → schedule prior → acoustic fingerprint (details in the plan).
@@ -170,6 +173,15 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-11** — **Admin tool: modular Box + Git panels + CLI catalog.** `admin.py` gained a
+  `box` group (pull clips / calibrate / deploy profile / sync verdicts / status / restart, all
+  config-driven via `admin-config.json` and each printing the exact ssh/scp it runs) and a `git`
+  group (commit & push from the GUI — publish artwork/photos without a terminal). The GUI got a
+  reusable **`CommandPanel`** base + **BoxPanel**/**GitPanel** (new panels are ~20 lines). Docs:
+  **`ADMIN.md`** (architecture + "Adding a panel") and **`COMMANDS.md`** (the commands-I-forget
+  cookbook). Advances ▶ Next #3 (vetting without raw CLI). Also same day: Trains tab **"Last
+  train" highlight + loudness/duration meters** so the raw feed isn't bare (`?v=obs34`/`obs25`).
 
 - **2026-06-11** — Observatory: **unified Analytics + chart polish.** A `🐦 Birds | 🚂 Trains`
   switch on the Analytics tab folds train analytics in (the Trains tab is now just the raw

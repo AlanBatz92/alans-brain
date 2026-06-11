@@ -10,6 +10,59 @@
 
 ---
 
+## 2026-06-11 — Trains tab "Last train" + meters, and a modular admin tool (Box + Git panels, CLI catalog)
+
+Two threads from Alan: (1) the now-raw Trains tab "looks a little too bare," and
+(2) a better, GUI-driven workflow for vetting/calibrating birdstation — plus a
+catalog of the CLI commands he always forgets — and the admin tool should be
+**modular/extensible** so future site-admin surfaces (artwork, photos, soundboard
+clips, commit-to-GitHub) drop in easily.
+
+**Trains tab — "Last train" highlight + visual rows** (`observatory.js?v=obs34` /
+`style.css?v=obs25`, front-end only):
+- A **"🚂 Last train"** card above the feed — the most recent pass as a big relative
+  time ("2h ago") + date·time + duration/loudness chips + the auto/confirmed badge.
+  Answers "when did the last train go by?" at a glance.
+- Recent-event rows now render **loudness + duration meters** (labeled bars,
+  normalized across the shown set) instead of plain tags, so the feed reads
+  visually. Rows are sorted newest-first defensively (not trusting API order).
+  Verified with a DOM/fetch harness (11 checks: latest picks the most recent *train*
+  with false-positives excluded, meters present, loudest≈full bar, published-only
+  audio, auto/confirmed badges).
+
+**Admin tool — modular Box + Git panels over `admin.py`** (the bigger ask):
+- **`admin.py` gained two command groups.** `box` wraps the birdstation/train
+  workflow — `status` (SSH health: services + train counts + pending + profile),
+  `pull --match GLOB` (scp clips → local `_incoming`), `open-corpus --make`,
+  `check`, `calibrate`, `deploy-profile` (scp + restart detector), `sync emit|apply`
+  (the verdicts bridge, dry-run aware), `restart`, `deploy`, `inspect`. `git` wraps
+  `status`/`pull`/`push`/`commit`/`sync` so the GUI can **commit & push to GitHub
+  without a terminal** ("save my new artwork/photos"). Every `box` command **prints
+  the exact ssh/scp/python it runs**, so the log doubles as a cheat-sheet. Two shared
+  helpers: `run_cmd()` (print-then-run) and `load_admin_config()`.
+- **Config-driven:** `admin-config.json` (gitignored; `admin-config.example.json`
+  committed) holds host/paths/venv; defaults match the `C:\horn` layout in
+  `HORN-CORPUS-GUIDE.md`.
+- **GUI: a reusable `CommandPanel` base** (header + toolbar + log already wired to
+  `admin.py`) — new panels are ~20 lines. Added **BoxPanel** (workflow buttons + a
+  pull-glob entry + a dry-run checkbox) and **GitPanel** (message box + Commit&Push).
+  `PANELS = [Soundboard, Media, Box, Git]`.
+- **Docs:** **`ADMIN.md`** (architecture + a full "Adding a panel" recipe — the
+  extensibility the user asked for) and **`COMMANDS.md`** (the categorized CLI
+  cookbook — deploy/services, the horn vet→calibrate→deploy loop, train-event
+  verdicts, bird life-list backfills, DB peeks, Pulse, git/site deploy).
+
+**Verified:** `node --check` + the train harness (11); `py_compile admin.py` +
+live smoke tests (`git status` runs locally; `box pull --dry-run` prints the exact
+`scp`; dispatch help; empty-message guard); and — since tkinter isn't installable
+here — a faithful tkinter-stub harness that instantiates BoxPanel/GitPanel and
+asserts they build the right `admin.py` arg lists (`box pull --match …`,
+`box deploy-profile [--dry-run]`, `git sync -m …`) with the empty-message guard.
+`.gitignore` updated. The `box`/`git` ssh/scp paths can't be exercised against the
+live box from here — they need a real run on Alan's PC.
+
+---
+
 ## 2026-06-11 — Observatory: unified Analytics (🐦 Birds | 🚂 Trains switch), tap-to-detail charts, numbers on bars
 
 Brought train analytics into the Analytics tab so it follows the same convention as

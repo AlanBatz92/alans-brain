@@ -46,7 +46,13 @@ Shared front-end: `style.css` (theme variables + all component styles),
 - **Theme variables** (`--bg`, `--surface`, `--text`, `--green`, `--teal`, `--border`, `--text-muted`, `--text-dim`, etc.) live near the top of `style.css`. Use them; don't hardcode colors.
 - **`api/`** holds Vercel serverless proxies (`setlist.js`, `spotify-proxy.js`) for setlist.fm and Spotify writes (CORS workaround). Spotify auth is PKCE — no client secret in the browser.
 - **Pages are JSON-driven** (`data/*.json`); adding content usually means editing a JSON file + dropping in media. See `README.md` "Adding Content".
-- **Admin tooling:** `admin.py` (CLI) and `admin-gui.py` (tkinter) manage soundboard clips/icons/media.
+- **Admin tooling:** `admin.py` (CLI) and `admin-gui.py` (tkinter GUI) — a sidebar of **panels**
+  over a CLI of **command groups**. Panels: **Soundboards**, **Media**, **Trains / Box** (pull
+  clips from birdstation → calibrate the horn profile → deploy → sync vetting to the page; group
+  `box`), **Git** (commit & push to publish, no terminal; group `git`). New surfaces subclass
+  `CommandPanel` + register in `PANELS` — see **`ADMIN.md`** (architecture + "Adding a panel").
+  Box/git settings live in `admin-config.json` (gitignored; copy `admin-config.example.json`).
+  Command catalog (the "I always forget these") is **`COMMANDS.md`**.
 - GoatCounter for analytics; `<audio>` elements for iOS silent-switch compatibility.
 - **Nav layout:** Home · My Week · Tasks · Explore ▼ · Stack — across all 15 pages. "Stack" is a direct `<a>` in `.nav-links` (not inside the dropdown). The mobile overlay places it before the Explore section label.
 
@@ -155,8 +161,8 @@ train data a home. ID/class prefix: **`obs-`**.
   `detailHeatmap`) — every axis tick, full numbers, cell counts on the train heatmap,
   the full leaderboard; horizontally scrollable. This is the **mobile** read path (no
   hover on touch). Shared builders: `hourBarsHtml()` / `dailyChartHtml()`.
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs33` +
-  `style.css?v=obs24` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs34` +
+  `style.css?v=obs25` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -305,7 +311,7 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs24`, `observatory.js?v=obs33`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs25`, `observatory.js?v=obs34`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

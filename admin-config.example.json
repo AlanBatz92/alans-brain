@@ -1,0 +1,17 @@
+{
+  "_comment": "Copy this file to admin-config.json (gitignored) and edit. These settings drive the `box` and `git` admin groups + the Trains/Box GUI panel. Anything you omit falls back to the documented defaults in admin.py (ADMIN_CONFIG_DEFAULTS).",
+
+  "box_host": "alan@192.168.4.132",
+  "box_repo": "~/alans-brain",
+  "box_db": "~/birdnet.db",
+  "box_clips_dir": "~/train_clips",
+  "box_services": ["birdapi", "birdnet", "train_detector"],
+
+  "_local_comment": "On YOUR PC: the sorting corpus + calibration output. Windows defaults to C:\\horn\\*; edit to taste.",
+  "corpus_dir": "C:\\horn\\corpus",
+  "out_dir": "C:\\horn\\out",
+  "verdicts_csv": "C:\\horn\\train_verdicts.csv",
+
+  "_python_comment": "A Python that has librosa/scipy/numpy (the calibration env from HORN-CORPUS-GUIDE step c). Point it at your venv so `box calibrate` works.",
+  "calibrate_python": "C:\\horn\\env\\Scripts\\python"
+}

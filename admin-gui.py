@@ -1149,11 +1149,194 @@ class MediaPanel(tk.Frame):
 
 
 # =====================================================================
+#  CommandPanel — reusable base for "buttons + streaming log" panels
+# =====================================================================
+#
+#  This is the easy way to add a new admin surface. Subclass it, set LABEL
+#  (sidebar text) and TITLE (header), implement build_toolbar(bar) to add your
+#  controls, and call self.run_admin([...]) to stream `admin.py …` into the log.
+#  Then add the class to PANELS. See ADMIN.md → "Adding a panel" for a walkthrough.
+
+
+class CommandPanel(tk.Frame):
+    """Header + a toolbar you fill + a log wired to admin.py.
+
+    Subclasses set LABEL/TITLE and override build_toolbar(self.toolbar). Extra
+    rows (entries, checkboxes) can be packed onto `self` from build_toolbar —
+    they land between the toolbar and the log."""
+
+    LABEL = "Command"
+    TITLE = "Command"
+
+    def __init__(self, parent, set_status):
+        super().__init__(parent, bg=BG)
+        self.set_status = set_status
+        self._build()
+
+    def _build(self):
+        top = tk.Frame(self, bg=BG_CARD, pady=8, padx=12)
+        top.pack(fill="x")
+        tk.Label(
+            top, text=self.TITLE, font=("Segoe UI", 14, "bold"), bg=BG_CARD, fg=ACCENT,
+        ).pack(side="left")
+        if getattr(self, "SUBTITLE", ""):
+            tk.Label(
+                top, text="  " + self.SUBTITLE, font=("Segoe UI", 10), bg=BG_CARD, fg=FG_DIM,
+            ).pack(side="left")
+
+        self.toolbar = tk.Frame(self, bg=BG, pady=10, padx=12)
+        self.toolbar.pack(fill="x")
+        self.build_toolbar(self.toolbar)
+
+        log_frame = tk.Frame(self, bg=BG)
+        log_frame.pack(fill="both", expand=True, padx=12, pady=(0, 12))
+        self.log = tk.Text(
+            log_frame, bg=BG_INPUT, fg=FG, font=("Consolas", 10), wrap="word",
+            state="disabled", highlightthickness=0, insertbackground=FG,
+        )
+        scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log.yview)
+        self.log.configure(yscrollcommand=scrollbar.set)
+        self.log.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+    # --- override this ---
+    def build_toolbar(self, bar):
+        pass
+
+    # --- helpers for subclasses ---
+    def add_button(self, bar, text, fn, color=ACCENT):
+        b = tk.Label(
+            bar, text=text, font=("Segoe UI", 10, "bold"),
+            bg=color, fg=BG, padx=14, pady=6, cursor="hand2",
+        )
+        b.pack(side="left", padx=(0, 8))
+        hover = ACCENT_HOVER if color == ACCENT else color
+        b.bind("<Button-1>", lambda e: fn())
+        b.bind("<Enter>", lambda e: b.configure(bg=hover))
+        b.bind("<Leave>", lambda e: b.configure(bg=color))
+        return b
+
+    def add_row(self, pady=(0, 6)):
+        """A new full-width row beneath the toolbar (for entries/checkboxes)."""
+        row = tk.Frame(self, bg=BG, padx=12, pady=pady)
+        row.pack(fill="x")
+        return row
+
+    def append_log(self, text):
+        self.log.configure(state="normal")
+        self.log.insert("end", text + "\n")
+        self.log.see("end")
+        self.log.configure(state="disabled")
+
+    def clear_log(self):
+        self.log.configure(state="normal")
+        self.log.delete("1.0", "end")
+        self.log.configure(state="disabled")
+
+    def run_admin(self, admin_args, label=None):
+        """Stream `python admin.py <admin_args>` into the log (off the UI thread)."""
+        label = label or " ".join(admin_args)
+        self.clear_log()
+        self.append_log("$ admin.py " + " ".join(admin_args) + "\n")
+        self.set_status(f"Running: {label}…")
+
+        def _worker():
+            try:
+                script = os.path.join(SCRIPT_DIR, "admin.py")
+                proc = subprocess.Popen(
+                    [sys.executable, script] + admin_args,
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    text=True, encoding="utf-8", errors="replace",
+                )
+                for line in proc.stdout:
+                    self.after(0, self.append_log, line.rstrip())
+                proc.wait()
+                self.after(0, self.set_status, f"Done: {label} (exit {proc.returncode})")
+            except Exception as exc:
+                self.after(0, self.append_log, f"ERROR: {exc}")
+                self.after(0, self.set_status, f"Error: {label}")
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+
+class BoxPanel(CommandPanel):
+    """birdstation / train-vetting workflow: pull clips → sort → calibrate →
+    deploy → sync to the page. Each button shells out to `admin.py box …`, which
+    prints the exact ssh/scp/python command it runs (so the log is a cheat-sheet).
+    Connection + paths come from admin-config.json."""
+
+    LABEL = "Trains / Box"
+    TITLE = "Trains / Box"
+    SUBTITLE = "vet · calibrate · deploy — settings in admin-config.json"
+
+    def build_toolbar(self, bar):
+        # Row 1 — workflow shortcuts
+        self.add_button(bar, "Box status", lambda: self.run_admin(["box", "status"], "box status"))
+        self.add_button(bar, "Open corpus", lambda: self.run_admin(["box", "open-corpus", "--make"], "open corpus"))
+        self.add_button(bar, "Check corpus", lambda: self.run_admin(["box", "check"], "check corpus"))
+        self.add_button(bar, "Calibrate", lambda: self.run_admin(["box", "calibrate"], "calibrate"))
+
+        # Row 2 — pull a batch from the box
+        pull = self.add_row()
+        tk.Label(pull, text="Pull clips matching:", bg=BG, fg=FG_DIM, font=("Segoe UI", 10)).pack(side="left", padx=(0, 8))
+        self.match = tk.Entry(pull, bg=BG_INPUT, fg=FG, insertbackground=FG, font=("Segoe UI", 10), relief="flat", width=26)
+        self.match.insert(0, "train_*.wav")
+        self.match.pack(side="left", ipady=4)
+        self.add_button(pull, "Pull", self._pull)
+
+        # Row 3 — deploy + sync (dry-run by default for the box-touching ones)
+        dep = self.add_row(pady=(0, 10))
+        self.dry = tk.BooleanVar(value=True)
+        tk.Checkbutton(
+            dep, text="Dry run", variable=self.dry, bg=BG, fg=FG, selectcolor=BG_INPUT,
+            activebackground=BG, activeforeground=FG, font=("Segoe UI", 10),
+        ).pack(side="left", padx=(0, 12))
+        self.add_button(dep, "Deploy profile", lambda: self.run_admin(self._dry(["box", "deploy-profile"]), "deploy profile"))
+        self.add_button(dep, "Sync: emit", lambda: self.run_admin(["box", "sync", "emit"], "sync emit"))
+        self.add_button(dep, "Sync: apply", lambda: self.run_admin(self._dry(["box", "sync", "apply"]), "sync apply"))
+
+    def _dry(self, args):
+        return args + (["--dry-run"] if self.dry.get() else [])
+
+    def _pull(self):
+        match = self.match.get().strip() or "train_*.wav"
+        self.run_admin(["box", "pull", "--match", match], "pull clips")
+
+
+class GitPanel(CommandPanel):
+    """Commit & push the repo to GitHub without leaving the admin tool — so
+    dropping in new artwork/photos/soundboard clips and publishing is one click."""
+
+    LABEL = "Git"
+    TITLE = "Git"
+    SUBTITLE = "commit & push changes to GitHub"
+
+    def build_toolbar(self, bar):
+        self.add_button(bar, "Status", lambda: self.run_admin(["git", "status"], "git status"))
+        self.add_button(bar, "Pull", lambda: self.run_admin(["git", "pull"], "git pull"))
+        self.add_button(bar, "Push", lambda: self.run_admin(["git", "push"], "git push"))
+
+        row = self.add_row(pady=(0, 10))
+        tk.Label(row, text="Message:", bg=BG, fg=FG_DIM, font=("Segoe UI", 10)).pack(side="left", padx=(0, 8))
+        self.msg = tk.Entry(row, bg=BG_INPUT, fg=FG, insertbackground=FG, font=("Segoe UI", 10), relief="flat")
+        self.msg.pack(side="left", fill="x", expand=True, ipady=4, padx=(0, 8))
+        self.add_button(row, "Commit & Push", self._sync)
+
+    def _sync(self):
+        msg = self.msg.get().strip()
+        if not msg:
+            self.set_status("Enter a commit message first.")
+            self.append_log("⚠ enter a commit message first.")
+            return
+        self.run_admin(["git", "sync", "-m", msg], "git sync")
+
+
+# =====================================================================
 #  Main App — sidebar + panel area
 # =====================================================================
 
-# Panel registry — add new panels here
-PANELS = [SoundboardPanel, MediaPanel]
+# Panel registry — add new panels here (see ADMIN.md → "Adding a panel")
+PANELS = [SoundboardPanel, MediaPanel, BoxPanel, GitPanel]
 
 
 class AdminApp(tk.Tk):

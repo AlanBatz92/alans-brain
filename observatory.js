@@ -646,6 +646,8 @@ async function loadTrains() {
   try {
     rows = await fetchJson(EP.trainsRecent);
   } catch (err) {
+    const latestEl = document.getElementById('obs-train-latest');
+    if (latestEl) latestEl.hidden = true;
     setMsg(el, "obs-empty", "Couldn't reach the observatory — it may be offline.");
     return;
   }
@@ -653,16 +655,30 @@ async function loadTrains() {
   // (reviewed=0) or human-verified (reviewed=1). Struck-off false positives
   // (verdict='false_positive') are excluded. Audio is gated separately (published).
   rows = (rows || []).filter((r) => r.verdict === 'train');
+  // Newest first (the API returns this order, but sort defensively so the "last
+  // train" card and the feed are correct even if that ever changes).
+  rows.sort((a, b) => (parseTime(b.detected_at) || 0) - (parseTime(a.detected_at) || 0));
   rows = rows.slice(0, MAX_TRAINS);
+  const latestEl = document.getElementById('obs-train-latest');
   if (rows.length === 0) {
+    if (latestEl) latestEl.hidden = true;
     setMsg(el, 'obs-empty', 'No confirmed train events yet.');
     return;
   }
+
+  // Normalize the loudness/duration meters against the shown set so the bars read
+  // relative to recent passes (a fuller bar = louder / longer than its neighbors).
+  const durs = rows.map((r) => Number(r.duration_s)).filter((n) => !isNaN(n));
+  const dbs  = rows.map((r) => Number(r.peak_db)).filter((n) => !isNaN(n));
+  const maxDur = durs.length ? Math.max.apply(null, durs) : 0;
+  const minDb  = dbs.length ? Math.min.apply(null, dbs) : 0;
+  const maxDb  = dbs.length ? Math.max.apply(null, dbs) : 0;
+
+  renderTrainLatest(rows[0]);
+
   el.innerHTML = rows.map((r) => {
     const ms   = parseTime(r.detected_at);
     const when = ms != null ? shortDate(ms) + ' · ' + clockTime(ms) : '';
-    const dur  = r.duration_s != null ? Number(r.duration_s).toFixed(1) + 's' : '';
-    const db   = r.peak_db    != null ? Math.round(r.peak_db) + ' dB' : '';
     const file = r.clip_path ? r.clip_path.split('/').pop() : '';
     // Audio is shown only for events explicitly published; otherwise the event
     // stands on its own (time/duration/dB) with no audio element and no note —
@@ -674,13 +690,61 @@ async function loadTrains() {
     return '<div class="obs-train">' +
         '<div class="obs-train-head">' +
           (when ? '<span class="obs-train-when">' + escapeHtml(when) + '</span>' : '') +
-          (dur  ? '<span class="obs-tag">' + escapeHtml(dur) + '</span>' : '') +
-          (db   ? '<span class="obs-tag">' + escapeHtml(db) + '</span>' : '') +
           renderVerdict(r) +
         '</div>' +
+        trainMeters(r, maxDur, minDb, maxDb) +
         clip +
       '</div>';
   }).join('');
+}
+
+// The most-recent pass, called out as a highlight card above the feed — answers
+// "when did the last train go by?" at a glance (relative time + duration + loudness).
+function renderTrainLatest(r) {
+  const el = document.getElementById('obs-train-latest');
+  if (!el) return;
+  const ms = parseTime(r.detected_at);
+  if (ms == null) { el.hidden = true; return; }
+  const dur = r.duration_s != null ? Number(r.duration_s).toFixed(1) + 's' : null;
+  const db  = r.peak_db != null ? Math.round(r.peak_db) + ' dB' : null;
+  const chips = [
+    dur ? '<span class="obs-tag">⏱ ' + escapeHtml(dur) + '</span>' : '',
+    db  ? '<span class="obs-tag">🔊 ' + escapeHtml(db) + '</span>' : '',
+    renderVerdict(r),
+  ].join('');
+  el.innerHTML =
+    '<div class="obs-train-latest-label">🚂 Last train</div>' +
+    '<div class="obs-train-latest-when">' + escapeHtml(relativeTime(ms)) + '</div>' +
+    '<div class="obs-train-latest-sub">' + escapeHtml(shortDate(ms) + ' · ' + clockTime(ms)) + '</div>' +
+    '<div class="obs-train-latest-chips">' + chips + '</div>';
+  el.hidden = false;
+}
+
+// Loudness + duration shown as labeled meters (replaces the plain tags), so the
+// feed reads visually. Bars are normalized across the shown set (see loadTrains).
+function trainMeters(r, maxDur, minDb, maxDb) {
+  const rows = [];
+  if (r.peak_db != null && !isNaN(Number(r.peak_db))) {
+    const v = Number(r.peak_db);
+    // dB across a small recent set is a narrow band, so map min→max to 15–100%
+    // (rather than 0) — a quiet pass still shows a visible sliver, not an empty bar.
+    const pct = maxDb > minDb ? Math.round(15 + 85 * (v - minDb) / (maxDb - minDb)) : 100;
+    rows.push(trainMeterRow('Loudness', Math.round(v) + ' dB', pct));
+  }
+  if (r.duration_s != null && !isNaN(Number(r.duration_s))) {
+    const v = Number(r.duration_s);
+    const pct = maxDur > 0 ? Math.round(Math.max(6, 100 * v / maxDur)) : 100;
+    rows.push(trainMeterRow('Duration', v.toFixed(1) + 's', pct));
+  }
+  return rows.length ? '<div class="obs-train-meters">' + rows.join('') + '</div>' : '';
+}
+
+function trainMeterRow(label, value, pct) {
+  return '<div class="obs-train-meter">' +
+      '<span class="obs-train-meter-lbl">' + escapeHtml(label) + '</span>' +
+      '<div class="obs-train-meter-track"><div class="obs-train-meter-fill" style="width:' + pct + '%"></div></div>' +
+      '<span class="obs-train-meter-val">' + escapeHtml(value) + '</span>' +
+    '</div>';
 }
 
 function renderVerdict(r) {

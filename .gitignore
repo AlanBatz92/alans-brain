@@ -14,3 +14,7 @@ __pycache__/
 # regenerated on the box from the local corpus; the param block is the durable record)
 horn_profile.json
 horn_profile_out/
+
+# Admin tool: per-machine box/git settings (host, paths, venv). Commit the
+# example (admin-config.example.json), not your real one.
+admin-config.json

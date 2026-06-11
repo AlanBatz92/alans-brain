@@ -4751,6 +4751,81 @@ nav {
   color: var(--text-dim);
 }
 
+/* "Last train" highlight card — the most recent pass, called out above the feed. */
+.obs-train-latest {
+  background: linear-gradient(135deg, var(--surface), var(--bg));
+  border: 1px solid var(--teal);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 4px 0 18px;
+}
+.obs-train-latest-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+.obs-train-latest-when {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+  margin-top: 2px;
+}
+.obs-train-latest-sub {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.obs-train-latest-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Per-event loudness / duration meters — a labeled bar so the feed reads visually. */
+.obs-train-meters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.obs-train-meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.obs-train-meter-lbl {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  width: 64px;
+  flex-shrink: 0;
+}
+.obs-train-meter-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.obs-train-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--teal);
+}
+.obs-train-meter-val {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 58px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
 /* ── Trains: "How these are detected" methodology panel ── */
 .obs-method {
   margin: 6px 0 18px;

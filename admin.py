@@ -13,13 +13,19 @@ Usage:
 Groups:
   soundboard   Manage soundboard clips, boards, categories, quotes, icons
   media        Compress images, generate WebP, convert audio
+  box          birdstation / train vetting: pull clips, calibrate, deploy, sync
+  git          Commit & push the repo to GitHub (save changes from the GUI)
 
 Examples:
   python admin.py soundboard add halflife Scientists hello.wav
-  python admin.py soundboard list
   python admin.py media art --dry-run
-  python admin.py media report
+  python admin.py box pull --match "train_2026-06-*.wav"
+  python admin.py box calibrate
+  python admin.py git sync -m "Add new artwork"
   python admin.py gui
+
+Box/Git connection + path settings live in admin-config.json (copy
+admin-config.example.json and edit). See ADMIN.md and COMMANDS.md.
 """
 
 import json
@@ -27,6 +33,7 @@ import os
 import sys
 import re
 import io
+import shlex
 import shutil
 import glob
 import subprocess
@@ -849,6 +856,324 @@ MEDIA_COMMANDS = {
 
 
 # =====================================================================
+#  GROUP: box  — birdstation / train-vetting workflow (SSH + local)
+# =====================================================================
+#
+#  Thin, transparent wrappers around the commands documented in
+#  birdstation/HORN-CORPUS-GUIDE.md and COMMANDS.md. Every wrapper PRINTS the
+#  exact command before running it ("$ ssh …"), so the panel doubles as a
+#  living cheat-sheet — you see (and learn) the underlying CLI each time.
+#
+#  Connection + path settings come from admin-config.json (copy
+#  admin-config.example.json and edit). Nothing here is box-specific in code.
+
+ADMIN_CONFIG_DEFAULTS = {
+    "box_host": "alan@192.168.4.132",      # user@host for ssh/scp
+    "box_repo": "~/alans-brain",           # the run-from-clone repo on the box
+    "box_db": "~/birdnet.db",              # SQLite DB on the box
+    "box_clips_dir": "~/train_clips",      # where the live detector saves clips
+    "box_services": ["birdapi", "birdnet", "train_detector"],
+    # Local (your PC) — the sorting corpus + calibration output.
+    "corpus_dir": ("C:\\horn\\corpus" if os.name == "nt"
+                   else os.path.expanduser("~/horn/corpus")),
+    "out_dir": ("C:\\horn\\out" if os.name == "nt"
+                else os.path.expanduser("~/horn/out")),
+    "verdicts_csv": ("C:\\horn\\train_verdicts.csv" if os.name == "nt"
+                     else os.path.expanduser("~/horn/train_verdicts.csv")),
+    # Python that has librosa/scipy/numpy (the calibration env). The guide makes
+    # one at C:\horn\env; default to the current interpreter so it at least runs.
+    "calibrate_python": sys.executable,
+}
+
+
+def load_admin_config():
+    """Merge admin-config.json (if present) over the documented defaults."""
+    cfg = dict(ADMIN_CONFIG_DEFAULTS)
+    path = os.path.join(SCRIPT_DIR, "admin-config.json")
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as f:
+                user = json.load(f)
+            cfg.update({k: v for k, v in user.items() if not k.startswith("_")})
+        except Exception as exc:
+            print(f"⚠ couldn't read admin-config.json ({exc}); using defaults")
+    return cfg
+
+
+def run_cmd(args, dry=False, cwd=None):
+    """Print a command (always) and run it (unless dry). `args` may be a list
+    (run without a shell — preferred) or a string (run via the shell). Child
+    stdout/stderr inherit ours, so output streams straight to the GUI log."""
+    printable = args if isinstance(args, str) else " ".join(shlex.quote(str(a)) for a in args)
+    print("$ " + printable)
+    sys.stdout.flush()
+    if dry:
+        print("(dry run — not executed)")
+        return 0
+    try:
+        return subprocess.run(args, shell=isinstance(args, str), cwd=cwd).returncode
+    except FileNotFoundError as exc:
+        print(f"✗ command not found: {exc}")
+        return 127
+
+
+def _flag(rest, name):
+    return name in rest
+
+
+def _opt(rest, name, default=None):
+    if name in rest:
+        i = rest.index(name)
+        if i + 1 < len(rest):
+            return rest[i + 1]
+    return default
+
+
+def _profiler():
+    return os.path.join(SCRIPT_DIR, "birdstation", "build_horn_profile.py")
+
+
+def _syncer():
+    return os.path.join(SCRIPT_DIR, "birdstation", "sync_train_verdicts.py")
+
+
+def box_status(cfg, rest):
+    """SSH the box for a quick health snapshot: service state, train counts,
+    pending (auto/unreviewed) count, and whether a horn profile is deployed."""
+    host, db, repo = cfg["box_host"], cfg["box_db"], cfg["box_repo"]
+    svcs = " ".join(cfg["box_services"])
+    remote = (
+        "echo '-- services --'; systemctl is-active " + svcs + " 2>/dev/null; echo; "
+        "echo '-- train_events by verdict --'; "
+        "sqlite3 " + db + " \"SELECT verdict, COUNT(*) FROM train_events GROUP BY verdict;\" 2>/dev/null; echo; "
+        "echo '-- pending (auto, unreviewed) --'; "
+        "sqlite3 " + db + " \"SELECT COUNT(*) FROM train_events WHERE verdict='train' AND reviewed=0;\" 2>/dev/null; echo; "
+        "echo '-- horn profile --'; ls -l " + repo + "/birdstation/horn_profile.json 2>/dev/null || echo 'no profile deployed'"
+    )
+    run_cmd(["ssh", host, remote])
+
+
+def box_pull(cfg, rest):
+    """scp a batch of clips from the box into <corpus>/_incoming for sorting.
+    --match GLOB (default train_*.wav) or --all to grab the whole folder."""
+    host, clips = cfg["box_host"], cfg["box_clips_dir"]
+    dest = os.path.join(cfg["corpus_dir"], "_incoming")
+    os.makedirs(dest, exist_ok=True)
+    dry = _flag(rest, "--dry-run")
+    if _flag(rest, "--all"):
+        run_cmd(["scp", "-r", f"{host}:{clips}", dest], dry=dry)
+        return
+    match = _opt(rest, "--match", "train_*.wav")
+    # The remote glob is left for the box's shell to expand (one arg).
+    run_cmd(["scp", f"{host}:{clips}/{match}", dest + os.sep], dry=dry)
+    print(f"\n→ now sort {dest} in File Explorer + VLC (trains/ = horns, else = negatives)")
+
+
+CORPUS_FOLDERS = ["trains", "planes", "vehicles", "gunshots",
+                  "construction", "other", "unsure", "_incoming"]
+
+
+def box_open_corpus(cfg, rest):
+    """Open the local corpus folder in the file manager (so you can sort).
+    --make first creates the standard category folders if they don't exist."""
+    corpus = cfg["corpus_dir"]
+    if _flag(rest, "--make"):
+        for sub in CORPUS_FOLDERS:
+            os.makedirs(os.path.join(corpus, sub), exist_ok=True)
+        print(f"corpus folders ready under {corpus}")
+    if not os.path.isdir(corpus):
+        print(f"corpus dir doesn't exist yet: {corpus}  (run with --make)")
+        return
+    print(f"opening {corpus}")
+    try:
+        if os.name == "nt":
+            os.startfile(corpus)  # type: ignore[attr-defined]
+        elif sys.platform == "darwin":
+            subprocess.run(["open", corpus])
+        else:
+            subprocess.run(["xdg-open", corpus])
+    except Exception as exc:
+        print(f"couldn't open file manager: {exc}")
+
+
+def box_check(cfg, rest):
+    """Census the corpus + GOOD/OK/THIN readiness verdict (no calibration)."""
+    run_cmd([cfg["calibrate_python"], _profiler(), "--corpus", cfg["corpus_dir"], "--check"])
+
+
+def box_calibrate(cfg, rest):
+    """Calibrate horn_profile.json from the corpus; prints the accuracy block."""
+    run_cmd([cfg["calibrate_python"], _profiler(),
+             "--corpus", cfg["corpus_dir"], "-o", cfg["out_dir"]])
+
+
+def box_deploy_profile(cfg, rest):
+    """scp the freshly-calibrated horn_profile.json to the box and restart the
+    detector. --dry-run prints the commands; --no-restart skips the restart."""
+    host, repo, dry = cfg["box_host"], cfg["box_repo"], _flag(rest, "--dry-run")
+    profile = os.path.join(cfg["out_dir"], "horn_profile.json")
+    if not os.path.exists(profile) and not dry:
+        print(f"✗ no profile at {profile} — run calibrate first.")
+        return
+    rc = run_cmd(["scp", profile, f"{host}:{repo}/birdstation/horn_profile.json"], dry=dry)
+    if rc == 0 and not _flag(rest, "--no-restart"):
+        run_cmd(["ssh", host, "sudo systemctl restart train_detector"], dry=dry)
+
+
+def box_sync(cfg, rest):
+    """Bridge sorted folders → the Observatory page.
+      emit   (local) corpus → train_verdicts.csv
+      apply  (box)   scp the csv up, then sync_train_verdicts apply (--dry-run aware)"""
+    if not rest:
+        print("Usage: admin.py box sync <emit|apply> [--dry-run]")
+        return
+    sub, dry = rest[0], _flag(rest, "--dry-run")
+    host, repo, csv = cfg["box_host"], cfg["box_repo"], cfg["verdicts_csv"]
+    if sub == "emit":
+        run_cmd([cfg["calibrate_python"], _syncer(), "emit",
+                 "--corpus", cfg["corpus_dir"], "--out", csv])
+    elif sub == "apply":
+        if run_cmd(["scp", csv, f"{host}:~/train_verdicts.csv"]) != 0:
+            return
+        remote = f"python3 {repo}/birdstation/sync_train_verdicts.py apply --csv ~/train_verdicts.csv"
+        if dry:
+            remote += " --dry-run"
+        run_cmd(["ssh", host, remote])
+    else:
+        print(f"unknown sync subcommand: {sub} (use emit | apply)")
+
+
+def box_restart(cfg, rest):
+    """Restart a box service (default birdapi). e.g. box restart train_detector"""
+    svc = next((a for a in rest if not a.startswith("-")), "birdapi")
+    run_cmd(["ssh", cfg["box_host"], f"sudo systemctl restart {svc}"])
+
+
+def box_deploy(cfg, rest):
+    """Deploy site/box code: git pull on the box + restart birdapi."""
+    repo = cfg["box_repo"]
+    run_cmd(["ssh", cfg["box_host"], f"cd {repo} && git pull && sudo systemctl restart birdapi"])
+
+
+def box_inspect(cfg, rest):
+    """Forensic 'why was this train missed?' for a time, e.g. box inspect 10:30pm"""
+    when = " ".join(a for a in rest if not a.startswith("-")) or "now"
+    run_cmd(["ssh", cfg["box_host"],
+             f"python3 {cfg['box_repo']}/birdstation/train_inspect.py {when}"])
+
+
+BOX_COMMANDS = {
+    "status": box_status,
+    "pull": box_pull,
+    "open-corpus": box_open_corpus,
+    "check": box_check,
+    "calibrate": box_calibrate,
+    "deploy-profile": box_deploy_profile,
+    "sync": box_sync,
+    "restart": box_restart,
+    "deploy": box_deploy,
+    "inspect": box_inspect,
+}
+
+
+def box_dispatch(args):
+    cfg = load_admin_config()
+    if not args:
+        print("Usage: admin.py box <command> [args]")
+        print("  Commands: " + ", ".join(BOX_COMMANDS))
+        return
+    cmd, rest = args[0], args[1:]
+    fn = BOX_COMMANDS.get(cmd)
+    if not fn:
+        print(f"Unknown box command: {cmd}")
+        print("  Available: " + ", ".join(BOX_COMMANDS))
+        sys.exit(1)
+    fn(cfg, rest)
+
+
+# =====================================================================
+#  GROUP: git  — commit/push the repo straight from the admin tool
+# =====================================================================
+#
+#  Lets the GUI save changes (new artwork, photos, soundboard clips, JSON
+#  edits) to GitHub without dropping to a terminal. Runs git in SCRIPT_DIR.
+
+def _git(args, dry=False):
+    return run_cmd(["git", "-C", SCRIPT_DIR] + args, dry=dry)
+
+
+def _current_branch():
+    try:
+        out = subprocess.run(
+            ["git", "-C", SCRIPT_DIR, "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True, text=True).stdout.strip()
+        return out or "HEAD"
+    except Exception:
+        return "HEAD"
+
+
+def git_status(rest):
+    """Short status + current branch."""
+    _git(["status", "-sb"])
+
+
+def git_pull(rest):
+    _git(["pull"])
+
+
+def git_push(rest):
+    """Push the current branch, setting upstream."""
+    _git(["push", "-u", "origin", _current_branch()])
+
+
+def git_commit(rest):
+    """Stage + commit. -m "msg" required; trailing non-flag args = specific paths
+    (default: stage everything)."""
+    msg = _opt(rest, "-m") or _opt(rest, "--message")
+    if not msg:
+        print('Usage: admin.py git commit -m "message" [paths...]')
+        return
+    paths = [a for a in rest if not a.startswith("-") and a != msg]
+    _git(["add"] + (paths if paths else ["-A"]))
+    _git(["commit", "-m", msg])
+
+
+def git_sync(rest):
+    """One-button save: stage all, commit, push. -m "msg" required."""
+    msg = _opt(rest, "-m") or _opt(rest, "--message")
+    if not msg:
+        print('Usage: admin.py git sync -m "message"')
+        return
+    _git(["add", "-A"])
+    if _git(["commit", "-m", msg]) != 0:
+        print("(nothing new to commit — pushing any unpushed commits anyway)")
+    git_push(rest)
+
+
+GIT_COMMANDS = {
+    "status": git_status,
+    "pull": git_pull,
+    "push": git_push,
+    "commit": git_commit,
+    "sync": git_sync,
+}
+
+
+def git_dispatch(args):
+    if not args:
+        print("Usage: admin.py git <command> [args]")
+        print("  Commands: " + ", ".join(GIT_COMMANDS))
+        return
+    cmd, rest = args[0], args[1:]
+    fn = GIT_COMMANDS.get(cmd)
+    if not fn:
+        print(f"Unknown git command: {cmd}")
+        print("  Available: " + ", ".join(GIT_COMMANDS))
+        sys.exit(1)
+    fn(rest)
+
+
+# =====================================================================
 #  Group registry — add new groups here
 # =====================================================================
 
@@ -861,6 +1186,16 @@ GROUPS = {
         "description": "Compress images, generate WebP, convert audio",
         "commands": MEDIA_COMMANDS,
         "dispatch": media_dispatch,
+    },
+    "box": {
+        "description": "birdstation / train vetting: pull clips, calibrate, deploy, sync",
+        "commands": BOX_COMMANDS,
+        "dispatch": box_dispatch,
+    },
+    "git": {
+        "description": "Commit & push the repo to GitHub (save changes from the GUI)",
+        "commands": GIT_COMMANDS,
+        "dispatch": git_dispatch,
     },
 }
 
