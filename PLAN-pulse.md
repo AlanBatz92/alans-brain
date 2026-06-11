@@ -7,7 +7,7 @@ website. Start with a small, shippable win today; build up to the full product.
 ## Context: why this isn't the runbook
 
 The runbook deploys Pulse on **birdstation** — Python 3.12, SQLite, systemd
-timers, an always-on box at `192.168.4.132`. Alan's Brain is the opposite: a
+timers, an always-on box at `your-box`. Alan's Brain is the opposite: a
 **no-build static site on Vercel** — vanilla HTML/CSS/JS, JSON files in `data/`,
 and serverless proxies in `api/` for CORS. There is no persistent disk and no
 always-on process here.

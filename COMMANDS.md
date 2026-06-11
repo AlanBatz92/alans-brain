@@ -4,7 +4,7 @@ A catalog of the CLI commands for running Alan's Brain + birdstation. Most have 
 one-click equivalent in the admin tool (`python admin.py gui` → see `ADMIN.md`),
 but this is the fallback reference for when you're in a terminal.
 
-**Conventions:** the box is `birdstation` (SSH `alan@192.168.4.132`), run-from-clone
+**Conventions:** the box is `birdstation` (SSH `you@your-box`), run-from-clone
 at `~/alans-brain`, secrets in `/etc/birdstation.env`. Replace host/paths with your
 own (the admin tool reads them from `admin-config.json`).
 
@@ -68,7 +68,7 @@ Full runbook: `birdstation/HORN-CORPUS-GUIDE.md`. The short version (mostly the
 
 ```powershell
 # 1. PULL a batch from the box into the corpus (on your PC)
-scp 'alan@192.168.4.132:~/train_clips/train_2026-06-*.wav' C:\horn\corpus\_incoming\
+scp 'you@your-box:~/train_clips/train_2026-06-*.wav' C:\horn\corpus\_incoming\
 
 # 2. SORT in File Explorer + VLC: trains\ = horns, every other folder = a negative
 
@@ -79,8 +79,8 @@ C:\horn\env\Scripts\python birdstation\build_horn_profile.py --corpus C:\horn\co
 C:\horn\env\Scripts\python birdstation\build_horn_profile.py --corpus C:\horn\corpus -o C:\horn\out
 
 # 5. DEPLOY the profile to the box (it auto-loads next run)
-scp C:\horn\out\horn_profile.json alan@192.168.4.132:~/alans-brain/birdstation/
-ssh alan@192.168.4.132 'sudo systemctl restart train_detector'
+scp C:\horn\out\horn_profile.json you@your-box:~/alans-brain/birdstation/
+ssh you@your-box 'sudo systemctl restart train_detector'
 ```
 
 `build_horn_profile.py` flags: `--corpus DIR` (has `trains/` + negative folders) |
@@ -95,7 +95,7 @@ ssh alan@192.168.4.132 'sudo systemctl restart train_detector'
 # bridge sorted folders -> page verdicts
 #  (PC) emit a CSV from the corpus:
 python birdstation/sync_train_verdicts.py emit --corpus C:\horn\corpus --out train_verdicts.csv
-scp train_verdicts.csv alan@192.168.4.132:~/
+scp train_verdicts.csv you@your-box:~/
 #  (box) preview then apply:
 python3 ~/alans-brain/birdstation/sync_train_verdicts.py apply --csv ~/train_verdicts.csv --dry-run
 python3 ~/alans-brain/birdstation/sync_train_verdicts.py apply --csv ~/train_verdicts.csv

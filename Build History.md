@@ -1412,7 +1412,7 @@ Three changes — one front-end-visible, two box-side.
      loud "-4.9 dB whistle candidate" that never resolved. Now pipes the stream
      through **ffmpeg → mono s16le PCM** (same approach as the working BirdNET
      pipeline), relaunching ffmpeg on disconnect.
-  2. **Wrong mount → HTTP 404.** Was reading `http://192.168.4.132:8000/backyard`
+  2. **Wrong mount → HTTP 404.** Was reading `http://your-box:8000/backyard`
      (repeated 404s in the log); the bird pipeline reads `localhost:8000/backyard`
      fine, so switched to that.
   Also confirmed from the log that the **duplicate `traindetect.service` is gone**

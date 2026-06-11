@@ -27,7 +27,7 @@ Pure standard library — no venv needed on either machine.
 Usage:
     # on your PC, after sorting C:\\horn\\corpus:
     python sync_train_verdicts.py emit --corpus C:\\horn\\corpus --out train_verdicts.csv
-    #   scp train_verdicts.csv alan@192.168.4.132:~/
+    #   scp train_verdicts.csv you@your-box:~/
 
     # on the box:
     python3 ~/alans-brain/birdstation/sync_train_verdicts.py apply --csv ~/train_verdicts.csv --dry-run
@@ -129,7 +129,7 @@ def cmd_emit(args):
     for cat, n in sorted(by_cat.items(), key=lambda kv: -kv[1]):
         print(f"  {cat:<16}{n:>5}")
     print("\nNext: copy it to the box, e.g.")
-    print(f"  scp {out} alan@192.168.4.132:~/")
+    print(f"  scp {out} you@your-box:~/")
     print("  then on the box:  sync_train_verdicts.py apply --csv ~/"
           f"{out.name} --dry-run")
 

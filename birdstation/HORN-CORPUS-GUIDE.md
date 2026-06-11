@@ -80,7 +80,7 @@ location is unmistakable no matter how the files are named or where they sit
 (do this once and remember the top path):
 
 ```powershell
-ssh alan@192.168.4.132 'find /home /media /mnt -iname "*.wav" -printf "%h\n" 2>/dev/null | sort | uniq -c | sort -rn | head -20'
+ssh you@your-box 'find /home /media /mnt -iname "*.wav" -printf "%h\n" 2>/dev/null | sort | uniq -c | sort -rn | head -20'
 ```
 
 (First connection asks you to type `yes` and your box password.) You'll get
@@ -94,12 +94,12 @@ saw above — for AudioMoth `YYYYMMDD_HHMMSS.WAV` files, "the first week of June
 
 ```powershell
 # replace <RECORDINGS_DIR> with the top path from the command above
-scp 'alan@192.168.4.132:<RECORDINGS_DIR>/2026060[1-7]_*.WAV' C:\horn\corpus\_incoming\
+scp 'you@your-box:<RECORDINGS_DIR>/2026060[1-7]_*.WAV' C:\horn\corpus\_incoming\
 ```
 
 If the files are lowercase `.wav` or use a `train_` prefix (the live clips do),
 adjust the pattern — e.g. `train_2026-06-0[1-7]*.wav` — or just **grab the whole
-folder** and sort from there: `scp -r 'alan@192.168.4.132:<RECORDINGS_DIR>' C:\horn\corpus\_incoming\`.
+folder** and sort from there: `scp -r 'you@your-box:<RECORDINGS_DIR>' C:\horn\corpus\_incoming\`.
 Keep the single quotes around the remote part — they let the **box** expand the
 `*`. Re-copying a file you've already sorted is harmless — you'll skip it.
 
@@ -213,7 +213,7 @@ To let **the box** do ongoing detection instead, copy the profile there (it's
 gitignored, so it won't fight `git pull`):
 
 ```powershell
-scp C:\horn\out\horn_profile.json alan@192.168.4.132:~/alans-brain/birdstation/
+scp C:\horn\out\horn_profile.json you@your-box:~/alans-brain/birdstation/
 ```
 
 The box's `train_horn_detector.py` will pick it up the next time it runs.
@@ -246,7 +246,7 @@ the **Trains tab** on the Observatory — without vetting twice. A small bridge,
 C:\horn\env\Scripts\python C:\Users\505ma\Documents\GitHub\alans-brain\birdstation\sync_train_verdicts.py emit --corpus C:\horn\corpus --out C:\horn\train_verdicts.csv
 
 # send it to the box
-scp C:\horn\train_verdicts.csv alan@192.168.4.132:~/
+scp C:\horn\train_verdicts.csv you@your-box:~/
 ```
 
 ```bash
@@ -332,8 +332,8 @@ mkdir C:\horn\corpus; cd C:\horn\corpus
 mkdir trains,vehicles,planes,gunshots,construction,other,unsure,_incoming
 
 # 1. find where the WAVs live, then pull a batch (replace <RECORDINGS_DIR>)
-ssh alan@192.168.4.132 'find /home /media /mnt -iname "*.wav" -printf "%h\n" 2>/dev/null | sort | uniq -c | sort -rn | head -20'
-scp 'alan@192.168.4.132:<RECORDINGS_DIR>/2026060[1-7]_*.WAV' C:\horn\corpus\_incoming\
+ssh you@your-box 'find /home /media /mnt -iname "*.wav" -printf "%h\n" 2>/dev/null | sort | uniq -c | sort -rn | head -20'
+scp 'you@your-box:<RECORDINGS_DIR>/2026060[1-7]_*.WAV' C:\horn\corpus\_incoming\
 
 # 2. sort in File Explorer + VLC/Audacity (trains\ = horns, everything else = negatives)
 

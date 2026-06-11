@@ -1,7 +1,7 @@
 {
   "_comment": "Copy this file to admin-config.json (gitignored) and edit. These settings drive the `box` and `git` admin groups + the Trains/Box GUI panel. Anything you omit falls back to the documented defaults in admin.py (ADMIN_CONFIG_DEFAULTS).",
 
-  "box_host": "alan@192.168.4.132",
+  "box_host": "you@your-box",
   "box_repo": "~/alans-brain",
   "box_db": "~/birdnet.db",
   "box_clips_dir": "~/train_clips",

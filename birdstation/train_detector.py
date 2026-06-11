@@ -37,7 +37,7 @@ except Exception as _exc:  # noqa: BLE001
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 # Read the same mount the (working) BirdNET pipeline uses. The remote
-# 192.168.4.132 mount was returning HTTP 404; Icecast serves /backyard reliably
+# your-box mount was returning HTTP 404; Icecast serves /backyard reliably
 # on localhost, so we read it there and let ffmpeg decode the MP3.
 STREAM_URL      = "http://localhost:8000/backyard"
 DB_PATH         = "/home/alan/birdnet.db"

@@ -868,7 +868,7 @@ MEDIA_COMMANDS = {
 #  admin-config.example.json and edit). Nothing here is box-specific in code.
 
 ADMIN_CONFIG_DEFAULTS = {
-    "box_host": "alan@192.168.4.132",      # user@host for ssh/scp
+    "box_host": "you@your-box",      # user@host for ssh/scp
     "box_repo": "~/alans-brain",           # the run-from-clone repo on the box
     "box_db": "~/birdnet.db",              # SQLite DB on the box
     "box_clips_dir": "~/train_clips",      # where the live detector saves clips
