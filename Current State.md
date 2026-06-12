@@ -125,6 +125,16 @@ train data a home. ID/class prefix: **`obs-`**.
   **"When across the week"** (day×hour heatmap) — reuse the `obs-an-*` analytics CSS.
   The Trains tab is now the **raw feed** (recent events + the "How these are detected"
   panel) only.
+- **Train analytics are period-scoped (2026-06-11).** `/api/trains/analytics` now takes
+  optional `start`/`end` (the same Eastern→UTC window the bird analytics use, end
+  exclusive) and scopes the period buckets to passes starting in it; `passes_today`
+  stays the **absolute** Eastern-today count (so the "Today" card means today at any
+  period). No window = all-time (backward compatible — an old box ignores the params).
+  The pass-grouping compute moved to **`birdstation/train_analytics.py`** (FastAPI-free,
+  single source of truth, unit-tested in `test_trains_analytics.py`); `bird_api` is a
+  thin wrapper. The Analytics→Trains period selector is back (the earlier `[hidden]`
+  bug that left it visible-but-inert is fixed). **Needs a box deploy** (`git pull` +
+  `restart birdapi`) — until then trains analytics serve all-time regardless of period.
 - **Confidence gate — three tiers (2026-06-03):** decoupled floors.
   (1) **Preserve 0.60** — the pipeline keeps detections ≥ 0.60 (was 0.35), cutting the
   worst noise but retaining sub-85% *diagnostic* hits. (2) **Display 0.85** — the page
@@ -161,7 +171,7 @@ train data a home. ID/class prefix: **`obs-`**.
   `detailHeatmap`) — every axis tick, full numbers, cell counts on the train heatmap,
   the full leaderboard; horizontally scrollable. This is the **mobile** read path (no
   hover on touch). Shared builders: `hourBarsHtml()` / `dailyChartHtml()`.
-- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs34` +
+- **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs35` +
   `style.css?v=obs26` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
@@ -311,7 +321,7 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs26`, `observatory.js?v=obs34`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs26`, `observatory.js?v=obs35`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

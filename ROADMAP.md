@@ -100,7 +100,10 @@ recent-events feed + method panel). Same change added **numbers on every bar** a
 **tap-any-chart detail popout** (the mobile read path, since hover tooltips don't fire on
 touch). Front-end only; see "Done (recent)" + `Build History.md` (2026-06-11). The
 remaining "Next additions" above (headway-over-time, duration/loudness, compared-to-usual,
-weather) still want a box-side `/api/trains/analytics` expansion + a period-scoped query.
+weather) still want a box-side `/api/trains/analytics` expansion.
+**✓ Period-scoped train analytics (2026-06-11):** `/api/trains/analytics` now takes
+`start`/`end` (passes_today stays absolute); the Analytics→Trains period selector filters
+the charts. Compute extracted to `birdstation/train_analytics.py` + `test_trains_analytics.py`.
 
 ### 3b. Observatory ideas backlog — re-prioritized 2026-06-05
 Building on the Analytics tab / `GET /api/analytics` / bird cards. Tags: **[new]** = added
@@ -173,6 +176,14 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-11** — Train analytics: **period scoping.** `/api/trains/analytics` gained
+  optional `start`/`end` (same Eastern→UTC window as the bird analytics; `passes_today`
+  stays absolute), the Analytics→Trains period selector now filters the charts, and the
+  pass-grouping compute moved to a dependency-free `birdstation/train_analytics.py`
+  (+ `test_trains_analytics.py`, 17 checks). **Needs a box deploy** (`git pull` + restart
+  `birdapi`); old box ignores the params (all-time) until then. Also fixed the `[hidden]`
+  CSS bug that had left the period bar visible-but-inert in Trains mode (`?v=obs35`/`obs26`).
 
 - **2026-06-11** — **Admin tool: modular Box + Git panels + CLI catalog.** `admin.py` gained a
   `box` group (pull clips / calibrate / deploy profile / sync verdicts / status / restart, all

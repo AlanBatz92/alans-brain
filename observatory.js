@@ -556,11 +556,15 @@ async function loadAlmost() {
    is on Trains; it renders the headline cards + the "when" charts into the shared
    analytics containers. Returns false if the box is unreachable (leaves the tab
    unloaded so a refresh retries). */
-async function loadTrainAnalytics() {
+async function loadTrainAnalytics(start, end) {
   setMsg(document.getElementById('obs-train-an-hours'), 'obs-loading', 'Crunching the numbers…');
+  let url = EP.trainsAnalytics;
+  if (start && end) {
+    url += '?start=' + encodeURIComponent(start) + '&end=' + encodeURIComponent(end);
+  }
   let a;
   try {
-    a = await fetchJson(EP.trainsAnalytics);
+    a = await fetchJson(url);
   } catch (err) {
     setMsg(document.getElementById('obs-train-an-hours'), 'obs-empty',
       'Train analytics unavailable — the box may be offline.');
@@ -1137,8 +1141,8 @@ function renderDaily(byDay) {
 }
 
 // Switch the analytics dataset (🐦 birds / 🚂 trains). Toggles the mode buttons,
-// shows the matching section set + note, hides the bird-only period bar for trains
-// (the train endpoint is all-time), and (re)loads that dataset.
+// shows the matching section set + note, and (re)loads that dataset. Both modes
+// are period-scoped (the period selector applies to either).
 function setAnMode(mode) {
   if (mode !== 'trains') mode = 'birds';
   state.an.mode = mode;
@@ -1154,14 +1158,14 @@ function setAnMode(mode) {
   if (birdsWrap)  birdsWrap.hidden  = mode !== 'birds';
   if (trainsWrap) trainsWrap.hidden = mode !== 'trains';
 
-  // Trains analytics are all-time (the box endpoint isn't period-scoped), so the
-  // period selector only applies to birds — hide it (and reframe the note) on trains.
+  // The period selector applies to both datasets now (the train endpoint takes the
+  // same start/end window). Keep it visible; just reframe the note per mode.
   const periodBar = document.getElementById('obs-an-period-bar');
-  if (periodBar) periodBar.hidden = mode === 'trains';
+  if (periodBar) periodBar.hidden = false;
   const note = document.getElementById('obs-an-note');
   if (note) {
     note.textContent = mode === 'trains'
-      ? 'All times in Eastern (Emmaus, PA). Counted as passes — clips within a few minutes are one train. All-time.'
+      ? 'All times in Eastern (Emmaus, PA). Counted as passes — clips within a few minutes are one train. Counts follow the selected period; “Today” is always today.'
       : 'All times in Eastern (Emmaus, PA). Only detections at 85%+ confidence are counted.';
   }
 
@@ -1169,26 +1173,28 @@ function setAnMode(mode) {
 }
 
 async function loadAnalytics(period) {
-  if (state.an.mode === 'trains') {
-    const ok = await loadTrainAnalytics();
-    if (ok) state.an.loaded = true;
-    return;
-  }
-
   const { start, end, label } = periodDates(period);
   state.an.period = period;
   state.an.label  = label;
-  // Sun times for the period's midpoint date, used to shade the hour chart. For
-  // multi-day periods this is representative (the chart aggregates all the days).
-  const midMs = (parseTime(start) + parseTime(end)) / 2;
-  state.an.sun = isNaN(midMs) ? null : sunTimes(new Date(midMs), OBS_LAT, OBS_LON);
 
-  // Reflect the active period button
+  // Reflect the active period button (shared by both datasets)
   document.querySelectorAll('#obs-an-periods .obs-period-tab').forEach((t) => {
     const on = t.getAttribute('data-period') === period;
     t.classList.toggle('obs-period-tab-active', on);
     t.setAttribute('aria-selected', on ? 'true' : 'false');
   });
+
+  // Trains: same Eastern→UTC window, scoped server-side.
+  if (state.an.mode === 'trains') {
+    const ok = await loadTrainAnalytics(start, end);
+    if (ok) state.an.loaded = true;
+    return;
+  }
+
+  // Sun times for the period's midpoint date, used to shade the hour chart. For
+  // multi-day periods this is representative (the chart aggregates all the days).
+  const midMs = (parseTime(start) + parseTime(end)) / 2;
+  state.an.sun = isNaN(midMs) ? null : sunTimes(new Date(midMs), OBS_LAT, OBS_LON);
 
   const hoursEl = document.getElementById('obs-an-hours');
   setMsg(hoursEl, 'obs-loading', 'Crunching the numbers…');

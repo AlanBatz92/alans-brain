@@ -10,6 +10,39 @@
 
 ---
 
+## 2026-06-11 — Train analytics: period scoping (box + front-end)
+
+Follow-up to the period-bar fix: Alan — "period scoping is important for proper
+analytics." Made the Trains analytics honor the period selector instead of being
+all-time.
+
+- **Box (`/api/trains/analytics`):** added optional `start`/`end` (full UTC datetime
+  strings, end exclusive — the **same** Eastern→UTC window the bird `/api/analytics`
+  already gets from the period selector). Passes whose start falls in `[start, end)`
+  feed the period buckets (`by_hour` / `by_dow_hour` / `by_day` / `total_passes` /
+  `busiest_hour` / `peak_day` / headway). **`passes_today` stays absolute** (Eastern
+  today), so the "Today" card is meaningful at any period. No window = all-time, so an
+  **old box ignores the new params** (FastAPI drops undeclared query params) and simply
+  serves all-time until deployed — graceful, no breakage.
+- **Refactor for testability:** the pass-grouping + bucketing moved out of the endpoint
+  into **`birdstation/train_analytics.py`** → `compute_train_analytics()` (no FastAPI
+  import), and `bird_api.trains_analytics` is now a thin DB-read + delegate. Robust
+  import (`from train_analytics import …` with a `birdstation.` fallback) covers
+  run-from-`birdstation/` and repo-root. New **`test_trains_analytics.py`** (17 checks):
+  pass grouping (5 clips → 3 passes), Eastern hour bucketing, window scoping,
+  passes_today-absolute-under-a-different-window, no-window all-time, empty range, and
+  headway median. All pass here (no box needed — the module is dependency-free).
+- **Front-end (`observatory.js?v=obs35`):** the Analytics period selector now applies to
+  **both** datasets — `loadAnalytics` computes the window once and routes it to
+  `loadTrainAnalytics(start, end)` (which appends `?start=&end=`), and `setAnMode` keeps
+  the period bar visible for trains with a reframed note ("counts follow the selected
+  period; 'Today' is always today"). Verified the URL windowing + routing with a stub.
+- **Deploy:** this one **needs the box** — `cd ~/alans-brain && git pull && sudo
+  systemctl restart birdapi` (picks up `bird_api.py` + the new `train_analytics.py`).
+  Site auto-deploys `?v=obs35`; until the box restarts, trains analytics are all-time.
+
+---
+
 ## 2026-06-11 — Fix: Analytics period bar stayed visible (and inert) in Trains mode
 
 `setAnMode('trains')` set `#obs-an-period-bar`'s `hidden` attribute (train analytics

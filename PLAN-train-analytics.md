@@ -4,11 +4,13 @@
 > Analytics tab. Train analytics (the existing all-time `/api/trains/analytics` — pass
 > counts, hour-of-day, per-day, day-of-week×hour heatmap) render there now, and the
 > Trains tab is the raw recent-events feed. Same change added numbers on every bar and a
-> tap-any-chart detail popout. **Still open** (the "new train-only visuals" below):
-> duration/loudness histograms, a headway card, and a **period-scoped** train endpoint —
-> all need a box-side `/api/trains/analytics` expansion. See `Build History.md`
-> (2026-06-11) and ROADMAP §3a. (Earlier status: designed 2026-06-05; foundation
-> endpoint + Trains-tab charts shipped 2026-06-08.)
+> tap-any-chart detail popout. **Period scoping shipped 2026-06-11** —
+> `/api/trains/analytics` takes `start`/`end` (compute in `birdstation/train_analytics.py`,
+> `test_trains_analytics.py`); the Trains period selector filters the charts (`passes_today`
+> stays absolute). **Still open** (the "new train-only visuals" below): duration/loudness
+> histograms and a headway card — further `/api/trains/analytics` fields. See
+> `Build History.md` (2026-06-11) and ROADMAP §3a. (Earlier status: designed 2026-06-05;
+> foundation endpoint + Trains-tab charts shipped 2026-06-08.)
 
 ## Why
 
