@@ -10,6 +10,22 @@
 
 ---
 
+## 2026-06-11 — Fix: Analytics period bar stayed visible (and inert) in Trains mode
+
+`setAnMode('trains')` set `#obs-an-period-bar`'s `hidden` attribute (train analytics
+are all-time, so the Today/Week/Month selector shouldn't apply), but the bar stayed
+on screen: `.obs-period-bar { display: flex }` (author CSS) **overrides** the UA
+`[hidden] { display: none }`, so the attribute never won. Result on desktop: the
+period filters showed in Trains mode and clicking them re-fetched the same all-time
+data — "nothing changes." Fix is a one-line normalize, `[hidden] { display: none
+!important; }`, so the attribute always wins (also hardens every other
+`hidden`-toggled element — panels, the daily-chart sections, the "Last train" card).
+CSS-only; `style.css?v=obs26`. (If period-scoped *train* analytics are wanted later,
+that's a box change — add `start`/`end` to `/api/trains/analytics`; tracked in
+ROADMAP §3a.)
+
+---
+
 ## 2026-06-11 — Trains tab "Last train" + meters, and a modular admin tool (Box + Git panels, CLI catalog)
 
 Two threads from Alan: (1) the now-raw Trains tab "looks a little too bare," and

@@ -162,7 +162,7 @@ train data a home. ID/class prefix: **`obs-`**.
   the full leaderboard; horizontally scrollable. This is the **mobile** read path (no
   hover on touch). Shared builders: `hourBarsHtml()` / `dailyChartHtml()`.
 - **Both** assets are cache-busted on observatory.html — `observatory.js?v=obs34` +
-  `style.css?v=obs25` + `bird-info.js?v=obs6`. Bump the query on *every* changed
+  `style.css?v=obs26` + `bird-info.js?v=obs6`. Bump the query on *every* changed
   Observatory asset (a stale cached `.js` once made a whole iteration look unshipped).
 - **Bird cards (steps 1–3 + polish, 2026-06-01):** tapping any species card opens a
   quick-view modal (bottom sheet on mobile, centered on desktop): Wikipedia photo
@@ -311,7 +311,7 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs25`, `observatory.js?v=obs34`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs26`, `observatory.js?v=obs34`, `bird-info.js?v=obs6`.
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 

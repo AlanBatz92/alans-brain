@@ -5264,6 +5264,12 @@ nav {
 }
 
 /* ── Period selector + search (Observatory timeline) ── */
+/* Normalize: the HTML `hidden` attribute must always win, even on elements with
+   an explicit display (e.g. .obs-period-bar is display:flex, which would otherwise
+   override the UA [hidden]{display:none} and leave a "hidden" bar visible — that's
+   why the all-time Trains analytics still showed the period filters). */
+[hidden] { display: none !important; }
+
 .obs-period-bar {
   display: flex;
   align-items: center;
