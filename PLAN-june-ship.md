@@ -97,6 +97,39 @@ site read as "MVP-ready."
 
 ---
 
+## Phase 1b — Weather app ("My Week") overhaul  ▶ first ship  (🤖)
+
+A "clean and accurate" pass on `weather.html` / `weather.js`. Added to the first ship
+2026-06-14. Ordered by priority; the first item is also a **security launch-gate** item.
+
+**Security / accuracy (must)**
+- [ ] **M 🤖 + 🧑** **Move the OpenWeatherMap API key server-side.** It's currently
+      **hardcoded in client JS** (`weather.js:8`) — scrapable, abusable. Add an
+      **`api/weather.js`** Vercel proxy holding the key as an env var (same pattern as
+      `api/setlist.js` / `api/spotify-proxy.js`); the browser calls the proxy. 🧑 **rotate
+      the exposed key** afterward. *(Also checked in Phase 5.)*
+- [ ] **M 🤖** **Fix the "vs. yesterday" comparison.** Today it caches *today's*
+      forecast and labels it "yesterday" (`saveYesterdayData`), so the delta is often
+      forecast drift, not a real day-over-day change. Use One Call 3.0's historical
+      `day_summary`/`timemachine` for a **true** comparison — or drop the feature rather
+      than show a number that can be wrong.
+- [ ] **S 🤖** **Bucket hours in the location's timezone**, not the viewer's. Use the
+      API's `timezone_offset` so the "best window" times are correct for any visitor.
+
+**Cleanup (should)**
+- [ ] **S 🤖** Collapse the duplicate `scoreInverse()` / `scoreRange()` (identical
+      bodies, misleading name).
+- [ ] **S 🤖** Fix the drone daily **visibility fudge** (hardcoded `10000`) + the fake
+      `20/20` "—" visibility row in the score breakdown.
+- [ ] **S 🤖** Replace the `prompt()`/`alert()` custom-location flow with a small inline
+      form (sturdier; `prompt` is blocked in some embedded contexts).
+
+**Calibration (subjective — with Alan)**
+- [ ] **S 🤖+🧑** Review the running/drone/tanning **thresholds** together; retune any
+      band that feels off. Open to suggestions — this is the judgment-call part.
+
+---
+
 ## Phase 2 — Theme polish  (🤖 engine / 🧑 some assets)
 
 - [ ] **M 🤖** **Space theme — starfield background**, optional toggle. Pure CSS/canvas,
@@ -156,6 +189,8 @@ diff, plus targeted checks:
 
 - [ ] **Secrets:** no keys/creds committed; IMAP + Ticketmaster keys only in
       `/etc/birdstation.env` (chmod 600); `.gitignore` still blocks `*.env`/`*.db`.
+- [ ] **OpenWeatherMap key:** moved behind the `api/weather.js` proxy (Phase 1b) and the
+      old client-exposed key **rotated**. No third-party API keys in any static asset.
 - [ ] **IMAP surface:** read-only, dedicated inbox, no creds in static JS or any API
       response; failure modes don't leak the address.
 - [ ] **XSS:** every new rendered string (events, newsletter items) goes through
