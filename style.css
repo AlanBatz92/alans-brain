@@ -4519,6 +4519,8 @@ nav {
   font-size: 1.02rem;
   color: var(--text);
   line-height: 1.15;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 /* Top-right corner group on a species card — the heard-count and, for lifers, a star. */
 .obs-species-meta {
@@ -4602,11 +4604,12 @@ nav {
   padding: 10px 14px;
 }
 .obs-lifer-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.obs-lifer-name { font-weight: 700; color: var(--text); min-width: 0; }
+.obs-lifer-name { font-weight: 700; color: var(--text); min-width: 0; overflow-wrap: break-word; }
 .obs-lifer-sci {
   font-size: 0.72rem;
   font-style: italic;
   color: var(--text-dim);
+  overflow-wrap: break-word;
 }
 .obs-lifer-meta {
   display: flex;
@@ -4996,6 +4999,7 @@ nav {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  min-width: 0;
 }
 .obs-bcard-stat-val {
   font-family: var(--font-display);
