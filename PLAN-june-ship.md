@@ -73,11 +73,10 @@ site read as "MVP-ready."
 - [x] **S 🤖** Bird life cards: text overflow ("text runneth over") — min-width:0 +
       overflow-wrap on the species name, life-list rows, and bird-card stat cells.
       *(done 2026-06-14; `?v=obs27`. Worth an eyeball on the live page to confirm.)*
-- [ ] **M 🤖** "Almost a lifer" shelf: show birds almost-a-lifer **by any metric**, not
-      just 3-hits-at-85%. Currently `computeAlmostLifers()` only handles the burst path;
-      extend to the cumulative (≥8 @ ≥0.70) and near-100% paths so a bird close on *any*
-      of the three routes appears. Front-end only. *(needs: a 2nd all-time fetch + a
-      decision on how close = "almost" for the 8-hit path)*
+- [x] **M 🤖** "Almost a lifer" shelf: show birds almost-a-lifer **by any metric**, not
+      just 3-hits-at-85%. Added the cumulative route (6–7 of 8 all-time @ ≥0.70); the
+      shelf now merges both paths, dedupes to the nearer one, and labels each card's
+      scope. *(done 2026-06-14; `?v=obs36`. The ~100% instant path can't be "almost".)*
 - [ ] **M 🤖** Analytics: charts crowd / collide at high counts (e.g. sorting "all
       time", large numbers). Fix bar spacing/scaling/label collision in the `obs-an-*`
       charts so they stay legible as the dataset grows. *(benefits from a rendered look)*
@@ -105,18 +104,17 @@ A "clean and accurate" pass on `weather.html` / `weather.js`. Added to the first
 2026-06-14. Ordered by priority; the first item is also a **security launch-gate** item.
 
 **Security / accuracy (must)**
-- [ ] **M 🤖 + 🧑** **Move the OpenWeatherMap API key server-side.** It's currently
-      **hardcoded in client JS** (`weather.js:8`) — scrapable, abusable. Add an
-      **`api/weather.js`** Vercel proxy holding the key as an env var (same pattern as
-      `api/setlist.js` / `api/spotify-proxy.js`); the browser calls the proxy. 🧑 **rotate
-      the exposed key** afterward. *(Also checked in Phase 5.)*
-- [ ] **M 🤖** **Fix the "vs. yesterday" comparison.** Today it caches *today's*
-      forecast and labels it "yesterday" (`saveYesterdayData`), so the delta is often
-      forecast drift, not a real day-over-day change. Use One Call 3.0's historical
-      `day_summary`/`timemachine` for a **true** comparison — or drop the feature rather
-      than show a number that can be wrong.
-- [ ] **S 🤖** **Bucket hours in the location's timezone**, not the viewer's. Use the
-      API's `timezone_offset` so the "best window" times are correct for any visitor.
+- [x] **M 🤖 + 🧑** **Move the OpenWeatherMap API key server-side.** Added
+      **`api/weather.js`** (key from the `OPENWEATHER_API_KEY` env var, endpoint
+      whitelist); `weather.js` calls the proxy and the key is gone from the client.
+      *(done 2026-06-14. 🧑 **ACTION:** set `OPENWEATHER_API_KEY` in Vercel + **rotate**
+      the old key. Also in Phase 5.)*
+- [x] **M 🤖** **Fix the "vs. yesterday" comparison.** Replaced the relabeled-forecast
+      hack with a **real** historical comparison via One Call 3.0 `day_summary` (through
+      the proxy), timezone-aware date, cached per day/location. *(done 2026-06-14)*
+- [ ] **S 🤖** **Bucket the hourly windows in the location's timezone**, not the
+      viewer's. The vs-yesterday date already uses `timezone_offset`; the "best window"
+      hour math (`getHours()` in `findOptimalWindow`/`getHoursForDay`) still needs it.
 
 **Cleanup (should)**
 - [ ] **S 🤖** Collapse the duplicate `scoreInverse()` / `scoreRange()` (identical
