@@ -17,3 +17,4 @@ birdstation (the home server behind Pulse + the Bird Observatory) is version-con
 - Setlist tool uses the `sl-` prefix for IDs and classes.
 - Theme variables (`--bg`, `--surface`, `--text`, `--green`, etc.) live near the top of `style.css`.
 - `api/` holds Vercel serverless proxies (setlist.fm, Spotify writes) for CORS workarounds.
+- **Keep the Stack page current.** Whenever a piece of technology is added, removed, or changed anywhere in the site/hardware stack, update `techstack.html` (its `NODES`/`GLOSSARY`/edges) in the same change so the diagram stays an accurate reflection of what's actually running.

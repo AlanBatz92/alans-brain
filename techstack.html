@@ -296,7 +296,6 @@
    GLOSSARY
 ══════════════════════════════════════ */
 var GLOSSARY = {
-  'usb':              { title: 'USB', def: 'Universal Serial Bus — a physical connector standard. The AudioMoth plugs into birdnode via USB and registers itself as an audio input device (like a microphone would).' },
   'icecast':          { title: 'Icecast', def: 'Open-source audio/video streaming server software. It receives a live audio feed and broadcasts it as a continuous HTTP stream — like an internet radio station, but on the local network.' },
   'http-stream':      { title: 'HTTP Audio Stream', def: 'A never-ending HTTP response that delivers audio data in real time. Any connected software can tune in and receive audio indefinitely.' },
   'ssh':              { title: 'SSH — Secure Shell', def: 'An encrypted protocol for remote command-line access over a network. Alan uses it to log into birdstation from any machine and run commands as if sitting at the keyboard.' },
@@ -348,7 +347,7 @@ var NODES = [
     d: [20, 7], m: [20, 5],
     type: 'Hardware — Acoustic Recorder',
     what: 'An open-source, ultra-low-power acoustic recording unit that sits outside and listens continuously.',
-    role: 'Captures continuous backyard audio and feeds it into birdnode via ' + T('usb','USB') + '. birdnode picks it up as a ' + T('usb','USB') + ' audio device — the same way a microphone would appear to any computer.',
+    role: 'Captures continuous backyard audio and feeds it into birdnode via USB. birdnode picks it up as a USB audio device — the same way a microphone would appear to any computer.',
     privacy: 'Audio is processed locally on birdstation and discarded after analysis. No recordings are ever stored permanently or sent off-site.',
     connects: ['birdnode']
   },
@@ -369,7 +368,7 @@ var NODES = [
     d: [20, 24], m: [20, 19],
     type: 'Edge Device — Raspberry Pi Zero 2 W',
     what: 'A Raspberry Pi Zero 2 W — a credit-card-sized, low-power single-board computer sitting physically near the AudioMoth.',
-    role: 'Receives audio from the AudioMoth over ' + T('usb','USB') + ' and runs <strong>' + T('icecast','Icecast') + '</strong>, the audio streaming server. Broadcasts a continuous ' + T('http-stream','HTTP audio stream') + ' over the local network on the <code>/backyard</code> mount point. birdstation connects to this URL to feed ' + T('birdnet','BirdNET') + ' and the train detector.',
+    role: 'Receives audio from the AudioMoth over USB and runs <strong>' + T('icecast','Icecast') + '</strong>, the audio streaming server. Broadcasts a continuous ' + T('http-stream','HTTP audio stream') + ' over the local network on the <code>/backyard</code> mount point. birdstation connects to this URL to feed ' + T('birdnet','BirdNET') + ' and the train detector.',
     privacy: 'Stays entirely on the local network — the audio stream is never exposed to the internet.',
     connects: ['audiomoth', 'birdstation']
   },
