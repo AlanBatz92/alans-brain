@@ -53,9 +53,12 @@ const MAX_TRAINS = 30;   // matches the recent-events query limit
 // `periodLabel` mirrors the selected period for the stat-card labels; the period
 // grid's "latest" species is stashed in `periodLatest` for the Latest card.
 const state = { life: [], lifeLoaded: false, periodGroups: [], period: 'today', periodLabel: 'today', periodLatest: null, searchQuery: '', periodSort: 'recent', lifeSort: 'recent', onlyPerfect: false, lifeOnlyPerfect: false,
-  // "Almost a lifer" shelf — rolling-24h grouped species, filtered against the
-  // life list at render time (so it tracks whichever of the two loads last).
+  // "Almost a lifer" shelf — two data sources, filtered against the life list at
+  // render time (so it tracks whichever load lands last): `almost` is the rolling-24h
+  // grouped species (burst path), `almostCum` is all-time grouped at the 0.70 floor
+  // (cumulative path).
   almost: [],
+  almostCum: [],
   // Analytics tab — lazy-loaded on first open, scoped by its own period selector.
   // `mode` is the dataset switch (🐦 birds / 🚂 trains); each keeps its own last
   // response so toggling back doesn't necessarily refetch. `data` mirrors the
@@ -80,6 +83,9 @@ const LIFE_LIST_WINDOW_HOURS = 24;
 // all-time, no time window — so a persistent moderate-confidence bird earns a spot.
 const LIFE_LIST_CUMULATIVE_HITS = 8;
 const LIFE_LIST_CUMULATIVE_CONFIDENCE = 0.70;
+// On the "Almost a lifer" shelf, surface a cumulative-path bird once it's within
+// striking distance of the 8-hit bar (≥ 6 of 8 all-time hits at ≥ 0.70).
+const ALMOST_CUMULATIVE_MIN = 6;
 
 /* ── Helpers ── */
 
@@ -472,24 +478,49 @@ async function loadLife() {
    grouped endpoint (a rolling-24h window) minus the loaded life list, so it needs
    no box change. Independent of the period selector — the rule is always rolling-24h. */
 
-// Pure (testable): from the rolling-window grouped species + the life list, return
-// the species on the cusp — not yet listed, heard 1..need-1 times at the display
-// floor in the window, and not a ~100% instant-add — ordered closest-first.
-function computeAlmostLifers(groups, life, need, perfectConf) {
+// Pure (testable): build the "almost a lifer" cards from BOTH qualifying routes —
+//  • burst:      1..MIN_HITS-1 hits at the display floor (≥0.85) in a rolling 24h,
+//                excluding ~100% instant-adds;
+//  • cumulative: ALMOST_CUMULATIVE_MIN..CUMULATIVE_HITS-1 hits at ≥0.70 all-time.
+// Species already on the life list are excluded. A species close on both routes is
+// shown once, on whichever is nearer to qualifying. Returns card models
+// {common_name, scientific_name, last_heard, got, need, path} ordered closest-first.
+function computeAlmostLifers(burst, cumulative, life, perfectConf) {
   const listed = new Set();
   (life || []).forEach((s) => {
     if (s.common_name)     listed.add(s.common_name.toLowerCase());
     if (s.scientific_name) listed.add(s.scientific_name.toLowerCase());
   });
-  return (groups || []).filter((g) => {
+  const isListed = (g) =>
+    listed.has((g.common_name || '').toLowerCase()) ||
+    (g.scientific_name && listed.has(g.scientific_name.toLowerCase()));
+
+  const byName = new Map();
+  const consider = (card) => {
+    const key = (card.common_name || '').toLowerCase();
+    const prev = byName.get(key);
+    if (!prev || (card.got / card.need) > (prev.got / prev.need)) byName.set(key, card);
+  };
+
+  (burst || []).forEach((g) => {
     const c = g.count || 0;
-    if (c < 1 || c >= need) return false;                          // none, or already qualified
-    if ((g.best_confidence || 0) >= perfectConf) return false;     // a ~100% hit instant-adds
-    if (listed.has((g.common_name || '').toLowerCase())) return false;
-    if (g.scientific_name && listed.has(g.scientific_name.toLowerCase())) return false;
-    return true;
-  }).sort((a, b) =>
-    (b.count - a.count) ||                                          // closest to the goal first
+    if (c < 1 || c >= LIFE_LIST_MIN_HITS) return;                  // none, or already qualified
+    if ((g.best_confidence || 0) >= perfectConf) return;           // a ~100% hit instant-adds
+    if (isListed(g)) return;
+    consider({ common_name: g.common_name, scientific_name: g.scientific_name,
+               last_heard: g.last_heard, got: c, need: LIFE_LIST_MIN_HITS, path: 'burst' });
+  });
+
+  (cumulative || []).forEach((g) => {
+    const c = g.count || 0;
+    if (c < ALMOST_CUMULATIVE_MIN || c >= LIFE_LIST_CUMULATIVE_HITS) return;
+    if (isListed(g)) return;
+    consider({ common_name: g.common_name, scientific_name: g.scientific_name,
+               last_heard: g.last_heard, got: c, need: LIFE_LIST_CUMULATIVE_HITS, path: 'cumulative' });
+  });
+
+  return Array.from(byName.values()).sort((a, b) =>
+    ((b.got / b.need) - (a.got / a.need)) ||                        // closest to the goal first
     ((parseTime(b.last_heard) || 0) - (parseTime(a.last_heard) || 0)));
 }
 
@@ -502,17 +533,20 @@ function renderAlmost() {
   // it has loaded, keep the bonus shelf hidden rather than risk showing a lifer.
   if (!state.lifeLoaded) { section.hidden = true; return; }
 
-  const need = LIFE_LIST_MIN_HITS;
-  const candidates = computeAlmostLifers(state.almost, state.life, need, PERFECT_CONFIDENCE);
+  const candidates = computeAlmostLifers(state.almost, state.almostCum, state.life, PERFECT_CONFIDENCE);
   if (candidates.length === 0) { section.hidden = true; return; }   // bonus shelf — hide when nothing's close
   section.hidden = false;
   if (countEl) countEl.textContent = '(' + candidates.length + ')';
 
   el.innerHTML = candidates.map((g) => {
-    const got    = Math.min(g.count || 0, need);
+    const need   = g.need;
+    const got    = Math.min(g.got || 0, need);
     const pct    = Math.round((got / need) * 100);
     const more   = need - got;
     const lastMs = parseTime(g.last_heard);
+    // Name the route so the count is legible: burst is a rolling-24h streak, the
+    // cumulative path is all-time evidence.
+    const scope  = g.path === 'cumulative' ? 'all-time' : 'in 24h';
     return '<div class="obs-almost-card" role="button" tabindex="0"' +
         ' data-name="' + escapeAttr(g.common_name) + '" data-sci="' + escapeAttr(g.scientific_name || '') + '">' +
         '<div class="obs-almost-top">' +
@@ -522,7 +556,7 @@ function renderAlmost() {
         (g.scientific_name ? '<div class="obs-almost-sci">' + escapeHtml(g.scientific_name) + '</div>' : '') +
         '<div class="obs-almost-track"><div class="obs-almost-fill" style="width:' + pct + '%"></div></div>' +
         '<div class="obs-almost-foot">' +
-          '<span class="obs-almost-need">' + more + ' more to go</span>' +
+          '<span class="obs-almost-need">' + more + ' more ' + scope + '</span>' +
           (lastMs != null ? '<span class="obs-almost-last">last ' + escapeHtml(clockTime(lastMs)) + '</span>' : '') +
         '</div>' +
       '</div>';
@@ -530,21 +564,23 @@ function renderAlmost() {
 }
 
 async function loadAlmost() {
-  const now   = Date.now();
-  const start = fmtUtcTsFull(now - LIFE_LIST_WINDOW_HOURS * 3600 * 1000);
-  const end   = fmtUtcTsFull(now);
-  let data;
-  try {
-    data = await fetchJson(
-      API_BASE + '/api/detections/grouped?start=' + encodeURIComponent(start) +
-      '&end=' + encodeURIComponent(end) + '&min_confidence=' + MIN_CONFIDENCE
-    );
-  } catch (err) {
-    state.almost = [];
-    renderAlmost();  // hides the section (it's a bonus shelf — no error noise if the box is down)
-    return;
-  }
-  state.almost = data.species || [];
+  const now        = Date.now();
+  const end        = fmtUtcTsFull(now);
+  const burstStart = fmtUtcTsFull(now - LIFE_LIST_WINDOW_HOURS * 3600 * 1000);
+  const cumStart   = fmtUtcTsFull(Date.UTC(2000, 0, 1));  // wide-open "all-time" floor
+  const grouped = (start, minConf) =>
+    fetchJson(API_BASE + '/api/detections/grouped?start=' + encodeURIComponent(start) +
+      '&end=' + encodeURIComponent(end) + '&min_confidence=' + minConf)
+      .then((d) => d.species || [])
+      .catch(() => null);  // a bonus shelf — a down box just yields no candidates, no error noise
+
+  // Burst (rolling 24h @ display floor) + cumulative (all-time @ 0.70) in parallel.
+  const [burst, cum] = await Promise.all([
+    grouped(burstStart, MIN_CONFIDENCE),
+    grouped(cumStart, LIFE_LIST_CUMULATIVE_CONFIDENCE)
+  ]);
+  state.almost    = burst || [];
+  state.almostCum = cum || [];
   renderAlmost();
 }
 
