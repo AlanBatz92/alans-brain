@@ -62,38 +62,40 @@ The fast, high-payoff polish. Knocks out ~10 items, no asset wait, makes the who
 site read as "MVP-ready."
 
 **Removals / verbiage (trivial sweeps)**
-- [ ] **S 🤖** Remove `"Built with HTML, CSS, and JS — the way the web was meant to
-      be"` footer — **all 14 pages** (confirmed present site-wide).
-- [ ] **S 🤖** Remove `"Privacy-safe — no IPs, hostnames, ports, or credentials
-      anywhere on this page"` note on Stack (`techstack.html`).
-- [ ] **S 🤖** Pride & Identity (`transart.html`): "art, voices, and resources **that
-      matter**" → "art, voices, and resources".
+- [x] **S 🤖** Remove `"Built with HTML, CSS, and JS — the way the web was meant to
+      be"` footer — **all 14 pages** (confirmed present site-wide). *(done 2026-06-14)*
+- [x] **S 🤖** Remove `"Privacy-safe — no IPs, hostnames, ports, or credentials
+      anywhere on this page"` note on Stack (`techstack.html`) + its orphaned CSS. *(done)*
+- [x] **S 🤖** Pride & Identity (`transart.html`): "art, voices, and resources **that
+      matter**" → "art, voices, and resources". *(done)*
 
 **Bird / Observatory cleanups**
-- [ ] **S 🤖** Bird life cards: text overflow ("text runneth over") — CSS fix on the
-      life-card layout (`.obs-*` in `style.css`).
+- [x] **S 🤖** Bird life cards: text overflow ("text runneth over") — min-width:0 +
+      overflow-wrap on the species name, life-list rows, and bird-card stat cells.
+      *(done 2026-06-14; `?v=obs27`. Worth an eyeball on the live page to confirm.)*
 - [ ] **M 🤖** "Almost a lifer" shelf: show birds almost-a-lifer **by any metric**, not
       just 3-hits-at-85%. Currently `computeAlmostLifers()` only handles the burst path;
       extend to the cumulative (≥8 @ ≥0.70) and near-100% paths so a bird close on *any*
-      of the three routes appears. Front-end only.
+      of the three routes appears. Front-end only. *(needs: a 2nd all-time fetch + a
+      decision on how close = "almost" for the 8-hit path)*
 - [ ] **M 🤖** Analytics: charts crowd / collide at high counts (e.g. sorting "all
       time", large numbers). Fix bar spacing/scaling/label collision in the `obs-an-*`
-      charts so they stay legible as the dataset grows.
+      charts so they stay legible as the dataset grows. *(benefits from a rendered look)*
 
 **Stack (`techstack.html`)**
-- [ ] **S 🤖** Expand node size.
-- [ ] **S 🤖** Ensure all text is visible / not cut off.
-- [ ] **S 🤖** Remove arbitrary glossary definitions (e.g. USB).
-- [ ] **M 🤖** Ensure **all** icons are custom (replace remaining emoji fallbacks:
-      Alan, birdstation, GitHub, Vercel, Anthropic, Visitor).
+- [ ] **S 🤖** Expand node size. *(benefits from a rendered look)*
+- [ ] **S 🤖** Ensure all text is visible / not cut off. *(benefits from a rendered look)*
+- [x] **S 🤖** Remove arbitrary glossary definitions (e.g. USB). *(done 2026-06-14)*
+- [ ] **M 🤖+🧑** Ensure **all** icons are custom (replace remaining emoji fallbacks:
+      Alan, birdstation, GitHub, Vercel, Anthropic, Visitor). *(needs icon assets/choices)*
 
 **Home page**
-- [ ] **S 🤖** Custom icons for **Pulse** and **Observatory** Explore cards (replace
-      generic/emoji with icons from `img/Icons/`).
+- [ ] **M 🤖+🧑** Custom icons for **Pulse** and **Observatory** Explore cards (replace
+      generic/emoji with icons from `img/Icons/`). *(needs icon choices)*
 
 **Process**
-- [ ] **S 🤖** Add a convention to `CLAUDE.md`: *update the Stack page whenever a piece
-      of technology is added or changed.* (Keeps `techstack.html` honest over time.)
+- [x] **S 🤖** Add a convention to `CLAUDE.md`: *update the Stack page whenever a piece
+      of technology is added or changed.* (Keeps `techstack.html` honest over time.) *(done)*
 
 ---
 
