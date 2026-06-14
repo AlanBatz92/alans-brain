@@ -9,6 +9,18 @@
 
 ---
 
+## ★ June Ship — systematic MVP review (active sprint)
+
+A time-boxed pass to get the site **feature-complete for an MVP** worth linking on
+socials, target **go-live ≈ end of June**. Full breakdown, phases, and checkboxes in
+**`PLAN-june-ship.md`**. Scope locked 2026-06-14: **flagship = Pulse "interests +
+events" feed**; Radio Station + Monte Cassino deferred to immediate post-launch.
+Start order: cleanups/removals → flagship → content/themes (as assets land) →
+**security review (launch gate)**. The items below remain the standing backlog; the
+sprint draws from and extends them.
+
+---
+
 ## ▶ Next
 
 ### 1. Observatory: "comic-book" bird cards — **steps 1–3 + polish + recent hits done**  (design: `PLAN-observatory-cards.md`)
