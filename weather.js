@@ -156,40 +156,72 @@ function initLocationSelector() {
   select.addEventListener('change', function() {
     var val = select.value;
     if (val === 'custom') {
-      showCustomLocationPrompt();
+      showCustomLocationForm();
     } else {
+      hideCustomLocationForm();
       var loc = WEATHER_LOCATIONS[parseInt(val, 10)];
       setSelectedLocation(loc);
       fetchWeather(true);
     }
   });
+
+  // Inline custom-location form wiring (replaces the old prompt()/alert()).
+  var saveBtn = document.getElementById('wCustomSave');
+  var cancelBtn = document.getElementById('wCustomCancel');
+  if (saveBtn)   saveBtn.addEventListener('click', saveCustomLocation);
+  if (cancelBtn) cancelBtn.addEventListener('click', function() {
+    hideCustomLocationForm();
+    restoreLocationDropdown();
+  });
+  ['wCustomName', 'wCustomLat', 'wCustomLon'].forEach(function(id) {
+    var inp = document.getElementById(id);
+    if (inp) inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); saveCustomLocation(); }
+    });
+  });
 }
 
-function showCustomLocationPrompt() {
-  var input = prompt('Enter location as "Name, Lat, Lon"\nExample: Jim Thorpe, 40.876, -75.732');
-  if (!input) {
-    // Reset dropdown to current
-    restoreLocationDropdown();
-    return;
-  }
-  var parts = input.split(',');
-  if (parts.length >= 3) {
-    var name = parts[0].trim();
-    var lat = parseFloat(parts[1].trim());
-    var lon = parseFloat(parts[2].trim());
-    if (name && !isNaN(lat) && !isNaN(lon)) {
-      setSelectedLocation({ name: name, lat: lat, lon: lon });
-      // Update dropdown label
-      var select = document.getElementById('wLocationSelect');
-      var customOpt = select.querySelector('option[value="custom"]');
-      customOpt.textContent = name;
-      customOpt.selected = true;
-      fetchWeather(true);
-      return;
-    }
-  }
-  alert('Invalid format. Use: Name, Lat, Lon');
-  restoreLocationDropdown();
+function showCustomLocationForm() {
+  var form = document.getElementById('wCustomLoc');
+  if (!form) return;
+  // Prefill with the current location if it's already a custom one (not a preset).
+  var current = getSelectedLocation();
+  var isPreset = WEATHER_LOCATIONS.some(function(l) { return l.name === current.name; });
+  document.getElementById('wCustomName').value = isPreset ? '' : current.name;
+  document.getElementById('wCustomLat').value  = isPreset ? '' : current.lat;
+  document.getElementById('wCustomLon').value  = isPreset ? '' : current.lon;
+  setCustomError('');
+  form.hidden = false;
+  document.getElementById('wCustomName').focus();
+}
+
+function hideCustomLocationForm() {
+  var form = document.getElementById('wCustomLoc');
+  if (form) form.hidden = true;
+}
+
+function setCustomError(msg) {
+  var err = document.getElementById('wCustomErr');
+  if (!err) return;
+  err.textContent = msg || '';
+  err.hidden = !msg;
+}
+
+function saveCustomLocation() {
+  var name = (document.getElementById('wCustomName').value || '').trim();
+  var lat = parseFloat((document.getElementById('wCustomLat').value || '').trim());
+  var lon = parseFloat((document.getElementById('wCustomLon').value || '').trim());
+
+  if (!name) { setCustomError('Enter a name.'); return; }
+  if (isNaN(lat) || lat < -90 || lat > 90)   { setCustomError('Latitude must be between -90 and 90.'); return; }
+  if (isNaN(lon) || lon < -180 || lon > 180) { setCustomError('Longitude must be between -180 and 180.'); return; }
+
+  setSelectedLocation({ name: name, lat: lat, lon: lon });
+  // Update the dropdown's "Custom..." option to show the chosen name.
+  var customOpt = document.getElementById('wLocationSelect').querySelector('option[value="custom"]');
+  if (customOpt) { customOpt.textContent = name; customOpt.selected = true; }
+  hideCustomLocationForm();
+  fetchWeather(true);
 }
 
 function restoreLocationDropdown() {

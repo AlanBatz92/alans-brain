@@ -3128,6 +3128,53 @@ nav {
   border-color: var(--teal);
 }
 
+/* ── Inline custom-location form (replaces prompt/alert) ── */
+.w-custom-loc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.w-custom-input {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.2s;
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.w-custom-input.w-custom-num { flex: 0 1 90px; }
+.w-custom-input:focus { border-color: var(--teal); }
+.w-custom-btn {
+  background: var(--green);
+  color: var(--bg);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.w-custom-btn:hover { opacity: 0.85; }
+.w-custom-btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+.w-custom-err {
+  flex: 1 1 100%;
+  color: var(--red, #ef4444);
+  font-size: 0.74rem;
+}
+
 /* ── Unified day card: dual ratings ── */
 .w-day-ratings {
   display: flex;

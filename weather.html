@@ -115,6 +115,16 @@
         <button class="tracker-refresh" onclick="manualWeatherRefresh()" aria-label="Refresh">&#8635;</button>
       </div>
 
+      <!-- Inline custom-location form (shown when "Custom..." is picked) -->
+      <div id="wCustomLoc" class="w-custom-loc" hidden>
+        <input type="text" id="wCustomName" class="w-custom-input" placeholder="Name (e.g. Jim Thorpe)" aria-label="Location name">
+        <input type="text" id="wCustomLat" class="w-custom-input w-custom-num" placeholder="Lat" inputmode="decimal" aria-label="Latitude">
+        <input type="text" id="wCustomLon" class="w-custom-input w-custom-num" placeholder="Lon" inputmode="decimal" aria-label="Longitude">
+        <button type="button" id="wCustomSave" class="w-custom-btn">Save</button>
+        <button type="button" id="wCustomCancel" class="w-custom-btn w-custom-btn-ghost">Cancel</button>
+        <span id="wCustomErr" class="w-custom-err" role="alert" hidden></span>
+      </div>
+
       <div id="wError" class="w-error" style="display:none"></div>
 
       <!-- Loading state -->
