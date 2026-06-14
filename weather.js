@@ -5,7 +5,7 @@
 
 // ⚡ CONFIGURATION
 var WEATHER_CONFIG = {
-  apiKey: '9eb0ce0243cfaab90e67250e1a55863e',
+  proxyBase: '/api/weather',             // Vercel serverless proxy (holds the OWM key server-side)
   units: 'imperial',                     // 'imperial' (°F, mph) or 'metric' (°C, m/s)
   cacheTTL: 2 * 60 * 60 * 1000          // 2 hours in ms
 };
@@ -213,12 +213,12 @@ function fetchWeather(force) {
   }
 
   showLoading(true);
-  var url = 'https://api.openweathermap.org/data/3.0/onecall'
-    + '?lat=' + loc.lat
+  var url = WEATHER_CONFIG.proxyBase
+    + '?endpoint=onecall'
+    + '&lat=' + loc.lat
     + '&lon=' + loc.lon
     + '&units=' + WEATHER_CONFIG.units
-    + '&exclude=minutely,alerts'
-    + '&appid=' + WEATHER_CONFIG.apiKey;
+    + '&exclude=minutely,alerts';
 
   fetch(url)
     .then(function(r) {
@@ -226,15 +226,15 @@ function fetchWeather(force) {
       return r.json();
     })
     .then(function(data) {
-      // Save yesterday's data before overwriting cache
-      saveYesterdayData(cached);
-
       weatherCache = data;
       localStorage.setItem('ab_weather_cache', JSON.stringify(data));
       localStorage.setItem('ab_weather_ts', String(Date.now()));
       renderWeather(data);
       updateTimestamp(Date.now());
       showLoading(false);
+      // Real yesterday comparison (historical day-summary; cached per day/location).
+      // Re-renders the Today card's comparison line once it lands — never blocks.
+      ensureYesterdayData(loc, data);
     })
     .catch(function(err) {
       showLoading(false);
@@ -243,45 +243,79 @@ function fetchWeather(force) {
     });
 }
 
-/* ── YESTERDAY COMPARISON ────────────── */
+/* ── YESTERDAY COMPARISON (real historical data) ──
+   Uses the OpenWeatherMap One Call 3.0 day-summary endpoint (via the proxy) for
+   *actual* yesterday weather, not a relabeled cached forecast. Cached in
+   localStorage keyed by location + the location-local yesterday date, so it costs
+   ~one extra API call per day per location and auto-invalidates on date/loc change. */
 
-function saveYesterdayData(previousCacheStr) {
-  if (!previousCacheStr) return;
-  try {
-    var prev = JSON.parse(previousCacheStr);
-    if (prev.daily && prev.daily.length > 0) {
-      // Save today's entry from the previous cache as "yesterday"
-      var todayEntry = prev.daily[0];
-      localStorage.setItem('ab_weather_yesterday', JSON.stringify(todayEntry));
-    }
-  } catch (e) { /* ignore */ }
-}
-
-function getYesterdayData() {
+function readYesterdayCache() {
   try {
     var raw = localStorage.getItem('ab_weather_yesterday');
-    if (!raw) return null;
-    var data = JSON.parse(raw);
-    // Verify it's actually from yesterday (within ~48 hours to be safe)
-    var age = Date.now() - (data.dt * 1000);
-    if (age > 48 * 60 * 60 * 1000) return null; // too old
-    return data;
+    return raw ? JSON.parse(raw) : null;
   } catch (e) { return null; }
 }
 
-function yesterdayComparisonHTML(today, yesterday) {
-  if (!yesterday) return '';
+// Yesterday's date (YYYY-MM-DD) in the *location's* timezone, from timezone_offset.
+function yesterdayDateStr(data) {
+  var tz = (data && typeof data.timezone_offset === 'number') ? data.timezone_offset : 0;
+  // Shift "now" into the location's local time, step back a day, read the UTC Y-M-D
+  // of that shifted instant (offset already applied).
+  var local = new Date((Math.floor(Date.now() / 1000) + tz - 86400) * 1000);
+  var y = local.getUTCFullYear();
+  var m = local.getUTCMonth() + 1;
+  var d = local.getUTCDate();
+  return y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+}
 
-  var todayFeels = today.feels_like ? today.feels_like.day : today.temp.day;
-  var yesterdayFeels = yesterday.feels_like ? yesterday.feels_like.day : yesterday.temp.day;
-  var diff = Math.round(todayFeels - yesterdayFeels);
+function yesterdayCacheKey(loc, dateStr) {
+  return loc.lat + ',' + loc.lon + ',' + dateStr;
+}
+
+// Returns yesterday's day-summary for the current loc/date if cached, else null.
+function getYesterdayData(loc, data) {
+  var want = yesterdayCacheKey(loc, yesterdayDateStr(data));
+  var cached = readYesterdayCache();
+  return (cached && cached.key === want) ? cached.data : null;
+}
+
+// Fetch + cache yesterday's day-summary if we don't already have it, then re-render
+// so the Today card picks up the comparison. Silent on failure (a bonus line).
+function ensureYesterdayData(loc, data) {
+  var dateStr = yesterdayDateStr(data);
+  var want = yesterdayCacheKey(loc, dateStr);
+  var cached = readYesterdayCache();
+  if (cached && cached.key === want) return; // already have it (already rendered)
+
+  var url = WEATHER_CONFIG.proxyBase
+    + '?endpoint=day_summary'
+    + '&lat=' + loc.lat
+    + '&lon=' + loc.lon
+    + '&date=' + dateStr
+    + '&units=' + WEATHER_CONFIG.units;
+
+  fetch(url)
+    .then(function(r) { if (!r.ok) throw new Error('hist ' + r.status); return r.json(); })
+    .then(function(summary) {
+      localStorage.setItem('ab_weather_yesterday', JSON.stringify({ key: want, data: summary }));
+      if (weatherCache) renderWeather(weatherCache); // re-render so the comparison shows
+    })
+    .catch(function() { /* bonus line — skip silently if history is unavailable */ });
+}
+
+function yesterdayComparisonHTML(todayDay, yData) {
+  if (!yData || !yData.temperature) return '';
+
+  // Compare daytime temps: yesterday's afternoon (≈ today's `temp.day`), max as fallback.
+  var yTemp = (yData.temperature.afternoon != null) ? yData.temperature.afternoon : yData.temperature.max;
+  if (yTemp == null) return '';
+  var diff = Math.round(todayDay.temp.day - yTemp);
 
   if (diff === 0) return '<div class="w-yesterday">Same as yesterday</div>';
 
   var arrow = diff > 0 ? '↑' : '↓';
   var cls = diff > 0 ? 'warmer' : 'cooler';
-  var label = diff > 0 ? 'warmer' : 'cooler';
-  return '<div class="w-yesterday ' + cls + '">' + arrow + Math.abs(diff) + '° ' + label + ' than yesterday</div>';
+  return '<div class="w-yesterday ' + cls + '">' + arrow + Math.abs(diff) + '° ' + cls + ' than yesterday</div>';
 }
 
 function showLoading(on) {
@@ -666,7 +700,7 @@ function renderWeather(data) {
   var daily = data.daily.slice(0, 7);
   var hourly = data.hourly || [];
   var todayDate = new Date(data.daily[0].dt * 1000).toDateString();
-  var yesterday = getYesterdayData();
+  var yesterday = getYesterdayData(getSelectedLocation(), data);
 
   renderUnifiedStrip(daily, hourly, todayDate, yesterday);
 
