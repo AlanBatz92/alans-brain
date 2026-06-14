@@ -59,6 +59,15 @@ var THRESHOLDS = {
 
 var weatherCache = null;
 
+// Location timezone offset (seconds), from the API's `timezone_offset`, refreshed on
+// each render. Hour/day bucketing uses these so the "best window" times and day labels
+// read in the *forecast location's* clock — not whatever timezone the visitor is in.
+var tzOffsetSec = 0;
+function locHour(dt)       { return new Date((dt + tzOffsetSec) * 1000).getUTCHours(); }
+function locDow(dt)        { return new Date((dt + tzOffsetSec) * 1000).getUTCDay(); }
+function locDateStr(dt)    { return new Date((dt + tzOffsetSec) * 1000).toISOString().slice(0, 10); }
+function locTodayDateStr() { return locDateStr(Math.floor(Date.now() / 1000)); }
+
 /* ── CUSTOM WEATHER ICONS ─────────────── */
 
 var WEATHER_ICONS = {
@@ -354,9 +363,9 @@ function scoreRunningHour(hr) {
   var score = 0;
   score += scoreRange(feels, THRESHOLDS.run_feelsLike);
   score += scoreRange(wind, THRESHOLDS.run_wind);
-  score += scoreInverse(pop, THRESHOLDS.run_pop);
+  score += scoreRange(pop, THRESHOLDS.run_pop);
   score += scoreRange(humidity, THRESHOLDS.run_humidity);
-  score += scoreInverse(uvi, THRESHOLDS.run_uvi);
+  score += scoreRange(uvi, THRESHOLDS.run_uvi);
 
   // Heat + humidity combo penalty
   if (THRESHOLDS.run_heatHumidPenalty && feels > 80 && humidity > 65) {
@@ -383,9 +392,9 @@ function scoreTanningHour(hr) {
   var score = 0;
   score += scoreRange(temp, THRESHOLDS.tan_temp);
   score += scoreRange(uvi, THRESHOLDS.tan_uvi);
-  score += scoreInverse(clouds, THRESHOLDS.tan_clouds);
+  score += scoreRange(clouds, THRESHOLDS.tan_clouds);
   score += scoreRange(wind, THRESHOLDS.tan_wind);
-  score += scoreInverse(pop, THRESHOLDS.tan_pop);
+  score += scoreRange(pop, THRESHOLDS.tan_pop);
 
   if (isRaining) score = Math.min(score, THRESHOLDS.tan_rainCap);
   return score;
@@ -406,7 +415,7 @@ function scoreDroneHour(hr, sunrise, sunset) {
   var score = 0;
   score += scoreRange(wind, THRESHOLDS.drone_wind);
   score += scoreRange(gust, THRESHOLDS.drone_gust);
-  score += scoreInverse(pop, THRESHOLDS.drone_pop);
+  score += scoreRange(pop, THRESHOLDS.drone_pop);
   score += scoreRange(vis, THRESHOLDS.drone_vis);
   score += scoreRange(temp, THRESHOLDS.drone_temp);
 
@@ -424,7 +433,7 @@ function findOptimalWindow(hours, scoreFn, sunrise, sunset) {
 
   var scores = [];
   for (var i = 0; i < hours.length; i++) {
-    scores.push({ dt: hours[i].dt, hour: new Date(hours[i].dt * 1000).getHours(), score: scoreFn(hours[i], sunrise, sunset) });
+    scores.push({ dt: hours[i].dt, hour: locHour(hours[i].dt), score: scoreFn(hours[i], sunrise, sunset) });
   }
 
   var bestStart = -1;
@@ -475,10 +484,10 @@ function findOptimalWindow(hours, scoreFn, sunrise, sunset) {
 }
 
 function getHoursForDay(hourly, dayDt) {
-  var dayDate = new Date(dayDt * 1000).toDateString();
+  var dayDate = locDateStr(dayDt);  // group by the location's calendar day
   var result = [];
   for (var i = 0; i < hourly.length; i++) {
-    if (new Date(hourly[i].dt * 1000).toDateString() === dayDate) {
+    if (locDateStr(hourly[i].dt) === dayDate) {
       result.push(hourly[i]);
     }
   }
@@ -529,9 +538,9 @@ function scoreRunning(day) {
   var score = 0;
   score += scoreRange(feels, THRESHOLDS.run_feelsLike);
   score += scoreRange(wind, THRESHOLDS.run_wind);
-  score += scoreInverse(pop, THRESHOLDS.run_pop);
+  score += scoreRange(pop, THRESHOLDS.run_pop);
   score += scoreRange(humidity, THRESHOLDS.run_humidity);
-  score += scoreInverse(uvi, THRESHOLDS.run_uvi);
+  score += scoreRange(uvi, THRESHOLDS.run_uvi);
 
   // Heat + humidity combo penalty
   if (THRESHOLDS.run_heatHumidPenalty && feels > 80 && humidity > 65) {
@@ -569,9 +578,9 @@ function scoreTanning(day) {
   var score = 0;
   score += scoreRange(temp, THRESHOLDS.tan_temp);
   score += scoreRange(uvi, THRESHOLDS.tan_uvi);
-  score += scoreInverse(clouds, THRESHOLDS.tan_clouds);
+  score += scoreRange(clouds, THRESHOLDS.tan_clouds);
   score += scoreRange(wind, THRESHOLDS.tan_wind);
-  score += scoreInverse(pop, THRESHOLDS.tan_pop);
+  score += scoreRange(pop, THRESHOLDS.tan_pop);
 
   if (isRaining) score = Math.min(score, THRESHOLDS.tan_rainCap);
 
@@ -595,7 +604,7 @@ function scoreDrone(day) {
   var score = 0;
   score += scoreRange(wind, THRESHOLDS.drone_wind);
   score += scoreRange(gust, THRESHOLDS.drone_gust);
-  score += scoreInverse(pop, THRESHOLDS.drone_pop);
+  score += scoreRange(pop, THRESHOLDS.drone_pop);
   if (isFoggy) vis = 3000;
   score += scoreRange(vis, THRESHOLDS.drone_vis);
   score += scoreRange(temp, THRESHOLDS.drone_temp);
@@ -609,20 +618,18 @@ function scoreDrone(day) {
   return {
     score: score,
     rating: scoreToRating(score),
-    factors: { wind: Math.round(wind), gust: Math.round(gust), pop: Math.round(pop), temp: Math.round(temp), daylight: daylight }
+    // `vis` is assumed (the daily forecast carries no visibility) — clear unless the
+    // condition code is fog. Surfaced so the score breakdown can say so honestly.
+    factors: { wind: Math.round(wind), gust: Math.round(gust), pop: Math.round(pop), temp: Math.round(temp), daylight: daylight, vis: vis }
   };
 }
 
 /* ── SCORING HELPERS ──────────────────── */
 
+// Band lookup: returns the points for the band `val` falls in, else 0. "Lower is
+// better" factors (rain %, clouds, UV) just encode that in their band tables — small
+// ranges carry the high points — so they use this same function (no separate inverse).
 function scoreRange(val, bands) {
-  for (var i = 0; i < bands.length; i++) {
-    if (val >= bands[i][0] && val <= bands[i][1]) return bands[i][2];
-  }
-  return 0;
-}
-
-function scoreInverse(val, bands) {
   for (var i = 0; i < bands.length; i++) {
     if (val >= bands[i][0] && val <= bands[i][1]) return bands[i][2];
   }
@@ -697,9 +704,10 @@ function toggleUvDetails(el) {
 /* ── RENDER ────────────────────────────── */
 
 function renderWeather(data) {
+  tzOffsetSec = (typeof data.timezone_offset === 'number') ? data.timezone_offset : 0;
   var daily = data.daily.slice(0, 7);
   var hourly = data.hourly || [];
-  var todayDate = new Date(data.daily[0].dt * 1000).toDateString();
+  var todayDate = locDateStr(data.daily[0].dt);
   var yesterday = getYesterdayData(getSelectedLocation(), data);
 
   renderUnifiedStrip(daily, hourly, todayDate, yesterday);
@@ -729,11 +737,12 @@ function renderUnifiedStrip(days, hourly, todayDate, yesterday) {
 
   for (var i = 0; i < days.length; i++) {
     var day = days[i];
-    var d = new Date(day.dt * 1000);
-    var isToday = d.toDateString() === todayDate;
-    var dayName = isToday ? 'Today' : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
-    var fullDayName = isToday ? 'Today' : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
-    var dateStr = (d.getMonth() + 1) + '/' + d.getDate();
+    // Read this day in the location's timezone so labels/dates match the forecast clock.
+    var d = new Date((day.dt + tzOffsetSec) * 1000);
+    var isToday = locDateStr(day.dt) === todayDate;
+    var dayName = isToday ? 'Today' : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getUTCDay()];
+    var fullDayName = isToday ? 'Today' : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getUTCDay()];
+    var dateStr = (d.getUTCMonth() + 1) + '/' + d.getUTCDate();
 
     var runResult = scoreRunning(day);
     var droneResult = scoreDrone(day);
@@ -984,7 +993,7 @@ function windowMetrics(hours, startHour, endHour) {
   if (!hours || hours.length === 0) return '';
   var windowHours = [];
   for (var i = 0; i < hours.length; i++) {
-    var h = new Date(hours[i].dt * 1000).getHours();
+    var h = locHour(hours[i].dt);
     // Handle windows that wrap midnight (unlikely but safe)
     if (startHour < endHour) {
       if (h >= startHour && h < endHour) windowHours.push(hours[i]);
@@ -1020,9 +1029,9 @@ function buildScoreBreakdown(type, result) {
   if (type === 'run') {
     lines.push(breakdownLine('Feels like', f.feels + '°F', scoreRange(f.feels, THRESHOLDS.run_feelsLike), 20));
     lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.run_wind), 20));
-    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreInverse(f.pop, THRESHOLDS.run_pop), 20));
+    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreRange(f.pop, THRESHOLDS.run_pop), 20));
     lines.push(breakdownLine('Humidity', f.humidity + '%', scoreRange(f.humidity, THRESHOLDS.run_humidity), 20));
-    lines.push(breakdownLine('UV Index', f.uvi, scoreInverse(f.uvi, THRESHOLDS.run_uvi), 20));
+    lines.push(breakdownLine('UV Index', f.uvi, scoreRange(f.uvi, THRESHOLDS.run_uvi), 20));
     if (THRESHOLDS.run_heatHumidPenalty && f.feels > 80 && f.humidity > 65) {
       var penalty = Math.round((f.feels - 80) * 0.5 + (f.humidity - 65) * 0.3);
       lines.push('<div class="w-breakdown-row penalty"><span>Heat+humidity penalty</span><span>-' + penalty + '</span></div>');
@@ -1030,15 +1039,17 @@ function buildScoreBreakdown(type, result) {
   } else if (type === 'drone') {
     lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.drone_wind), 20));
     lines.push(breakdownLine('Gusts', f.gust + ' mph', scoreRange(f.gust, THRESHOLDS.drone_gust), 20));
-    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreInverse(f.pop, THRESHOLDS.drone_pop), 20));
+    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreRange(f.pop, THRESHOLDS.drone_pop), 20));
     lines.push(breakdownLine('Temp', f.temp + '°F', scoreRange(f.temp, THRESHOLDS.drone_temp), 20));
-    lines.push(breakdownLine('Visibility', '—', 20, 20)); // daily doesn't have vis
+    // Daily forecast has no visibility — assumed clear unless the condition is fog.
+    var visLabel = (f.vis != null && f.vis < 10000) ? 'reduced (fog)' : 'clear (assumed)';
+    lines.push(breakdownLine('Visibility', visLabel, scoreRange(f.vis != null ? f.vis : 10000, THRESHOLDS.drone_vis), 20));
   } else if (type === 'tan') {
     lines.push(breakdownLine('Temp', f.temp + '°F', scoreRange(f.temp, THRESHOLDS.tan_temp), 20));
     lines.push(breakdownLine('UV Index', f.uvi, scoreRange(f.uvi, THRESHOLDS.tan_uvi), 25));
-    lines.push(breakdownLine('Cloud cover', f.clouds + '%', scoreInverse(f.clouds, THRESHOLDS.tan_clouds), 25));
+    lines.push(breakdownLine('Cloud cover', f.clouds + '%', scoreRange(f.clouds, THRESHOLDS.tan_clouds), 25));
     lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.tan_wind), 15));
-    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreInverse(f.pop, THRESHOLDS.tan_pop), 15));
+    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreRange(f.pop, THRESHOLDS.tan_pop), 15));
   }
   return lines.join('');
 }
@@ -1108,9 +1119,8 @@ function findBestDay(days, scoreFn) {
 
 function summaryHTML(best, type, daily, hourly) {
   if (!best) return '';
-  var d = new Date(best.day.dt * 1000);
-  var todayStr = new Date().toDateString();
-  var dayName = d.toDateString() === todayStr ? 'Today' : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
+  var dayName = locDateStr(best.day.dt) === locTodayDateStr() ? 'Today'
+    : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][locDow(best.day.dt)];
   var label = type === 'run' ? '🏃 Best run' : (type === 'drone' ? '🛸 Best flight' : '☀️ Best tan');
 
   var hours = getHoursForDay(hourly, best.day.dt);
