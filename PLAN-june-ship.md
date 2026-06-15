@@ -77,20 +77,24 @@ site read as "MVP-ready."
       just 3-hits-at-85%. Added the cumulative route (6–7 of 8 all-time @ ≥0.70); the
       shelf now merges both paths, dedupes to the nearer one, and labels each card's
       scope. *(done 2026-06-14; `?v=obs36`. The ~100% instant path can't be "almost".)*
-- [ ] **M 🤖** Analytics: charts crowd / collide at high counts (e.g. sorting "all
-      time", large numbers). Fix bar spacing/scaling/label collision in the `obs-an-*`
-      charts so they stay legible as the dataset grows. *(benefits from a rendered look)*
+- [x] **M 🤖** Analytics: charts crowd / collide at high counts (e.g. sorting "all
+      time", large numbers). Inline hour/day bar numbers now hide < 600px (the
+      tap-to-detail popout is the mobile read path); desktop keeps them. *(done
+      2026-06-15; `?v=obs28`. **VERIFY on preview** — please confirm phones read cleanly.)*
 
 **Stack (`techstack.html`)**
-- [ ] **S 🤖** Expand node size. *(benefits from a rendered look)*
-- [ ] **S 🤖** Ensure all text is visible / not cut off. *(benefits from a rendered look)*
+- [x] **S 🤖** Expand node size — 56→64px (52px mobile), icons/glyphs + NODE_R to match.
+      *(done 2026-06-15. **VERIFY on preview** — confirm no nodes overlap at the dense spots.)*
+- [x] **S 🤖** Ensure all text is visible / not cut off — removed the label `max-width`
+      + ellipsis truncation so full names ("alansbrain.com") show. *(done 2026-06-15)*
 - [x] **S 🤖** Remove arbitrary glossary definitions (e.g. USB). *(done 2026-06-14)*
-- [ ] **M 🤖+🧑** Ensure **all** icons are custom (replace remaining emoji fallbacks:
-      Alan, birdstation, GitHub, Vercel, Anthropic, Visitor). *(needs icon assets/choices)*
+- [ ] **🧑 DEFERRED** Ensure **all** icons are custom (replace remaining emoji fallbacks:
+      Alan, birdstation, GitHub, Vercel, Anthropic, Visitor). *(deferred — needs icon
+      assets/choices; the existing set has nothing suitable. Revisit post-launch.)*
 
 **Home page**
-- [ ] **M 🤖+🧑** Custom icons for **Pulse** and **Observatory** Explore cards (replace
-      generic/emoji with icons from `img/Icons/`). *(needs icon choices)*
+- [ ] **🧑 DEFERRED** Custom icons for **Pulse** and **Observatory** Explore cards.
+      *(deferred with the Stack icons — same asset gap.)*
 
 **Process**
 - [x] **S 🤖** Add a convention to `CLAUDE.md`: *update the Stack page whenever a piece
@@ -112,17 +116,21 @@ A "clean and accurate" pass on `weather.html` / `weather.js`. Added to the first
 - [x] **M 🤖** **Fix the "vs. yesterday" comparison.** Replaced the relabeled-forecast
       hack with a **real** historical comparison via One Call 3.0 `day_summary` (through
       the proxy), timezone-aware date, cached per day/location. *(done 2026-06-14)*
-- [ ] **S 🤖** **Bucket the hourly windows in the location's timezone**, not the
-      viewer's. The vs-yesterday date already uses `timezone_offset`; the "best window"
-      hour math (`getHours()` in `findOptimalWindow`/`getHoursForDay`) still needs it.
+- [x] **S 🤖** **Bucket the hourly windows + day labels in the location's timezone**,
+      not the viewer's. New `locHour`/`locDow`/`locDateStr` helpers (from
+      `timezone_offset`); `findOptimalWindow`/`getHoursForDay`/`windowMetrics`/the day
+      cards all read in the forecast clock. *(done 2026-06-15. `updateTimestamp` stays
+      viewer-local — it's when *you* refreshed.)*
 
 **Cleanup (should)**
-- [ ] **S 🤖** Collapse the duplicate `scoreInverse()` / `scoreRange()` (identical
-      bodies, misleading name).
-- [ ] **S 🤖** Fix the drone daily **visibility fudge** (hardcoded `10000`) + the fake
-      `20/20` "—" visibility row in the score breakdown.
-- [ ] **S 🤖** Replace the `prompt()`/`alert()` custom-location flow with a small inline
-      form (sturdier; `prompt` is blocked in some embedded contexts).
+- [x] **S 🤖** Collapse the duplicate `scoreInverse()` into `scoreRange()` (15 callers
+      repointed). *(done 2026-06-15)*
+- [x] **S 🤖** Fix the drone daily **visibility fudge** — surface the assumed visibility
+      ("clear (assumed)" / "reduced (fog)") with real points instead of a fake `20/20 —`.
+      *(done 2026-06-15)*
+- [x] **S 🤖** Replace the `prompt()`/`alert()` custom-location flow with an inline form
+      (name/lat/lon, validation, Enter-to-save, inline errors). *(done 2026-06-15.
+      **VERIFY on preview** — confirm the form looks right.)*
 
 **Calibration (subjective — with Alan)**
 - [ ] **S 🤖+🧑** Review the running/drone/tanning **thresholds** together; retune any

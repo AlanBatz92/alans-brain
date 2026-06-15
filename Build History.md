@@ -10,6 +10,70 @@
 
 ---
 
+## 2026-06-14/15 — June Ship: systematic MVP review kicked off (Phase 1 + 1b)
+
+Started a time-boxed "systematic review of alansbrain.com" to reach a
+feature-complete MVP worth linking on socials (target go-live ≈ end of June).
+Planning doc **`PLAN-june-ship.md`** (phased, checkboxed, effort/owner-tagged),
+linked from a **★ June Ship** banner in `ROADMAP.md`. Scope locked with Alan:
+flagship new build = **Pulse "interests + events" feed**; Radio Station + Monte
+Cassino deferred to immediate post-launch. This session completed **Phase 1
+(cleanups/removals)** and **Phase 1b (weather overhaul)** — everything buildable
+without Alan-supplied assets.
+
+**Phase 1 — cleanups/removals/verbiage:**
+- Removed the `"Built with HTML, CSS, and JS — the way the web was meant to be"`
+  footer line (+ dangling `<br>`) across **all 14 pages**.
+- Removed the Stack `"Privacy-safe — no IPs…"` note + its orphaned `.ts-privacy` CSS.
+- Pride & Identity tagline → "art, voices, and resources" (dropped "that matter").
+- Removed the arbitrary **USB** glossary definition on Stack (kept the "USB audio"
+  edge label); unwrapped its two `T('usb',…)` clickable terms. Glossary now 31 entries.
+- Bird **life-card text overflow** fixed — `min-width:0` + `overflow-wrap` on the
+  species name, life-list rows, and bird-card stat grid cells (`?v=obs27`).
+- **"Almost a lifer" → any metric:** added the **cumulative route** (6–7 of 8
+  all-time hits at ≥0.70) alongside the burst route; `loadAlmost` fetches both
+  windows in parallel, `computeAlmostLifers` merges + dedupes to the nearer path
+  and labels each card's scope ("1 more in 24h" / "2 more all-time"). Logic verified
+  with a harness (exclusions, dedup, closest-first). `?v=obs36`.
+- **Analytics crowding:** large all-time counts collided the inline hour/day bar
+  numbers on phones — hide them < 600px (the tap-to-detail popout is the mobile read
+  path), keep on desktop. `?v=obs28`.
+- **Stack:** enlarged nodes 56→64px (52px mobile) with icons/glyphs + `NODE_R`
+  (32 / 26) to match; removed the label `max-width`+ellipsis truncation so full
+  names show.
+- **Process:** added a `CLAUDE.md` convention to keep `techstack.html` current when
+  the stack changes.
+- **Deferred (asset-gated):** custom icons for the home Pulse/Observatory cards +
+  the Stack emoji nodes — the existing icon set has nothing suitable.
+
+**Phase 1b — weather ("My Week") overhaul** (`weather.html`/`weather.js` + new
+`api/weather.js`):
+- **Security:** the OpenWeatherMap key was **hardcoded in client JS** (scrapable).
+  Added a Vercel serverless proxy **`api/weather.js`** that reads the key from the
+  `OPENWEATHER_API_KEY` env var (endpoint whitelist guards SSRF); the client calls
+  `/api/weather` and the key is gone from the browser. **Needs Alan: set the env var
+  in Vercel + rotate the old key.**
+- **Real "vs. yesterday":** replaced the hack that cached *today's* forecast and
+  relabeled it — now a true historical comparison via One Call 3.0 `day_summary`
+  (through the proxy), timezone-aware date, cached per day/location.
+- **Timezone bucketing:** the hourly "best window" math + day/date labels now read in
+  the forecast **location's** timezone (`locHour`/`locDow`/`locDateStr` from
+  `timezone_offset`), not the viewer's. `updateTimestamp` stays viewer-local.
+- **Cleanups:** collapsed the duplicate `scoreInverse()` into `scoreRange()` (15
+  callers); made the drone daily **visibility** honest in the score breakdown
+  ("clear (assumed)" / "reduced (fog)" with real points, not a fake `20/20 —`);
+  replaced the `prompt()`/`alert()` custom-location flow with an **inline form**
+  (validation, Enter-to-save, inline errors).
+
+**Verification:** `node --check` on all changed JS; CSS brace-balanced; logic
+harness for the almost-a-lifer merge; tz-helper math sanity-checked. The
+**visual** items (analytics mobile labels, Stack node sizing, the weather inline
+form) and the **weather proxy** (needs the env var) want a check on the preview
+deploy — flagged in the handoff. Calibration of the weather scoring thresholds is
+deferred until Alan flags specific ratings that feel wrong.
+
+---
+
 ## 2026-06-11 — Train analytics: period scoping (box + front-end)
 
 Follow-up to the period-bar fix: Alan — "period scoping is important for proper

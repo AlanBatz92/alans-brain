@@ -44,7 +44,7 @@ Shared front-end: `style.css` (theme variables + all component styles),
 - **Vanilla only.** No frameworks, no build step, no package manager. Don't introduce any.
 - **`setlist-spotify.js` is ES5-style** (`function`, `var` — not `let`/`const`/arrow). Match it when editing that file. The rest of the JS is modern.
 - **Theme variables** (`--bg`, `--surface`, `--text`, `--green`, `--teal`, `--border`, `--text-muted`, `--text-dim`, etc.) live near the top of `style.css`. Use them; don't hardcode colors.
-- **`api/`** holds Vercel serverless proxies (`setlist.js`, `spotify-proxy.js`) for setlist.fm and Spotify writes (CORS workaround). Spotify auth is PKCE — no client secret in the browser.
+- **`api/`** holds Vercel serverless proxies (`setlist.js`, `spotify-proxy.js`, `weather.js`) for setlist.fm, Spotify writes (CORS workaround), and OpenWeatherMap. Spotify auth is PKCE — no client secret in the browser. **`api/weather.js`** keeps the OpenWeatherMap key server-side (reads `OPENWEATHER_API_KEY` env var; endpoint whitelist for `onecall`/`day_summary`/`timemachine`); `weather.js` calls `/api/weather`, never OWM directly. *(NB: `api/setlist.js` still hardcodes its key server-side — lower risk since it's never sent to the browser, but a candidate to move to an env var too.)*
 - **Pages are JSON-driven** (`data/*.json`); adding content usually means editing a JSON file + dropping in media. See `README.md` "Adding Content".
 - **Admin tooling:** `admin.py` (CLI) and `admin-gui.py` (tkinter GUI) — a sidebar of **panels**
   over a CLI of **command groups**. Panels: **Soundboards**, **Media**, **Trains / Box** (pull
@@ -321,7 +321,18 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs26`, `observatory.js?v=obs35`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs28`, `observatory.js?v=obs36`, `bird-info.js?v=obs6`.
+- **"Almost a lifer" now covers both routes (2026-06-15):** the shelf surfaces birds
+  on the **burst** path (1–2 of 3 hits ≥0.85 in rolling 24h) *and* the **cumulative**
+  path (6–7 of 8 all-time hits ≥0.70). `loadAlmost()` fetches both windows in parallel;
+  `computeAlmostLifers(burst, cumulative, life, perfectConf)` merges, dedupes a bird
+  close on both to the nearer path, and each card names its scope ("N more in 24h" /
+  "N more all-time"). `ALMOST_CUMULATIVE_MIN = 6`.
+- **Analytics inline bar numbers hide < 600px (2026-06-15):** large all-time counts
+  collided on phones; the tap-to-detail popout (scrolls, labels every bar) is the
+  mobile read path, so `.obs-an-hours/.obs-an-daily .obs-an-bar-num` are hidden there.
+- **Bird cards: long text wraps (2026-06-15):** `min-width:0` + `overflow-wrap` on the
+  species name, life-list rows, and bird-card stat grid cells (no more overflow).
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 
@@ -429,10 +440,13 @@ Hardware chain: **AudioMoth** (USB mic) → **birdnode** (Raspberry Pi Zero 2 W 
 - Canvas aspect-ratio: `5/4` desktop, `7/10` mobile. `positionGraph()` recomputes pixel coords on every resize.
 - `buildGraph()` creates SVG defs/markers + node divs; `selectNode(id)` highlights active edges (stroke-opacity 0.9) and dims inactive (0.06); `clearSelection()` restores defaults.
 - Extra-bow heuristic on long diagonals: alan→birdstation, github→birdstation, birdnode→birdstation (+18px).
-- NODE_R = 28px desktop, 23px mobile (arrowhead offset).
+- NODE_R = 32px desktop, 26px mobile (arrowhead offset; bumped 2026-06-15 with the
+  larger nodes — `.ts-node-icon` 64px desktop / 52px mobile, was 56/46).
+- **Labels show in full (2026-06-15):** `.ts-node-label` dropped its `max-width` +
+  `text-overflow: ellipsis`, so long names ("alansbrain.com") are no longer truncated.
 
 ### Glossary / clickable-term system (2026-06-02)
-- **`GLOSSARY`** object: 32 entries mapping `key → {title, def}` (DNS, reverse-proxy, SSL termination, Icecast, BirdNET, systemd, FastAPI, SQLite, PKCE, CDN, anycast, nameserver, A record, CNAME, HTTPS, SSH, git, REST, JSON, API, WAV, PCM, MP3, FFT, uvicorn, CORS, webhook, serverless, venv, cron, passphrase, USB).
+- **`GLOSSARY`** object: 31 entries mapping `key → {title, def}` (DNS, reverse-proxy, SSL termination, Icecast, BirdNET, systemd, FastAPI, SQLite, PKCE, CDN, anycast, nameserver, A record, CNAME, HTTPS, SSH, git, REST, JSON, API, WAV, PCM, MP3, FFT, uvicorn, CORS, webhook, serverless, venv, cron, passphrase). *(USB removed 2026-06-14 as an arbitrary definition.)*
 - **`T(key, display)`** helper wraps terms in `<span class="ts-term" data-key="...">` inside node role strings; event delegation on `.ts-panel` opens the popover.
 - **`.ts-gloss`** fixed-position card; `showGloss(key, triggerEl)` uses `getBoundingClientRect()` for placement (flips below trigger if < 60px from top).
 
