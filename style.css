@@ -5483,6 +5483,18 @@ nav {
   pointer-events: none;
 }
 .obs-an-hbar-peak .obs-an-bar-num { color: var(--green); }
+/* Slightly tighter so large all-time counts (e.g. "9.9k") stay within a column. */
+.obs-an-bar-num { letter-spacing: -0.02em; }
+
+/* On a phone the inline hour/day bars are too narrow for a number on every one —
+   large all-time counts collide. Hide the inline labels there and let the
+   tap-to-detail popout (which scrolls and labels every bar) be the mobile read path,
+   as it already is for the rest of the chart. The popout's own numbers
+   (.obs-an-hours-detail .obs-an-bar-num) are unaffected — different, more specific rule. */
+@media (max-width: 600px) {
+  .obs-an-hours .obs-an-bar-num,
+  .obs-an-daily .obs-an-bar-num { display: none; }
+}
 
 /* Dawn-chorus shading — one continuous day/night "sky" gradient behind the bars
    (built in JS from Emmaus' sunrise/sunset). Spans the columns' content box; the

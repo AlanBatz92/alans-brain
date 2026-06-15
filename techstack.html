@@ -51,23 +51,25 @@
     .ts-node.ts-selected { transform: translate(-50%,-50%) scale(1.09); }
 
     .ts-node-icon {
-      width: 56px; height: 56px; border-radius: 14px;
+      width: 64px; height: 64px; border-radius: 16px;
       border: 2px solid var(--ts-border,rgba(45,212,191,.3));
       background: var(--ts-bg,rgba(45,212,191,.08));
       display: flex; align-items: center; justify-content: center;
-      font-size: 26px; transition: box-shadow .2s, border-color .2s;
+      font-size: 30px; transition: box-shadow .2s, border-color .2s;
     }
-    .ts-node-icon img { width: 28px; height: 28px; object-fit: contain; }
+    .ts-node-icon img { width: 32px; height: 32px; object-fit: contain; }
     .ts-node.ts-selected .ts-node-icon,
     .ts-node:hover .ts-node-icon {
       box-shadow: 0 0 0 3px var(--ts-glow,rgba(45,212,191,.4)), 0 0 22px var(--ts-glow,rgba(45,212,191,.18));
       border-color: var(--ts-color,var(--teal));
     }
+    /* Full label always visible — no truncation. The chip sizes to the text (labels
+       are short), so longer names like "alansbrain.com" aren't clipped with an ellipsis. */
     .ts-node-label {
       font-family: var(--font-mono); font-size: 0.59rem; color: var(--text-dim);
       text-align: center; white-space: nowrap;
-      background: rgba(10,14,26,.78); padding: 2px 5px; border-radius: 4px;
-      transition: color .2s; max-width: 82px; overflow: hidden; text-overflow: ellipsis;
+      background: rgba(10,14,26,.78); padding: 2px 6px; border-radius: 4px;
+      transition: color .2s;
     }
     .ts-node.ts-selected .ts-node-label,
     .ts-node:hover .ts-node-label { color: var(--ts-color,var(--teal)); }
@@ -80,9 +82,9 @@
     .ts-yellow { --ts-color:var(--yellow); --ts-bg:rgba(251,191,36,.08);  --ts-border:rgba(251,191,36,.28);  --ts-glow:rgba(251,191,36,.3); }
 
     @media (max-width: 520px) {
-      .ts-node-icon { width: 46px; height: 46px; font-size: 22px; border-radius: 12px; }
-      .ts-node-icon img { width: 24px; height: 24px; }
-      .ts-node-label { font-size: 0.54rem; max-width: 68px; }
+      .ts-node-icon { width: 52px; height: 52px; font-size: 25px; border-radius: 13px; }
+      .ts-node-icon img { width: 28px; height: 28px; }
+      .ts-node-label { font-size: 0.54rem; }
     }
 
     /* ── Legend ── */
@@ -622,7 +624,7 @@ function positionGraph() {
   var rect = canvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
   var w = rect.width, h = rect.height;
-  var NODE_R = isMobile() ? 23 : 28;
+  var NODE_R = isMobile() ? 26 : 32;  // half the icon size (52 / 64) so arrows meet the node edge
 
   NODES.forEach(function(n) {
     var pos = pct(n);
