@@ -130,9 +130,11 @@ function getSelectedLocation() {
 
 function setSelectedLocation(loc) {
   localStorage.setItem('ab_weather_location', JSON.stringify(loc));
-  // Clear cache so next fetch uses new location
+  // Clear cache so the next fetch uses the new location — both the forecast and the
+  // (location-keyed) yesterday comparison, so nothing stale lingers after a switch.
   localStorage.removeItem('ab_weather_cache');
   localStorage.removeItem('ab_weather_ts');
+  localStorage.removeItem('ab_weather_yesterday');
 }
 
 function initLocationSelector() {
@@ -361,7 +363,10 @@ function yesterdayComparisonHTML(todayDay, yData) {
 
 function showLoading(on) {
   document.getElementById('wLoading').style.display = on ? 'flex' : 'none';
-  document.getElementById('wStrip').style.display = on ? 'none' : '';
+  ['wHero', 'wBest', 'wWeek'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = on ? 'none' : '';
+  });
 }
 
 function updateTimestamp(ts) {
@@ -676,7 +681,6 @@ function scoreToRating(score) {
 }
 
 var RATING_LABELS = { perfect: 'Perfect', good: 'Good', fair: 'Fair', poor: 'Poor' };
-var RATING_ICONS = { perfect: '◆', good: '●', fair: '▲', poor: '✕' };
 
 /* ── UV INDEX INFO ───────────────────── */
 
@@ -742,34 +746,41 @@ function renderWeather(data) {
   var todayDate = locDateStr(data.daily[0].dt);
   var yesterday = getYesterdayData(getSelectedLocation(), data);
 
-  renderUnifiedStrip(daily, hourly, todayDate, yesterday);
+  var dayData = buildDayData(daily, hourly, todayDate, yesterday);
+  renderedDays['wStrip'] = dayData;
 
-  // Summary badges
-  var runBest = findBestDay(daily, scoreRunning);
-  var droneBest = findBestDay(daily, scoreDrone);
-  var tanBest = findBestDay(daily, scoreTanning);
-  document.getElementById('wSummary').innerHTML =
-    summaryHTML(runBest, 'run', daily, hourly)
-    + summaryHTML(droneBest, 'drone', daily, hourly)
-    + summaryHTML(tanBest, 'tan', daily, hourly);
+  renderHero(dayData[0]);
+  renderBestOfWeek(dayData);
+  renderWeek(dayData);
+  wireDayTaps();
 
   showLoading(false);
 }
 
 var renderedDays = {};
 
-function isMobile() {
-  return window.innerWidth <= 600;
+// Capitalize the first letter of the OWM condition text ("clear sky" → "Clear sky").
+function capitalize(s) {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function renderUnifiedStrip(days, hourly, todayDate, yesterday) {
-  var el = document.getElementById('wStrip');
-  var html = '';
-  var dayData = [];
+// Short best-window string for an activity on a day: "7–10am" from the optimal window
+// when we have hourly data, a coarse estimate label when we don't, or '' when the day
+// is poor for that activity (nothing worth pointing at).
+function windowStr(win, result, day, type) {
+  if (win) return formatHour(win.startHour) + '–' + formatHour(win.endHour);
+  if (result.rating === 'poor') return '';
+  if (type === 'tan') return 'Midday';
+  return estimateWindow(day, type).label;
+}
 
+// Compute everything the hero / week rows / drawer need — once, for all 7 days.
+function buildDayData(days, hourly, todayDate, yesterday) {
+  var dayData = [];
   for (var i = 0; i < days.length; i++) {
     var day = days[i];
-    // Read this day in the location's timezone so labels/dates match the forecast clock.
+    // Read each day in the location's timezone so labels/dates match the forecast clock.
     var d = new Date((day.dt + tzOffsetSec) * 1000);
     var isToday = locDateStr(day.dt) === todayDate;
     var dayName = isToday ? 'Today' : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getUTCDay()];
@@ -781,142 +792,153 @@ function renderUnifiedStrip(days, hourly, todayDate, yesterday) {
     var tanResult = scoreTanning(day);
     var icon = weatherIcon(day.weather[0].id);
 
-    // Optimal windows
     var hours = getHoursForDay(hourly, day.dt);
-    var runWin = null;
-    var droneWin = null;
-    var tanWin = null;
-    var runWindowHTML = '';
-    var droneWindowHTML = '';
-    var tanWindowHTML = '';
-
+    var runWin = null, droneWin = null, tanWin = null;
     if (hours.length >= 4) {
       runWin = findOptimalWindow(hours, scoreRunningHour, day.sunrise, day.sunset);
       droneWin = findOptimalWindow(hours, scoreDroneHour, day.sunrise, day.sunset);
       tanWin = findOptimalWindow(hours, scoreTanningHour, day.sunrise, day.sunset);
-      if (runWin) {
-        runWindowHTML = formatHour(runWin.startHour) + '–' + formatHour(runWin.endHour);
-      }
-      if (droneWin) {
-        droneWindowHTML = formatHour(droneWin.startHour) + '–' + formatHour(droneWin.endHour);
-      }
-      if (tanWin) {
-        tanWindowHTML = formatHour(tanWin.startHour) + '–' + formatHour(tanWin.endHour);
-      }
-    } else {
-      var runEst = estimateWindow(day, 'run');
-      var droneEst = estimateWindow(day, 'drone');
-      if (runResult.rating !== 'poor') runWindowHTML = runEst.label;
-      if (droneResult.rating !== 'poor') droneWindowHTML = droneEst.label;
-      if (tanResult.rating !== 'poor') tanWindowHTML = 'Midday';
     }
 
-    // Yesterday comparison (only on Today card)
-    var yesterdayHTML = '';
-    if (isToday && yesterday) {
-      yesterdayHTML = yesterdayComparisonHTML(day, yesterday);
-    }
-
-    // Store for drawer
     dayData.push({
-      day: day, runResult: runResult, droneResult: droneResult, tanResult: tanResult,
+      day: day, isToday: isToday,
+      runResult: runResult, droneResult: droneResult, tanResult: tanResult,
       runWin: runWin, droneWin: droneWin, tanWin: tanWin,
+      runWinStr: windowStr(runWin, runResult, day, 'run'),
+      droneWinStr: windowStr(droneWin, droneResult, day, 'drone'),
+      tanWinStr: windowStr(tanWin, tanResult, day, 'tan'),
       dayName: dayName, fullDayName: fullDayName, dateStr: dateStr,
       icon: icon, hours: hours, yesterday: isToday ? yesterday : null
     });
+  }
+  return dayData;
+}
 
-    html += '<div class="w-day' + (isToday ? ' today' : '') + '" data-idx="' + i + '">'
-      + '<div class="w-day-name">' + dayName + '</div>'
-      + '<div class="w-day-date">' + dateStr + '</div>'
-      + '<div class="w-day-icon">' + icon + '</div>'
-      + '<div class="w-day-temp">' + Math.round(day.temp.day) + '°</div>'
-      + yesterdayHTML
-      + '<div class="w-day-ratings">'
-        + '<div class="w-day-activity">'
-          + '<span class="w-activity-label">🏃</span>'
-          + '<span class="w-rating ' + runResult.rating + '">'
-            + RATING_LABELS[runResult.rating]
-          + '</span>'
+// The three scored activities, in display order.
+var W_ACTIVITIES = [
+  { key: 'run',   icon: '🏃', name: 'Run' },
+  { key: 'drone', icon: '🛸', name: 'Drone' },
+  { key: 'tan',   icon: '☀️', name: 'Tan' }
+];
+function actResult(d, key) {
+  return key === 'run' ? d.runResult : (key === 'drone' ? d.droneResult : d.tanResult);
+}
+function actWinStr(d, key) {
+  return key === 'run' ? d.runWinStr : (key === 'drone' ? d.droneWinStr : d.tanWinStr);
+}
+
+/* ── HERO (today) ── */
+
+function renderHero(d) {
+  var el = document.getElementById('wHero');
+  if (!el || !d) return;
+  var day = d.day;
+  var feels = day.feels_like ? Math.round(day.feels_like.day) : Math.round(day.temp.day);
+  var cond = capitalize((day.weather[0] && day.weather[0].description) || '');
+
+  var acts = W_ACTIVITIES.map(function(a) {
+    var r = actResult(d, a.key);
+    var win = actWinStr(d, a.key);
+    return '<div class="w-act ' + r.rating + '">'
+      + '<div class="w-act-icon">' + a.icon + '</div>'
+      + '<div class="w-act-name">' + a.name + '</div>'
+      + '<div class="w-act-rating ' + r.rating + '">' + RATING_LABELS[r.rating] + '</div>'
+      + '<div class="w-act-win">' + (win || '—') + '</div>'
+      + '</div>';
+  }).join('');
+
+  var yest = d.yesterday ? yesterdayComparisonHTML(day, d.yesterday) : '';
+
+  el.innerHTML =
+    '<div class="w-hero-top" data-idx="0" role="button" tabindex="0">'
+      + '<div class="w-hero-icon">' + d.icon + '</div>'
+      + '<div class="w-hero-main">'
+        + '<div class="w-hero-day">Today <span class="w-hero-date">' + d.dateStr + '</span></div>'
+        + '<div class="w-hero-temp">' + Math.round(day.temp.day) + '°</div>'
+        + '<div class="w-hero-cond">' + cond + ' · feels ' + feels + '°</div>'
+        + '<div class="w-hero-meta">'
+          + '<span>H ' + Math.round(day.temp.max) + '° L ' + Math.round(day.temp.min) + '°</span>'
+          + '<span>💨 ' + Math.round(day.wind_speed) + ' mph</span>'
+          + (day.humidity != null ? '<span>💧 ' + day.humidity + '%</span>' : '')
         + '</div>'
-        + '<div class="w-day-activity">'
-          + '<span class="w-activity-label">🛸</span>'
-          + '<span class="w-rating ' + droneResult.rating + '">'
-            + RATING_LABELS[droneResult.rating]
-          + '</span>'
-        + '</div>'
-        + '<div class="w-day-activity">'
-          + '<span class="w-activity-label">☀️</span>'
-          + '<span class="w-rating ' + tanResult.rating + '">'
-            + RATING_LABELS[tanResult.rating]
-          + '</span>'
-        + '</div>'
+        + yest
       + '</div>'
-      + '<div class="w-day-wind">' + Math.round(day.wind_speed) + ' mph</div>'
-      + '<div class="w-detail" id="detail-wStrip-' + i + '">'
-        + renderUnifiedDetail(runResult, droneResult, tanResult, day, runWin, droneWin, tanWin)
-      + '</div>'
+    + '</div>'
+    + '<div class="w-hero-acts" data-idx="0" role="button" tabindex="0">' + acts + '</div>';
+}
+
+/* ── BEST DAY THIS WEEK (per activity) ── */
+
+function renderBestOfWeek(dayData) {
+  var el = document.getElementById('wBest');
+  if (!el) return;
+  var chips = W_ACTIVITIES.map(function(a) {
+    var bestIdx = -1, bestScore = -1;
+    for (var i = 0; i < dayData.length; i++) {
+      var s = actResult(dayData[i], a.key).score;
+      if (s > bestScore) { bestScore = s; bestIdx = i; }
+    }
+    if (bestIdx < 0) return '';
+    var d = dayData[bestIdx];
+    var r = actResult(d, a.key);
+    var win = actWinStr(d, a.key);
+    return '<div class="w-best-chip ' + r.rating + '" data-idx="' + bestIdx + '" role="button" tabindex="0">'
+      + '<span class="w-best-act">' + a.icon + '</span>'
+      + '<span class="w-best-day">' + d.dayName + '</span>'
+      + (win ? '<span class="w-best-win">' + win + '</span>' : '')
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<span class="w-best-label">Best this week</span>' + chips;
+}
+
+/* ── 6-DAY LIST (rows after today) ── */
+
+function renderWeek(dayData) {
+  var el = document.getElementById('wWeek');
+  if (!el) return;
+  var html = '';
+  for (var i = 1; i < dayData.length; i++) {
+    var d = dayData[i];
+    var day = d.day;
+    var dots = W_ACTIVITIES.map(function(a) {
+      var r = actResult(d, a.key);
+      return '<span class="w-row-act" title="' + a.name + ': ' + RATING_LABELS[r.rating] + '">'
+        + '<span class="w-row-act-i">' + a.icon + '</span>'
+        + '<span class="w-dot ' + r.rating + '"></span></span>';
+    }).join('');
+    html += '<div class="w-row" data-idx="' + i + '" role="button" tabindex="0">'
+      + '<span class="w-row-when"><span class="w-row-day">' + d.dayName + '</span>'
+        + '<span class="w-row-date">' + d.dateStr + '</span></span>'
+      + '<span class="w-row-icon">' + d.icon + '</span>'
+      + '<span class="w-row-temp"><span class="w-row-hi">' + Math.round(day.temp.max) + '°</span>'
+        + '<span class="w-row-lo">' + Math.round(day.temp.min) + '°</span></span>'
+      + '<span class="w-row-acts">' + dots + '</span>'
       + '</div>';
   }
   el.innerHTML = html;
-  renderedDays['wStrip'] = dayData;
-
-  el.querySelectorAll('.w-day').forEach(function(card) {
-    card.addEventListener('click', function() {
-      var idx = parseInt(card.getAttribute('data-idx'), 10);
-      if (isMobile()) {
-        openWeatherDrawer(idx);
-      } else {
-        card.classList.toggle('expanded');
-      }
-    });
-  });
 }
 
-/* ── UNIFIED DETAIL (inline desktop) ──── */
-
-function renderUnifiedDetail(runResult, droneResult, tanResult, day, runWin, droneWin, tanWin) {
-  var html = '';
-
-  // Running section
-  html += '<div class="w-detail-section">🏃 Running</div>';
-  if (runWin && runWin.hourScores) {
-    html += renderHourlyMini(runWin.hourScores);
+// Tap the hero, any week row, or a best-of-week chip → open that day's detail drawer
+// (the drawer is the single detail surface now, on every screen width).
+function wireDayTaps() {
+  function bind(node) {
+    if (!node) return;
+    node.addEventListener('click', function() {
+      var idx = parseInt(node.getAttribute('data-idx'), 10);
+      if (!isNaN(idx)) openWeatherDrawer(idx);
+    });
+    node.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        var idx = parseInt(node.getAttribute('data-idx'), 10);
+        if (!isNaN(idx)) openWeatherDrawer(idx);
+      }
+    });
   }
-  var rf = runResult.factors;
-  html += '<div class="w-detail-row"><span>Feels like</span><span>' + rf.feels + '°F</span></div>'
-    + '<div class="w-detail-row"><span>Wind</span><span>' + rf.wind + ' mph</span></div>'
-    + '<div class="w-detail-row"><span>Rain chance</span><span>' + rf.pop + '%</span></div>'
-    + '<div class="w-detail-row"><span>Humidity</span><span>' + rf.humidity + '%</span></div>'
-    + '<div class="w-detail-row"><span>UV Index</span><span>' + rf.uvi + '</span></div>'
-    + '<div class="w-detail-row"><span>Score</span><span>' + runResult.score + '/100</span></div>';
-
-  // Drone section
-  html += '<div class="w-detail-section" style="margin-top:8px">🛸 Drone</div>';
-  if (droneWin && droneWin.hourScores) {
-    html += renderHourlyMini(droneWin.hourScores);
-  }
-  var df = droneResult.factors;
-  html += '<div class="w-detail-row"><span>Wind</span><span>' + df.wind + ' mph</span></div>'
-    + '<div class="w-detail-row"><span>Gusts</span><span>' + df.gust + ' mph</span></div>'
-    + '<div class="w-detail-row"><span>Rain chance</span><span>' + df.pop + '%</span></div>'
-    + '<div class="w-detail-row"><span>Temp</span><span>' + df.temp + '°F</span></div>'
-    + '<div class="w-detail-row"><span>Daylight</span><span>' + df.daylight + ' hrs</span></div>'
-    + '<div class="w-detail-row"><span>Score</span><span>' + droneResult.score + '/100</span></div>';
-
-  // Tanning section
-  html += '<div class="w-detail-section" style="margin-top:8px">☀️ Tanning</div>';
-  if (tanWin && tanWin.hourScores) {
-    html += renderHourlyMini(tanWin.hourScores);
-  }
-  var tf = tanResult.factors;
-  html += '<div class="w-detail-row"><span>Temp</span><span>' + tf.temp + '°F</span></div>'
-    + '<div class="w-detail-row"><span>UV Index</span><span>' + tf.uvi + '</span></div>'
-    + '<div class="w-detail-row"><span>Cloud cover</span><span>' + tf.clouds + '%</span></div>'
-    + '<div class="w-detail-row"><span>Wind</span><span>' + tf.wind + ' mph</span></div>'
-    + '<div class="w-detail-row"><span>Rain chance</span><span>' + tf.pop + '%</span></div>'
-    + '<div class="w-detail-row"><span>Score</span><span>' + tanResult.score + '/100</span></div>';
-
-  return html;
+  bind(document.querySelector('#wHero .w-hero-top'));
+  bind(document.querySelector('#wHero .w-hero-acts'));
+  document.querySelectorAll('#wWeek .w-row').forEach(bind);
+  document.querySelectorAll('#wBest .w-best-chip').forEach(bind);
 }
 
 /* ── WEATHER DETAIL DRAWER ────────────── */
@@ -1119,58 +1141,6 @@ function renderDrawerHourly(hourScores) {
   }
   html += '</div>';
   return html;
-}
-
-function renderHourlyMini(hourScores) {
-  var html = '<div class="w-hourly-mini">';
-  for (var i = 0; i < hourScores.length; i++) {
-    var s = hourScores[i];
-    var rating = scoreToRating(s.score);
-    var height = Math.max(4, Math.round(s.score / 100 * 28));
-    html += '<div class="w-hourly-bar-wrap" title="' + formatHour(s.hour) + ': ' + s.score + '/100">'
-      + '<div class="w-hourly-bar ' + rating + '" style="height:' + height + 'px"></div>'
-      + '<div class="w-hourly-label">' + (s.hour % 3 === 0 ? formatHour(s.hour) : '') + '</div>'
-      + '</div>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function findBestDay(days, scoreFn) {
-  var best = null;
-  var bestScore = -1;
-  for (var i = 0; i < days.length; i++) {
-    var r = scoreFn(days[i]);
-    if (r.score > bestScore) {
-      bestScore = r.score;
-      best = { day: days[i], result: r, index: i };
-    }
-  }
-  return best;
-}
-
-function summaryHTML(best, type, daily, hourly) {
-  if (!best) return '';
-  var dayName = locDateStr(best.day.dt) === locTodayDateStr() ? 'Today'
-    : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][locDow(best.day.dt)];
-  var label = type === 'run' ? '🏃 Best run' : (type === 'drone' ? '🛸 Best flight' : '☀️ Best tan');
-
-  var hours = getHoursForDay(hourly, best.day.dt);
-  var windowStr = '';
-  if (hours.length >= 4) {
-    var scoreFn = type === 'run' ? scoreRunningHour : (type === 'drone' ? scoreDroneHour : scoreTanningHour);
-    var win = findOptimalWindow(hours, scoreFn, best.day.sunrise, best.day.sunset);
-    if (win) {
-      windowStr = ' <span class="w-summary-window">' + formatHour(win.startHour) + '–' + formatHour(win.endHour) + '</span>';
-    }
-  }
-
-  return '<div class="w-summary-line">'
-    + '<span class="w-summary-label">' + label + ':</span> '
-    + '<span class="w-summary-day ' + best.result.rating + '">' + dayName + '</span>'
-    + windowStr + ' '
-    + '<span class="w-summary-rating ' + best.result.rating + '">' + RATING_LABELS[best.result.rating] + '</span>'
-    + '</div>';
 }
 
 /* ── INIT ──────────────────────────────── */

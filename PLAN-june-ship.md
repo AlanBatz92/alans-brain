@@ -78,9 +78,16 @@ site read as "MVP-ready."
       shelf now merges both paths, dedupes to the nearer one, and labels each card's
       scope. *(done 2026-06-14; `?v=obs36`. The ~100% instant path can't be "almost".)*
 - [x] **M 🤖** Analytics: charts crowd / collide at high counts (e.g. sorting "all
-      time", large numbers). Inline hour/day bar numbers now hide < 600px (the
-      tap-to-detail popout is the mobile read path); desktop keeps them. *(done
-      2026-06-15; `?v=obs28`. **VERIFY on preview** — please confirm phones read cleanly.)*
+      time", large numbers). *(2026-06-15: hid inline hour/day numbers < 600px.
+      **Follow-up 2026-06-17** per Alan "big numbers on columns still run into each
+      other": the 24-column hour chart now prints a number **only on the peak bar** —
+      24 columns never fit a label each, even on desktop; the rest live in the
+      tap-to-detail popout + tooltips. `?v=obs37`.)*
+- [x] **S 🤖** Bird cards "do not fully populate" (Alan's 2026-06-17 note): a
+      moderate/cumulative-path lifer with no ≥0.85 detections 404'd `/api/species` and
+      left a Wikipedia-only stub. `openBirdCard` now retries at the 0.60 preserve floor
+      so the stats/hits/breakdown fill in; also stopped the extract chopping at a
+      single-letter abbreviation. *(done 2026-06-17; `?v=obs37`, front-end only.)*
 
 **Stack (`techstack.html`)**
 - [x] **S 🤖** Expand node size — 56→64px (52px mobile), icons/glyphs + NODE_R to match.
@@ -131,6 +138,18 @@ A "clean and accurate" pass on `weather.html` / `weather.js`. Added to the first
 - [x] **S 🤖** Replace the `prompt()`/`alert()` custom-location flow with an inline form
       (name/lat/lon, validation, Enter-to-save, inline errors). *(done 2026-06-15.
       **VERIFY on preview** — confirm the form looks right.)*
+
+**Look & feel (Alan's 2026-06-17 note: "just ugly to look at" — overhaul)**
+- [x] **L 🤖** **Visual redesign — hero + clean week list** (Alan picked this direction).
+      Replaced the cramped 7-column strip with a **hero "Today" card** (big temp,
+      condition/feels, H·L/wind/humidity, vs-yesterday, three activity verdict tiles with
+      best-window times), a **"best this week" chip row**, and a **roomy tappable 6-day
+      list** (day · icon · hi/lo · 🏃/🛸/☀️ rating dots); a single **detail drawer** now
+      serves every width (dropped the cramped inline desktop expand). *(done 2026-06-17,
+      `?v=w2`; verified with a headless render harness + desktop/phone screenshots.)*
+- [x] **S 🤖** **Confirm changing location works** — the change handler was sound (set
+      localStorage → clear forecast cache → forced refetch); also clear the yesterday
+      cache on switch. *(done 2026-06-17.)*
 
 **Calibration (subjective — with Alan)**
 - [ ] **S 🤖+🧑** Review the running/drone/tanning **thresholds** together; retune any

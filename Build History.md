@@ -10,6 +10,61 @@
 
 ---
 
+## 2026-06-17 — June Ship: bird-page fixes + weather "My Week" redesign
+
+From Alan's notes (3 screenshots): bird cards that "do not fully populate," analytics
+still too crowded ("big numbers on columns run into each other"), and the weather page
+"just ugly to look at" — overhaul it, take a page from better-built weather apps, and
+make sure changing location actually works.
+
+**Bird page (`observatory.js` + `style.css`, `?v=obs37`/`obs29`):**
+- **Cards now fully populate.** A species opened from the life list / "almost a lifer"
+  shelf that had **no detections at the 0.85 display floor** (a moderate-confidence or
+  cumulative-path lifer) made `/api/species?min_confidence=0.85` **404**, so the card
+  fell back to a Wikipedia-only stub — no stats grid, no recent hits, no life-list
+  breakdown (exactly what the Junco/Oriole screenshots showed). `openBirdCard` now
+  retries at the **0.60 preserve floor** when the display-floor fetch comes back null,
+  so the card populates for any bird with any detection. **Front-end only** — the
+  existing API already honors the `min_confidence` param, so no box deploy needed.
+- **Extract no longer chops mid-phrase.** `truncateExtract` treated the period in a
+  single-letter abbreviation as a sentence end (e.g. "…Mexico, I. s." on the Orchard
+  Oriole). It now skips boundaries where the word before the period is one letter.
+- **Analytics decluttered.** The 24-column hour chart printed a count on *every* bar —
+  far too narrow, so large/adjacent numbers collided even on desktop (the earlier
+  < 600px hide only helped phones). Now `hourBarsHtml` prints the count **only on the
+  peak (busiest) bar**; every bar's number still lives in the tap-to-detail popout and
+  the hover tooltips. One number per chart → zero collisions at any width. (Daily chart
+  unchanged — few bars; its < 600px label hide stays.)
+
+**Weather "My Week" redesign** (`weather.html`/`weather.js` + `style.css`, `?v=w2`):
+- Full visual overhaul from the cramped 7-column strip (which jammed temps + tiny
+  detail rows into ~100px columns) to a **hero + clean week list** (Alan picked this
+  direction). New structure:
+  - **Hero "Today" card** — big temperature, condition + "feels like", H/L · wind ·
+    humidity, the vs-yesterday line, and the **three activity verdicts** (🏃 Run /
+    🛸 Drone / ☀️ Tan) as tiles with a rating-colored top accent + best-window time.
+  - **"Best this week" chip row** — one chip per activity naming its best day + window
+    (replaces the old cross-week summary line), tap-through to that day.
+  - **6-day list** — roomy tappable rows: day/date · icon · hi/lo · three activity
+    emoji+colored-dot indicators. Tap any day/chip/hero → the **detail drawer** (now
+    the single detail surface at *all* widths; the cramped inline desktop expand is gone).
+- **Location switching:** the change handler was already sound (set localStorage →
+  clear forecast cache → forced refetch); also clear the **yesterday cache** on switch
+  so nothing location-specific lingers. Selector unchanged and verified wired.
+- **Removed** the now-dead `renderUnifiedStrip`/`renderUnifiedDetail`/`renderHourlyMini`/
+  `summaryHTML`/`findBestDay`/`isMobile`/`RATING_ICONS` and all the `.w-strip`/`.w-day*`/
+  `.w-detail*`/`.w-hourly-mini*`/`.w-summary*` CSS; page container narrowed 820→620px
+  for the single column. Scoring/window/drawer logic is unchanged (kept the tested core).
+- **Verification:** `node --check` on both JS files; a headless render harness (stubbed
+  DOM) confirmed the hero/best/week markup is well-formed and fully populated; rendered a
+  full preview with the real stylesheet and **screenshotted it at desktop + phone widths**
+  (shared with Alan) to confirm the look before deploy.
+
+**Deploy:** all front-end, no box change. (Weather stays passphrase-gated until it's
+public — Alan: "not until it looks and feels good.")
+
+---
+
 ## 2026-06-14/15 — June Ship: systematic MVP review kicked off (Phase 1 + 1b)
 
 Started a time-boxed "systematic review of alansbrain.com" to reach a

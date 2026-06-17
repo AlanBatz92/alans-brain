@@ -35,6 +35,12 @@ const API_BASE = 'https://birds.alansbrain.com';
 // within 24h, or one ~100% hit). Display, preserve, and life-list are decoupled.
 const MIN_CONFIDENCE = 0.85;
 
+// The box keeps detections down to this preserve floor. The bird card falls back to
+// it when a species has no hits at the 0.85 display floor (e.g. a moderate-confidence
+// or cumulative-path lifer opened from the life list) — otherwise /api/species 404s
+// and the card shows only the Wikipedia blurb with no stats/hits.
+const PRESERVE_MIN_CONFIDENCE = 0.6;
+
 const EP = {
   lifetime:     API_BASE + '/api/lifetime',
   trainStats:   API_BASE + '/api/trains/stats',
@@ -158,6 +164,11 @@ function truncateExtract(text) {
   while (count < 3) {
     const next = text.indexOf('. ', pos);
     if (next === -1 || next >= MAX) break;
+    // Don't treat a single-letter abbreviation as a sentence end (e.g. "I. spurius"
+    // or "I. s. cucullatus" — the scientific-name shorthand), which would chop the
+    // extract mid-phrase ("…Mexico, I. s.").
+    const wordStart = text.lastIndexOf(' ', next - 1) + 1;
+    if (next - wordStart <= 1) { pos = next + 2; continue; }
     pos = next + 1;  // include the period
     count++;
   }
@@ -1013,9 +1024,11 @@ function renderAnStats(a) {
   ]);
 }
 
-// Shared inner markup for the 24-bar hour-of-day charts (birds + trains): a count
-// printed above each bar (compact so it stays legible in a narrow column) and the
-// custom hover tooltip. Bars scale to BAR_HEADROOM_PCT so the top number can't clip.
+// Shared inner markup for the 24-bar hour-of-day charts (birds + trains). Only the
+// peak (busiest) bar carries an inline count — 24 columns are far too narrow to print
+// a number on every one without them colliding. The full per-bar numbers live in the
+// tap-to-detail popout (the read path) and the hover tooltips. Bars scale to
+// BAR_HEADROOM_PCT so the peak's top number can't clip.
 function hourBarsHtml(byHour, unit, peak) {
   const max = byHour.reduce((m, n) => Math.max(m, n), 0) || 1;
   let html = '';
@@ -1027,7 +1040,7 @@ function hourBarsHtml(byHour, unit, peak) {
         '<div class="obs-an-hbar-track">' +
           '<div class="obs-an-hbar' + (h === peak ? ' obs-an-hbar-peak' : '') +
             '" style="height:' + pct + '%">' +
-            (n > 0 ? '<span class="obs-an-bar-num">' + escapeHtml(compactNum(n)) + '</span>' : '') +
+            (h === peak && n > 0 ? '<span class="obs-an-bar-num">' + escapeHtml(compactNum(n)) + '</span>' : '') +
           '</div>' +
         '</div>' +
         '<div class="obs-an-haxis">' + (h % 6 === 0 ? hourLabel(h, false) : '') + '</div>' +
@@ -1602,9 +1615,16 @@ async function openBirdCard(commonName, scientificName) {
   const wikiPromise = typeof BirdInfo !== 'undefined'
     ? BirdInfo.get(scientificName, commonName)
     : Promise.resolve(null);
-  const histPromise = fetchJson(API_BASE + '/api/species/' + encodeURIComponent(commonName) +
-      '?min_confidence=' + MIN_CONFIDENCE)
-    .catch(() => null);
+  // Per-species history. Try the 0.85 display floor first (so the card's stats agree
+  // with the rest of the page); if there are no detections that high, retry at the
+  // 0.60 preserve floor so the card still populates instead of falling back to a
+  // Wikipedia-only stub. (The recent-hits list already reaches to 0.60 either way.)
+  const fetchHist = (floor) =>
+    fetchJson(API_BASE + '/api/species/' + encodeURIComponent(commonName) +
+        '?min_confidence=' + floor)
+      .catch(() => null);
+  const histPromise = fetchHist(MIN_CONFIDENCE)
+    .then((h) => h || fetchHist(PRESERVE_MIN_CONFIDENCE));
 
   const [wikiResult, histResult] = await Promise.allSettled([wikiPromise, histPromise]);
   const wiki = wikiResult.status === 'fulfilled' ? wikiResult.value : null;

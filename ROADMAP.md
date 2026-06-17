@@ -189,6 +189,18 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-17** — June Ship: **bird-page fixes + weather "My Week" redesign** (front-end
+  only, no box deploy). Bird page (`?v=obs37`/`obs29`): cards now **always populate** —
+  `openBirdCard` retries `/api/species` at the 0.60 preserve floor when the 0.85 fetch
+  404s (was leaving a Wikipedia-only stub for moderate/cumulative-path lifers); the
+  Wikipedia extract no longer chops at a single-letter abbreviation; and the 24-column
+  hour analytics chart prints a number **only on the peak bar** (the rest live in the
+  tap-to-detail popout) so "big numbers run into each other" is gone. Weather (`?v=w2`):
+  full overhaul from the cramped 7-column strip to a **hero "Today" card + "best this
+  week" chips + roomy 6-day list** with a single detail drawer at all widths; location
+  switching verified (also clears the yesterday cache). Verified with a headless render
+  harness + desktop/phone screenshots. Weather stays passphrase-gated until public.
+
 - **2026-06-11** — Train analytics: **period scoping.** `/api/trains/analytics` gained
   optional `start`/`end` (same Eastern→UTC window as the bird analytics; `passes_today`
   stays absolute), the Analytics→Trains period selector now filters the charts, and the

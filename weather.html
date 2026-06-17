@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=w2">
 </head>
 <body>
 
@@ -137,10 +137,11 @@
         <div>Checking the skies...</div>
       </div>
 
-      <!-- ── UNIFIED WEATHER SECTION ── -->
+      <!-- ── WEATHER ── -->
       <div class="w-section">
-        <div class="w-summary" id="wSummary"></div>
-        <div class="w-strip" id="wStrip"></div>
+        <div id="wHero" class="w-hero"></div>
+        <div id="wBest" class="w-best"></div>
+        <div id="wWeek" class="w-week"></div>
       </div>
 
       <!-- ── LEGEND ── -->
@@ -149,7 +150,7 @@
         <span class="w-legend-item"><span class="w-rating-dot good"></span> Good</span>
         <span class="w-legend-item"><span class="w-rating-dot fair"></span> Fair</span>
         <span class="w-legend-item"><span class="w-rating-dot poor"></span> Poor</span>
-        <span class="w-legend-tap">Tap a day for details</span>
+        <span class="w-legend-acts">🏃 Run · 🛸 Drone · ☀️ Tan · tap a day for details</span>
       </div>
 
       <!-- ══════ FOOTER ══════ -->
@@ -184,7 +185,7 @@
 
   <!-- Scripts -->
   <script src="auth.js"></script>
-  <script src="weather.js"></script>
+  <script src="weather.js?v=w2"></script>
   <script>
     initAuthGate('authGate', 'protectedContent', function() {
       initWeather();

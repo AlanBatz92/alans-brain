@@ -31,7 +31,7 @@ a Google Sheet, and a home server called **birdstation**).
 | Pride & Identity | `transart.html` | Tabbed: art, polyamory, resources |
 | Personal Projects | `projects.html` | Hub for the home-built projects — cards link to Pulse, Observatory, and Setlist to Spotify |
 | Setlist to Spotify | `setlist-spotify.html` / `setlist-spotify.js` | Setlists → Spotify playlist |
-| My Week | `weather.html` / `weather.js` | Weather outlook + running/drone scoring |
+| My Week | `weather.html` / `weather.js` | Weather outlook + running/drone/tan scoring. **Redesigned 2026-06-17** to a **hero "Today" card + "best this week" chips + roomy 6-day list** (was a cramped 7-column strip); tap any day/chip → detail drawer (now the only detail surface, all widths). Passphrase-gated until it's public. |
 | Household Task Tracker | `tasks.html` / `tasks.js` | Passphrase-gated, reads/writes a Google Sheet |
 | Observatory | `observatory.html` / `observatory.js` | BirdNET + train detections from birdstation. Three tabs: 🐦 Birds / 📊 Analytics / 🚂 Trains. **Analytics is unified** — a `🐦 Birds \| 🚂 Trains` switch on the Analytics tab (2026-06-11), so train *analytics* live there (not on the Trains tab, which is now just the raw recent-events feed + method panel). Linked from the home Explore grid + nav dropdown. |
 | Tech Stack | `techstack.html` | Interactive SVG node-graph of the full site/hardware stack. Self-contained (inline CSS + JS). Public, no gate. See Tech Stack section below. |
@@ -321,18 +321,28 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs28`, `observatory.js?v=obs36`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs29`, `observatory.js?v=obs37`, `bird-info.js?v=obs6`.
 - **"Almost a lifer" now covers both routes (2026-06-15):** the shelf surfaces birds
   on the **burst** path (1–2 of 3 hits ≥0.85 in rolling 24h) *and* the **cumulative**
   path (6–7 of 8 all-time hits ≥0.70). `loadAlmost()` fetches both windows in parallel;
   `computeAlmostLifers(burst, cumulative, life, perfectConf)` merges, dedupes a bird
   close on both to the nearer path, and each card names its scope ("N more in 24h" /
   "N more all-time"). `ALMOST_CUMULATIVE_MIN = 6`.
-- **Analytics inline bar numbers hide < 600px (2026-06-15):** large all-time counts
-  collided on phones; the tap-to-detail popout (scrolls, labels every bar) is the
-  mobile read path, so `.obs-an-hours/.obs-an-daily .obs-an-bar-num` are hidden there.
+- **Hour chart prints only the peak number (2026-06-17):** 24 columns are too narrow
+  to label every bar without collisions (even on desktop), so `hourBarsHtml` now emits
+  the count **only on the peak/busiest bar**; every bar's number stays in the
+  tap-to-detail popout + hover tooltips. The daily chart still labels each bar (few of
+  them) and hides those inline labels < 600px (`.obs-an-daily .obs-an-bar-num`).
 - **Bird cards: long text wraps (2026-06-15):** `min-width:0` + `overflow-wrap` on the
   species name, life-list rows, and bird-card stat grid cells (no more overflow).
+- **Bird cards always populate (2026-06-17):** a species with **no detections at the
+  0.85 display floor** (a moderate-confidence / cumulative-path lifer opened from the
+  life list) made `/api/species?min_confidence=0.85` **404**, so the card degraded to a
+  Wikipedia-only stub (no stats / hits / life-list breakdown). `openBirdCard` now
+  **retries at the 0.60 preserve floor** when the display-floor fetch returns null, so
+  the card fills in for any bird with any detection (front-end only — the API already
+  honors `min_confidence`). Also: `truncateExtract` no longer chops the extract at a
+  single-letter abbreviation (e.g. "…Mexico, I. s.").
 
 ### birdstation + birdnode (home server — code mirrored in this repo under `birdstation/`)
 
