@@ -182,6 +182,10 @@ A "clean and accurate" pass on `weather.html` / `weather.js`. Added to the first
       score bars. *(done 2026-06-17, `?v=w5`.)*
 - [x] **S 🤖** **Sun & moon on the page** (Alan: "moon phases + sunrise/sunset"). 🌅/🌇 + moon
       phase on the hero + drawer. *(done 2026-06-17. Could extend: moonrise/set, golden hour.)*
+- [x] **S 🤖** **"Best this week" = remaining days only** (Alan: don't show days already past /
+      next week). Capped to today→Sunday; relabeled "Best rest of week". *(done 2026-06-17.)*
+- [x] **S 🤖** **Promote Weather into the top nav on every page** (Alan: "no longer hidden")
+      + **rename "My Week" → "Weather"**. *(done 2026-06-17, `?v=w6`.)*
 
 ---
 

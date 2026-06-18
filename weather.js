@@ -831,14 +831,21 @@ function renderHero(d) {
 function renderBestOfWeek(dayData) {
   var el = document.getElementById('wBest');
   if (!el) return;
+  // Only the *rest of this week* — today through the coming Sunday (week = Mon–Sun).
+  // dayData[0] is today and the forecast runs forward, so we just cap how many days we
+  // consider; days that spill into next week (next Mon/Tue) are excluded.
+  var dow = locDow(dayData[0].day.dt);           // 0=Sun … 6=Sat
+  var daysLeft = ((7 - dow) % 7) + 1;            // today … Sunday, inclusive
+  var pool = dayData.slice(0, Math.min(daysLeft, dayData.length));
+
   var chips = W_ACTIVITIES.map(function(a) {
     var bestIdx = -1, bestScore = -1;
-    for (var i = 0; i < dayData.length; i++) {
-      var s = actResult(dayData[i], a.key).score;
+    for (var i = 0; i < pool.length; i++) {
+      var s = actResult(pool[i], a.key).score;
       if (s > bestScore) { bestScore = s; bestIdx = i; }
     }
     if (bestIdx < 0) return '';
-    var d = dayData[bestIdx];
+    var d = pool[bestIdx];
     var r = actResult(d, a.key);
     var win = actWinStr(d, a.key);
     return '<div class="w-best-chip ' + r.rating + '" data-idx="' + bestIdx + '" role="button" tabindex="0">'
@@ -847,7 +854,9 @@ function renderBestOfWeek(dayData) {
       + (win ? '<span class="w-best-win">' + win + '</span>' : '')
       + '</div>';
   }).join('');
-  el.innerHTML = '<span class="w-best-label">Best this week</span>' + chips;
+  // "Rest of week" when there's more than just today left, else just today's picks.
+  var label = pool.length > 1 ? 'Best rest of week' : 'Best today';
+  el.innerHTML = '<span class="w-best-label">' + label + '</span>' + chips;
 }
 
 /* ── 6-DAY LIST (rows after today) ── */

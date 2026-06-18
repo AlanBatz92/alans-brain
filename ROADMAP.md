@@ -189,6 +189,10 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-17** — Weather: **"Best rest of week"** now excludes days past the current week
+  (today→Sunday only), **Weather promoted into the top nav on every page** (was hidden while
+  gated), and **renamed "My Week" → "Weather"** everywhere. `?v=w6`.
+
 - **2026-06-17** — Weather: a **selectable hour-by-hour chart** in the drawer (pick
   Rain/UV/Temp/Wind/Cloud/Humidity → see the metric's shape + labeled peak, e.g. "rain
   100% at 3 PM", "UV peaks at noon"; replaces the unreadable per-activity score bars), plus

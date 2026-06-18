@@ -10,6 +10,25 @@
 
 ---
 
+## 2026-06-17 — Weather: "rest of week" only, nav link on every page, renamed "Weather"
+
+Three quick follow-ups (`weather.js` + all page navs, `?v=w6`):
+
+- **"Best this week" → "Best rest of week."** It was scanning the full rolling 7-day
+  forecast, so it could surface *next* week's days (e.g. next Tue). `renderBestOfWeek` now
+  caps the pool to **today through the coming Sunday** (`locDow` → `daysLeft = ((7-dow)%7)+1`,
+  week = Mon–Sun) and labels it "Best rest of week" (or "Best today" when only today's left).
+  Verified with a harness: a cool next-week Tue that scored best is correctly excluded.
+- **Weather promoted into the top nav on every page.** It was only in the nav on
+  `weather.html`/`tasks.html` (hidden elsewhere while the page was gated). A
+  `<a href="weather.html">` now sits right after **Home** in both the desktop `.nav-links`
+  and the mobile overlay on **all** pages (scripted insert after each Home anchor; the navs
+  otherwise vary by page).
+- **Renamed "My Week" → "Weather"** everywhere user-facing (nav links, the page `<h1>`/
+  section title, `<title>`), per Alan.
+
+---
+
 ## 2026-06-17 — Weather: hour-by-hour metric chart + sun/moon on the page
 
 From Alan's note on the drawer ("hard to tell what the graph shows / where the 100% rain
