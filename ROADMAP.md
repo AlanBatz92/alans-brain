@@ -189,6 +189,12 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-17** — Weather: **drone + tanning scoring** grounded the same way (drone =
+  wind/gusts-dominant per DJI specs + rain/fog/cold caps; tanning = UV-led + clear sky +
+  warmth) so e.g. 29 mph gusts → Fair not Good and a hot high-UV day → Perfect tanning; a
+  plain-language **"How these scores work"** explainer drawer (ℹ️ button); and the
+  **passphrase gate removed — My Week is now public**. `?v=w4`.
+
 - **2026-06-17** — Weather drawer + scoring (Alan's review): metrics no longer repeat in
   the detail drawer (single shared **Conditions** block; activities show rating · window ·
   bars · tap-to-open breakdown), **Good** recolored teal → **blue** (distinct from green

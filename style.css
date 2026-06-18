@@ -2931,6 +2931,65 @@ nav {
   font-size: 0.68rem;
 }
 
+/* "How these scores work" — trigger button + explainer content (in the detail drawer) */
+.w-info-row { text-align: center; margin: 4px 0 8px; }
+.w-info-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.w-info-btn:hover { border-color: var(--teal); color: var(--text); background: var(--surface-hover); }
+
+.w-info-lead { font-size: 0.9rem; color: var(--text-muted); line-height: 1.55; margin: 4px 0 14px; }
+.w-info-scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 6px;
+}
+.w-info-scale-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+.w-info-act { margin-top: 18px; }
+.w-info-act-head {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text);
+}
+.w-info-act-sub { font-size: 0.85rem; color: var(--text-dim); margin: 3px 0 6px; }
+.w-info-list { margin: 0; padding-left: 18px; }
+.w-info-list li {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 5px 0;
+}
+.w-info-list strong { color: var(--text); }
+.w-info-list em { color: var(--teal); font-style: normal; }
+.w-info-foot {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 20px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
 /* ── Responsive: phone ── */
 @media (max-width: 600px) {
   .w-hero { padding: 16px; }

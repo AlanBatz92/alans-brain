@@ -168,8 +168,14 @@ A "clean and accurate" pass on `weather.html` / `weather.js`. Added to the first
       doable"). Apparent temp + **dew point** (not raw humidity), UV dropped, gentle bands,
       heat/cold caps. 78°/43%/0% now Good 81 (was Fair 64); muggy 85° still Poor.
       *(done 2026-06-17, `?v=w3`.)*
-- [ ] **S 🤖+🧑** Give **drone & tanning** the same once-over (Alan flagged only running);
-      add dew-point / retune any band that feels off once seen on real days.
+- [x] **M 🤖** Give **drone & tanning** the same research-grounded rework (Alan: "fix drone
+      and tanning in the same way, ground it scientifically"). Drone = wind/gusts-dominant
+      (DJI/Beaufort) + rain/fog/cold/visibility caps; tanning = UV-led + clear sky + warmth.
+      29 mph gusts → Fair (not Good); hot high-UV day → Perfect tanning. *(done 2026-06-17, `?v=w4`.)*
+- [x] **M 🤖** Add a **"How these scores work" explainer** (Alan asked for a card/drawer,
+      user-friendly) — ℹ️ button → drawer with the colored rating scale + what drives each
+      activity in plain language. *(done 2026-06-17.)*
+- [x] **S 🤖** **Remove the weather passphrase gate** — My Week is now public. *(done 2026-06-17.)*
 
 ---
 

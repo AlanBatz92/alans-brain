@@ -10,6 +10,42 @@
 
 ---
 
+## 2026-06-17 — Weather: drone/tanning scoring, "how it works" explainer, gate removed
+
+Follow-up to the running-score work — same research-grounded treatment for the other two
+activities, a user-friendly explainer, and the page went **public** (`weather.js`/`weather.html`/
+`style.css`, `?v=w4`).
+
+- **Drone scoring grounded in reality.** Rebuilt around what keeps a small drone safe/legal:
+  **wind 35 · gusts 25 · precip 25 · temp 15**, with caps for rain (not waterproof), fog /
+  low visibility (VLOS — hourly uses real `visibility`, daily assumes clear unless foggy),
+  near-limit sustained wind (>22 mph), and below-freezing (LiPo batteries fade). Wind/gusts now
+  dominate per DJI wind-resistance specs (~20–24 mph / Beaufort 5). Effect: the sample day's
+  **29 mph gusts → Fair 61** (was a too-rosy Good 74); a clear calm 30°F → Good 75 (not Perfect);
+  >24 mph gusts → Poor. Visibility dropped from the additive score (daily forecast lacks it) and
+  is a cap instead.
+- **Tanning scoring grounded in reality.** **UV 35 · clouds 25 · temp 25 · wind 15** — UV leads
+  (it's what actually tans you; higher = faster tan *and* burn), then clear skies, lying-out
+  warmth (~78–92°F), and a light breeze; rain and too-cold (<58°F) cap it. Removed the old
+  "temp < 70 → 0" hard floor and the band that *penalized* high UV. Effect: the hot, high-UV,
+  mostly-clear sample day → **Perfect 88** (was a wrong-feeling Fair 57).
+- Shared `computeDroneScore()` / `computeTanScore()` (day + hourly agree); breakdown weights
+  updated; `drone_vis`/`tan_pop` band tables removed.
+- **"How these scores work" explainer.** New **ℹ️ How these scores work** button (under the
+  legend) opens a drawer (reuses the detail-drawer shell) that, in plain language, shows the
+  Perfect/Good/Fair/Poor scale (colored chips) and what drives each activity — including the
+  *why* ("a dry 80° beats a humid 80°", "higher UV burns faster — wear sunscreen"). `infoDrawerHTML()`
+  / `openInfoDrawer()`; `.w-info-*` styles.
+- **Passphrase gate removed — My Week is now public.** Dropped the `auth-gate` markup,
+  `auth.js`, and the `initAuthGate(...)` wrapper (init runs directly now); `#protectedContent`
+  no longer hidden. (It's already linked in the main nav.)
+
+**Verification:** `node --check`; scoring sanity tables for a spread of drone (wind/gust/temp)
+and tanning (UV/cloud/temp) cases; the explainer + updated detail drawer rendered via the
+stubbed-DOM harness and screenshotted (shared with Alan).
+
+---
+
 ## 2026-06-17 — Weather: drawer de-dup + rating colors + running-score overhaul
 
 Three fixes from Alan's review of the detail drawer (`weather.js`/`style.css`, `?v=w3`):

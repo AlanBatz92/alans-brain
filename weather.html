@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=w3">
+  <link rel="stylesheet" href="style.css?v=w4">
 </head>
 <body>
 
@@ -26,27 +26,9 @@
   </div>
 
   <!-- ══════════════════════════════════════
-       PASSPHRASE GATE
+       PAGE CONTENT (public — no passphrase gate)
        ══════════════════════════════════════ -->
-  <div class="auth-gate" id="authGate">
-    <div class="auth-card">
-      <div class="auth-icon">🔒</div>
-      <div class="auth-title"><span class="gradient-text">My Week</span></div>
-      <div class="auth-input-wrap">
-        <input type="password" class="auth-input" placeholder="Enter passphrase..." autocomplete="off" spellcheck="false">
-      </div>
-      <button class="auth-btn">Unlock</button>
-      <div class="auth-error">That's not it — try again</div>
-      <div class="auth-hint">
-        Don't have the passphrase? <a href="index.html">&larr; Back to the main site</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
-       PROTECTED CONTENT
-       ══════════════════════════════════════ -->
-  <div id="protectedContent" style="display:none">
+  <div id="protectedContent">
 
     <!-- Navigation -->
     <nav>
@@ -153,6 +135,10 @@
         <span class="w-legend-acts">🏃 Run · 🛸 Drone · ☀️ Tan · tap a day for details</span>
       </div>
 
+      <div class="w-info-row">
+        <button class="w-info-btn" id="wInfoBtn" type="button">ℹ️ How these scores work</button>
+      </div>
+
       <!-- ══════ FOOTER ══════ -->
       <footer class="site-footer">
         <div class="footer-stamp">Handcrafted by Alan <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/UFO/ufo.png" alt=""></div>
@@ -184,10 +170,9 @@
   </div>
 
   <!-- Scripts -->
-  <script src="auth.js"></script>
-  <script src="weather.js?v=w3"></script>
+  <script src="weather.js?v=w4"></script>
   <script>
-    initAuthGate('authGate', 'protectedContent', function() {
+    (function() {
       initWeather();
 
       /* Explore dropdown toggle */
@@ -226,7 +211,7 @@
           });
         });
       }
-    });
+    })();
   </script>
 
 <script src="theme-switcher.js" defer></script>

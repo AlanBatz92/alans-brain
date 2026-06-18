@@ -42,24 +42,31 @@ var THRESHOLDS = {
   run_hotCapAt:  92, run_hotCap: 30,    // dangerous heat → no better than Poor
   run_coldCapAt: 24, run_coldCap: 45,   // bitter cold → no better than Fair
 
-  // ── Tanning ──  (80-90°F ideal, clear skies, good UV)
-  tan_temp:      [[80, 90, 20], [75, 79, 14], [91, 95, 14], [70, 74, 8], [96, 100, 6]],
-  tan_uvi:       [[5, 7, 25],   [3, 4, 15],   [8, 9, 12], [10, 15, 6]],  // moderate-high UV best
-  tan_clouds:    [[0, 10, 25],  [11, 25, 18],  [26, 50, 10], [51, 75, 4]],  // cloud cover %
-  tan_wind:      [[0, 10, 15],  [11, 18, 10],  [19, 25, 5]],   // light breeze ideal
-  tan_pop:       [[0, 5, 15],   [6, 15, 10],   [16, 30, 4]],   // precipitation %
-  tan_rainCap:   15,
+  // ── Tanning ──  UV is what actually tans you, so it leads; then clear skies (direct
+  // sun), warmth (comfortable to lie out), and a calm-ish breeze. Higher UV tans faster —
+  // and burns faster, hence the "wear sunscreen" note in the explainer. Sources: UV-index
+  // meaning (WHO/EPA) + sunbathing comfort temps. Max: UV 35 · clouds 25 · temp 25 · wind 15.
+  tan_uvi:    [[6, 20, 35], [4, 5.9, 26], [2.5, 3.9, 14], [1, 2.4, 5]],
+  tan_clouds: [[0, 15, 25], [16, 35, 17], [36, 60, 8], [61, 80, 3], [81, 100, 0]],   // cloud cover %
+  tan_temp:   [[78, 92, 25], [72, 77, 18], [93, 97, 16], [66, 71, 9], [98, 103, 6], [60, 65, 3]],
+  tan_wind:   [[0, 8, 15], [9, 14, 10], [15, 20, 5], [21, 99, 1]],
+  tan_rainCap:   12,            // rain → no tanning
+  tan_coldCapAt: 58, tan_coldCap: 30,   // too cold to comfortably lie out
 
-  // ── Drone ──
-  drone_wind:    [[0, 8, 20],   [9, 15, 14],   [16, 20, 6]],
-  drone_gust:    [[0, 15, 20],  [16, 25, 14],  [26, 30, 6]],
-  drone_pop:     [[0, 0, 20],   [1, 15, 14],   [16, 30, 6]],
-  drone_vis:     [[10001, 99999, 20], [5000, 10000, 14], [1000, 4999, 6]],
-  drone_temp:    [[50, 85, 20], [35, 49, 14],  [86, 95, 14], [20, 34, 6]],
-  drone_rainCap: 25,
-  drone_fogCap:  50,
-  drone_highWindCap: 35,
-  drone_highWindThreshold: 25,  // wind speed (mph) that triggers the cap
+  // ── Drone ──  Wind & gusts dominate (consumer drones resist ~20–24 mph, Beaufort 5);
+  // drones aren't waterproof (rain), need visual line-of-sight (fog) + daylight, and run
+  // LiPo batteries that fade in cold / overheat in extreme heat. Sources: DJI wind-resistance
+  // specs + Beaufort scale; FAA VLOS/daylight rules. Max: wind 35 · gust 25 · precip 25 · temp 15.
+  drone_wind:    [[0, 7, 35], [8, 12, 28], [13, 17, 18], [18, 23, 8], [24, 99, 2]],   // mph
+  drone_gust:    [[0, 12, 25], [13, 18, 18], [19, 24, 10], [25, 31, 3], [32, 99, 0]],
+  drone_pop:     [[0, 5, 25], [6, 15, 15], [16, 30, 6], [31, 100, 1]],
+  drone_temp:    [[50, 85, 15], [40, 49, 10], [86, 95, 10], [32, 39, 5], [96, 104, 4]],  // LiPo range
+  drone_rainCap: 15,            // not waterproof
+  drone_fogCap:  35,            // must keep visual line-of-sight
+  drone_lowVis:  5000,          // metres (hourly visibility) below which VLOS is a concern
+  drone_highWindCap: 30,
+  drone_highWindThreshold: 22,  // sustained wind (mph) near small-drone limits
+  drone_coldCapAt: 33, drone_coldCap: 75,   // below freezing → batteries fade (fly, but not "Perfect")
 
   // ── Rating cutoffs ──
   perfect: 85,
@@ -433,53 +440,45 @@ function scoreRunningHour(hr) {
   return computeRunScore(feels, hr.wind_speed, (hr.pop || 0) * 100, dewPt, isRaining);
 }
 
-function scoreTanningHour(hr) {
-  var temp = hr.temp;
-  var uvi = hr.uvi || 0;
-  var clouds = hr.clouds || 0;
-  var wind = hr.wind_speed;
-  var pop = (hr.pop || 0) * 100;
-  var weatherId = hr.weather[0].id;
-  var isRaining = weatherId < 700;
-
-  // Below 70°F → always poor for tanning
-  if (temp < 70) return 0;
-
-  var score = 0;
-  score += scoreRange(temp, THRESHOLDS.tan_temp);
-  score += scoreRange(uvi, THRESHOLDS.tan_uvi);
-  score += scoreRange(clouds, THRESHOLDS.tan_clouds);
-  score += scoreRange(wind, THRESHOLDS.tan_wind);
-  score += scoreRange(pop, THRESHOLDS.tan_pop);
-
+// Shared tanning score (day + hourly): UV + clear sky + warmth + calm. Rain caps it;
+// too-cold caps it (no comfortable tanning while shivering).
+function computeTanScore(uvi, clouds, temp, wind, isRaining) {
+  var score = scoreRange(uvi, THRESHOLDS.tan_uvi)
+            + scoreRange(clouds, THRESHOLDS.tan_clouds)
+            + scoreRange(temp, THRESHOLDS.tan_temp)
+            + scoreRange(wind, THRESHOLDS.tan_wind);
   if (isRaining) score = Math.min(score, THRESHOLDS.tan_rainCap);
-  return score;
+  if (temp < THRESHOLDS.tan_coldCapAt) score = Math.min(score, THRESHOLDS.tan_coldCap);
+  return Math.max(0, Math.round(score));
+}
+
+// Shared drone score (day + hourly): wind + gusts + dry + battery-friendly temp. Rain,
+// fog/low-visibility, and near-limit sustained wind each cap it. Hourly also gates to
+// daylight (FAA) and can use real visibility; the daily forecast has no visibility, so it
+// assumes clear unless the condition code is fog.
+function computeDroneScore(wind, gust, pop, temp, isRaining, isFoggy, lowVis) {
+  var score = scoreRange(wind, THRESHOLDS.drone_wind)
+            + scoreRange(gust, THRESHOLDS.drone_gust)
+            + scoreRange(pop, THRESHOLDS.drone_pop)
+            + scoreRange(temp, THRESHOLDS.drone_temp);
+  if (isRaining) score = Math.min(score, THRESHOLDS.drone_rainCap);
+  if (isFoggy || lowVis) score = Math.min(score, THRESHOLDS.drone_fogCap);
+  if (wind > THRESHOLDS.drone_highWindThreshold) score = Math.min(score, THRESHOLDS.drone_highWindCap);
+  if (temp < THRESHOLDS.drone_coldCapAt) score = Math.min(score, THRESHOLDS.drone_coldCap);
+  return Math.max(0, Math.round(score));
+}
+
+function scoreTanningHour(hr) {
+  var isRaining = hr.weather[0].id < 700;
+  return computeTanScore(hr.uvi || 0, hr.clouds || 0, hr.temp, hr.wind_speed, isRaining);
 }
 
 function scoreDroneHour(hr, sunrise, sunset) {
-  var temp = hr.temp;
-  var wind = hr.wind_speed;
-  var gust = hr.wind_gust || wind;
-  var pop = (hr.pop || 0) * 100;
-  var vis = hr.visibility || 10000;
-  var weatherId = hr.weather[0].id;
-  var isRaining = weatherId < 700;
-  var isFoggy = weatherId >= 700 && weatherId < 800;
-
-  if (hr.dt < sunrise || hr.dt > sunset) return 0;
-
-  var score = 0;
-  score += scoreRange(wind, THRESHOLDS.drone_wind);
-  score += scoreRange(gust, THRESHOLDS.drone_gust);
-  score += scoreRange(pop, THRESHOLDS.drone_pop);
-  score += scoreRange(vis, THRESHOLDS.drone_vis);
-  score += scoreRange(temp, THRESHOLDS.drone_temp);
-
-  if (isRaining) score = Math.min(score, THRESHOLDS.drone_rainCap);
-  if (isFoggy) score = Math.min(score, THRESHOLDS.drone_fogCap);
-  if (wind > THRESHOLDS.drone_highWindThreshold) score = Math.min(score, THRESHOLDS.drone_highWindCap);
-
-  return score;
+  if (hr.dt < sunrise || hr.dt > sunset) return 0;   // daylight only
+  var id = hr.weather[0].id;
+  var lowVis = (hr.visibility != null) && hr.visibility < THRESHOLDS.drone_lowVis;
+  return computeDroneScore(hr.wind_speed, hr.wind_gust || hr.wind_speed, (hr.pop || 0) * 100,
+    hr.temp, id < 700, id >= 700 && id < 800, lowVis);
 }
 
 /* ── OPTIMAL WINDOW FINDER ────────────── */
@@ -595,32 +594,12 @@ function scoreTanning(day) {
   var uvi = day.uvi || 0;
   var clouds = day.clouds || 0;
   var wind = day.wind_speed;
-  var pop = (day.pop || 0) * 100;
-  var weatherId = day.weather[0].id;
-  var isRaining = weatherId < 700;
-
-  // Below 70°F → always poor for tanning
-  if (temp < 70) {
-    return {
-      score: 0,
-      rating: 'poor',
-      factors: { temp: Math.round(temp), uvi: uvi, clouds: clouds, wind: Math.round(wind), pop: Math.round(pop) }
-    };
-  }
-
-  var score = 0;
-  score += scoreRange(temp, THRESHOLDS.tan_temp);
-  score += scoreRange(uvi, THRESHOLDS.tan_uvi);
-  score += scoreRange(clouds, THRESHOLDS.tan_clouds);
-  score += scoreRange(wind, THRESHOLDS.tan_wind);
-  score += scoreRange(pop, THRESHOLDS.tan_pop);
-
-  if (isRaining) score = Math.min(score, THRESHOLDS.tan_rainCap);
-
+  var isRaining = day.weather[0].id < 700;
+  var score = computeTanScore(uvi, clouds, temp, wind, isRaining);
   return {
     score: score,
     rating: scoreToRating(score),
-    factors: { temp: Math.round(temp), uvi: uvi, clouds: clouds, wind: Math.round(wind), pop: Math.round(pop) }
+    factors: { temp: Math.round(temp), uvi: uvi, clouds: clouds, wind: Math.round(wind), pop: Math.round((day.pop || 0) * 100) }
   };
 }
 
@@ -629,31 +608,14 @@ function scoreDrone(day) {
   var wind = day.wind_speed;
   var gust = day.wind_gust || wind;
   var pop = (day.pop || 0) * 100;
-  var vis = 10000;
-  var weatherId = day.weather[0].id;
-  var isRaining = weatherId < 700;
-  var isFoggy = weatherId >= 700 && weatherId < 800;
-
-  var score = 0;
-  score += scoreRange(wind, THRESHOLDS.drone_wind);
-  score += scoreRange(gust, THRESHOLDS.drone_gust);
-  score += scoreRange(pop, THRESHOLDS.drone_pop);
-  if (isFoggy) vis = 3000;
-  score += scoreRange(vis, THRESHOLDS.drone_vis);
-  score += scoreRange(temp, THRESHOLDS.drone_temp);
-
-  if (isRaining) score = Math.min(score, THRESHOLDS.drone_rainCap);
-  if (isFoggy) score = Math.min(score, THRESHOLDS.drone_fogCap);
-  if (wind > THRESHOLDS.drone_highWindThreshold) score = Math.min(score, THRESHOLDS.drone_highWindCap);
-
-  var daylight = ((day.sunset - day.sunrise) / 3600).toFixed(1);
-
+  var id = day.weather[0].id;
+  var isFoggy = id >= 700 && id < 800;
+  // Daily forecast carries no visibility → assume clear unless the condition code is fog.
+  var score = computeDroneScore(wind, gust, pop, temp, id < 700, isFoggy, false);
   return {
     score: score,
     rating: scoreToRating(score),
-    // `vis` is assumed (the daily forecast carries no visibility) — clear unless the
-    // condition code is fog. Surfaced so the score breakdown can say so honestly.
-    factors: { wind: Math.round(wind), gust: Math.round(gust), pop: Math.round(pop), temp: Math.round(temp), daylight: daylight, vis: vis }
+    factors: { wind: Math.round(wind), gust: Math.round(gust), pop: Math.round(pop), temp: Math.round(temp) }
   };
 }
 
@@ -1076,19 +1038,15 @@ function buildScoreBreakdown(type, result) {
       lines.push(breakdownLine('Dew point', f.dew + '°F', scoreRange(f.dew, THRESHOLDS.run_dewPoint), 17));
     }
   } else if (type === 'drone') {
-    lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.drone_wind), 20));
-    lines.push(breakdownLine('Gusts', f.gust + ' mph', scoreRange(f.gust, THRESHOLDS.drone_gust), 20));
-    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreRange(f.pop, THRESHOLDS.drone_pop), 20));
-    lines.push(breakdownLine('Temp', f.temp + '°F', scoreRange(f.temp, THRESHOLDS.drone_temp), 20));
-    // Daily forecast has no visibility — assumed clear unless the condition is fog.
-    var visLabel = (f.vis != null && f.vis < 10000) ? 'reduced (fog)' : 'clear (assumed)';
-    lines.push(breakdownLine('Visibility', visLabel, scoreRange(f.vis != null ? f.vis : 10000, THRESHOLDS.drone_vis), 20));
+    lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.drone_wind), 35));
+    lines.push(breakdownLine('Gusts', f.gust + ' mph', scoreRange(f.gust, THRESHOLDS.drone_gust), 25));
+    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreRange(f.pop, THRESHOLDS.drone_pop), 25));
+    lines.push(breakdownLine('Temp', f.temp + '°F', scoreRange(f.temp, THRESHOLDS.drone_temp), 15));
   } else if (type === 'tan') {
-    lines.push(breakdownLine('Temp', f.temp + '°F', scoreRange(f.temp, THRESHOLDS.tan_temp), 20));
-    lines.push(breakdownLine('UV Index', f.uvi, scoreRange(f.uvi, THRESHOLDS.tan_uvi), 25));
+    lines.push(breakdownLine('UV Index', f.uvi, scoreRange(f.uvi, THRESHOLDS.tan_uvi), 35));
     lines.push(breakdownLine('Cloud cover', f.clouds + '%', scoreRange(f.clouds, THRESHOLDS.tan_clouds), 25));
+    lines.push(breakdownLine('Temp', f.temp + '°F', scoreRange(f.temp, THRESHOLDS.tan_temp), 25));
     lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.tan_wind), 15));
-    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreRange(f.pop, THRESHOLDS.tan_pop), 15));
   }
   return lines.join('');
 }
@@ -1107,6 +1065,70 @@ function breakdownLine(label, value, pts, max) {
 function closeWeatherDrawer() {
   document.getElementById('wDrawerBackdrop').classList.remove('open');
   document.getElementById('wDrawer').classList.remove('open');
+}
+
+/* ── "How these scores work" explainer (reuses the detail-drawer shell) ── */
+
+function infoChip(cls, label) {
+  return '<span class="w-rating ' + cls + '" style="font-size:0.7rem;padding:2px 9px">' + label + '</span>';
+}
+
+function infoDrawerHTML() {
+  return ''
+    + '<p class="w-info-lead">Each day gets three 0–100 scores — for <strong>running</strong>, '
+      + 'flying a <strong>drone</strong>, and <strong>tanning</strong> — worked out from the forecast. '
+      + 'Each score becomes a simple rating:</p>'
+    + '<div class="w-info-scale">'
+      + '<span class="w-info-scale-item">' + infoChip('perfect', 'Perfect') + ' 85+</span>'
+      + '<span class="w-info-scale-item">' + infoChip('good', 'Good') + ' 65+</span>'
+      + '<span class="w-info-scale-item">' + infoChip('fair', 'Fair') + ' 45+</span>'
+      + '<span class="w-info-scale-item">' + infoChip('poor', 'Poor') + ' under 45</span>'
+    + '</div>'
+
+    + '<div class="w-info-act"><div class="w-info-act-head">🏃 Running</div>'
+      + '<p class="w-info-act-sub">Best when it’s cool, dry, and calm.</p>'
+      + '<ul class="w-info-list">'
+        + '<li><strong>Feels-like temperature</strong> (matters most) — the sweet spot is about '
+          + '<strong>50–68°F</strong>. It uses the "feels like" number, which already folds in humidity '
+          + 'and wind chill.</li>'
+        + '<li><strong>Dew point</strong> — how muggy the air actually is. Below ~55°F is dry and '
+          + 'comfortable; above ~70°F is oppressive. <em>This is why a dry 80° scores far better than a '
+          + 'humid 80°.</em></li>'
+        + '<li><strong>Rain and wind</strong> drag it down, and dangerous heat or bitter cold cap it.</li>'
+      + '</ul></div>'
+
+    + '<div class="w-info-act"><div class="w-info-act-head">🛸 Drone</div>'
+      + '<p class="w-info-act-sub">Built around keeping a small drone safe and legal.</p>'
+      + '<ul class="w-info-list">'
+        + '<li><strong>Wind &amp; gusts</strong> (matter most) — most consumer drones top out around '
+          + '<strong>20–24 mph</strong>; gusts past that get dicey.</li>'
+        + '<li><strong>Rain</strong> — drones aren’t waterproof, so any rain tanks the score.</li>'
+        + '<li><strong>Fog / low visibility</strong> — you have to keep it in sight.</li>'
+        + '<li><strong>Temperature</strong> — batteries fade in the cold and overheat in extreme heat '
+          + '(best ~50–85°F). Night hours score zero.</li>'
+      + '</ul></div>'
+
+    + '<div class="w-info-act"><div class="w-info-act-head">☀️ Tanning</div>'
+      + '<p class="w-info-act-sub">What gets you color, comfortably.</p>'
+      + '<ul class="w-info-list">'
+        + '<li><strong>UV index</strong> (matters most) — you need real sun, and higher UV tans faster. '
+          + '<em>Higher UV also burns faster — wear sunscreen.</em></li>'
+        + '<li><strong>Cloud cover</strong> — clear skies mean direct sun.</li>'
+        + '<li><strong>Temperature &amp; wind</strong> — warm enough to lie out (best ~78–92°F) with a '
+          + 'light breeze; rain rules it out.</li>'
+      + '</ul></div>'
+
+    + '<p class="w-info-foot">The <strong>best window</strong> for each activity is simply the run of '
+      + 'upcoming hours with the highest scores. Tap any day to see it hour by hour.</p>';
+}
+
+function openInfoDrawer() {
+  document.getElementById('wDrawerHeader').innerHTML =
+    '<div class="w-drawer-day-name">How these scores work</div>'
+    + '<div class="w-drawer-summary">Friendly, forecast-based ratings — not a substitute for your own judgment.</div>';
+  document.getElementById('wDrawerBody').innerHTML = infoDrawerHTML();
+  document.getElementById('wDrawerBackdrop').classList.add('open');
+  document.getElementById('wDrawer').classList.add('open');
 }
 
 function renderDrawerHourly(hourScores) {
@@ -1135,4 +1157,6 @@ function initWeather() {
   document.getElementById('wDrawer').addEventListener('click', function(e) {
     if (e.target.classList.contains('drawer-handle')) closeWeatherDrawer();
   });
+  var infoBtn = document.getElementById('wInfoBtn');
+  if (infoBtn) infoBtn.addEventListener('click', openInfoDrawer);
 }
