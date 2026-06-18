@@ -2769,7 +2769,7 @@ nav {
   text-align: center;
 }
 .w-act.perfect { border-top-color: var(--green); }
-.w-act.good    { border-top-color: var(--teal); }
+.w-act.good    { border-top-color: var(--blue); }
 .w-act.fair    { border-top-color: var(--yellow); }
 .w-act.poor    { border-top-color: var(--red); }
 .w-act-icon { font-size: 1.3rem; line-height: 1; }
@@ -2782,7 +2782,7 @@ nav {
 }
 .w-act-rating { font-weight: 700; font-size: 0.9rem; margin-top: 3px; }
 .w-act-rating.perfect { color: var(--green); }
-.w-act-rating.good    { color: var(--teal); }
+.w-act-rating.good    { color: var(--blue); }
 .w-act-rating.fair    { color: var(--yellow); }
 .w-act-rating.poor    { color: var(--red); }
 .w-act-win {
@@ -2824,7 +2824,7 @@ nav {
 }
 .w-best-chip:hover { background: var(--surface-hover); }
 .w-best-chip.perfect { border-color: var(--green-border); }
-.w-best-chip.good    { border-color: rgba(45, 212, 191, 0.3); }
+.w-best-chip.good    { border-color: rgba(56, 189, 248, 0.4); }
 .w-best-chip.fair    { border-color: var(--yellow-border); }
 .w-best-act { font-size: 0.95rem; }
 .w-best-day { font-weight: 700; }
@@ -2866,7 +2866,7 @@ nav {
 .w-row-act-i { font-size: 0.95rem; line-height: 1; }
 .w-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .w-dot.perfect { background: var(--green); }
-.w-dot.good    { background: var(--teal); }
+.w-dot.good    { background: var(--blue); }
 .w-dot.fair    { background: var(--yellow); }
 .w-dot.poor    { background: var(--red); }
 
@@ -2892,7 +2892,7 @@ nav {
   margin-bottom: 6px;
 }
 .w-rating.perfect { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-.w-rating.good    { background: rgba(45, 212, 191, 0.10); color: var(--teal); border: 1px solid rgba(45, 212, 191, 0.20); }
+.w-rating.good    { background: rgba(56, 189, 248, 0.12); color: var(--blue); border: 1px solid rgba(56, 189, 248, 0.25); }
 .w-rating.fair    { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
 .w-rating.poor    { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
 
@@ -2919,7 +2919,7 @@ nav {
   display: inline-block;
 }
 .w-rating-dot.perfect { background: var(--green); }
-.w-rating-dot.good    { background: var(--teal); }
+.w-rating-dot.good    { background: var(--blue); }
 .w-rating-dot.fair    { background: var(--yellow); }
 .w-rating-dot.poor    { background: var(--red); }
 
@@ -3005,7 +3005,7 @@ nav {
   margin-bottom: 10px;
 }
 .w-drawer-window.perfect { color: var(--green); border-color: var(--green-border); }
-.w-drawer-window.good    { color: var(--teal); border-color: rgba(45,212,191,0.2); }
+.w-drawer-window.good    { color: var(--blue); border-color: rgba(56,189,248,0.25); }
 .w-drawer-window.fair    { color: var(--yellow); border-color: var(--yellow-border); }
 .w-drawer-window.poor    { color: var(--red); border-color: var(--red-border); }
 
@@ -3077,7 +3077,7 @@ nav {
   border-radius: 2px 2px 0 0;
 }
 .w-drawer-bar.perfect { background: var(--green); }
-.w-drawer-bar.good    { background: var(--teal); }
+.w-drawer-bar.good    { background: var(--blue); }
 .w-drawer-bar.fair    { background: var(--yellow); }
 .w-drawer-bar.poor    { background: var(--red); }
 .w-drawer-bar-label {
@@ -3168,13 +3168,48 @@ nav {
 }
 
 /* ── Drawer activity header ── */
+/* ── Drawer: shared "Conditions" block (shown once, above the activities) ── */
+.w-cond-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin: 4px 0 8px;
+}
+.w-cond-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.w-cond-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--surface);
+  padding: 8px 12px;
+}
+.w-cond-label { font-size: 0.78rem; color: var(--text-muted); }
+.w-cond-val {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
 .w-drawer-activity-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 0.95rem;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin: 22px 0 8px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--border);
 }

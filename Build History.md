@@ -10,6 +10,44 @@
 
 ---
 
+## 2026-06-17 — Weather: drawer de-dup + rating colors + running-score overhaul
+
+Three fixes from Alan's review of the detail drawer (`weather.js`/`style.css`, `?v=w3`):
+
+- **No more repeated metrics in the drawer.** Each activity (Running/Drone/Tanning) used
+  to print its own factor rows — so temperature, wind, and rain appeared three times, the
+  bulk of the "overload." Now a single **`Conditions` block** (a 2-col metric grid + the
+  UV "tap for info" expandable, built by `conditionsHTML()`) sits once at the top, and each
+  activity shows only its **rating · best window (+ during-window chips) · hourly bars ·
+  a tap-to-open score breakdown** (where the per-factor detail now lives). `renderDrawerActivity`
+  lost its `factorRows`/`uvValue` params; the window chips dropped humidity (it's in
+  Conditions); `drawerRow()` removed (orphaned).
+- **"Good" recolored green → blue.** Perfect (green `--green #34d399`) and Good (teal
+  `--teal #2dd4bf`) were nearly the same hue. Good is now **blue (`--blue #38bdf8`)** across
+  every weather rating surface (pills, hero tiles, week dots, best-of-week chips, drawer
+  window + hourly bars, legend) — a clear 4-step ramp green → blue → amber → red.
+- **Running score reworked (research-based).** The old model was harsh and double-counted:
+  a flat feels-like cliff (76–80°F → 10/20), humidity scored *separately* on top of
+  feels-like (which already includes it), a 20-pt **UV** weight that tanked sunny runs, and
+  a hard "feels > 90 → poor" guard. Rebuilt around **apparent temperature + dew point**
+  (the runner's real mugginess metric, ≤55°F dry … ≥70°F oppressive — std running guidance)
+  with gentle bands: **feels-like 40 · precip 25 · wind 18 · dew point 17 = 100**, UV
+  dropped, plus dangerous-heat (feels ≥ 92 → ≤ Poor) and bitter-cold (≤ 24 → ≤ Fair) caps.
+  Heat+humidity still hurts correctly — a muggy 85° reads as a higher feels-like *and* a
+  higher dew point, a dry 85° doesn't. Shared `computeRunScore()` (used by the day card +
+  hourly window) + `getDewPoint()`/`dewPointF()` (prefers OWM `dew_point`, computes from
+  RH as fallback). Verified across a sanity table: 78°/43%/14mph/0% **Fair 64 → Good 81**
+  (Alan's example), dry 85° → Good 66, muggy 85°→feels-92 → Poor 30, 40° clear → Perfect 90,
+  72° + 60% rain → Fair 50.
+
+**Verification:** `node --check`; a stubbed-DOM harness drove the real `renderWeather` +
+`openWeatherDrawer` → preview with the live stylesheet → screenshot (shared with Alan);
+running-score sanity table printed for a range of temp/humidity/wind cases. Drone & tanning
+scoring left as-is (Alan flagged only running); their thresholds can get the same dew-point
+treatment later if wanted.
+
+---
+
 ## 2026-06-17 — Observatory polish: life-list wrapping + "Almost" popout + breathing room
 
 Follow-up to Alan's two formatting notes (screenshots): life-list entries wrapping to

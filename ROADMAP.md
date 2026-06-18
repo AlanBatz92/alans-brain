@@ -189,6 +189,13 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-17** — Weather drawer + scoring (Alan's review): metrics no longer repeat in
+  the detail drawer (single shared **Conditions** block; activities show rating · window ·
+  bars · tap-to-open breakdown), **Good** recolored teal → **blue** (distinct from green
+  Perfect), and the **running score** rebuilt around apparent temp + **dew point** (gentle
+  bands, UV dropped, heat/cold caps) so e.g. 78°F/43%/0% reads **Good (81)** not Fair (64).
+  `?v=w3`. Drone/tanning scoring left for a later pass.
+
 - **2026-06-17** — Observatory polish (Alan's formatting notes): **life-list cards no
   longer break names mid-word** (vertical card: full-width name + `×count · since` meta
   row), the **"Almost a lifer" shelf moved into a popout** (compact trigger banner →

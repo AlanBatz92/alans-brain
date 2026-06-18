@@ -23,14 +23,24 @@ var WEATHER_LOCATIONS = [
 // Each array entry: [min, max, points]  (higher points = better conditions)
 var THRESHOLDS = {
 
-  // ── Running ──  (sweet spot 50-75°F; drops sharply above 80 especially with humidity)
-  run_feelsLike: [[50, 75, 20], [40, 49, 14], [76, 80, 10], [30, 39, 6], [81, 85, 4], [86, 95, 1]],
-  run_wind:      [[0, 8, 20],   [9, 15, 14],  [16, 22, 6]],
-  run_pop:       [[0, 10, 20],  [11, 30, 14],  [31, 60, 6]],   // precipitation %
-  run_humidity:  [[30, 55, 20], [20, 29, 14],  [56, 70, 12], [71, 80, 6], [81, 90, 2]],
-  run_uvi:       [[0, 5, 20],   [6, 7, 14],    [8, 9, 6]],     // UV index
-  run_rainCap:   35,            // max score if actively raining
-  run_heatHumidPenalty: true,   // extra penalty when hot + humid together
+  // ── Running ──
+  // Driven by feels-like (apparent temp — which already folds in humidity & wind chill),
+  // precipitation, wind, and *dew point* (the runner's real "mugginess" metric — far more
+  // telling than raw RH). Bands are deliberately gentle at the comfortable end (no cliff
+  // at ~75°F). Max points: feels 40 · precip 25 · wind 18 · dew 17 = 100. UV is NOT scored
+  // for running (it doesn't make a run bad — that's a sunscreen note, not a quality hit).
+  // Heat + humidity is captured twice on purpose where it should be: a muggy 85° reads as a
+  // higher *feels-like* (lower temp pts) AND a higher dew point (lower dew pts); a dry 85°
+  // does not. Sources: dew-point comfort scale (≤55°F dry … ≥70°F oppressive) used widely in
+  // running guidance; apparent-temperature (NWS heat index / wind chill) for feels-like.
+  run_feelsLike: [[50, 68, 40], [45, 49, 36], [69, 73, 36], [40, 44, 30], [74, 78, 32],
+                  [35, 39, 22], [79, 82, 24], [83, 86, 14], [30, 34, 12], [87, 90, 7], [91, 95, 3]],
+  run_pop:       [[0, 10, 25], [11, 25, 18], [26, 50, 10], [51, 75, 4], [76, 100, 1]],  // precipitation %
+  run_wind:      [[0, 7, 18], [8, 12, 15], [13, 18, 11], [19, 24, 6], [25, 99, 2]],     // mph
+  run_dewPoint:  [[-50, 54, 17], [55, 59, 13], [60, 64, 9], [65, 69, 5], [70, 74, 2], [75, 130, 0]],  // °F, lower = drier
+  run_rainCap:   50,            // cap when it's actively precipitating
+  run_hotCapAt:  92, run_hotCap: 30,    // dangerous heat → no better than Poor
+  run_coldCapAt: 24, run_coldCap: 45,   // bitter cold → no better than Fair
 
   // ── Tanning ──  (80-90°F ideal, clear skies, good UV)
   tan_temp:      [[80, 90, 20], [75, 79, 14], [91, 95, 14], [70, 74, 8], [96, 100, 6]],
@@ -385,33 +395,42 @@ function manualWeatherRefresh() {
 
 /* ── HOURLY SCORING ───────────────────── */
 
+// Dew point (°F) from temp (°F) + relative humidity (%), Magnus-Tetens. Used only as a
+// fallback — OpenWeatherMap already provides `dew_point` on daily + hourly.
+function dewPointF(tempF, rh) {
+  if (rh == null || tempF == null) return null;
+  var tc = (tempF - 32) * 5 / 9;
+  var a = 17.27, b = 237.7;
+  var g = (a * tc) / (b + tc) + Math.log(Math.max(1, rh) / 100);
+  var dpC = (b * g) / (a - g);
+  return dpC * 9 / 5 + 32;
+}
+// Prefer the API's dew_point; fall back to computing it from temp + humidity.
+function getDewPoint(o, tempF) {
+  if (o && typeof o.dew_point === 'number') return o.dew_point;
+  return dewPointF(tempF, o ? o.humidity : null);
+}
+
+// Shared running score (0–100) for a day or an hour, so the daily card and the hourly
+// "best window" bars agree. feels-like + precip + wind + dew point; UV is intentionally
+// ignored (see THRESHOLDS). Dangerous-heat / bitter-cold caps keep an otherwise-okay
+// wind/precip line from reading as a good run when the temperature alone rules it out.
+function computeRunScore(feels, wind, pop, dewPt, isRaining) {
+  var score = scoreRange(feels, THRESHOLDS.run_feelsLike)
+            + scoreRange(pop, THRESHOLDS.run_pop)
+            + scoreRange(wind, THRESHOLDS.run_wind)
+            + (dewPt != null ? scoreRange(dewPt, THRESHOLDS.run_dewPoint) : THRESHOLDS.run_dewPoint[0][2]);
+  if (isRaining) score = Math.min(score, THRESHOLDS.run_rainCap);
+  if (feels >= THRESHOLDS.run_hotCapAt)       score = Math.min(score, THRESHOLDS.run_hotCap);
+  else if (feels <= THRESHOLDS.run_coldCapAt) score = Math.min(score, THRESHOLDS.run_coldCap);
+  return Math.max(0, Math.round(score));
+}
+
 function scoreRunningHour(hr) {
   var feels = hr.feels_like;
-  var wind = hr.wind_speed;
-  var pop = (hr.pop || 0) * 100;
-  var humidity = hr.humidity;
-  var uvi = hr.uvi || 0;
-  var weatherId = hr.weather[0].id;
-  var isRaining = weatherId < 700;
-
-  // Guard rails: below freezing or above 90 → always poor
-  if (feels < 32 || feels > 90) return Math.min(feels < 32 ? 10 : 5, 20);
-
-  var score = 0;
-  score += scoreRange(feels, THRESHOLDS.run_feelsLike);
-  score += scoreRange(wind, THRESHOLDS.run_wind);
-  score += scoreRange(pop, THRESHOLDS.run_pop);
-  score += scoreRange(humidity, THRESHOLDS.run_humidity);
-  score += scoreRange(uvi, THRESHOLDS.run_uvi);
-
-  // Heat + humidity combo penalty
-  if (THRESHOLDS.run_heatHumidPenalty && feels > 80 && humidity > 65) {
-    var penalty = Math.round((feels - 80) * 0.5 + (humidity - 65) * 0.3);
-    score = Math.max(0, score - penalty);
-  }
-
-  if (isRaining) score = Math.min(score, THRESHOLDS.run_rainCap);
-  return score;
+  var isRaining = hr.weather[0].id < 700;
+  var dewPt = getDewPoint(hr, hr.temp);
+  return computeRunScore(feels, hr.wind_speed, (hr.pop || 0) * 100, dewPt, isRaining);
 }
 
 function scoreTanningHour(hr) {
@@ -557,40 +576,17 @@ function scoreRunning(day) {
   var feels = day.feels_like ? day.feels_like.day : day.temp.day;
   var wind = day.wind_speed;
   var pop = (day.pop || 0) * 100;
-  var humidity = day.humidity;
-  var uvi = day.uvi || 0;
-  var weatherId = day.weather[0].id;
-  var isRaining = weatherId < 700;
-
-  // Guard rails: below freezing or above 90 → always poor
-  if (feels < 32 || feels > 90) {
-    var capScore = feels < 32 ? 10 : 5;
-    return {
-      score: capScore,
-      rating: 'poor',
-      factors: { feels: Math.round(feels), wind: Math.round(wind), pop: Math.round(pop), humidity: humidity, uvi: uvi }
-    };
-  }
-
-  var score = 0;
-  score += scoreRange(feels, THRESHOLDS.run_feelsLike);
-  score += scoreRange(wind, THRESHOLDS.run_wind);
-  score += scoreRange(pop, THRESHOLDS.run_pop);
-  score += scoreRange(humidity, THRESHOLDS.run_humidity);
-  score += scoreRange(uvi, THRESHOLDS.run_uvi);
-
-  // Heat + humidity combo penalty
-  if (THRESHOLDS.run_heatHumidPenalty && feels > 80 && humidity > 65) {
-    var penalty = Math.round((feels - 80) * 0.5 + (humidity - 65) * 0.3);
-    score = Math.max(0, score - penalty);
-  }
-
-  if (isRaining) score = Math.min(score, THRESHOLDS.run_rainCap);
+  var isRaining = day.weather[0].id < 700;
+  var dewPt = getDewPoint(day, day.temp.day);
+  var score = computeRunScore(feels, wind, pop, dewPt, isRaining);
 
   return {
     score: score,
     rating: scoreToRating(score),
-    factors: { feels: Math.round(feels), wind: Math.round(wind), pop: Math.round(pop), humidity: humidity, uvi: uvi }
+    factors: {
+      feels: Math.round(feels), wind: Math.round(wind), pop: Math.round(pop),
+      humidity: day.humidity, dew: dewPt != null ? Math.round(dewPt) : null, uvi: day.uvi || 0
+    }
   };
 }
 
@@ -968,35 +964,14 @@ function openWeatherDrawer(idx) {
 
   document.getElementById('wDrawerHeader').innerHTML = headerHTML;
 
-  // Build body — all activities in one view
-  var bodyHTML = '';
-
-  // Running
-  bodyHTML += renderDrawerActivity('🏃 Running', data.runResult, data.runWin, data.hours, scoreRunningHour, day,
-    [['Feels like', data.runResult.factors.feels + '°F'],
-     ['Wind', data.runResult.factors.wind + ' mph'],
-     ['Rain chance', data.runResult.factors.pop + '%'],
-     ['Humidity', data.runResult.factors.humidity + '%']],
-    buildScoreBreakdown('run', data.runResult),
-    data.runResult.factors.uvi);
-
-  // Drone
-  bodyHTML += renderDrawerActivity('🛸 Drone', data.droneResult, data.droneWin, data.hours, scoreDroneHour, day,
-    [['Wind', data.droneResult.factors.wind + ' mph'],
-     ['Gusts', data.droneResult.factors.gust + ' mph'],
-     ['Rain chance', data.droneResult.factors.pop + '%'],
-     ['Temp', data.droneResult.factors.temp + '°F'],
-     ['Daylight', data.droneResult.factors.daylight + ' hrs']],
-    buildScoreBreakdown('drone', data.droneResult));
-
-  // Tanning
-  bodyHTML += renderDrawerActivity('☀️ Tanning', data.tanResult, data.tanWin, data.hours, scoreTanningHour, day,
-    [['Temp', data.tanResult.factors.temp + '°F'],
-     ['Cloud cover', data.tanResult.factors.clouds + '%'],
-     ['Wind', data.tanResult.factors.wind + ' mph'],
-     ['Rain chance', data.tanResult.factors.pop + '%']],
-    buildScoreBreakdown('tan', data.tanResult),
-    data.tanResult.factors.uvi);
+  // Build body — the shared Conditions block once, then each activity (rating + best
+  // window + hourly bars + a tappable score breakdown). The raw numbers (temp, wind,
+  // rain, UV, …) live only in Conditions; the activities no longer repeat them, which
+  // was the bulk of the drawer's clutter.
+  var bodyHTML = conditionsHTML(day, data);
+  bodyHTML += renderDrawerActivity('🏃 Running', data.runResult, data.runWin, data.hours, buildScoreBreakdown('run', data.runResult));
+  bodyHTML += renderDrawerActivity('🛸 Drone',   data.droneResult, data.droneWin, data.hours, buildScoreBreakdown('drone', data.droneResult));
+  bodyHTML += renderDrawerActivity('☀️ Tanning', data.tanResult, data.tanWin, data.hours, buildScoreBreakdown('tan', data.tanResult));
 
   document.getElementById('wDrawerBody').innerHTML = bodyHTML;
 
@@ -1004,8 +979,33 @@ function openWeatherDrawer(idx) {
   document.getElementById('wDrawer').classList.add('open');
 }
 
-function renderDrawerActivity(title, result, win, hours, scoreFn, day, factorRows, breakdownHTML, uvValue) {
-  var html = '<div class="w-drawer-activity-header" style="margin-top:16px">'
+// Shared metrics for the day, shown ONCE above the activities (so temp/wind/rain/etc.
+// aren't repeated in every activity section). The UV expandable lives here too.
+function conditionsHTML(day, data) {
+  var rf = data.runResult.factors;
+  var items = [
+    ['Feels like', rf.feels + '°F'],
+    ['Wind', Math.round(day.wind_speed) + ' mph'],
+    ['Gusts', Math.round(day.wind_gust || day.wind_speed) + ' mph'],
+    ['Humidity', day.humidity + '%']
+  ];
+  if (rf.dew != null)        items.push(['Dew point', rf.dew + '°F']);
+  if (day.clouds != null)    items.push(['Cloud cover', day.clouds + '%']);
+  items.push(['Rain chance', Math.round((day.pop || 0) * 100) + '%']);
+  items.push(['Daylight', ((day.sunset - day.sunrise) / 3600).toFixed(1) + ' hrs']);
+
+  var grid = '';
+  for (var i = 0; i < items.length; i++) {
+    grid += '<div class="w-cond-item"><span class="w-cond-label">' + items[i][0] + '</span>'
+          + '<span class="w-cond-val">' + items[i][1] + '</span></div>';
+  }
+  return '<div class="w-cond-title">Conditions</div>'
+       + '<div class="w-cond-grid">' + grid + '</div>'
+       + uvExpandableHTML(day.uvi || 0);
+}
+
+function renderDrawerActivity(title, result, win, hours, breakdownHTML) {
+  var html = '<div class="w-drawer-activity-header">'
     + '<span>' + title + '</span>'
     + '<span class="w-rating ' + result.rating + '" style="font-size:0.75rem;padding:3px 10px">'
       + RATING_LABELS[result.rating]
@@ -1013,7 +1013,7 @@ function renderDrawerActivity(title, result, win, hours, scoreFn, day, factorRow
     + '</div>';
 
   if (win) {
-    // Window with inline metrics
+    // Best window + what it'll be like during it (window-specific, not a day repeat).
     var winMetrics = windowMetrics(hours, win.startHour, win.endHour);
     html += '<div class="w-drawer-window ' + win.rating + '">'
       + 'Best window: <strong>' + formatHour(win.startHour) + '–' + formatHour(win.endHour) + '</strong>'
@@ -1024,16 +1024,7 @@ function renderDrawerActivity(title, result, win, hours, scoreFn, day, factorRow
     html += renderDrawerHourly(win.hourScores);
   }
 
-  for (var i = 0; i < factorRows.length; i++) {
-    html += drawerRow(factorRows[i][0], factorRows[i][1]);
-  }
-
-  // UV Index expandable (if this activity uses UV)
-  if (uvValue !== undefined) {
-    html += uvExpandableHTML(uvValue);
-  }
-
-  // Tappable score with breakdown
+  // Tappable score with breakdown (this is where the per-activity factor detail lives now)
   html += '<div class="w-drawer-row w-score-row" onclick="this.classList.toggle(\'open\')">'
     + '<span>Score <span class="w-score-hint">(tap for details)</span></span>'
     + '<span>' + result.score + ' / 100</span>'
@@ -1057,38 +1048,32 @@ function windowMetrics(hours, startHour, endHour) {
   }
   if (windowHours.length === 0) return '';
 
-  var avgTemp = 0, maxWind = 0, maxPop = 0, avgHumidity = 0, avgUvi = 0;
+  var avgTemp = 0, maxWind = 0, maxPop = 0;
   for (var j = 0; j < windowHours.length; j++) {
     var hr = windowHours[j];
     avgTemp += (hr.feels_like || hr.temp);
     if (hr.wind_speed > maxWind) maxWind = hr.wind_speed;
     var pop = (hr.pop || 0) * 100;
     if (pop > maxPop) maxPop = pop;
-    avgHumidity += (hr.humidity || 0);
-    avgUvi += (hr.uvi || 0);
   }
   avgTemp = Math.round(avgTemp / windowHours.length);
-  avgHumidity = Math.round(avgHumidity / windowHours.length);
-  avgUvi = Math.round((avgUvi / windowHours.length) * 10) / 10;
 
+  // Temp/wind/rain *during the window* — distinct from the day-level Conditions block
+  // (humidity dropped here; it lives in Conditions).
   return '<span>' + avgTemp + '°F</span>'
     + '<span>💨 ' + Math.round(maxWind) + 'mph</span>'
-    + '<span>🌧 ' + Math.round(maxPop) + '%</span>'
-    + '<span>💧 ' + avgHumidity + '%</span>';
+    + '<span>🌧 ' + Math.round(maxPop) + '%</span>';
 }
 
 function buildScoreBreakdown(type, result) {
   var f = result.factors;
   var lines = [];
   if (type === 'run') {
-    lines.push(breakdownLine('Feels like', f.feels + '°F', scoreRange(f.feels, THRESHOLDS.run_feelsLike), 20));
-    lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.run_wind), 20));
-    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreRange(f.pop, THRESHOLDS.run_pop), 20));
-    lines.push(breakdownLine('Humidity', f.humidity + '%', scoreRange(f.humidity, THRESHOLDS.run_humidity), 20));
-    lines.push(breakdownLine('UV Index', f.uvi, scoreRange(f.uvi, THRESHOLDS.run_uvi), 20));
-    if (THRESHOLDS.run_heatHumidPenalty && f.feels > 80 && f.humidity > 65) {
-      var penalty = Math.round((f.feels - 80) * 0.5 + (f.humidity - 65) * 0.3);
-      lines.push('<div class="w-breakdown-row penalty"><span>Heat+humidity penalty</span><span>-' + penalty + '</span></div>');
+    lines.push(breakdownLine('Feels like', f.feels + '°F', scoreRange(f.feels, THRESHOLDS.run_feelsLike), 40));
+    lines.push(breakdownLine('Rain chance', f.pop + '%', scoreRange(f.pop, THRESHOLDS.run_pop), 25));
+    lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.run_wind), 18));
+    if (f.dew != null) {
+      lines.push(breakdownLine('Dew point', f.dew + '°F', scoreRange(f.dew, THRESHOLDS.run_dewPoint), 17));
     }
   } else if (type === 'drone') {
     lines.push(breakdownLine('Wind', f.wind + ' mph', scoreRange(f.wind, THRESHOLDS.drone_wind), 20));
@@ -1122,10 +1107,6 @@ function breakdownLine(label, value, pts, max) {
 function closeWeatherDrawer() {
   document.getElementById('wDrawerBackdrop').classList.remove('open');
   document.getElementById('wDrawer').classList.remove('open');
-}
-
-function drawerRow(label, value) {
-  return '<div class="w-drawer-row"><span>' + label + '</span><span>' + value + '</span></div>';
 }
 
 function renderDrawerHourly(hourScores) {

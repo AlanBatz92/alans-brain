@@ -157,10 +157,19 @@ A "clean and accurate" pass on `weather.html` / `weather.js`. Added to the first
 - [x] **S 🤖** **Confirm changing location works** — the change handler was sound (set
       localStorage → clear forecast cache → forced refetch); also clear the yesterday
       cache on switch. *(done 2026-06-17.)*
+- [x] **M 🤖** **De-clutter the detail drawer** (Alan: metrics repeated, "overload"). One
+      shared **Conditions** block; activities show only rating · window · bars · tap-to-open
+      breakdown. *(done 2026-06-17, `?v=w3`.)*
+- [x] **S 🤖** **Distinguish Perfect vs Good colors** (Alan: "WAY too close"). Good teal →
+      **blue**; ramp is now green/blue/amber/red. *(done 2026-06-17.)*
 
 **Calibration (subjective — with Alan)**
-- [ ] **S 🤖+🧑** Review the running/drone/tanning **thresholds** together; retune any
-      band that feels off. Open to suggestions — this is the judgment-call part.
+- [x] **M 🤖** **Running score reworked** (Alan: "78° → 10/20 is too harsh; dry 80°+ is
+      doable"). Apparent temp + **dew point** (not raw humidity), UV dropped, gentle bands,
+      heat/cold caps. 78°/43%/0% now Good 81 (was Fair 64); muggy 85° still Poor.
+      *(done 2026-06-17, `?v=w3`.)*
+- [ ] **S 🤖+🧑** Give **drone & tanning** the same once-over (Alan flagged only running);
+      add dew-point / retune any band that feels off once seen on real days.
 
 ---
 
