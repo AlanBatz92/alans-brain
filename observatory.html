@@ -14,7 +14,7 @@
       if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=obs29">
+  <link rel="stylesheet" href="style.css?v=obs30">
 </head>
 <body>
 
@@ -134,13 +134,14 @@
         </div>
       </details>
 
-      <!-- "Almost a lifer" shelf — species on the cusp of the life list (rolling 24h).
-           Hidden by default; observatory.js reveals it only when something's close. -->
-      <div id="obs-almost-section" hidden>
-        <h2 class="obs-heading">🎯 Almost a lifer <span class="obs-heading-count" id="obs-almost-count"></span></h2>
-        <p class="obs-almost-caption">Heard at 85%+ in the last 24 hours but not yet on the life list — a couple more qualifying hits and they're in.</p>
-        <div class="obs-almost" id="obs-almost"></div>
-      </div>
+      <!-- "Almost a lifer" — compact trigger that opens the popout (below). Hidden by
+           default; observatory.js reveals it only when something's actually close, so
+           it stays a bonus and keeps the main page tidy. -->
+      <button class="obs-almost-trigger" id="obs-almost-trigger" type="button" hidden aria-haspopup="dialog">
+        <span class="obs-almost-trigger-label">🎯 Almost a lifer <span class="obs-heading-count" id="obs-almost-count"></span></span>
+        <span class="obs-almost-trigger-sub">on the cusp of the life list</span>
+        <span class="obs-almost-trigger-arrow" aria-hidden="true">→</span>
+      </button>
 
       <div class="obs-period-bar">
         <div class="obs-period-tabs" role="tablist" aria-label="Time period">
@@ -290,7 +291,7 @@
   </div><!-- /.page -->
 
   <script src="bird-info.js?v=obs6"></script>
-  <script src="observatory.js?v=obs37"></script>
+  <script src="observatory.js?v=obs38"></script>
   <script>
     /* Explore dropdown toggle */
     var dropdown = document.querySelector('.nav-dropdown');
@@ -349,6 +350,22 @@
     </div>
     <div class="obs-life-modal-body">
       <div class="obs-life" id="obs-life"></div>
+    </div>
+  </div>
+</div>
+
+<!-- "Almost a lifer" popout — reuses the life-list modal shell. Holds the progress
+     cards (#obs-almost), opened from the trigger banner on the Birds panel. -->
+<div id="obs-almost-modal" class="obs-life-overlay">
+  <div class="obs-life-backdrop"></div>
+  <div class="obs-life-sheet" role="dialog" aria-modal="true" aria-label="Almost a lifer">
+    <div class="obs-life-modal-head">
+      <button class="obs-bcard-close obs-almost-modal-close" aria-label="Close">✕</button>
+      <h2 class="obs-life-modal-title">🎯 Almost a lifer <span class="obs-heading-count" id="obs-almost-modal-count"></span></h2>
+      <p class="obs-life-modal-note">Heard at 85%+ in the last 24 hours, or building cumulative evidence over time, but not yet on the life list — a couple more qualifying hits and they're in.</p>
+    </div>
+    <div class="obs-life-modal-body">
+      <div class="obs-almost" id="obs-almost"></div>
     </div>
   </div>
 </div>

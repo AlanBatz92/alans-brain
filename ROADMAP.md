@@ -189,6 +189,13 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-17** — Observatory polish (Alan's formatting notes): **life-list cards no
+  longer break names mid-word** (vertical card: full-width name + `×count · since` meta
+  row), the **"Almost a lifer" shelf moved into a popout** (compact trigger banner →
+  modal reusing the life-list shell), and **breathing room** added to the Birds panel
+  (reclaimed shelf space + margin bumps). Front-end only, `?v=obs38`/`obs30`; verified
+  with a render harness + screenshots.
+
 - **2026-06-17** — June Ship: **bird-page fixes + weather "My Week" redesign** (front-end
   only, no box deploy). Bird page (`?v=obs37`/`obs29`): cards now **always populate** —
   `openBirdCard` retries `/api/species` at the 0.60 preserve floor when the 0.85 fetch

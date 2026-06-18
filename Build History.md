@@ -10,6 +10,39 @@
 
 ---
 
+## 2026-06-17 — Observatory polish: life-list wrapping + "Almost" popout + breathing room
+
+Follow-up to Alan's two formatting notes (screenshots): life-list entries wrapping to
+ugly mid-word breaks, and the main Birds page feeling cramped ("everything right on top
+of each other"). All front-end (`observatory.html`/`observatory.js`/`style.css`,
+`?v=obs38`/`obs30`).
+
+- **Life-list cards no longer break mid-word.** Each `.obs-lifer` shared a flex row
+  between the name (left) and the count + "since …" date (right, `white-space:nowrap`);
+  the date squeezed the name column so long names broke mid-word ("Least Flycat\ner",
+  "Red-bellied Woodpec\ker"). The card is now a **vertical stack** — name (full width,
+  wraps at spaces), sci name, then a compact meta **row** ("×21  since Jun 14"). Names
+  wrap cleanly at the space ("Red-bellied" / "Woodpecker") or fit on one line. CSS only.
+- **"Almost a lifer" moved into a popout** (Alan: "put the almost lifers into their own
+  pop-out window, sort of like the life list"). The big inline shelf (heading + caption
+  + 5 cards) is replaced by a **compact trigger banner** — "🎯 Almost a lifer (N) · on
+  the cusp of the life list →", shown only when there are candidates — that opens a
+  **modal reusing the life-list shell** (`#obs-almost-modal`, the `.obs-life-overlay`
+  classes + `obs-life-open` toggle; `openAlmostModal`/`closeAlmostModal`/`almostModalOpen`,
+  wired into the Escape chain and the bird-card scroll-lock so a card opened from an
+  almost row layers correctly). `renderAlmost()` now drives the trigger + both counts
+  instead of the inline section; the card markup + `computeAlmostLifers` logic are
+  unchanged, and the `obs-almost` card-tap delegation still works (the container kept
+  its id, just moved into the modal).
+- **Breathing room on the Birds panel.** Reclaiming the inline shelf's vertical space
+  plus margin bumps — `.obs-method` `6/18` → `14/24`px, `.obs-period-bar` top `20` →
+  `28`px — separate the stats / Almost trigger / explainer / period selector / grid.
+- **Verified** with a stubbed-DOM render harness (drove the real `renderLife` /
+  `renderAlmost`) → preview HTML with the live stylesheet → desktop + zoom screenshots
+  (shared with Alan) confirming names wrap cleanly and the popout/trigger read well.
+
+---
+
 ## 2026-06-17 — June Ship: bird-page fixes + weather "My Week" redesign
 
 From Alan's notes (3 screenshots): bird cards that "do not fully populate," analytics

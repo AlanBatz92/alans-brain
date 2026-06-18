@@ -321,7 +321,17 @@ train data a home. ID/class prefix: **`obs-`**.
   calibration pipeline, refinement loop, two-detector reality + convergence, privacy,
   caveats); keep the JSON + doc in sync on every recalibration. Bonus panel — fails
   silent if the JSON is missing.
-- Assets: `style.css?v=obs29`, `observatory.js?v=obs37`, `bird-info.js?v=obs6`.
+- Assets: `style.css?v=obs30`, `observatory.js?v=obs38`, `bird-info.js?v=obs6`.
+- **"Almost a lifer" is a popout, not an inline shelf (2026-06-17):** a compact trigger
+  banner (`#obs-almost-trigger`, shown only when candidates exist) opens a modal
+  (`#obs-almost-modal`) reusing the life-list shell (`.obs-life-overlay` + `obs-life-open`;
+  `openAlmostModal`/`closeAlmostModal`/`almostModalOpen`, in the Escape chain + bird-card
+  scroll-lock). `renderAlmost()` drives the trigger + counts; `#obs-almost` (the card grid)
+  moved into the modal but kept its id so the card-tap delegation is unchanged. This + a
+  couple of margin bumps (`.obs-method`, `.obs-period-bar`) gave the Birds panel breathing
+  room. **Life-list cards are now a vertical stack** (name full-width → wraps at spaces,
+  not mid-word; then a `×count · since <date>` meta row) — fixes long names like
+  "Red-bellied Woodpecker" breaking as "Woodpec\ker".
 - **"Almost a lifer" now covers both routes (2026-06-15):** the shelf surfaces birds
   on the **burst** path (1–2 of 3 hits ≥0.85 in rolling 24h) *and* the **cumulative**
   path (6–7 of 8 all-time hits ≥0.70). `loadAlmost()` fetches both windows in parallel;

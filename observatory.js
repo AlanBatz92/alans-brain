@@ -536,18 +536,23 @@ function computeAlmostLifers(burst, cumulative, life, perfectConf) {
 }
 
 function renderAlmost() {
-  const section = document.getElementById('obs-almost-section');
-  const el      = document.getElementById('obs-almost');
-  const countEl = document.getElementById('obs-almost-count');
-  if (!section || !el) return;
-  // The shelf hinges on knowing the life list (to exclude listed species). Until
-  // it has loaded, keep the bonus shelf hidden rather than risk showing a lifer.
-  if (!state.lifeLoaded) { section.hidden = true; return; }
+  const trigger  = document.getElementById('obs-almost-trigger');
+  const el       = document.getElementById('obs-almost');
+  const countEl  = document.getElementById('obs-almost-count');
+  const mCountEl = document.getElementById('obs-almost-modal-count');
+  if (!trigger || !el) return;
+  // Bonus feature: keep the trigger (and its popout) hidden until there are actual
+  // candidates — and until the life list has loaded, so a lifer is never shown as
+  // "almost". If the candidates drain while the popout is open, close it.
+  const hide = () => { trigger.hidden = true; if (almostModalOpen()) closeAlmostModal(); };
+  if (!state.lifeLoaded) { hide(); return; }
 
   const candidates = computeAlmostLifers(state.almost, state.almostCum, state.life, PERFECT_CONFIDENCE);
-  if (candidates.length === 0) { section.hidden = true; return; }   // bonus shelf — hide when nothing's close
-  section.hidden = false;
-  if (countEl) countEl.textContent = '(' + candidates.length + ')';
+  if (candidates.length === 0) { hide(); return; }   // bonus feature — hide when nothing's close
+  trigger.hidden = false;
+  const countTxt = '(' + candidates.length + ')';
+  if (countEl)  countEl.textContent  = countTxt;
+  if (mCountEl) mCountEl.textContent = countTxt;
 
   el.innerHTML = candidates.map((g) => {
     const need   = g.need;
@@ -1640,10 +1645,11 @@ function lifeModalOpen() {
 function closeBirdCard() {
   const modal = document.getElementById('obs-bird-modal');
   if (modal) modal.classList.remove('obs-bcard-open');
-  // A bird card can layer over the open life list or the chart popout (its
-  // leaderboard rows open cards); only release the page scroll lock if nothing else
-  // is still up.
-  document.body.style.overflow = (lifeModalOpen() || chartModalOpen()) ? 'hidden' : '';
+  // A bird card can layer over the open life list, the "almost" popout, or the chart
+  // popout (their cards open bird cards); only release the page scroll lock if nothing
+  // else is still up.
+  document.body.style.overflow =
+    (lifeModalOpen() || almostModalOpen() || chartModalOpen()) ? 'hidden' : '';
 }
 
 /* ── Life list popout ──
@@ -1663,6 +1669,30 @@ function closeLifeModal() {
   const modal = document.getElementById('obs-life-modal');
   if (modal) modal.classList.remove('obs-life-open');
   // Don't unlock the page if a bird card is still open on top of the list.
+  const card = document.getElementById('obs-bird-modal');
+  const cardOpen = card && card.classList.contains('obs-bcard-open');
+  if (!cardOpen) document.body.style.overflow = '';
+}
+
+/* ── "Almost a lifer" popout ──
+   Reuses the life-list modal shell (same bottom-sheet/centered shell + open class).
+   renderAlmost() populates #obs-almost and the counts; opening just reveals it. */
+function almostModalOpen() {
+  const m = document.getElementById('obs-almost-modal');
+  return !!(m && m.classList.contains('obs-life-open'));
+}
+function openAlmostModal() {
+  const modal = document.getElementById('obs-almost-modal');
+  if (!modal) return;
+  modal.classList.add('obs-life-open');
+  document.body.style.overflow = 'hidden';
+  const body = modal.querySelector('.obs-life-modal-body');
+  if (body) body.scrollTop = 0;
+}
+function closeAlmostModal() {
+  const modal = document.getElementById('obs-almost-modal');
+  if (modal) modal.classList.remove('obs-life-open');
+  // Keep the page locked if a bird card (opened from an almost card) is still up.
   const card = document.getElementById('obs-bird-modal');
   const cardOpen = card && card.classList.contains('obs-bcard-open');
   if (!cardOpen) document.body.style.overflow = '';
@@ -1908,13 +1938,23 @@ function initObservatory() {
     lifeModal.querySelector('.obs-life-modal-close').addEventListener('click', closeLifeModal);
   }
 
+  // "Almost a lifer": trigger opens the popout; backdrop / × closes it
+  const almostTrigger = document.getElementById('obs-almost-trigger');
+  if (almostTrigger) almostTrigger.addEventListener('click', openAlmostModal);
+  const almostModal = document.getElementById('obs-almost-modal');
+  if (almostModal) {
+    almostModal.querySelector('.obs-life-backdrop').addEventListener('click', closeAlmostModal);
+    almostModal.querySelector('.obs-almost-modal-close').addEventListener('click', closeAlmostModal);
+  }
+
   // Escape closes the topmost open modal (bird card layers over the life list /
-  // chart popout)
+  // almost / chart popouts)
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     const card = document.getElementById('obs-bird-modal');
     if (card && card.classList.contains('obs-bcard-open')) closeBirdCard();
     else if (chartModalOpen()) closeChartDetail();
+    else if (almostModalOpen()) closeAlmostModal();
     else if (lifeModalOpen()) closeLifeModal();
   });
 

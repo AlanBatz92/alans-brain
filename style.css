@@ -4592,16 +4592,17 @@ nav {
 }
 .obs-lifer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 4px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 14px;
 }
 .obs-lifer-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.obs-lifer-name { font-weight: 700; color: var(--text); min-width: 0; overflow-wrap: break-word; }
+/* Full-width name (it no longer shares the row with the count/date), so it wraps at
+   spaces instead of being squeezed into mid-word breaks ("Flycat\ner"). */
+.obs-lifer-name { font-weight: 700; color: var(--text); line-height: 1.2; overflow-wrap: break-word; }
 .obs-lifer-sci {
   font-size: 0.72rem;
   font-style: italic;
@@ -4610,10 +4611,9 @@ nav {
 }
 .obs-lifer-meta {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  flex-shrink: 0;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: 0.68rem;
 }
@@ -4624,11 +4624,39 @@ nav {
    Species on the cusp of the life list (rolling 24h). A green left-accent + green
    progress bar mark it as a goal-in-progress, distinct from the confidence-coloured
    species cards; the bar fills to qualifying-hits / required, not to confidence. */
-.obs-almost-caption {
+/* Compact trigger that opens the "Almost a lifer" popout — shown only when there are
+   candidates. Banner styled like a goal-in-progress (green left accent + arrow). */
+.obs-almost-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 16px 0 0;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s;
+}
+.obs-almost-trigger:hover { border-color: var(--teal); transform: translateY(-1px); }
+.obs-almost-trigger-label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text);
+}
+.obs-almost-trigger-sub {
   font-size: 0.78rem;
   color: var(--text-dim);
-  margin: -6px 0 10px;
-  line-height: 1.45;
+}
+.obs-almost-trigger-arrow {
+  margin-left: auto;
+  color: var(--green);
+  font-weight: 800;
+  font-size: 1.1rem;
 }
 .obs-almost {
   display: grid;
@@ -4828,7 +4856,7 @@ nav {
 
 /* ── Trains: "How these are detected" methodology panel ── */
 .obs-method {
-  margin: 6px 0 18px;
+  margin: 14px 0 24px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
@@ -4867,6 +4895,7 @@ nav {
 }
 @media (max-width: 480px) {
   .obs-life { grid-template-columns: 1fr; }
+  .obs-almost-trigger-sub { display: none; }   /* keep the trigger to one tidy line */
 }
 
 /* ── Bird card quick-view modal ── */
@@ -5252,8 +5281,9 @@ nav {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
-/* Lifer cards sit on the surface-colored sheet, so give them the page bg to pop */
-.obs-life-modal-body .obs-lifer { background: var(--bg); }
+/* Lifer / almost cards sit on the surface-colored sheet, so give them the page bg to pop */
+.obs-life-modal-body .obs-lifer,
+.obs-life-modal-body .obs-almost-card { background: var(--bg); }
 
 @media (min-width: 600px) {
   .obs-life-overlay { align-items: center; }
@@ -5276,7 +5306,7 @@ nav {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin: 20px 0 0;
+  margin: 28px 0 0;
 }
 .obs-period-tabs {
   display: flex;

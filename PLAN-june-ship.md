@@ -88,6 +88,13 @@ site read as "MVP-ready."
       left a Wikipedia-only stub. `openBirdCard` now retries at the 0.60 preserve floor
       so the stats/hits/breakdown fill in; also stopped the extract chopping at a
       single-letter abbreviation. *(done 2026-06-17; `?v=obs37`, front-end only.)*
+- [x] **S 🤖** Life-list cards break names mid-word (Alan's 2026-06-17 note): the count +
+      date squeezed the name column. Card is now a vertical stack — full-width name (wraps
+      at spaces) + a `×count · since <date>` meta row. *(done 2026-06-17; `?v=obs30`.)*
+- [x] **M 🤖** Main Birds page cramped + "put the almost lifers in their own pop-out"
+      (Alan's 2026-06-17 note): the inline "Almost a lifer" shelf is now a compact trigger
+      banner → a popout (reuses the life-list modal shell); reclaimed space + margin bumps
+      give the panel breathing room. *(done 2026-06-17; `?v=obs38`.)*
 
 **Stack (`techstack.html`)**
 - [x] **S 🤖** Expand node size — 56→64px (52px mobile), icons/glyphs + NODE_R to match.
