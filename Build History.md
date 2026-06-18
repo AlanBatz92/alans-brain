@@ -259,8 +259,8 @@ without Alan-supplied assets.
 - **Security:** the OpenWeatherMap key was **hardcoded in client JS** (scrapable).
   Added a Vercel serverless proxy **`api/weather.js`** that reads the key from the
   `OPENWEATHER_API_KEY` env var (endpoint whitelist guards SSRF); the client calls
-  `/api/weather` and the key is gone from the browser. **Needs Alan: set the env var
-  in Vercel + rotate the old key.**
+  `/api/weather` and the key is gone from the browser. **✅ Done 2026-06-18:** Alan set
+  `OPENWEATHER_API_KEY` in Vercel and rotated the old client-exposed key.
 - **Real "vs. yesterday":** replaced the hack that cached *today's* forecast and
   relabeled it — now a true historical comparison via One Call 3.0 `day_summary`
   (through the proxy), timezone-aware date, cached per day/location.

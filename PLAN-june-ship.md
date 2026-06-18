@@ -125,8 +125,8 @@ A "clean and accurate" pass on `weather.html` / `weather.js`. Added to the first
 - [x] **M 🤖 + 🧑** **Move the OpenWeatherMap API key server-side.** Added
       **`api/weather.js`** (key from the `OPENWEATHER_API_KEY` env var, endpoint
       whitelist); `weather.js` calls the proxy and the key is gone from the client.
-      *(done 2026-06-14. 🧑 **ACTION:** set `OPENWEATHER_API_KEY` in Vercel + **rotate**
-      the old key. Also in Phase 5.)*
+      *(done 2026-06-14. 🧑 **DONE 2026-06-18** — Alan set `OPENWEATHER_API_KEY` in Vercel
+      and rotated the old client-exposed key.)*
 - [x] **M 🤖** **Fix the "vs. yesterday" comparison.** Replaced the relabeled-forecast
       hack with a **real** historical comparison via One Call 3.0 `day_summary` (through
       the proxy), timezone-aware date, cached per day/location. *(done 2026-06-14)*
@@ -248,8 +248,9 @@ diff, plus targeted checks:
 
 - [ ] **Secrets:** no keys/creds committed; IMAP + Ticketmaster keys only in
       `/etc/birdstation.env` (chmod 600); `.gitignore` still blocks `*.env`/`*.db`.
-- [ ] **OpenWeatherMap key:** moved behind the `api/weather.js` proxy (Phase 1b) and the
-      old client-exposed key **rotated**. No third-party API keys in any static asset.
+- [x] **OpenWeatherMap key:** moved behind the `api/weather.js` proxy (Phase 1b); the env
+      var is **set in Vercel** and the old client-exposed key **rotated** (Alan, 2026-06-18).
+      No third-party API keys in any static asset.
 - [ ] **IMAP surface:** read-only, dedicated inbox, no creds in static JS or any API
       response; failure modes don't leak the address.
 - [ ] **XSS:** every new rendered string (events, newsletter items) goes through
