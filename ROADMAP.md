@@ -189,6 +189,11 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-17** — Weather: a **selectable hour-by-hour chart** in the drawer (pick
+  Rain/UV/Temp/Wind/Cloud/Humidity → see the metric's shape + labeled peak, e.g. "rain
+  100% at 3 PM", "UV peaks at noon"; replaces the unreadable per-activity score bars), plus
+  **🌅 sunrise / 🌇 sunset / 🌙 moon phase** on the hero + drawer. `?v=w5`.
+
 - **2026-06-17** — Weather: **drone + tanning scoring** grounded the same way (drone =
   wind/gusts-dominant per DJI specs + rain/fog/cold caps; tanning = UV-led + clear sky +
   warmth) so e.g. 29 mph gusts → Fair not Good and a hot high-UV day → Perfect tanning; a

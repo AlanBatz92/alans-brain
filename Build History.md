@@ -10,6 +10,33 @@
 
 ---
 
+## 2026-06-17 — Weather: hour-by-hour metric chart + sun/moon on the page
+
+From Alan's note on the drawer ("hard to tell what the graph shows / where the 100% rain
+falls; I want to pick a metric and see the what & where; also add moon phase + sunrise/sunset")
+(`weather.js`/`weather.html`/`style.css`, `?v=w5`).
+
+- **Selectable hour-by-hour chart.** The confusing per-activity score bars (colored by
+  rating, no axis) are gone. The drawer now has one **"Hour by hour"** chart with a metric
+  selector — **🌧 Rain · ☀️ UV · 🌡 Temp · 💨 Wind · ☁️ Cloud · 💧 Humidity** — that plots
+  the picked metric for every upcoming hour, **highlights + labels the peak**, has an hour
+  axis, and a plain caption ("Rain chance peaks at **100%** around **3 PM**", "UV index peaks
+  at **9** around **12 PM**"). Defaults to **Rain** when there's any rain that day (the
+  "when does it rain?" case), else Temp. So you can see at a glance *when* it rains and
+  *when/where* UV is highest. `WX_SERIES` + `wxState` + `renderHourlyMetric()`/`hourlyChartHTML()`;
+  `.w-hr-*` styles. Gracefully shows "not available this far out" for days past the ~48h
+  hourly window. (Per-activity sections keep their rating + best window + tap-to-open breakdown.)
+- **Sun & moon, broadly "weather."** The hero (Today) and each day's drawer header now show
+  **🌅 sunrise · 🌇 sunset · 🌙 moon phase** (emoji + name), from OWM daily `sunrise`/`sunset`/
+  `moon_phase`. `sunMoonHTML()` + `locClock()` (tz-aware) + `moonPhaseInfo()` (8 phases);
+  `.w-sunmoon` styles. First cut — easy to extend (moonrise/set, golden hour) later.
+
+**Verification:** `node --check`; stubbed-DOM harness drove `renderWeather` + `openWeatherDrawer`
++ a metric switch (Rain → UV), rendered with the live stylesheet, and screenshotted (shared with
+Alan) — confirmed the 100% rain peak and the UV peak read clearly and the hero sun/moon shows.
+
+---
+
 ## 2026-06-17 — Weather: drone/tanning scoring, "how it works" explainer, gate removed
 
 Follow-up to the running-score work — same research-grounded treatment for the other two

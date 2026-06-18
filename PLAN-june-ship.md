@@ -176,6 +176,12 @@ A "clean and accurate" pass on `weather.html` / `weather.js`. Added to the first
       user-friendly) — ℹ️ button → drawer with the colored rating scale + what drives each
       activity in plain language. *(done 2026-06-17.)*
 - [x] **S 🤖** **Remove the weather passphrase gate** — My Week is now public. *(done 2026-06-17.)*
+- [x] **M 🤖** **Selectable hour-by-hour metric chart** (Alan: "pick a weather metric and see
+      the what & where; see when it rains / when UV peaks"). Drawer chart with Rain/UV/Temp/
+      Wind/Cloud/Humidity chips, labeled peak + caption; replaced the unreadable per-activity
+      score bars. *(done 2026-06-17, `?v=w5`.)*
+- [x] **S 🤖** **Sun & moon on the page** (Alan: "moon phases + sunrise/sunset"). 🌅/🌇 + moon
+      phase on the hero + drawer. *(done 2026-06-17. Could extend: moonrise/set, golden hour.)*
 
 ---
 

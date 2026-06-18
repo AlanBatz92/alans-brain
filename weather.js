@@ -822,6 +822,7 @@ function renderHero(d) {
         + yest
       + '</div>'
     + '</div>'
+    + sunMoonHTML(day)
     + '<div class="w-hero-acts" data-idx="0" role="button" tabindex="0">' + acts + '</div>';
 }
 
@@ -899,6 +900,123 @@ function wireDayTaps() {
   document.querySelectorAll('#wBest .w-best-chip').forEach(bind);
 }
 
+/* ── SUN & MOON ───────────────────────── */
+
+// Clock time (e.g. "6:02a") for a unix-seconds instant, read in the forecast location's tz.
+function locClock(dt) {
+  var d = new Date((dt + tzOffsetSec) * 1000);
+  var h = d.getUTCHours(), m = d.getUTCMinutes();
+  var ampm = h >= 12 ? 'p' : 'a';
+  h = h % 12 || 12;
+  return h + ':' + (m < 10 ? '0' + m : m) + ampm;
+}
+
+// Moon phase (OWM `moon_phase` 0–1: 0/1 = new, 0.25 = first quarter, 0.5 = full, 0.75 = last).
+function moonPhaseInfo(p) {
+  if (p < 0.03 || p > 0.97) return { emoji: '🌑', name: 'New moon' };
+  if (p < 0.22) return { emoji: '🌒', name: 'Waxing crescent' };
+  if (p < 0.28) return { emoji: '🌓', name: 'First quarter' };
+  if (p < 0.47) return { emoji: '🌔', name: 'Waxing gibbous' };
+  if (p < 0.53) return { emoji: '🌕', name: 'Full moon' };
+  if (p < 0.72) return { emoji: '🌖', name: 'Waning gibbous' };
+  if (p < 0.78) return { emoji: '🌗', name: 'Last quarter' };
+  return { emoji: '🌘', name: 'Waning crescent' };
+}
+
+function sunMoonHTML(day) {
+  if (!day || day.sunrise == null) return '';
+  var moon = (day.moon_phase != null) ? moonPhaseInfo(day.moon_phase) : null;
+  return '<div class="w-sunmoon">'
+    + '<span class="w-sunmoon-item">🌅 ' + locClock(day.sunrise) + '</span>'
+    + '<span class="w-sunmoon-item">🌇 ' + locClock(day.sunset) + '</span>'
+    + (moon ? '<span class="w-sunmoon-item">' + moon.emoji + ' ' + moon.name + '</span>' : '')
+    + '</div>';
+}
+
+/* ── HOUR-BY-HOUR METRIC CHART ────────────
+   One chart in the drawer; pick a weather metric (rain, UV, temp, …) and see its value
+   for every upcoming hour — so you can see *at a glance* when it rains or when UV peaks.
+   Replaces the old per-activity score bars (which were hard to read). */
+
+var WX_SERIES = [
+  { key: 'rain',     chip: '🌧',  label: 'Rain',     noun: 'Rain chance', color: '#38bdf8', max: 100,
+    val: function(h) { return Math.round((h.pop || 0) * 100); }, fmt: function(v) { return v + '%'; } },
+  { key: 'uv',       chip: '☀️', label: 'UV',       noun: 'UV index',    color: '#f59e0b', max: 11,
+    val: function(h) { return Math.round((h.uvi || 0) * 10) / 10; }, fmt: function(v) { return String(v); } },
+  { key: 'temp',     chip: '🌡', label: 'Temp',     noun: 'Temperature', color: '#fb7185', dyn: true,
+    val: function(h) { return Math.round(h.feels_like != null ? h.feels_like : h.temp); }, fmt: function(v) { return v + '°'; } },
+  { key: 'wind',     chip: '💨', label: 'Wind',     noun: 'Wind',        color: '#2dd4bf', dyn: true,
+    val: function(h) { return Math.round(h.wind_speed); }, fmt: function(v) { return v + ' mph'; } },
+  { key: 'clouds',   chip: '☁️', label: 'Cloud',    noun: 'Cloud cover', color: '#94a3b8', max: 100,
+    val: function(h) { return Math.round(h.clouds || 0); }, fmt: function(v) { return v + '%'; } },
+  { key: 'humidity', chip: '💧', label: 'Humidity', noun: 'Humidity',    color: '#60a5fa', max: 100,
+    val: function(h) { return Math.round(h.humidity || 0); }, fmt: function(v) { return v + '%'; } }
+];
+
+var wxState = { hours: [], metric: 'rain' };
+
+function seriesByKey(key) {
+  for (var i = 0; i < WX_SERIES.length; i++) if (WX_SERIES[i].key === key) return WX_SERIES[i];
+  return WX_SERIES[0];
+}
+
+function hourlyChartHTML(series) {
+  var hours = wxState.hours;
+  if (!hours || hours.length < 3) {
+    return '<div class="w-hr-empty">Hour-by-hour detail isn’t available this far out — the forecast only carries hourly data for the next couple of days.</div>';
+  }
+  var vals = hours.map(series.val);
+  var maxVal = vals.reduce(function(m, v) { return Math.max(m, v); }, 0);
+  // %/UV metrics use a fixed scale; temp/wind scale to the day's own range (with headroom).
+  var scaleMax = series.dyn ? Math.max(1, Math.ceil(maxVal * 1.15)) : series.max;
+  var peakIdx = 0;
+  for (var i = 1; i < vals.length; i++) if (vals[i] > vals[peakIdx]) peakIdx = i;
+
+  var bars = '';
+  for (var j = 0; j < hours.length; j++) {
+    var v = vals[j];
+    var pct = scaleMax > 0 ? Math.round(v / scaleMax * 100) : 0;
+    var hr = locHour(hours[j].dt);
+    var isPeak = (j === peakIdx && maxVal > 0);
+    bars += '<div class="w-hr-col">'
+      + '<div class="w-hr-track">'
+        + (isPeak ? '<span class="w-hr-peak">' + series.fmt(v) + '</span>' : '')
+        + '<div class="w-hr-bar' + (isPeak ? ' peak' : '') + '" style="height:' + Math.max(2, pct) + '%;background:' + series.color + '"></div>'
+      + '</div>'
+      + '<div class="w-hr-axis">' + (hr % 3 === 0 ? formatHour(hr) : '') + '</div>'
+    + '</div>';
+  }
+
+  var caption;
+  if (series.key === 'rain' && maxVal === 0) {
+    caption = 'No rain expected today.';
+  } else {
+    caption = series.noun + ' peaks at <strong>' + series.fmt(vals[peakIdx])
+            + '</strong> around <strong>' + formatHour(locHour(hours[peakIdx].dt)) + '</strong>.';
+  }
+  return '<div class="w-hr-chart">' + bars + '</div>'
+    + '<div class="w-hr-caption">' + caption + '</div>';
+}
+
+function renderHourlyMetric() {
+  var el = document.getElementById('wHourly');
+  if (!el) return;
+  var series = seriesByKey(wxState.metric);
+  var chips = WX_SERIES.map(function(s) {
+    return '<button type="button" class="w-hr-chip' + (s.key === wxState.metric ? ' active' : '')
+      + '" data-metric="' + s.key + '">' + s.chip + ' ' + s.label + '</button>';
+  }).join('');
+  el.innerHTML = '<div class="w-hr-head">Hour by hour</div>'
+    + '<div class="w-hr-metrics">' + chips + '</div>'
+    + hourlyChartHTML(series);
+  el.querySelectorAll('.w-hr-chip').forEach(function(c) {
+    c.addEventListener('click', function() {
+      wxState.metric = c.getAttribute('data-metric');
+      renderHourlyMetric();
+    });
+  });
+}
+
 /* ── WEATHER DETAIL DRAWER ────────────── */
 
 function openWeatherDrawer(idx) {
@@ -919,6 +1037,9 @@ function openWeatherDrawer(idx) {
     headerHTML += yesterdayComparisonHTML(day, data.yesterday);
   }
 
+  // Sun & moon for the day
+  headerHTML += sunMoonHTML(day);
+
   // Summary from API
   if (day.summary) {
     headerHTML += '<div class="w-drawer-summary">' + day.summary + '</div>';
@@ -926,16 +1047,22 @@ function openWeatherDrawer(idx) {
 
   document.getElementById('wDrawerHeader').innerHTML = headerHTML;
 
-  // Build body — the shared Conditions block once, then each activity (rating + best
-  // window + hourly bars + a tappable score breakdown). The raw numbers (temp, wind,
-  // rain, UV, …) live only in Conditions; the activities no longer repeat them, which
-  // was the bulk of the drawer's clutter.
+  // Build body — shared Conditions, then the selectable hour-by-hour weather chart, then
+  // each activity (rating + best window + tappable score breakdown). Raw numbers live in
+  // Conditions / the chart; the activities don't repeat them.
   var bodyHTML = conditionsHTML(day, data);
+  bodyHTML += '<div id="wHourly" class="w-hourly"></div>';
   bodyHTML += renderDrawerActivity('🏃 Running', data.runResult, data.runWin, data.hours, buildScoreBreakdown('run', data.runResult));
   bodyHTML += renderDrawerActivity('🛸 Drone',   data.droneResult, data.droneWin, data.hours, buildScoreBreakdown('drone', data.droneResult));
   bodyHTML += renderDrawerActivity('☀️ Tanning', data.tanResult, data.tanWin, data.hours, buildScoreBreakdown('tan', data.tanResult));
 
   document.getElementById('wDrawerBody').innerHTML = bodyHTML;
+
+  // Default the hour-by-hour chart to Rain when rain is in play (the "when does it rain?"
+  // case), otherwise Temp; then render it into its placeholder.
+  wxState.hours = data.hours || [];
+  wxState.metric = wxState.hours.some(function(h) { return (h.pop || 0) > 0; }) ? 'rain' : 'temp';
+  renderHourlyMetric();
 
   document.getElementById('wDrawerBackdrop').classList.add('open');
   document.getElementById('wDrawer').classList.add('open');
@@ -981,9 +1108,6 @@ function renderDrawerActivity(title, result, win, hours, breakdownHTML) {
       + 'Best window: <strong>' + formatHour(win.startHour) + '–' + formatHour(win.endHour) + '</strong>'
       + (winMetrics ? '<div class="w-window-metrics">' + winMetrics + '</div>' : '')
       + '</div>';
-  }
-  if (win && win.hourScores) {
-    html += renderDrawerHourly(win.hourScores);
   }
 
   // Tappable score with breakdown (this is where the per-activity factor detail lives now)
@@ -1129,21 +1253,6 @@ function openInfoDrawer() {
   document.getElementById('wDrawerBody').innerHTML = infoDrawerHTML();
   document.getElementById('wDrawerBackdrop').classList.add('open');
   document.getElementById('wDrawer').classList.add('open');
-}
-
-function renderDrawerHourly(hourScores) {
-  var html = '<div class="w-drawer-hourly">';
-  for (var i = 0; i < hourScores.length; i++) {
-    var s = hourScores[i];
-    var rating = scoreToRating(s.score);
-    var height = Math.max(6, Math.round(s.score / 100 * 48));
-    html += '<div class="w-drawer-bar-wrap">'
-      + '<div class="w-drawer-bar ' + rating + '" style="height:' + height + 'px"></div>'
-      + '<div class="w-drawer-bar-label">' + formatHour(s.hour) + '</div>'
-      + '</div>';
-  }
-  html += '</div>';
-  return html;
 }
 
 /* ── INIT ──────────────────────────────── */
