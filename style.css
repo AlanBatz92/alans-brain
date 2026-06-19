@@ -304,9 +304,14 @@ nav {
   -webkit-backdrop-filter: blur(30px);
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 20px;
+  justify-content: flex-start;
+  gap: 6px;
+  /* Clear the sticky nav bar so the close (✕) button stays reachable, and
+     scroll when the list is taller than the screen (was centered + clipped). */
+  padding: 84px 20px calc(28px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .nav-mobile-overlay.open {
   display: flex;

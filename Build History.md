@@ -10,7 +10,25 @@
 
 ---
 
-## 2026-06-17 — Weather: "rest of week" only, nav link on every page, renamed "Weather"
+## 2026-06-19 — Mobile menu: scrollable, no longer clips, easier to close
+
+Fixed the mobile nav overlay (`.nav-mobile-overlay` in `style.css`, shared by every
+page). With ~12 items the list was taller than a phone screen, but the overlay used
+`justify-content: center` with no scrolling — so the top item (Home) and bottom items
+(Personal Projects) were clipped off both edges of the viewport with no way to reach
+them, and the menu filled the whole screen making it feel inescapable.
+
+- **Top-align + scroll:** `justify-content: center` → `flex-start`, added
+  `overflow-y: auto` (+ `-webkit-overflow-scrolling: touch`, `overscroll-behavior:
+  contain`) so a long list scrolls instead of clipping.
+- **Clear the sticky nav so the ✕ stays reachable:** `padding-top` bumped to 84px
+  (was 20px) so the first link sits below the sticky nav bar, keeping the hamburger
+  ✕ (the close button, `z-index 202` above the overlay's `199`) unobstructed at the
+  top-right. Bottom padding respects `env(safe-area-inset-bottom)`; `gap` trimmed
+  8px → 6px.
+
+CSS-only, in the shared stylesheet, so it lands on all pages at once (no per-page
+edits; pages link `style.css` un-versioned, the existing convention).
 
 Three quick follow-ups (`weather.js` + all page navs, `?v=w6`):
 
