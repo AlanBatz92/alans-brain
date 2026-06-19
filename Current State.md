@@ -37,7 +37,8 @@ a Google Sheet, and a home server called **birdstation**).
 | Tech Stack | `techstack.html` | Interactive SVG node-graph of the full site/hardware stack. Self-contained (inline CSS + JS). Public, no gate. See Tech Stack section below. |
 
 Shared front-end: `style.css` (theme variables + all component styles),
-`theme-switcher.js`, `auth.js`, `visit-ticker.js`.
+`theme-switcher.js`, `auth.js`, `visit-ticker.js`, `nav-menu.js` (mobile-menu
+backdrop-tap + Escape close, loaded on every page).
 
 ## Conventions (authoritative)
 
@@ -54,7 +55,7 @@ Shared front-end: `style.css` (theme variables + all component styles),
   Box/git settings live in `admin-config.json` (gitignored; copy `admin-config.example.json`).
   Command catalog (the "I always forget these") is **`COMMANDS.md`**.
 - GoatCounter for analytics; `<audio>` elements for iOS silent-switch compatibility.
-- **Nav layout:** **`Weather`** is a top-level `<a href="weather.html">` in `.nav-links` (and the mobile overlay) on **every page**, inserted right after Home (2026-06-17 — promoted from hidden once the page went public; label is "Weather", not "My Week"). The rest of the bar varies by page (some carry Pulse/Tasks). "Stack" is a direct `<a>` in `.nav-links` (not inside the dropdown). The mobile overlay places Stack before the Explore section label. **The mobile overlay (`.nav-mobile-overlay`) scrolls** (2026-06-19): it's top-aligned (`justify-content: flex-start`) with `overflow-y: auto` and `padding-top: 84px` so a list taller than the screen scrolls instead of clipping off the top/bottom, and the first link clears the sticky nav bar — keeping the hamburger ✕ (the close button, `z-index 202` over the overlay's `199`) reachable. (Was `justify-content: center`, unscrollable — Home/Personal Projects clipped off both edges on a phone.)
+- **Nav layout:** **`Weather`** is a top-level `<a href="weather.html">` in `.nav-links` (and the mobile overlay) on **every page**, inserted right after Home (2026-06-17 — promoted from hidden once the page went public; label is "Weather", not "My Week"). The rest of the bar varies by page (some carry Pulse/Tasks). "Stack" is a direct `<a>` in `.nav-links` (not inside the dropdown). The mobile overlay places Stack before the Explore section label. **The mobile overlay (`.nav-mobile-overlay`) scrolls** (2026-06-19): it's top-aligned (`justify-content: flex-start`) with `overflow-y: auto` and `padding-top: 84px` so a list taller than the screen scrolls instead of clipping off the top/bottom, and the first link clears the sticky nav bar — keeping the hamburger ✕ (the close button, `z-index 202` over the overlay's `199`) reachable. (Was `justify-content: center`, unscrollable — Home/Personal Projects clipped off both edges on a phone.) **Closing the menu (2026-06-19):** the hamburger toggles into a ✕, **and** `nav-menu.js` (a shared script loaded site-wide before `theme-switcher.js`) adds **tap-the-backdrop** (`e.target === overlay`) and **Escape** to close. It only *adds* listeners (never re-binds the hamburger), so it coexists with each page's inline toggle/link-close handler without double-toggling.
 
 ## Pulse subsystem (most active area)
 

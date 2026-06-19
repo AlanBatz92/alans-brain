@@ -30,6 +30,19 @@ them, and the menu filled the whole screen making it feel inescapable.
 CSS-only, in the shared stylesheet, so it lands on all pages at once (no per-page
 edits; pages link `style.css` un-versioned, the existing convention).
 
+**Follow-up — tap-to-close + Escape (same day).** Added **`nav-menu.js`**, a small
+shared script (loaded site-wide, right before `theme-switcher.js` on all 16 pages)
+that *augments* the per-page hamburger toggle: **tap the backdrop** (any empty space
+outside a link → `e.target === overlay`) closes the menu, and **Escape** closes it
+too. It only *adds* listeners — it never re-binds the hamburger — so it can't
+double-toggle the existing inline handlers (which still own open/toggle + link-close).
+`closeMenu()` mirrors the existing teardown (drop `.open`, reset `aria-expanded`,
+restore `body` scroll). The per-page toggle scripts were left in place (they're
+embedded in varied page contexts — some share an IIFE with other logic — so a shared
+augmentation was cleaner and lower-risk than rewriting 15 inline blocks). Verified the
+close logic with a DOM-shim unit test (backdrop closes, child-link tap doesn't,
+Escape closes).
+
 Three quick follow-ups (`weather.js` + all page navs, `?v=w6`):
 
 - **"Best this week" → "Best rest of week."** It was scanning the full rolling 7-day

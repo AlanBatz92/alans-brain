@@ -193,6 +193,8 @@ into the prose. More fragile; revisit only if the current style feels lacking.
   the close ✕ stays reachable. Was `justify-content: center` with no scroll, so on a phone
   the top/bottom items ran off-screen unreachable; now top-aligned + `overflow-y: auto`
   with `padding-top` clearing the sticky nav. CSS-only in shared `style.css` (all pages).
+  Plus **tap-the-backdrop + Escape to close** via a new shared `nav-menu.js` (loaded
+  site-wide; augments the per-page hamburger toggle without re-binding it).
 
 - **2026-06-17** — Weather: **"Best rest of week"** now excludes days past the current week
   (today→Sunday only), **Weather promoted into the top nav on every page** (was hidden while
