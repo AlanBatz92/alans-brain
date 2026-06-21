@@ -142,7 +142,7 @@
   {
     "name": "Xikipedia",
     "url": "https://xikipedia.org/",
-    "description": "A xkcd-style parody wiki full of absurd, nerdy, and hilariously rewritten articles.",
+    "description": "A pseudo social-media feed that algorithmically surfaces Simple Wikipedia articles — a demo of how even a basic, non-ML algorithm quickly learns what you engage with to suggest more.",
     "category": "Fun & Games",
     "icon": "📖"
   },

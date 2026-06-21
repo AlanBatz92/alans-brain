@@ -33,7 +33,7 @@
     /* ── Graph ── */
     .ts-graph-wrap { position: relative; padding: 0 0.5rem 1.5rem; max-width: 900px; margin: 0 auto; }
     .ts-canvas { position: relative; width: 100%; aspect-ratio: 5/4; min-height: 420px; }
-    @media (max-width: 520px) { .ts-canvas { aspect-ratio: 7/10; min-height: 500px; } }
+    @media (max-width: 520px) { .ts-canvas { aspect-ratio: 7/12; min-height: 560px; } }
 
     .ts-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 
@@ -348,7 +348,7 @@ var NODES = [
     id: 'audiomoth', label: 'AudioMoth',
     icon: 'img/Icons/icons/Audio_Related/audio-waves.png',
     color: 'ts-yellow', hex: '#fbbf24',
-    d: [20, 7], m: [20, 5],
+    d: [20, 7], m: [18, 5],
     type: 'Hardware — Acoustic Recorder',
     what: 'An open-source, ultra-low-power acoustic recording unit that sits outside and listens continuously.',
     role: 'Captures continuous backyard audio and feeds it into birdnode via USB. birdnode picks it up as a USB audio device — the same way a microphone would appear to any computer.',
@@ -359,7 +359,7 @@ var NODES = [
     id: 'alan', label: 'Alan (Admin)',
     emoji: '👤',
     color: 'ts-pink', hex: '#f472b6',
-    d: [80, 7], m: [80, 5],
+    d: [80, 7], m: [82, 5],
     type: 'Person — Site Operator',
     what: "That's me — I maintain the whole stack from hardware to code.",
     role: T('ssh','SSH') + ' into birdstation for admin tasks, monitoring logs, and running the train vetting ' + T('cli','CLI') + '. Push code changes to GitHub, which triggers deploys. Occasionally ' + T('ssh','SSH') + ' into birdstation to run ' + T('git-pull','<code>git pull</code>') + ' and restart a service when the code changes.',
@@ -369,7 +369,7 @@ var NODES = [
     id: 'birdnode', label: 'birdnode',
     icon: 'img/Icons/icons/Audio_Related/sound-wave.png',
     color: 'ts-teal', hex: '#2dd4bf',
-    d: [20, 24], m: [20, 19],
+    d: [20, 24], m: [18, 19],
     type: 'Edge Device — Raspberry Pi Zero 2 W',
     what: 'A Raspberry Pi Zero 2 W — a credit-card-sized, low-power single-board computer sitting physically near the AudioMoth.',
     role: 'Receives audio from the AudioMoth over USB and runs <strong>' + T('icecast','Icecast') + '</strong>, the audio streaming server. Broadcasts a continuous ' + T('http-stream','HTTP audio stream') + ' over the local network on the <code>/backyard</code> mount point. birdstation connects to this URL to feed ' + T('birdnet','BirdNET') + ' and the train detector.',
@@ -380,7 +380,7 @@ var NODES = [
     id: 'birdstation', label: 'birdstation',
     emoji: '🖥️',
     color: 'ts-blue', hex: '#38bdf8',
-    d: [20, 43], m: [20, 35],
+    d: [22, 41], m: [26, 33],
     type: 'Home Server — Processing Hub',
     what: 'A home server running 24/7. The processing hub for the bird observatory and the Pulse news system.',
     role: '<strong>Runs six ' + T('systemd','systemd') + ' services:</strong><br>' +
@@ -397,7 +397,7 @@ var NODES = [
     id: 'github', label: 'GitHub',
     emoji: '🐙',
     color: 'ts-purple', hex: '#a78bfa',
-    d: [80, 27], m: [80, 23],
+    d: [80, 25], m: [82, 19],
     type: 'Source Control',
     what: T('version-control','Version control') + ' and source of truth for every file in the project — website pages, birdstation Python scripts, ' + T('fastapi','FastAPI') + ' app, ' + T('systemd','systemd') + ' units, and this very page.',
     role: 'Accepts git pushes from Alan. Automatically triggers a Vercel deploy via ' + T('webhook','webhook') + ' for every push to <code>main</code>. Also serves as the deploy source for birdstation: a ' + T('git-pull','<code>git pull</code>') + ' on the box updates the running scripts in-place.',
@@ -407,7 +407,7 @@ var NODES = [
     id: 'anthropic', label: 'Anthropic API',
     emoji: '🤖',
     color: 'ts-teal', hex: '#2dd4bf',
-    d: [52, 55], m: [52, 47],
+    d: [60, 40], m: [64, 33],
     type: 'External AI API',
     what: "Anthropic's Claude AI, called over " + T('https','HTTPS') + ' from birdstation.',
     role: 'Powers two Pulse features on birdstation:<br>' +
@@ -420,7 +420,7 @@ var NODES = [
     id: 'cloudflare', label: 'Cloudflare',
     icon: 'img/Icons/icons/Explore/cloud.png',
     color: 'ts-green', hex: '#34d399',
-    d: [27, 67], m: [26, 60],
+    d: [27, 60], m: [22, 48],
     type: 'DNS + Reverse Proxy + CDN',
     what: T('dns','DNS') + ' provider, ' + T('reverse-proxy','reverse proxy') + ', and ' + T('cdn','CDN') + ' for both domains.',
     role: 'Handles ' + T('dns','DNS') + ' for <strong>alansbrain.com</strong> and <strong>birds.alansbrain.com</strong>. Acts as ' + T('ssl-termination','SSL terminator') + ' and ' + T('reverse-proxy','reverse proxy') + ' in front of birdstation\'s ' + T('fastapi','FastAPI') + ' — so the home server IP is never exposed publicly. The website fetches Observatory and Pulse data by calling <code>birds.alansbrain.com</code>, which routes through Cloudflare to the box. Also provides ' + T('cdn','CDN') + ' caching and ' + T('ddos','DDoS') + ' protection.',
@@ -430,7 +430,7 @@ var NODES = [
     id: 'porkbun', label: 'Porkbun',
     icon: 'img/Icons/icons/Other/domain.png',
     color: 'ts-green', hex: '#34d399',
-    d: [8, 84], m: [7, 75],
+    d: [8, 78], m: [10, 63],
     type: 'Domain Registrar',
     what: 'The ' + T('registrar','domain registrar') + ' where the domain was purchased and is renewed annually.',
     role: T('registrar','Registrar') + ' for alansbrain.com. ' + T('nameservers','Nameservers') + ' are delegated to Cloudflare, meaning Cloudflare — not Porkbun — controls where all ' + T('dns','DNS') + ' queries for the domain resolve.',
@@ -440,7 +440,7 @@ var NODES = [
     id: 'vercel', label: 'Vercel',
     emoji: '▲',
     color: 'ts-purple', hex: '#a78bfa',
-    d: [74, 67], m: [76, 60],
+    d: [74, 60], m: [74, 48],
     type: 'Static Hosting + Serverless',
     what: T('static-site','Static site') + ' hosting platform with ' + T('serverless','serverless') + ' function support.',
     role: 'Hosts all of the HTML/CSS/JS pages of <strong>alansbrain.com</strong>. Also runs two ' + T('serverless','serverless') + ' proxy functions in <code>api/</code>:<br>' +
@@ -451,9 +451,9 @@ var NODES = [
   },
   {
     id: 'website', label: 'alansbrain.com',
-    icon: 'img/Icons/icons/Other/planet.png',
+    icon: 'img/Icons/icons/Alan\'s_Brain/world-creativity-and-innovation-day.png',
     color: 'ts-blue', hex: '#38bdf8',
-    d: [52, 84], m: [52, 75],
+    d: [52, 78], m: [52, 77],
     type: 'Static Website',
     what: 'This website. A personal digital garden built with vanilla HTML, CSS, and JS — no frameworks, no build step.',
     role: 'A ' + T('static-site','static site') + ' that fetches live data client-side via ' + T('https','HTTPS') + ':<br>' +
@@ -466,7 +466,7 @@ var NODES = [
     id: 'visitor', label: 'Visitor',
     emoji: '👥',
     color: 'ts-pink', hex: '#f472b6',
-    d: [52, 95], m: [52, 88],
+    d: [52, 93], m: [52, 91],
     type: 'You',
     what: 'You! Anyone browsing the site.',
     role: 'Makes ' + T('https','HTTPS') + ' requests to alansbrain.com — served by Vercel, ' + T('dns','DNS') + ' via Cloudflare. Observatory and Pulse data is fetched client-side from <code>birds.alansbrain.com</code> by the browser\'s JavaScript, not pre-rendered.',

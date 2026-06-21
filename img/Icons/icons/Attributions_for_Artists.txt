@@ -9,3 +9,10 @@
 <a href="https://www.flaticon.com/free-icons/construction-and-tools" title="construction and tools icons">Construction and tools icons created by IconMarketPK - Flaticon</a>
 <a href="https://www.flaticon.com/free-icons/search" title="search icons">Search icons created by Freepik - Flaticon</a>
 <a href="https://www.flaticon.com/free-icons/sound-off" title="sound off icons">Sound off icons created by Andrean Prabowo - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/radar" title="radar icons">Radar icons created by Freepik - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/observatory" title="observatory icons">Observatory icons created by Alfian Dwi Hartanto - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/api" title="api icons">Api icons created by Freepik - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/visitor" title="visitor icons">Visitor icons created by Flat Icons - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/coding" title="coding icons">Coding icons created by Iconjam - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/parrot" title="parrot icons">Parrot icons created by B.Genesis - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/octopus" title="octopus icons">Octopus icons created by Freepik - Flaticon</a>

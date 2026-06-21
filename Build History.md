@@ -10,6 +10,47 @@
 
 ---
 
+## 2026-06-21 — Tech Stack: de-crowded node layout + Brain icon + credited icon set (plus Xikipedia fix, calmer starfield)
+
+**Tech Stack node graph (`techstack.html`) — spacing overhaul.** Nodes were running
+into each other — notably the long "alansbrain.com" label colliding with the Visitor
+node and a cramped bottom cluster. Reworked all **11 node positions** (`d` desktop /
+`m` mobile) into a clean **two-column layout**: left column AudioMoth → birdnode →
+birdstation → Cloudflare → Porkbun, right column Alan → GitHub → Anthropic → Vercel,
+both converging to **alansbrain.com → Visitor** at the bottom center. Also gave the
+**mobile canvas more height** (`aspect-ratio` 7/10 → **7/12**, `min-height` 500 →
+560px) so the taller phone stack breathes. Verified with a bounding-box harness
+(icon + label boxes, mirroring the DOM) that there are **zero overlaps** at desktop
+(900×720) and down to a 360px phone. Node sizes + the icon/edge code are unchanged.
+
+**alansbrain.com node now uses the Brain icon** from the "Alan's Brain" header
+(`img/Icons/icons/Alan's_Brain/world-creativity-and-innovation-day.png` — the
+apostrophe is `\'`-escaped in the single-quoted JS string) instead of the generic
+planet.
+
+**Credited the incoming icon set** in `img/Icons/icons/Attributions_for_Artists.txt`
+— seven new Flaticon lines: radar (Pulse), observatory, api (Anthropic), visitor,
+coding (Alan), parrot (birdstation), octopus (GitHub). The **PNG assets are pending**
+(Alan to add them); the planned homes are `img/Icons/icons/Stack/` for the five node
+icons and `img/Icons/icons/Projects/` for radar/observatory. The `n.icon` wiring
+(Anthropic→api, GitHub→octopus, birdstation→parrot, Alan→coding, Visitor→visitor;
+Pulse→radar / Observatory→observatory on their page heroes + project cards) lands
+once the files are in — held back deliberately so **no commit ships a broken image**
+(those nodes keep their emoji until then).
+
+**Also (small polish):**
+- **Xikipedia** blurb on Great & Free (`data/websites.json`) was wrong — it described
+  an unrelated "xkcd parody wiki". Now: *"A pseudo social-media feed that
+  algorithmically surfaces Simple Wikipedia articles — a demo of how even a basic,
+  non-ML algorithm quickly learns what you engage with to suggest more."*
+- **Starfield twinkle eased ~25%** (`starfield.js`: per-star `tws` `0.6 + rand·1.6`
+  → `0.45 + rand·1.2`) for a calmer shimmer, per taste.
+
+Validated: `data/websites.json` parses, `starfield.js` passes `node --check`, and the
+`techstack.html` inline script parses (escaped Brain path).
+
+---
+
 ## 2026-06-19 — Space theme: animated "Starfield" skin (June Ship Phase 2)
 
 Landed the first **Phase 2 (theme polish)** item from the June Ship plan — the one

@@ -58,7 +58,7 @@
         baseAlpha: 0.35 + depth * 0.5,
         vy: 0.02 + depth * 0.06,           // nearer stars drift faster (parallax)
         tw: Math.random() * Math.PI * 2,   // twinkle phase
-        tws: 0.6 + Math.random() * 1.6     // twinkle speed
+        tws: 0.45 + Math.random() * 1.2    // twinkle speed (eased ~25% for a calmer shimmer)
       });
     }
   }

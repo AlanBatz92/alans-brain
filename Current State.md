@@ -52,7 +52,8 @@ palette/visual overrides scoped to `html[data-theme="…"]`.
 - **Starfield (2026-06-19):** the deep-space palette plus an **animated canvas
   starfield** — a fixed full-viewport `<canvas id="starfield-canvas">` (`z-index:0`,
   behind `.page`, alongside the ambient blobs) with drifting, twinkling **parallax**
-  stars + the occasional shooting star. Drawn by **`starfield.js`**, which
+  stars + the occasional shooting star (per-star twinkle speed eased ~25% on
+  2026-06-21 — `tws` `0.45 + rand·1.2` — for a calmer shimmer). Drawn by **`starfield.js`**, which
   `theme-switcher.js` **lazy-loads once** (`ensureStarfield()`) only when the skin is
   selected — zero overhead for everyone else. The script self-boots on load and
   starts/stops on the `themechange` event; it honors `prefers-reduced-motion` (static
@@ -478,7 +479,8 @@ Hardware chain: **AudioMoth** (USB mic) → **birdnode** (Raspberry Pi Zero 2 W 
 
 ### Node graph implementation
 - `NODES` array: each entry has `id`, `label`, `d:[x%,y%]` (desktop pos), `m:[x%,y%]` (mobile pos), `color` (CSS class), `hex`, `type`, `what`, `role` (HTML with `T()` markup), optional `icon` (img path) or `emoji`, optional `privacy`.
-- Canvas aspect-ratio: `5/4` desktop, `7/10` mobile. `positionGraph()` recomputes pixel coords on every resize.
+- Canvas aspect-ratio: `5/4` desktop, **`7/12` mobile** (mobile bumped from `7/10` + `min-height` 500→560px on 2026-06-21 for vertical breathing room). `positionGraph()` recomputes pixel coords on every resize.
+- **Layout — de-crowded two columns (2026-06-21):** left column AudioMoth → birdnode → birdstation → Cloudflare → Porkbun; right column Alan → GitHub → Anthropic → Vercel; both converge to alansbrain.com → Visitor at the bottom center. All 11 `d`/`m` positions retuned so no icon or label overlaps (verified with a bounding-box harness at desktop + a 360px phone) — the old layout had the long "alansbrain.com" label running into the Visitor node.
 - `buildGraph()` creates SVG defs/markers + node divs; `selectNode(id)` highlights active edges (stroke-opacity 0.9) and dims inactive (0.06); `clearSelection()` restores defaults.
 - Extra-bow heuristic on long diagonals: alan→birdstation, github→birdstation, birdnode→birdstation (+18px).
 - NODE_R = 32px desktop, 26px mobile (arrowhead offset; bumped 2026-06-15 with the
@@ -492,7 +494,7 @@ Hardware chain: **AudioMoth** (USB mic) → **birdnode** (Raspberry Pi Zero 2 W 
 - **`.ts-gloss`** fixed-position card; `showGloss(key, triggerEl)` uses `getBoundingClientRect()` for placement (flips below trigger if < 60px from top).
 
 ### Icons
-Custom icons from `img/Icons/icons/`: AudioMoth → `Audio_Related/audio-waves.png`, birdnode → `Audio_Related/sound-wave.png`, Cloudflare → `Explore/cloud.png`, Porkbun → `Other/domain.png`, website → `Other/planet.png`. Alan, birdstation, GitHub, Vercel, Anthropic, Visitor use emoji fallbacks.
+Custom icons from `img/Icons/icons/`: AudioMoth → `Audio_Related/audio-waves.png`, birdnode → `Audio_Related/sound-wave.png`, Cloudflare → `Explore/cloud.png`, Porkbun → `Other/domain.png`, **website (alansbrain.com) → the Brain header icon `Alan's_Brain/world-creativity-and-innovation-day.png`** (apostrophe `\'`-escaped in the JS string; was `Other/planet.png`, 2026-06-21). Vercel uses the ▲ emoji. **Pending assets (credited 2026-06-21, not yet wired):** Anthropic→api, GitHub→octopus, birdstation→parrot, Alan→coding, Visitor→visitor — all credited in `Attributions_for_Artists.txt`; the PNGs will live in `img/Icons/icons/Stack/` (+ `Projects/` for the Pulse=radar / Observatory=observatory page icons) and replace those nodes' emoji once added. Until then those five keep their emoji (no `n.icon` set, so nothing renders broken).
 
 ### Privacy posture
 No IPs, ports, credentials, or internal network topology exposed. Node descriptions reference only public-facing URLs or generic architectural patterns.

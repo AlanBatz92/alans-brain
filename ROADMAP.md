@@ -189,6 +189,17 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-21** — Tech Stack **de-crowded** + icon credits, plus two small polish fixes.
+  Reworked all 11 `techstack.html` node positions into a clean **two-column layout** (taller
+  mobile canvas, `7/10`→`7/12`) so nothing overlaps — verified with a bounding-box harness at
+  desktop + a 360px phone; the **alansbrain.com** node now uses the **Brain header icon**.
+  Added the seven new Flaticon **attributions** (radar/observatory/api/visitor/coding/parrot/
+  octopus) ahead of the assets — the node + project icon wiring lands once the PNGs are added
+  (`img/Icons/icons/Stack/` for the node icons, `Projects/` for radar/observatory; held back so
+  no commit ships a broken image). Also fixed the **Xikipedia** description on Great & Free
+  (it's the algorithmic Simple-Wikipedia feed, not an "xkcd parody wiki") and **eased the
+  Starfield twinkle ~25%**. See `Build History.md` (2026-06-21).
+
 - **2026-06-19** — June Ship **Phase 2: Space theme** — a new **Starfield** skin in the
   footer theme picker. Animated full-viewport canvas starfield (`starfield.js`) — drifting,
   twinkling parallax stars + the occasional shooting star — over the deep-space palette
