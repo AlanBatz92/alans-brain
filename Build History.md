@@ -39,6 +39,13 @@ Verified with `node --check` on both JS files + a stubbed-DOM/canvas node harnes
 takes the static path with 0 animation frames). The "optional toggle" in the plan is
 the opt-in theme itself (the picker), matching how Quake II works.
 
+**Follow-up (same day) — shooting stars fly off screen.** They were retired by a
+`life` timer (~0.7–1.2s) and so blinked out mid-flight. Dropped the timer; a streak is
+now retired only once its **trailing tail** has crossed the viewport edge (`tailX > w ||
+tailY > h`), so it always travels fully off screen. Still bounded (head/tail geometry +
+constant velocity → a few seconds max; harness confirms one shooter retires in ~256
+frames, no accumulation).
+
 ---
 
 ## 2026-06-19 — Mobile menu: scrollable, no longer clips, easier to close

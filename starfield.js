@@ -86,8 +86,7 @@
       x: Math.random() * w * 0.6,
       y: Math.random() * h * 0.3,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 700 + Math.random() * 500
+      vy: Math.sin(angle) * speed
     });
   }
 
@@ -113,9 +112,10 @@
       var sh = shooters[j];
       sh.x += sh.vx * step;
       sh.y += sh.vy * step;
-      sh.life -= dt;
-      if (sh.life <= 0 || sh.x > w + 60 || sh.y > h + 60) { shooters.splice(j, 1); continue; }
       var tailX = sh.x - sh.vx * 8, tailY = sh.y - sh.vy * 8;
+      // Retire only once the whole streak (head AND trailing tail) has left the
+      // viewport, so it always flies off screen rather than blinking out mid-flight.
+      if (tailX > w || tailY > h) { shooters.splice(j, 1); continue; }
       var grad = ctx.createLinearGradient(sh.x, sh.y, tailX, tailY);
       grad.addColorStop(0, 'rgba(255,255,255,0.9)');
       grad.addColorStop(1, 'rgba(255,255,255,0)');
