@@ -10,6 +10,37 @@
 
 ---
 
+## 2026-06-19 — Space theme: animated "Starfield" skin (June Ship Phase 2)
+
+Landed the first **Phase 2 (theme polish)** item from the June Ship plan — the one
+piece marked "🤖, no assets needed, end-to-end" — a new **Starfield** skin in the
+theme picker backed by an animated canvas starfield. Pure vanilla, no deps, no assets,
+front-end only (ships via the normal git/Vercel push — no box work).
+
+- **`starfield.js`** (new) — a self-contained IIFE that draws a drifting, twinkling
+  **parallax** starfield on a fixed full-viewport `<canvas>` (`#starfield-canvas`,
+  `z-index:0`, behind `.page`/content, alongside the ambient blobs), with the
+  occasional **shooting star** (rare + capped). Star count scales with viewport area
+  (capped 220 for phones); depth drives size/brightness/drift speed. Honors
+  **`prefers-reduced-motion`** (renders a static field, no RAF loop), **pauses while
+  the tab is hidden** (`visibilitychange`), is **DPR-aware** + debounced on resize,
+  and **starts/stops on `themechange`**.
+- **`themes/starfield.css`** (new) — keeps the cool deep-space palette (inherits
+  `:root`), just deepens `--bg-deep`/`--bg` + adds a soft top-down radial vignette and
+  softens the ambient blobs into distant-nebula glow so the stars read.
+- **`theme-switcher.js`** — registered `starfield: { label: 'Starfield' }` between
+  Deep Space and Quake II, and **lazy-loads `starfield.js`** (`ensureStarfield()`,
+  once) only when the skin is selected — so it costs nothing for every other visitor.
+  The script self-boots on load (theme already set) and the existing flash-prevention
+  inline `<head>` script already restores `data-theme="starfield"` from localStorage.
+
+Verified with `node --check` on both JS files + a stubbed-DOM/canvas node harness
+(boot runs the RAF loop; theme switch away→back stops/restarts cleanly; reduced-motion
+takes the static path with 0 animation frames). The "optional toggle" in the plan is
+the opt-in theme itself (the picker), matching how Quake II works.
+
+---
+
 ## 2026-06-19 — Mobile menu: scrollable, no longer clips, easier to close
 
 Fixed the mobile nav overlay (`.nav-mobile-overlay` in `style.css`, shared by every

@@ -5,11 +5,26 @@
    ═══════════════════════════════════════════ */
 
 var THEMES = {
-  default: { label: 'Deep Space',  css: null },
-  quake2:  { label: 'Quake II',    css: 'themes/quake2.css' }
+  default:   { label: 'Deep Space', css: null },
+  starfield: { label: 'Starfield',  css: 'themes/starfield.css' },
+  quake2:    { label: 'Quake II',   css: 'themes/quake2.css' }
 };
 
 var STORAGE_KEY = 'ab_theme';
+
+/**
+ * Lazy-load the starfield canvas script — only ever fetched when the
+ * Starfield theme is actually used, so it adds no overhead otherwise.
+ * starfield.js self-boots on load and then listens for `themechange`.
+ */
+function ensureStarfield() {
+  if (document.getElementById('starfield-js')) return;
+  var s = document.createElement('script');
+  s.id = 'starfield-js';
+  s.src = 'starfield.js';
+  s.defer = true;
+  document.head.appendChild(s);
+}
 
 /**
  * Apply a theme by name.
@@ -36,6 +51,9 @@ function setTheme(name) {
       link.href = theme.css;
       document.head.appendChild(link);
     }
+
+    // Starfield needs its canvas animation script (lazy, once).
+    if (name === 'starfield') ensureStarfield();
   }
 
   localStorage.setItem(STORAGE_KEY, name);

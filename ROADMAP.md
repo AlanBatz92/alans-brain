@@ -189,6 +189,15 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-19** — June Ship **Phase 2: Space theme** — a new **Starfield** skin in the
+  footer theme picker. Animated full-viewport canvas starfield (`starfield.js`) — drifting,
+  twinkling parallax stars + the occasional shooting star — over the deep-space palette
+  (`themes/starfield.css`). **Lazy-loaded only when the skin is active** (`ensureStarfield()`
+  in `theme-switcher.js`), so zero overhead otherwise; honors `prefers-reduced-motion`
+  (static field) and pauses on hidden tabs. Pure vanilla, no assets, front-end only. The
+  "optional toggle" is the opt-in skin itself (like Quake II). See `Build History.md` +
+  `PLAN-june-ship.md` Phase 2.
+
 - **2026-06-19** — Mobile menu: the nav overlay now **scrolls instead of clipping** and
   the close ✕ stays reachable. Was `justify-content: center` with no scroll, so on a phone
   the top/bottom items ran off-screen unreachable; now top-aligned + `overflow-y: auto`

@@ -1,0 +1,30 @@
+/* ═══════════════════════════════════════════
+   STARFIELD THEME — Alan's Brain
+   The same cool "deep space" palette as the default skin, with a deeper black
+   backdrop + a soft vignette so the animated canvas starfield (starfield.js)
+   reads. Palette variables are inherited from :root — this file only nudges the
+   backdrop and softens the ambient blobs into distant-nebula glow.
+   ═══════════════════════════════════════════ */
+
+html[data-theme="starfield"] {
+  --bg-deep: #05070f;
+  --bg: #0a0f1f;
+}
+
+/* Deepen the page backdrop with a subtle top-down radial vignette. */
+html[data-theme="starfield"] body {
+  background:
+    radial-gradient(120% 120% at 50% -10%, #0c1326 0%, #05070f 60%, #03040a 100%);
+  background-attachment: fixed;
+}
+
+/* Soften the ambient blobs so they read as distant nebulae behind the stars. */
+html[data-theme="starfield"] .blob-1 {
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.08) 0%, transparent 70%);
+}
+html[data-theme="starfield"] .blob-2 {
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.07) 0%, transparent 70%);
+}
+html[data-theme="starfield"] .blob-3 {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.06) 0%, transparent 70%);
+}

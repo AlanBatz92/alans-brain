@@ -191,8 +191,13 @@ A "clean and accurate" pass on `weather.html` / `weather.js`. Added to the first
 
 ## Phase 2 — Theme polish  (🤖 engine / 🧑 some assets)
 
-- [ ] **M 🤖** **Space theme — starfield background**, optional toggle. Pure CSS/canvas,
-      **no assets needed** — I can do this end-to-end. Good early win.
+- [x] **M 🤖** **Space theme — starfield background**, optional toggle. Pure CSS/canvas,
+      **no assets needed** — I can do this end-to-end. Good early win. *(done 2026-06-19:
+      a new **Starfield** skin in the theme picker — animated canvas starfield (`starfield.js`,
+      lazy-loaded only when active) + `themes/starfield.css`; parallax twinkle + shooting
+      stars, honors `prefers-reduced-motion`, pauses on hidden tabs. The "optional toggle"
+      is the opt-in skin itself, like Quake II. **VERIFY on preview** — pick Starfield from
+      the footer theme picker.)*
 - [ ] **M 🤖+🧑** **Quake theme — fully fleshed out.** Quake/Quake2 button textures,
       optional menu **SFX**, optional swirling **"sky"** background. 🤖 the
       toggles/rendering/settings; 🧑 (or sourced) the **textures + sound assets** —

@@ -40,6 +40,26 @@ Shared front-end: `style.css` (theme variables + all component styles),
 `theme-switcher.js`, `auth.js`, `visit-ticker.js`, `nav-menu.js` (mobile-menu
 backdrop-tap + Escape close, loaded on every page).
 
+### Themes (`theme-switcher.js`, `themes/*.css`)
+
+A footer picker ("Choose Your Skin") swaps CSS custom properties via a
+`data-theme` attribute on `<html>`; the choice persists in `localStorage`
+(`ab_theme`) and each page's `<head>` has a tiny inline script that re-applies it
+before paint (no flash). Skins: **Deep Space** (default; no CSS file), **Starfield**
+(`themes/starfield.css`), **Quake II** (`themes/quake2.css`). Non-default skins are
+palette/visual overrides scoped to `html[data-theme="…"]`.
+
+- **Starfield (2026-06-19):** the deep-space palette plus an **animated canvas
+  starfield** — a fixed full-viewport `<canvas id="starfield-canvas">` (`z-index:0`,
+  behind `.page`, alongside the ambient blobs) with drifting, twinkling **parallax**
+  stars + the occasional shooting star. Drawn by **`starfield.js`**, which
+  `theme-switcher.js` **lazy-loads once** (`ensureStarfield()`) only when the skin is
+  selected — zero overhead for everyone else. The script self-boots on load and
+  starts/stops on the `themechange` event; it honors `prefers-reduced-motion` (static
+  field), pauses on hidden tabs, and is DPR-aware + debounced on resize. The matching
+  `themes/starfield.css` only deepens `--bg-deep`/`--bg`, adds a soft vignette, and
+  softens the blobs into nebula glow (palette otherwise inherited from `:root`).
+
 ## Conventions (authoritative)
 
 - **Vanilla only.** No frameworks, no build step, no package manager. Don't introduce any.
