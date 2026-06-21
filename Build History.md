@@ -49,6 +49,22 @@ once the files are in — held back deliberately so **no commit ships a broken i
 Validated: `data/websites.json` parses, `starfield.js` passes `node --check`, and the
 `techstack.html` inline script parses (escaped Brain path).
 
+**Follow-up (same day) — the seven icons landed + wired.** Google Drive turned out to be
+firewalled from the build sandbox (the network policy blocks `drive.google.com`), and
+routing the PNG bytes back through chat as base64 corrupted them — so the files came in
+via a **GitHub branch upload** instead (git transfers binary cleanly). All seven verified
+as complete 512×512 PNGs (PNG chunk-walk + CRC check) before anything referenced them, then
+sorted to canonical paths and wired:
+- **Tech Stack nodes** (`img/Icons/icons/Stack/`): Anthropic→`api.png`, GitHub→`octopus.png`,
+  birdstation→`parrot.png`, Alan→`coding.png`, Visitor→`visitor.png` (each node's `emoji`
+  swapped for `icon`; only Vercel stays ▲).
+- **Pulse + Observatory** (`img/Icons/icons/Projects/`): `radar.png` / `observatory.png` on
+  the page heroes (`pulse.html` / `observatory.html`) and the project cards (`index.html` +
+  `projects.html`).
+- Drive→repo renames on import: `satellite-dish`→`radar`, `parakeet`→`parrot`,
+  `audience`→`visitor` (the other four already matched). Re-verified every referenced icon
+  path resolves on disk and the tech-stack script still parses.
+
 ---
 
 ## 2026-06-19 — Space theme: animated "Starfield" skin (June Ship Phase 2)

@@ -193,10 +193,12 @@ into the prose. More fragile; revisit only if the current style feels lacking.
   Reworked all 11 `techstack.html` node positions into a clean **two-column layout** (taller
   mobile canvas, `7/10`→`7/12`) so nothing overlaps — verified with a bounding-box harness at
   desktop + a 360px phone; the **alansbrain.com** node now uses the **Brain header icon**.
-  Added the seven new Flaticon **attributions** (radar/observatory/api/visitor/coding/parrot/
-  octopus) ahead of the assets — the node + project icon wiring lands once the PNGs are added
-  (`img/Icons/icons/Stack/` for the node icons, `Projects/` for radar/observatory; held back so
-  no commit ships a broken image). Also fixed the **Xikipedia** description on Great & Free
+  Added **seven new Flaticon icons** (radar/observatory/api/visitor/coding/parrot/octopus,
+  credited in `Attributions_for_Artists.txt`) and **wired them** — five Tech Stack nodes
+  (`img/Icons/icons/Stack/`) plus the **Pulse**/**Observatory** page heroes + project cards
+  (`Projects/`). (Drive was firewalled from the sandbox, so the PNGs came in via a GitHub
+  branch upload; all verified as complete 512×512 PNGs before wiring.) Also fixed the
+  **Xikipedia** description on Great & Free
   (it's the algorithmic Simple-Wikipedia feed, not an "xkcd parody wiki") and **eased the
   Starfield twinkle ~25%**. See `Build History.md` (2026-06-21).
 
