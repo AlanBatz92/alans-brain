@@ -10,6 +10,28 @@
 
 ---
 
+## 2026-06-22 — Starfield: rarity-keyed streak colors + per-species rate cap
+
+Two refinements from Alan (`starfield.js`, token `sf2 → sf3`):
+
+- **Streak color now varies by rarity** (controlled, not chaos). `streakColor(count)`
+  maps a species' all-time count here to a small fixed palette — **amber** (scarce,
+  just above the comet threshold) → **teal** (uncommon) → **green** (common) → **pale
+  blue** (abundant); unknown → green. `makeShooter(bird, count)` carries the tint;
+  truly rare birds (≤ `rareMax`) still become a comet instead. So the sky's colors
+  shift with what's actually being heard.
+- **Chatty species are capped at 1 streak per 10 detections.** A per-species counter
+  (`seenCount`, `CFG.birds.perSpeciesEvery = 10`) gates the enqueue so a common bird
+  only streaks on its **1st, 11th, 21st…** detection — a House Sparrow burst can't
+  monopolize the sky (or drown out a rarer visitor). Rare→comet detections are never
+  rate-limited. The test hook gained an optional `testStreak(name, count)` to preview a
+  tier.
+
+Verified: `node --check` + harness now **24 checks** (added: 25 detections of one
+species → exactly 3 streaks; and the four color tiers via the hook).
+
+---
+
 ## 2026-06-22 — Cache-bust the lazy-loaded starfield (versioned loader)
 
 `starfield.js` had a **static URL** (injected by `theme-switcher.js` as plain

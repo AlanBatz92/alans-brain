@@ -49,8 +49,8 @@ before paint (no flash). Skins: **Deep Space** (default; no CSS file), **Starfie
 (`themes/starfield.css`), **Quake II** (`themes/quake2.css`). Non-default skins are
 palette/visual overrides scoped to `html[data-theme="…"]`.
 
-**Cache-busting (2026-06-22):** `theme-switcher.js` is loaded as `theme-switcher.js?v=sf2`
-on every page and reads its own `?v=` token (`ASSET_V` via `document.currentScript`),
+**Cache-busting (2026-06-22):** `theme-switcher.js` is loaded as `theme-switcher.js?v=sf3`
+(bump on each starfield/loader change) on every page and reads its own `?v=` token (`ASSET_V` via `document.currentScript`),
 injecting **`starfield.js?v=<token>`** so the lazy-loaded starfield inherits it. To ship a
 `starfield.js`/`theme-switcher.js` change, **bump the `theme-switcher.js?v=` token in all
 pages** (scripted) — there's no `vercel.json`, so the `?v=` query is the bust mechanism,
@@ -75,10 +75,13 @@ same as `observatory.js?v=…`/`style.css?v=…`.
     tapering tail, pure canvas gradients, ~30s to cross) and **bird-detection-driven
     shooting stars** — it polls `birds.alansbrain.com/api/detections` (~90s, ≥0.85)
     and fires a streak per *new* detection (species logged to the console — an easter
-    egg). Bird-driven streaks are **green-tinted + brighter** to read distinctly from
-    the **rare cool-white fallback** streaks, which only fill in after a long quiet gap
-    (`idleBeforeRandom` 5 min, low `randChance`) — i.e. ≈ overnight. **The comet is the
-    "special event":** it's triggered by a **new
+    egg). Bird-driven streaks are **brighter + tinted by the species' rarity**
+    (`streakColor()`: amber scarce → teal uncommon → green common → pale-blue abundant),
+    and a **per-species cap** (`perSpeciesEvery` 10) means a common bird only streaks on
+    its 1st/11th/21st… detection so a chatty species can't monopolize the sky. They read
+    distinctly from the **rare cool-white fallback** streaks, which only fill in after a
+    long quiet gap (`idleBeforeRandom` 5 min, low `randChance`) — i.e. ≈ overnight. **The
+    comet is the "special event":** it's triggered by a **new
     lifer** (a second `/api/lifetime` poll, ~5 min, sees a species that wasn't there)
     or a **rare detection** (a life-listed species with ≤ `rareMax` (3) all-time hits is
     promoted from a streak to a comet), with a long **ambient fallback** (~6–16 min);

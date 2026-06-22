@@ -44,6 +44,18 @@
   // Star tints from the site's cool spectrum so the field feels on-brand.
   var STAR_TINTS = ['255,255,255', '224,242,255', '199,224,255', '226,214,255'];
 
+  // Bird-streak tint by the species' all-time count here (its rarity). A small,
+  // fixed palette — cool when a bird is common, warming up as it gets rarer — so
+  // the colors vary meaningfully without turning into chaos. (Truly rare birds,
+  // <= rareMax, become a comet instead of a streak.)
+  function streakColor(count) {
+    if (count == null) return '178,255,206'; // unknown rarity → green (default)
+    if (count >= 100)  return '190,225,255'; // abundant → pale blue
+    if (count >= 30)   return '178,255,206'; // common   → green
+    if (count >= 10)   return '120,240,230'; // uncommon → teal
+    return '255,214,140';                     // scarce (just above comet-rare) → amber
+  }
+
   /* ── Tunable knobs (exposed for tinkering from the console) ───────────── */
   var CFG = {
     comet: {
@@ -68,6 +80,7 @@
       timeoutMs: 6000,
       queueCap: 6,
       rareMax: 3,           // a life-listed species with <= this many all-time hits = "rare" → comet
+      perSpeciesEvery: 10,  // a common species fires a streak only every Nth detection (caps chatty birds)
       showLabels: false     // set true to draw the species name beside its streak
     }
   };
@@ -147,7 +160,7 @@
      so a detection-driven streak can announce itself; random fallback streaks
      leave it null.
      ═══════════════════════════════════════════ */
-  function makeShooter(bird) {
+  function makeShooter(bird, count) {
     var speed = 6 + Math.random() * 4;
     var angle = (Math.PI / 4) + (Math.random() - 0.5) * 0.5; // roughly down-right
     var sh = {
@@ -155,7 +168,8 @@
       y: Math.random() * h * 0.3,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      bird: bird || null
+      bird: bird || null,
+      tint: bird ? streakColor(count) : null  // rarity color (null = white fallback)
     };
     sh.step = function (dt) {
       var step = dt / 16;
@@ -167,10 +181,11 @@
       if (tailX > w || tailY > h) return false;
       var grad = ctx.createLinearGradient(sh.x, sh.y, tailX, tailY);
       if (sh.bird) {
-        // A real detection — a brighter, green-tinted streak (nods to the comet +
-        // the Observatory) so it's visibly distinct from the plain ambient ones.
-        grad.addColorStop(0, 'rgba(178,255,206,0.98)');
-        grad.addColorStop(1, 'rgba(178,255,206,0)');
+        // A real detection — brighter + thicker, tinted by the species' rarity so
+        // the sky's colors vary with what's being heard (still clearly distinct
+        // from the plain ambient white streaks).
+        grad.addColorStop(0, 'rgba(' + sh.tint + ',0.98)');
+        grad.addColorStop(1, 'rgba(' + sh.tint + ',0)');
         ctx.lineWidth = 2.2;
       } else {
         // Ambient fallback — a dimmer, thinner cool-white streak.
@@ -281,6 +296,7 @@
   var pendingComet = null;   // a requested special-event comet, awaiting a free slot
   var lastCometAt = -1e9;    // last comet spawn time (enforces CFG.comet.minSpacing)
   var lastBirdSpawn = -1e9;  // last detection-driven streak (gates the random fallback)
+  var seenCount = {};        // per-species detections seen since load (for the rate cap)
 
   function pollBirds() {
     if (!running || document.hidden || reduceMotion) return;
@@ -303,7 +319,17 @@
           var ts = rows[i].timestamp;
           if (!ts) continue;
           if (lastSeenTs !== null && ts > lastSeenTs) {
-            birdQueue.push({ name: rows[i].common_name || 'a bird', rare: isRare(rows[i]) });
+            var nm = rows[i].common_name || 'a bird';
+            var cnt = lifeCountFor(rows[i]);          // all-time count (rarity), or null
+            seenCount[nm] = (seenCount[nm] || 0) + 1;
+            if (isRare(cnt)) {
+              // Rare bird → a comet (handled at release); never rate-limited.
+              birdQueue.push({ name: nm, rare: true, count: cnt });
+            } else if ((seenCount[nm] - 1) % CFG.birds.perSpeciesEvery === 0) {
+              // Common bird → a streak, but only its 1st, 11th, 21st… detection,
+              // so a chatty species can't monopolize the sky.
+              birdQueue.push({ name: nm, rare: false, count: cnt });
+            }
           }
           if (maxTs === null || ts > maxTs) maxTs = ts;
         }
@@ -315,15 +341,17 @@
       .catch(function () { if (to) clearTimeout(to); /* stay quiet, fall back */ });
   }
 
-  // A detection is "rare" if its species is on the life list with very few
-  // all-time hits. Unknown (life list not loaded yet) → treat as not rare.
-  function isRare(row) {
-    if (!lifeSet) return false;
+  // A detection's all-time count here (scientific then common name), or null if
+  // the species isn't on the life list yet / the list hasn't loaded.
+  function lifeCountFor(row) {
+    if (!lifeSet) return null;
     var sci = row.scientific_name, com = row.common_name;
-    var total = (sci != null && lifeCount[sci] != null) ? lifeCount[sci]
-              : (com != null && lifeCount[com] != null) ? lifeCount[com] : null;
-    return total != null && total <= CFG.birds.rareMax;
+    if (sci != null && lifeCount[sci] != null) return lifeCount[sci];
+    if (com != null && lifeCount[com] != null) return lifeCount[com];
+    return null;
   }
+  // "Rare" (→ comet) = on the life list with very few all-time hits. Unknown → not rare.
+  function isRare(count) { return count != null && count <= CFG.birds.rareMax; }
 
   // Poll the life list: a newly-appeared species fires a (special) comet.
   function pollLife() {
@@ -450,7 +478,7 @@
             // A seldom-heard bird → promote it to a comet rather than a streak.
             requestComet('rare', item.name);
           } else {
-            var sh = makeShooter(item.name);
+            var sh = makeShooter(item.name, item.count);
             sh.kind = 'shooter';
             effects.push(sh);
             if (window.console && console.log) {
@@ -529,7 +557,7 @@
     if (canvas) { ctx.clearRect(0, 0, w, h); canvas.style.display = 'none'; }
     effects = [];
     birdQueue = [];
-    lastSeenTs = null; lifeSet = null; lifeCount = {};
+    lastSeenTs = null; lifeSet = null; lifeCount = {}; seenCount = {};
     pendingComet = null; lastCometAt = -1e9; lastBirdSpawn = -1e9;
     for (var k = 0; k < EVENT_TYPES.length; k++) EVENT_TYPES[k].reset();
   }
@@ -564,10 +592,11 @@
         activeEffects: effects.length
       };
     },
-    testStreak: function (name) {
+    testStreak: function (name, count) {
       if (!running) return 'not running — switch to the Starfield theme first';
-      var sh = makeShooter(name || 'test bird'); sh.kind = 'shooter'; effects.push(sh);
-      return 'spawned a streak for ' + (name || 'test bird');
+      var sh = makeShooter(name || 'test bird', count); sh.kind = 'shooter'; effects.push(sh);
+      return 'spawned a streak for ' + (name || 'test bird') +
+        (count != null ? ' (count ' + count + ' → ' + streakColor(count) + ')' : '');
     },
     testComet: function (reason, name) {
       if (!running) return 'not running — switch to the Starfield theme first';
