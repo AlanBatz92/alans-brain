@@ -10,6 +10,36 @@
 
 ---
 
+## 2026-06-22 — Follow-ups: setlist→Spotify graphic, Personal Projects philosophy icon, comet on rare-bird events
+
+Closing out the rest of Alan's list (front-end only).
+
+- **Setlist to Spotify graphic.** Replaced the generic 🎵 on the project card
+  (`projects.html`) and the page hero (`setlist-spotify.html`) with a self-contained
+  inline **SVG**: a setlist (sheet with a green header + song lines) → **arrow** → the
+  **Spotify mark** (green circle + three light arcs). No external asset; scales cleanly
+  at card (40px) and hero (66px). Rendered a preview (cairosvg) and shared it. *(Alan
+  chose "compose an SVG" over supplying a photo.)*
+- **Personal Projects philosophy icon.** Alan uploaded `philosophy.png` (Vectors Tank,
+  Flaticon — credited) to `img/Icons/icons/Projects/`; pulled it in and **wired it
+  everywhere the 🚀 stood for Personal Projects** — Explore dropdown + mobile overlay on
+  all 16 pages, the `index.html` project card, and the `projects.html` hero (34 swaps,
+  no 🚀 left). PNG verified complete (512×512, IHDR..IEND) before wiring.
+- **Comet now fires on special bird events** (`starfield.js`), per Alan's idea. Beyond
+  the ambient timer (now a rarer ~6–16 min fallback), a comet is triggered by:
+  - **a new lifer** — a second poll of `/api/lifetime` (~5 min) notices a species that
+    wasn't there before → comet;
+  - **a rare detection** — a detection whose species is on the life list with **≤ 3
+    all-time hits** (`rareMax`) is *promoted* from a shooting star to a comet.
+  A single `requestComet(reason, name)` queue feeds the comet event, which enforces
+  one-at-a-time + a `minSpacing` (30s) so simultaneous events can't burst; the species
+  is logged to the console (`☄️ …`). Still fails silent / reduced-motion / hidden-tab
+  safe. Verified with an extended stubbed-DOM harness — **14 checks** (new-lifer→comet,
+  rare→comet, common→streak, rare-doesn't-also-streak, ambient comet, fallback streak,
+  two poll loops).
+
+---
+
 ## 2026-06-22 — Tech Stack: external-API nodes + project-card deep-links
 
 Lands Alan's "add the other technologies, and let me click a project's tech to jump

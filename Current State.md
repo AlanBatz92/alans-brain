@@ -65,12 +65,16 @@ palette/visual overrides scoped to `html[data-theme="…"]`.
     (decide when to spawn → push an effect) + `reset()`; an effect is
     `{ step(dt)→aliveBool }` that updates+draws itself and retires on `false`. Two
     events ship: a **comet** (slow interstellar visitor — green-white coma + long
-    tapering tail, pure canvas gradients, ~30s to cross, one every ~2–5 min) and
-    **bird-detection-driven shooting stars** — it polls
-    `birds.alansbrain.com/api/detections` (~90s, ≥0.85) and fires a streak per *new*
-    detection (species logged to the console — an easter egg), **falling back** to
-    the original random streaks when the box is offline or quiet (overnight). Fails
-    silent, honors reduced-motion (no events/polling), pauses on hidden tabs.
+    tapering tail, pure canvas gradients, ~30s to cross) and **bird-detection-driven
+    shooting stars** — it polls `birds.alansbrain.com/api/detections` (~90s, ≥0.85)
+    and fires a streak per *new* detection (species logged to the console — an easter
+    egg), **falling back** to the original random streaks when the box is offline or
+    quiet (overnight). **The comet is the "special event":** it's triggered by a **new
+    lifer** (a second `/api/lifetime` poll, ~5 min, sees a species that wasn't there)
+    or a **rare detection** (a life-listed species with ≤ `rareMax` (3) all-time hits is
+    promoted from a streak to a comet), with a long **ambient fallback** (~6–16 min);
+    `requestComet()` feeds it, one-at-a-time + `minSpacing` so events can't burst.
+    Fails silent, honors reduced-motion (no events/polling), pauses on hidden tabs.
     Knobs in `window.STARFIELD_CONFIG`. Add a new event by writing a `make…Type()`
     and pushing it to `EVENT_TYPES`.
 
@@ -89,7 +93,7 @@ palette/visual overrides scoped to `html[data-theme="…"]`.
   Box/git settings live in `admin-config.json` (gitignored; copy `admin-config.example.json`).
   Command catalog (the "I always forget these") is **`COMMANDS.md`**.
 - GoatCounter for analytics; `<audio>` elements for iOS silent-switch compatibility.
-- **Nav layout:** **`Weather`** is a top-level `<a href="weather.html">` in `.nav-links` (and the mobile overlay) on **every page**, inserted right after Home (2026-06-17 — promoted from hidden once the page went public; label is "Weather", not "My Week"). The rest of the bar varies by page (some carry Pulse). **The "Tasks" link was removed from every nav bar (2026-06-22)** — the Household Task Tracker stays passphrase-gated and reachable by direct URL only, no longer advertised in any menu. **The Explore dropdown + mobile overlay use `img/Icons/icons/Projects/observatory.png` for Observatory (2026-06-22, was the 🔭 emoji); Personal Projects still uses 🚀 pending its philosophy icon.** "Stack" is a direct `<a>` in `.nav-links` (not inside the dropdown). The mobile overlay places Stack before the Explore section label. **The mobile overlay (`.nav-mobile-overlay`) scrolls** (2026-06-19): it's top-aligned (`justify-content: flex-start`) with `overflow-y: auto` and `padding-top: 84px` so a list taller than the screen scrolls instead of clipping off the top/bottom, and the first link clears the sticky nav bar — keeping the hamburger ✕ (the close button, `z-index 202` over the overlay's `199`) reachable. (Was `justify-content: center`, unscrollable — Home/Personal Projects clipped off both edges on a phone.) **Closing the menu (2026-06-19):** the hamburger toggles into a ✕, **and** `nav-menu.js` (a shared script loaded site-wide before `theme-switcher.js`) adds **tap-the-backdrop** (`e.target === overlay`) and **Escape** to close. It only *adds* listeners (never re-binds the hamburger), so it coexists with each page's inline toggle/link-close handler without double-toggling.
+- **Nav layout:** **`Weather`** is a top-level `<a href="weather.html">` in `.nav-links` (and the mobile overlay) on **every page**, inserted right after Home (2026-06-17 — promoted from hidden once the page went public; label is "Weather", not "My Week"). The rest of the bar varies by page (some carry Pulse). **The "Tasks" link was removed from every nav bar (2026-06-22)** — the Household Task Tracker stays passphrase-gated and reachable by direct URL only, no longer advertised in any menu. **The Explore dropdown + mobile overlay use `img/Icons/icons/Projects/observatory.png` for Observatory and `Projects/philosophy.png` for Personal Projects (2026-06-22; were the 🔭/🚀 emoji — philosophy icon also on the `index.html` card + `projects.html` hero).** "Stack" is a direct `<a>` in `.nav-links` (not inside the dropdown). The mobile overlay places Stack before the Explore section label. **The mobile overlay (`.nav-mobile-overlay`) scrolls** (2026-06-19): it's top-aligned (`justify-content: flex-start`) with `overflow-y: auto` and `padding-top: 84px` so a list taller than the screen scrolls instead of clipping off the top/bottom, and the first link clears the sticky nav bar — keeping the hamburger ✕ (the close button, `z-index 202` over the overlay's `199`) reachable. (Was `justify-content: center`, unscrollable — Home/Personal Projects clipped off both edges on a phone.) **Closing the menu (2026-06-19):** the hamburger toggles into a ✕, **and** `nav-menu.js` (a shared script loaded site-wide before `theme-switcher.js`) adds **tap-the-backdrop** (`e.target === overlay`) and **Escape** to close. It only *adds* listeners (never re-binds the hamburger), so it coexists with each page's inline toggle/link-close handler without double-toggling.
 
 ## Pulse subsystem (most active area)
 

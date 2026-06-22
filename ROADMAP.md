@@ -185,9 +185,31 @@ are hands-off instead of manual. Only worth it once the manual rhythm proves a c
 Optional UX alternative to the per-section `Sources:` line — `[n]` markers woven
 into the prose. More fragile; revisit only if the current style feels lacking.
 
+### 9. Quake II skin — make it look/feel Quake-like (advice given 2026-06-22)
+Two parts, both asset-gated:
+- **Textures:** convert grabbed Quake/Quake II textures (`.wad`/`.wal`/`.pcx`) to
+  **PNG** (tileable, power-of-two), wire as `background-image` scoped to
+  `html[data-theme="quake2"]` with **`image-rendering: pixelated`**. A small set
+  (wall / metal panel / trim / liquid accent) goes far. Drop in `img/themes/quake2/`.
+- **Menu SFX toggle:** a lazy-loaded `quake-sfx.js` (like `starfield.js`), a footer
+  toggle persisted to `localStorage` (off by default — no autoplay), `playSfx()` wired
+  to hover/click on nav/buttons. I can scaffold the toggle + infra with CC0 placeholder
+  blips immediately, then swap in chosen sounds.
+- ⚠️ **Licensing:** original id Quake/Quake II texture **and sound** assets are
+  copyrighted (engine is GPL, game data is not) — crediting ≠ a license. For the public
+  site prefer **CC0 "Quake-style"** texture/sound packs (OpenGameArt, freesound CC0), or
+  keep id assets to a personal/unshipped build.
+
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-22** — Follow-ups (completes Alan's 5-item list): **Setlist→Spotify graphic**
+  (a composed inline SVG — setlist → arrow → Spotify mark — replacing the 🎵 on the card +
+  hero), **Personal Projects philosophy icon** wired everywhere (Alan supplied
+  `philosophy.png`, credited), and the **comet now fires on special bird events** — a new
+  lifer (`/api/lifetime`) or a rare (≤3 all-time) detection, ambient timer as fallback.
+  14-check harness. See `Build History.md` (2026-06-22).
 
 - **2026-06-22** — Tech Stack: **external-API nodes + project-card deep-links**. Added
   **Spotify API / setlist.fm / OpenWeatherMap** nodes (off Vercel; 14 nodes / 15 edges,
@@ -205,10 +227,8 @@ into the prose. More fragile; revisit only if the current style feels lacking.
   `birds.alansbrain.com/api/detections`, one streak per new detection, species logged to
   console; **falls back** to random streaks overnight/offline). Reduced-motion + hidden-tab
   safe; tunables in `window.STARFIELD_CONFIG`; 12-check stubbed-DOM harness. See
-  `Build History.md` (2026-06-22). **Still open from Alan's list (asset-gated):** the
-  **Personal Projects philosophy icon** and the **Setlist→Spotify card image** — both
-  need a PNG uploaded to the branch (held back so no commit ships a broken image);
-  wiring is ready to drop in. Plus advice given on the **Quake skin** + a menu-SFX toggle.
+  `Build History.md` (2026-06-22). *(Both asset-gated items — philosophy icon + setlist
+  graphic — landed later the same day; see the follow-ups entry above.)*
 
 - **2026-06-21** — Tech Stack **de-crowded** + icon credits, plus two small polish fixes.
   Reworked all 11 `techstack.html` node positions into a clean **two-column layout** (taller

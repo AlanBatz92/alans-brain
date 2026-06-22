@@ -46,7 +46,14 @@
 
   /* ── Tunable knobs (exposed for tinkering from the console) ───────────── */
   var CFG = {
-    comet: { minGap: 110000, maxGap: 320000, firstMin: 18000, firstMax: 60000 },
+    comet: {
+      // A comet is the "special event". It fires on a rare bird moment (a new
+      // lifer, or a seldom-heard species) and, failing that, drifts by on a long
+      // ambient timer so the sky still gets one now and then.
+      minGap: 360000, maxGap: 960000,   // ambient fallback cadence (~6–16 min)
+      firstMin: 30000, firstMax: 90000, // first ambient comet after load
+      minSpacing: 30000                 // never two comets closer than this (caps bursts)
+    },
     shooter: {
       randChance: 0.004,    // per-frame odds of a fallback streak when birds are quiet
       maxActive: 3,
@@ -55,9 +62,12 @@
     },
     birds: {
       url: 'https://birds.alansbrain.com/api/detections?limit=8&min_confidence=0.85',
+      lifeUrl: 'https://birds.alansbrain.com/api/lifetime',
       pollMs: 90000,        // how often to check for new detections
+      lifePollMs: 300000,   // how often to check the life list (lifers are rare)
       timeoutMs: 6000,
       queueCap: 6,
+      rareMax: 3,           // a life-listed species with <= this many all-time hits = "rare" → comet
       showLabels: false     // set true to draw the species name beside its streak
     }
   };
@@ -254,9 +264,13 @@
      released as streaks. Fails silent (box offline / CORS / overnight quiet)
      and the shooter event falls back to random streaks.
      ═══════════════════════════════════════════ */
-  var birdQueue = [];
+  var birdQueue = [];        // queued detections → streaks ({ name, rare })
   var lastSeenTs = null;     // newest detection timestamp we've already handled
-  var pollTimer = null;
+  var pollTimer = null, lifePollTimer = null;
+  var lifeSet = null;        // set of life-list species names (null until first load)
+  var lifeCount = {};        // species name → all-time count (for rarity)
+  var pendingComet = null;   // a requested special-event comet, awaiting a free slot
+  var lastCometAt = -1e9;    // last comet spawn time (enforces CFG.comet.minSpacing)
 
   function pollBirds() {
     if (!running || document.hidden || reduceMotion) return;
@@ -279,7 +293,7 @@
           var ts = rows[i].timestamp;
           if (!ts) continue;
           if (lastSeenTs !== null && ts > lastSeenTs) {
-            birdQueue.push(rows[i].common_name || 'a bird');
+            birdQueue.push({ name: rows[i].common_name || 'a bird', rare: isRare(rows[i]) });
           }
           if (maxTs === null || ts > maxTs) maxTs = ts;
         }
@@ -291,13 +305,76 @@
       .catch(function () { if (to) clearTimeout(to); /* stay quiet, fall back */ });
   }
 
+  // A detection is "rare" if its species is on the life list with very few
+  // all-time hits. Unknown (life list not loaded yet) → treat as not rare.
+  function isRare(row) {
+    if (!lifeSet) return false;
+    var sci = row.scientific_name, com = row.common_name;
+    var total = (sci != null && lifeCount[sci] != null) ? lifeCount[sci]
+              : (com != null && lifeCount[com] != null) ? lifeCount[com] : null;
+    return total != null && total <= CFG.birds.rareMax;
+  }
+
+  // Poll the life list: a newly-appeared species fires a (special) comet.
+  function pollLife() {
+    if (!running || document.hidden || reduceMotion || !window.fetch) return;
+    var ctrl = null, to = null;
+    try {
+      ctrl = new AbortController();
+      to = setTimeout(function () { ctrl.abort(); }, CFG.birds.timeoutMs);
+    } catch (e) { /* no AbortController */ }
+
+    fetch(CFG.birds.lifeUrl, ctrl ? { signal: ctrl.signal } : undefined)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (to) clearTimeout(to);
+        var species = data && (data.species || data.lifetime);
+        if (!species || !species.length) return;
+        var firstLoad = (lifeSet === null);
+        var newSet = {}, counts = {}, newcomer = null;
+        for (var i = 0; i < species.length; i++) {
+          var s = species[i], com = s.common_name, sci = s.scientific_name;
+          var total = (s.total_detections != null) ? s.total_detections
+                    : (s.count != null ? s.count : 0);
+          if (com) { newSet[com] = 1; counts[com] = total; }
+          if (sci) { newSet[sci] = 1; counts[sci] = total; }
+          if (!firstLoad && !newcomer &&
+              !((com && lifeSet[com]) || (sci && lifeSet[sci]))) {
+            newcomer = com || sci || 'a new bird';
+          }
+        }
+        lifeSet = newSet; lifeCount = counts;
+        if (newcomer) requestComet('lifer', newcomer);
+      })
+      .catch(function () { if (to) clearTimeout(to); });
+  }
+
+  // Ask for a special-event comet; the comet event picks it up at the next free
+  // slot (one queued at a time, spacing enforced in the event).
+  function requestComet(reason, name) {
+    if (!pendingComet) pendingComet = { reason: reason, name: name };
+  }
+
+  function spawnComet(info) {
+    var c = makeComet();
+    c.kind = 'comet';
+    effects.push(c);
+    if (info && window.console && console.log) {
+      var msg = info.reason === 'lifer'
+        ? '☄️ ' + info.name + ' just joined the life list — a comet flies for it'
+        : '☄️ rare visitor: ' + info.name + ' — a comet flies for it';
+      console.log('%c' + msg, 'color:#9be7ff;font-weight:700');
+    }
+  }
+
   function startPolling() {
-    if (pollTimer || reduceMotion) return;
-    pollBirds();
-    pollTimer = setInterval(pollBirds, CFG.birds.pollMs);
+    if (reduceMotion) return;
+    if (!pollTimer) { pollBirds(); pollTimer = setInterval(pollBirds, CFG.birds.pollMs); }
+    if (!lifePollTimer) { pollLife(); lifePollTimer = setInterval(pollLife, CFG.birds.lifePollMs); }
   }
   function stopPolling() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    if (lifePollTimer) { clearInterval(lifePollTimer); lifePollTimer = null; }
   }
 
   /* ═══════════════════════════════════════════
@@ -311,21 +388,32 @@
 
   function makeCometType() {
     var nextAt = 0;
+    function reschedule(now) {
+      nextAt = now + CFG.comet.minGap + Math.random() * (CFG.comet.maxGap - CFG.comet.minGap);
+    }
     return {
       id: 'comet',
       reset: function () { nextAt = 0; },
       onFrame: function (now) {
-        if (!nextAt) {
-          nextAt = now + CFG.comet.firstMin +
-            Math.random() * (CFG.comet.firstMax - CFG.comet.firstMin);
+        if (countEffects('comet') > 0) return;            // one comet at a time
+        if (now - lastCometAt < CFG.comet.minSpacing) return;
+        // A special bird event (new lifer / rare detection) → a comet, now.
+        if (pendingComet) {
+          spawnComet(pendingComet);
+          pendingComet = null;
+          lastCometAt = now;
+          reschedule(now);
           return;
         }
-        if (now >= nextAt && countEffects('comet') === 0) {
-          var c = makeComet();
-          c.kind = 'comet';
-          effects.push(c);
-          nextAt = now + CFG.comet.minGap +
-            Math.random() * (CFG.comet.maxGap - CFG.comet.minGap);
+        // Ambient fallback comet on a long timer (first one comes sooner).
+        if (!nextAt) {
+          nextAt = now + CFG.comet.firstMin + Math.random() * (CFG.comet.firstMax - CFG.comet.firstMin);
+          return;
+        }
+        if (now >= nextAt) {
+          spawnComet(null);
+          lastCometAt = now;
+          reschedule(now);
         }
       }
     };
@@ -344,17 +432,22 @@
         var s = CFG.shooter;
         if (countEffects('shooter') >= s.maxActive) return;
 
-        // 1) A real bird detection is queued → release it as a streak.
+        // 1) A real bird detection is queued → release it.
         if (birdQueue.length && now - lastRelease > s.releaseGap) {
-          var name = birdQueue.shift();
-          var sh = makeShooter(name);
-          sh.kind = 'shooter';
-          effects.push(sh);
+          var item = birdQueue.shift();
           lastRelease = now;
           lastBirdSpawn = now;
-          if (window.console && console.log) {
-            console.log('%c🐦 ' + name + '%c — a shooting star, courtesy of birdstation',
-              'color:#34d399;font-weight:700', 'color:#7c8aa5');
+          if (item.rare) {
+            // A seldom-heard bird → promote it to a comet rather than a streak.
+            requestComet('rare', item.name);
+          } else {
+            var sh = makeShooter(item.name);
+            sh.kind = 'shooter';
+            effects.push(sh);
+            if (window.console && console.log) {
+              console.log('%c🐦 ' + item.name + '%c — a shooting star, courtesy of birdstation',
+                'color:#34d399;font-weight:700', 'color:#7c8aa5');
+            }
           }
           return;
         }
@@ -427,6 +520,8 @@
     if (canvas) { ctx.clearRect(0, 0, w, h); canvas.style.display = 'none'; }
     effects = [];
     birdQueue = [];
+    lastSeenTs = null; lifeSet = null; lifeCount = {};
+    pendingComet = null; lastCometAt = -1e9;
     for (var k = 0; k < EVENT_TYPES.length; k++) EVENT_TYPES[k].reset();
   }
 
