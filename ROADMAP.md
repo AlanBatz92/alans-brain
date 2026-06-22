@@ -189,6 +189,13 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-22** — Tech Stack: **external-API nodes + project-card deep-links**. Added
+  **Spotify API / setlist.fm / OpenWeatherMap** nodes (off Vercel; 14 nodes / 15 edges,
+  layout re-verified zero-overlap) and a **deep-link** system — `techstack.html#<nodeId>`
+  (optionally `~<glossKey>`) opens that node's panel; the **project-card tech tags**
+  (`projects.html`) now jump to the right tech (BirdNET, RSS, Raspberry Pi, Spotify API,
+  Setlist.fm). See `Build History.md` (2026-06-22).
+
 - **2026-06-22** — Nav cleanup + **starfield background-events scaffold**. Delisted
   the **Tasks** link from every nav bar (the tracker stays passphrase-gated + direct-URL
   only); swapped the **Observatory** dropdown/overlay icon from 🔭 to the existing
@@ -198,9 +205,10 @@ into the prose. More fragile; revisit only if the current style feels lacking.
   `birds.alansbrain.com/api/detections`, one streak per new detection, species logged to
   console; **falls back** to random streaks overnight/offline). Reduced-motion + hidden-tab
   safe; tunables in `window.STARFIELD_CONFIG`; 12-check stubbed-DOM harness. See
-  `Build History.md` (2026-06-22). **Still open from Alan's list:** Personal Projects
-  philosophy icon (asset-pending), Setlist→Spotify card image, and the Tech Stack
-  technology-nodes + project-card deep-links.
+  `Build History.md` (2026-06-22). **Still open from Alan's list (asset-gated):** the
+  **Personal Projects philosophy icon** and the **Setlist→Spotify card image** — both
+  need a PNG uploaded to the branch (held back so no commit ships a broken image);
+  wiring is ready to drop in. Plus advice given on the **Quake skin** + a menu-SFX toggle.
 
 - **2026-06-21** — Tech Stack **de-crowded** + icon credits, plus two small polish fixes.
   Reworked all 11 `techstack.html` node positions into a clean **two-column layout** (taller

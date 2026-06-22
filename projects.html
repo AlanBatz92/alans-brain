@@ -93,7 +93,7 @@
         <div class="card-title">Pulse</div>
         <div class="card-desc">A live feed of Lehigh Valley news, pulled from local sources</div>
         <div class="card-tags">
-          <span class="card-tag">RSS</span>
+          <span class="card-tag" data-stack="birdstation~rss">RSS</span>
           <span class="card-tag">Local news</span>
         </div>
       </a>
@@ -102,8 +102,8 @@
         <div class="card-title">Observatory</div>
         <div class="card-desc">Live bird and train detections from a backyard mic — a life list, analytics, and the dawn chorus, powered by BirdNET</div>
         <div class="card-tags">
-          <span class="card-tag">BirdNET</span>
-          <span class="card-tag">Raspberry Pi</span>
+          <span class="card-tag" data-stack="birdstation~birdnet">BirdNET</span>
+          <span class="card-tag" data-stack="birdnode">Raspberry Pi</span>
         </div>
       </a>
       <a href="setlist-spotify.html" class="project-card card-green reveal">
@@ -111,8 +111,8 @@
         <div class="card-title">Setlist to Spotify</div>
         <div class="card-desc">Turn any concert setlist into a Spotify playlist — or combine two setlists into one</div>
         <div class="card-tags">
-          <span class="card-tag">Spotify API</span>
-          <span class="card-tag">Setlist.fm</span>
+          <span class="card-tag" data-stack="spotify-api">Spotify API</span>
+          <span class="card-tag" data-stack="setlistfm">Setlist.fm</span>
         </div>
       </a>
     </div>
@@ -159,6 +159,22 @@
     });
   }, { threshold: 0.1 });
   revealEls.forEach(function(el) { observer.observe(el); });
+
+  /* Project-card tech tags deep-link into the Tech Stack. They sit inside the
+     card's <a>, so navigate manually and stop the card link from also firing. */
+  document.querySelectorAll('.card-tag[data-stack]').forEach(function(tag) {
+    tag.setAttribute('role', 'link');
+    tag.setAttribute('tabindex', '0');
+    tag.title = 'See this in the Tech Stack';
+    function go(e) {
+      e.preventDefault(); e.stopPropagation();
+      window.location.href = 'techstack.html#' + tag.getAttribute('data-stack');
+    }
+    tag.addEventListener('click', go);
+    tag.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') go(e);
+    });
+  });
 
   /* Explore dropdown toggle */
   var dropdown = document.querySelector('.nav-dropdown');

@@ -340,7 +340,7 @@ function T(key, display) {
 /* ══════════════════════════════════════
    NODE DATA
    Positions: d=[x%,y%] desktop (5:4 canvas)
-              m=[x%,y%] mobile  (7:10 canvas)
+              m=[x%,y%] mobile  (7:12 canvas)
    icon: path to img  OR  emoji: glyph
 ══════════════════════════════════════ */
 var NODES = [
@@ -447,7 +447,7 @@ var NODES = [
           '• <code>setlist.js</code> — proxies the setlist.fm ' + T('api','API') + ' (' + T('cors','CORS') + ' workaround)<br>' +
           '• <code>spotify-proxy.js</code> — handles Spotify write operations (' + T('pkce','PKCE') + ' ' + T('oauth','OAuth') + ', no client secret in the browser)<br><br>' +
           'Auto-deploys from GitHub via ' + T('webhook','webhook') + ' on every push to <code>main</code> — no manual deploy step needed.',
-    connects: ['github', 'website']
+    connects: ['github', 'website', 'setlistfm', 'spotify-api', 'openweather']
   },
   {
     id: 'website', label: 'alansbrain.com',
@@ -471,6 +471,37 @@ var NODES = [
     what: 'You! Anyone browsing the site.',
     role: 'Makes ' + T('https','HTTPS') + ' requests to alansbrain.com — served by Vercel, ' + T('dns','DNS') + ' via Cloudflare. Observatory and Pulse data is fetched client-side from <code>birds.alansbrain.com</code> by the browser\'s JavaScript, not pre-rendered.',
     connects: ['website']
+  },
+  {
+    id: 'spotify-api', label: 'Spotify API',
+    emoji: '🎵',
+    color: 'ts-green', hex: '#34d399',
+    d: [92, 64], m: [88, 72],
+    type: 'External Music API',
+    what: "Spotify's Web " + T('api','API') + ', used by the Setlist to Spotify tool to find tracks and build a playlist in your own account.',
+    role: 'The browser signs in with ' + T('pkce','PKCE') + ' ' + T('oauth','OAuth') + ' — no client secret in the page. Playlist writes are relayed through a Vercel ' + T('serverless','serverless') + ' proxy (<code>spotify-proxy.js</code>) so access tokens stay server-side and ' + T('cors','CORS') + ' limits are avoided.',
+    privacy: 'Only the songs from the setlist you pick and your own Spotify authorization are involved — handled in your browser and Spotify session.',
+    connects: ['vercel']
+  },
+  {
+    id: 'setlistfm', label: 'setlist.fm',
+    emoji: '🎤',
+    color: 'ts-blue', hex: '#38bdf8',
+    d: [90, 47], m: [84, 60],
+    type: 'External Setlist API',
+    what: 'The setlist.fm ' + T('api','API') + ' — a crowd-sourced database of real concert setlists.',
+    role: "Searched by the Setlist to Spotify tool to pull an artist's actual setlists. Requests are relayed through a Vercel " + T('serverless','serverless') + ' proxy (<code>setlist.js</code>) as a ' + T('cors','CORS') + ' workaround.',
+    connects: ['vercel']
+  },
+  {
+    id: 'openweather', label: 'OpenWeatherMap',
+    emoji: '🌤',
+    color: 'ts-yellow', hex: '#fbbf24',
+    d: [88, 80], m: [80, 84],
+    type: 'External Weather API',
+    what: 'The OpenWeatherMap One Call ' + T('api','API') + ' — current conditions, hourly/daily forecasts, and historical day summaries.',
+    role: 'Powers the Weather page. Calls go through a Vercel ' + T('serverless','serverless') + ' proxy (<code>weather.js</code>) that keeps the API key server-side (with an endpoint whitelist to prevent abuse), so the key never reaches the browser.',
+    connects: ['vercel']
   }
 ];
 
@@ -487,7 +518,10 @@ var EDGES = [
   ['porkbun',    'cloudflare',  'nameservers',    '#34d399', true ],
   ['cloudflare', 'website',     'CDN + DNS',      '#34d399', false],
   ['vercel',     'website',     'static hosting', '#a78bfa', false],
-  ['website',    'visitor',     'HTTPS',          '#38bdf8', false]
+  ['website',    'visitor',     'HTTPS',          '#38bdf8', false],
+  ['vercel',     'setlistfm',   'setlist.fm API', '#38bdf8', false],
+  ['vercel',     'spotify-api', 'Spotify API',    '#38bdf8', false],
+  ['vercel',     'openweather', 'weather API',    '#38bdf8', false]
 ];
 
 var LEGEND = [
@@ -908,6 +942,30 @@ window.addEventListener('resize', function() {
 buildGraph();
 requestAnimationFrame(function() { requestAnimationFrame(positionGraph); });
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(positionGraph);
+
+/* ══════════════════════════════════════
+   DEEP LINK
+   Other pages (e.g. project-card tags) link here as
+   techstack.html#<nodeId>  — or  #<nodeId>~<glossKey>  to also pop a
+   definition — to jump straight to the relevant tech and open its panel.
+══════════════════════════════════════ */
+function openFromHash() {
+  var hash = (location.hash || '').replace(/^#/, '');
+  if (!hash) return;
+  var parts = hash.split('~');
+  var id = parts[0], glossKey = parts[1];
+  if (!nodeMap[id]) return;
+  selectNode(id);
+  if (glossKey && GLOSSARY[glossKey]) {
+    /* Wait for the panel slide-in so the term's rect is settled before placing. */
+    setTimeout(function() {
+      var termEl = panelContent.querySelector('.ts-term[data-key="' + glossKey + '"]');
+      if (termEl) showGloss(glossKey, termEl);
+    }, 340);
+  }
+}
+openFromHash();
+window.addEventListener('hashchange', openFromHash);
 </script>
 
 <script>

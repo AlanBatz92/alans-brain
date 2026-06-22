@@ -487,8 +487,11 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
 
 Self-contained single-file page (inline `<style>` + `<script>`). No external JS dependencies.
 
-### Architecture documented (11 nodes, 12 edges)
-Hardware chain: **AudioMoth** (USB mic) → **birdnode** (Raspberry Pi Zero 2 W running Icecast) → **birdstation** (home server: FastAPI + BirdNET + train detector) → **Cloudflare** (DNS + reverse proxy + SSL) → **alansbrain.com** (Visitor). Parallel paths: **Alan** (admin via SSH + git) → birdstation, **GitHub** (code hosting) → birdstation (git pull deploys) + **Vercel** (static hosting + serverless proxies), **Porkbun** (domain registrar, NS delegated to Cloudflare), **Anthropic** (Claude API called by birdstation's AI services).
+### Architecture documented (14 nodes, 15 edges)
+Hardware chain: **AudioMoth** (USB mic) → **birdnode** (Raspberry Pi Zero 2 W running Icecast) → **birdstation** (home server: FastAPI + BirdNET + train detector) → **Cloudflare** (DNS + reverse proxy + SSL) → **alansbrain.com** (Visitor). Parallel paths: **Alan** (admin via SSH + git) → birdstation, **GitHub** (code hosting) → birdstation (git pull deploys) + **Vercel** (static hosting + serverless proxies), **Porkbun** (domain registrar, NS delegated to Cloudflare), **Anthropic** (Claude API called by birdstation's AI services). **External APIs (added 2026-06-22), each off Vercel's serverless proxies on the HTTPS/API edge:** **Spotify API** + **setlist.fm** (Setlist to Spotify) and **OpenWeatherMap** (Weather).
+
+### Deep-linking (2026-06-22)
+`techstack.html#<nodeId>` — or `#<nodeId>~<glossKey>` to also pop a definition — selects that node and opens its panel on load (`openFromHash()`, also on `hashchange`). Used by the **project-card tags on `projects.html`**, which carry `data-stack` and jump to the relevant tech: Pulse→**RSS** (`birdstation~rss`), Observatory→**BirdNET** (`birdstation~birdnet`) / **Raspberry Pi** (`birdnode`), Setlist→**Spotify API** (`spotify-api`) / **Setlist.fm** (`setlistfm`). Tags sit inside the card `<a>`, so a handler navigates manually + stops propagation; keyboard-accessible, with a `↗` affordance (`.card-tag[data-stack]`).
 
 ### Node graph implementation
 - `NODES` array: each entry has `id`, `label`, `d:[x%,y%]` (desktop pos), `m:[x%,y%]` (mobile pos), `color` (CSS class), `hex`, `type`, `what`, `role` (HTML with `T()` markup), optional `icon` (img path) or `emoji`, optional `privacy`.

@@ -10,6 +10,41 @@
 
 ---
 
+## 2026-06-22 — Tech Stack: external-API nodes + project-card deep-links
+
+Lands Alan's "add the other technologies, and let me click a project's tech to jump
+to it in the stack" item. Front-end only (`techstack.html` + `projects.html` +
+`style.css`).
+
+- **Three new external-API nodes** in the graph, each hanging off **Vercel** (where
+  the serverless proxies that call them live), all on the blue **HTTPS / API** edge
+  (no new legend entry): **Spotify API** (🎵, ts-green — `spotify-proxy.js`, PKCE
+  OAuth), **setlist.fm** (🎤, ts-blue — `setlist.js`), and **OpenWeatherMap** (🌤,
+  ts-yellow — `weather.js`, key kept server-side). Panels are kept generic (no keys,
+  no internals), matching the page's privacy posture. Graph is now **14 nodes / 15
+  edges** (was 11 / 12).
+- **Layout:** the three sit in the open lower-right, fanning off Vercel. Re-verified
+  with the bounding-box harness (icon + label boxes) — **zero overlaps** at desktop
+  (900×720) and a 360px phone; the only flags are the pre-existing AudioMoth/Alan
+  top-edge pokes, unchanged from the 2026-06-21 layout. Mobile canvas comment fixed
+  to 7:12.
+- **Deep-linking.** `techstack.html#<nodeId>` (optionally `#<nodeId>~<glossKey>`)
+  selects that node and opens its panel on load — and pops a glossary definition if a
+  key is given. `openFromHash()` runs at init and on `hashchange`.
+- **Project-card tags link into the stack** (`projects.html`). The tech tags now
+  carry `data-stack` and deep-link: Pulse → **RSS** (`birdstation~rss`); Observatory
+  → **BirdNET** (`birdstation~birdnet`), **Raspberry Pi** (`birdnode`); Setlist to
+  Spotify → **Spotify API** (`spotify-api`), **Setlist.fm** (`setlistfm`). Because the
+  tags live inside the card's `<a>`, a small handler navigates manually and
+  `preventDefault`/`stopPropagation`s so the card link doesn't also fire; tags are
+  keyboard-accessible (`role=link`, `tabindex`, Enter/Space) and show a `↗` + hover
+  state (`.card-tag[data-stack]`).
+- **Verified:** all three inline scripts `node --check` clean; a cross-check confirms
+  every edge endpoint and all five card deep-link targets resolve to real node ids
+  (and the gloss keys `rss`/`birdnet` exist in the birdstation panel).
+
+---
+
 ## 2026-06-22 — Nav cleanup (Tasks delisted), Observatory dropdown icon, + starfield background-events scaffold (comet + bird-detection shooting stars)
 
 Three items from Alan's list (front-end only, no box change):

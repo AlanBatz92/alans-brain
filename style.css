@@ -3587,6 +3587,19 @@ nav {
   border-radius: 4px;
   padding: 2px 6px;
 }
+/* Tags that deep-link into the Tech Stack (the tech behind the project). */
+.card-tag[data-stack] {
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.card-tag[data-stack]::after { content: " \2197"; opacity: .5; }
+.card-tag[data-stack]:hover,
+.card-tag[data-stack]:focus-visible {
+  color: var(--teal);
+  border-color: var(--teal);
+  background: var(--surface-hover);
+  outline: none;
+}
 
 /* ═══════════════════════════════════
    SETLIST TO SPOTIFY APP
