@@ -10,6 +10,52 @@
 
 ---
 
+## 2026-06-22 — Nav cleanup (Tasks delisted), Observatory dropdown icon, + starfield background-events scaffold (comet + bird-detection shooting stars)
+
+Three items from Alan's list (front-end only, no box change):
+
+- **Tasks delisted from the nav.** The Household Task Tracker is passphrase-gated
+  and not meant to be publicly discoverable, but a "Tasks" link still sat in the
+  top + mobile nav on `weather.html` (and self-referentially on `tasks.html`).
+  Removed all four `<a href="tasks.html">Tasks</a>` entries. The page is still
+  reachable by direct URL behind its passphrase — it's just no longer advertised
+  in any menu bar.
+- **Observatory dropdown icon.** Swapped the 🔭 emoji for the existing
+  `img/Icons/icons/Projects/observatory.png` in the Explore dropdown + mobile
+  overlay on **all 16 pages** (script-replaced the two exact emoji-spans → `<img>`,
+  32 swaps). **Personal Projects still shows 🚀 in the nav** — its requested new
+  icon (a Flaticon "philosophy" glyph by Vectors Tank) is **asset-pending** and
+  held back so no commit ships a broken image (same pattern as the 2026-06-21
+  icon set); attribution + wiring land once the PNG is uploaded to
+  `img/Icons/icons/Projects/`.
+- **Starfield background-events scaffold (`starfield.js`).** Generalized the lone
+  shooting-star spawner into a small **events scaffold**: `EVENT_TYPES` each expose
+  `onFrame(now, dt)` (decide when to spawn → push an effect) + `reset()`; an effect
+  is `{ step(dt) → aliveBool }` that updates + draws itself each frame and retires
+  when it returns false. Two events ship:
+  - **Comet** — a slow interstellar visitor (3I/ATLAS vibe): a faint green-white
+    **coma** + long **tapering tail**, drawn entirely with canvas gradients (no
+    asset), drifting all the way across the viewport over ~30s. Infrequent — one
+    every ~2–5 min, one at a time — so catching it feels like a treat.
+  - **Shooting stars driven by bird detections** — polls
+    `birds.alansbrain.com/api/detections` (~90s, `min_confidence=0.85`); each *new*
+    detection is released as a streak (spread out so a batch doesn't burst) and the
+    species is logged to the console — a quiet **easter egg** that every shooting
+    star is a real backyard bird, tying the starfield into the wider web of
+    integrations. **Falls back** to the original random streaks when the box is
+    offline or birds are quiet (overnight), so the sky is never empty. Fails silent
+    (CORS/timeout/offline via `AbortController`), honors `prefers-reduced-motion`
+    (static field, no polling), and pauses on hidden tabs.
+
+  Tunables live in `window.STARFIELD_CONFIG` (comet gaps, poll interval, fallback
+  cadence, optional on-canvas species labels). Verified with a stubbed-DOM/canvas
+  harness — **12 checks**: reduced-motion static path (no loop, no polling),
+  loop + poll boot, comet coma draw (radial gradient is comet-specific),
+  new-detection-drives-a-streak + baseline-detection-doesn't, and the fallback
+  random streak when birds are quiet.
+
+---
+
 ## 2026-06-21 — Tech Stack: de-crowded node layout + Brain icon + credited icon set (plus Xikipedia fix, calmer starfield)
 
 **Tech Stack node graph (`techstack.html`) — spacing overhaul.** Nodes were running

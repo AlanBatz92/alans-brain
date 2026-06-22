@@ -189,6 +189,19 @@ into the prose. More fragile; revisit only if the current style feels lacking.
 
 ## ✓ Done (recent)
 
+- **2026-06-22** — Nav cleanup + **starfield background-events scaffold**. Delisted
+  the **Tasks** link from every nav bar (the tracker stays passphrase-gated + direct-URL
+  only); swapped the **Observatory** dropdown/overlay icon from 🔭 to the existing
+  `observatory.png` on all 16 pages. Biggest piece: `starfield.js` grew a small,
+  extensible **events** layer with two events — a slow **comet** (3I/ATLAS-style coma +
+  tail, pure canvas) and **shooting stars driven by live bird detections** (polls
+  `birds.alansbrain.com/api/detections`, one streak per new detection, species logged to
+  console; **falls back** to random streaks overnight/offline). Reduced-motion + hidden-tab
+  safe; tunables in `window.STARFIELD_CONFIG`; 12-check stubbed-DOM harness. See
+  `Build History.md` (2026-06-22). **Still open from Alan's list:** Personal Projects
+  philosophy icon (asset-pending), Setlist→Spotify card image, and the Tech Stack
+  technology-nodes + project-card deep-links.
+
 - **2026-06-21** — Tech Stack **de-crowded** + icon credits, plus two small polish fixes.
   Reworked all 11 `techstack.html` node positions into a clean **two-column layout** (taller
   mobile canvas, `7/10`→`7/12`) so nothing overlaps — verified with a bounding-box harness at

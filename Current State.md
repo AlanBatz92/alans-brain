@@ -32,7 +32,7 @@ a Google Sheet, and a home server called **birdstation**).
 | Personal Projects | `projects.html` | Hub for the home-built projects — cards link to Pulse, Observatory, and Setlist to Spotify |
 | Setlist to Spotify | `setlist-spotify.html` / `setlist-spotify.js` | Setlists → Spotify playlist |
 | Weather | `weather.html` / `weather.js` | **Public** (passphrase gate removed 2026-06-17; nav label is **"Weather"**, was "My Week"). Weather outlook + running/drone/tan scoring. **Hero "Today" card** (incl. 🌅/🌇 sun + 🌙 moon phase via `sunMoonHTML`) + **"Best rest of week"** chips (today→Sunday only, no next-week days) + roomy 6-day list; tap any day/chip → detail drawer = shared `Conditions` block + a **selectable "Hour by hour" chart** (pick Rain/UV/Temp/Wind/Cloud/Humidity → peak labeled; `WX_SERIES`/`renderHourlyMetric`) + per-activity rating · best window · tap-to-open breakdown. Rating colors: green/blue/amber/red (Good = blue). **All three scores research-grounded** (`computeRunScore`/`computeDroneScore`/`computeTanScore`): running = apparent temp + **dew point** (UV dropped); drone = **wind/gusts** dominant + rain/fog/cold caps; tanning = **UV**-led + clear sky + warmth. **ℹ️ "How these scores work"** explainer drawer (`openInfoDrawer`). Assets `?v=w6`. |
-| Household Task Tracker | `tasks.html` / `tasks.js` | Passphrase-gated, reads/writes a Google Sheet |
+| Household Task Tracker | `tasks.html` / `tasks.js` | Passphrase-gated, reads/writes a Google Sheet. **Not linked in any nav (2026-06-22)** — direct URL + passphrase only. |
 | Observatory | `observatory.html` / `observatory.js` | BirdNET + train detections from birdstation. Three tabs: 🐦 Birds / 📊 Analytics / 🚂 Trains. **Analytics is unified** — a `🐦 Birds \| 🚂 Trains` switch on the Analytics tab (2026-06-11), so train *analytics* live there (not on the Trains tab, which is now just the raw recent-events feed + method panel). Linked from the home Explore grid + nav dropdown. |
 | Tech Stack | `techstack.html` | Interactive SVG node-graph of the full site/hardware stack. Self-contained (inline CSS + JS). Public, no gate. See Tech Stack section below. |
 
@@ -60,6 +60,19 @@ palette/visual overrides scoped to `html[data-theme="…"]`.
   field), pauses on hidden tabs, and is DPR-aware + debounced on resize. The matching
   `themes/starfield.css` only deepens `--bg-deep`/`--bg`, adds a soft vignette, and
   softens the blobs into nebula glow (palette otherwise inherited from `:root`).
+  - **Background-events scaffold (2026-06-22):** `starfield.js` now has a small,
+    extensible **events** layer — `EVENT_TYPES` each expose `onFrame(now,dt)`
+    (decide when to spawn → push an effect) + `reset()`; an effect is
+    `{ step(dt)→aliveBool }` that updates+draws itself and retires on `false`. Two
+    events ship: a **comet** (slow interstellar visitor — green-white coma + long
+    tapering tail, pure canvas gradients, ~30s to cross, one every ~2–5 min) and
+    **bird-detection-driven shooting stars** — it polls
+    `birds.alansbrain.com/api/detections` (~90s, ≥0.85) and fires a streak per *new*
+    detection (species logged to the console — an easter egg), **falling back** to
+    the original random streaks when the box is offline or quiet (overnight). Fails
+    silent, honors reduced-motion (no events/polling), pauses on hidden tabs.
+    Knobs in `window.STARFIELD_CONFIG`. Add a new event by writing a `make…Type()`
+    and pushing it to `EVENT_TYPES`.
 
 ## Conventions (authoritative)
 
@@ -76,7 +89,7 @@ palette/visual overrides scoped to `html[data-theme="…"]`.
   Box/git settings live in `admin-config.json` (gitignored; copy `admin-config.example.json`).
   Command catalog (the "I always forget these") is **`COMMANDS.md`**.
 - GoatCounter for analytics; `<audio>` elements for iOS silent-switch compatibility.
-- **Nav layout:** **`Weather`** is a top-level `<a href="weather.html">` in `.nav-links` (and the mobile overlay) on **every page**, inserted right after Home (2026-06-17 — promoted from hidden once the page went public; label is "Weather", not "My Week"). The rest of the bar varies by page (some carry Pulse/Tasks). "Stack" is a direct `<a>` in `.nav-links` (not inside the dropdown). The mobile overlay places Stack before the Explore section label. **The mobile overlay (`.nav-mobile-overlay`) scrolls** (2026-06-19): it's top-aligned (`justify-content: flex-start`) with `overflow-y: auto` and `padding-top: 84px` so a list taller than the screen scrolls instead of clipping off the top/bottom, and the first link clears the sticky nav bar — keeping the hamburger ✕ (the close button, `z-index 202` over the overlay's `199`) reachable. (Was `justify-content: center`, unscrollable — Home/Personal Projects clipped off both edges on a phone.) **Closing the menu (2026-06-19):** the hamburger toggles into a ✕, **and** `nav-menu.js` (a shared script loaded site-wide before `theme-switcher.js`) adds **tap-the-backdrop** (`e.target === overlay`) and **Escape** to close. It only *adds* listeners (never re-binds the hamburger), so it coexists with each page's inline toggle/link-close handler without double-toggling.
+- **Nav layout:** **`Weather`** is a top-level `<a href="weather.html">` in `.nav-links` (and the mobile overlay) on **every page**, inserted right after Home (2026-06-17 — promoted from hidden once the page went public; label is "Weather", not "My Week"). The rest of the bar varies by page (some carry Pulse). **The "Tasks" link was removed from every nav bar (2026-06-22)** — the Household Task Tracker stays passphrase-gated and reachable by direct URL only, no longer advertised in any menu. **The Explore dropdown + mobile overlay use `img/Icons/icons/Projects/observatory.png` for Observatory (2026-06-22, was the 🔭 emoji); Personal Projects still uses 🚀 pending its philosophy icon.** "Stack" is a direct `<a>` in `.nav-links` (not inside the dropdown). The mobile overlay places Stack before the Explore section label. **The mobile overlay (`.nav-mobile-overlay`) scrolls** (2026-06-19): it's top-aligned (`justify-content: flex-start`) with `overflow-y: auto` and `padding-top: 84px` so a list taller than the screen scrolls instead of clipping off the top/bottom, and the first link clears the sticky nav bar — keeping the hamburger ✕ (the close button, `z-index 202` over the overlay's `199`) reachable. (Was `justify-content: center`, unscrollable — Home/Personal Projects clipped off both edges on a phone.) **Closing the menu (2026-06-19):** the hamburger toggles into a ✕, **and** `nav-menu.js` (a shared script loaded site-wide before `theme-switcher.js`) adds **tap-the-backdrop** (`e.target === overlay`) and **Escape** to close. It only *adds* listeners (never re-binds the hamburger), so it coexists with each page's inline toggle/link-close handler without double-toggling.
 
 ## Pulse subsystem (most active area)
 
