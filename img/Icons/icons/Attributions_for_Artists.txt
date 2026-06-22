@@ -16,3 +16,4 @@
 <a href="https://www.flaticon.com/free-icons/coding" title="coding icons">Coding icons created by Iconjam - Flaticon</a>
 <a href="https://www.flaticon.com/free-icons/parrot" title="parrot icons">Parrot icons created by B.Genesis - Flaticon</a>
 <a href="https://www.flaticon.com/free-icons/octopus" title="octopus icons">Octopus icons created by Freepik - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/philosophy" title="philosophy icons">Philosophy icons created by Vectors Tank - Flaticon</a>
