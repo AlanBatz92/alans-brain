@@ -535,6 +535,34 @@
     }
   });
 
+  // ── Dev / verification hooks ───────────────────────────────────────────
+  // Handy for confirming the bird-driven events on the live site (must be on the
+  // Starfield theme). In the browser console:
+  //   __starfield.status()                                  → connection + state
+  //   __starfield.testStreak('Northern Cardinal')           → a bird streak now
+  //   __starfield.testComet('lifer','Pileated Woodpecker')  → a comet now
+  window.__starfield = {
+    status: function () {
+      return {
+        running: running,
+        detectionsConnected: lastSeenTs !== null, // /api/detections reached (baseline set)
+        lifeListConnected: lifeSet !== null,       // /api/lifetime reached
+        queuedStreaks: birdQueue.length,
+        activeEffects: effects.length
+      };
+    },
+    testStreak: function (name) {
+      if (!running) return 'not running — switch to the Starfield theme first';
+      var sh = makeShooter(name || 'test bird'); sh.kind = 'shooter'; effects.push(sh);
+      return 'spawned a streak for ' + (name || 'test bird');
+    },
+    testComet: function (reason, name) {
+      if (!running) return 'not running — switch to the Starfield theme first';
+      spawnComet({ reason: reason || 'rare', name: name || 'test bird' });
+      return 'spawned a comet (' + (reason || 'rare') + ': ' + (name || 'test bird') + ')';
+    }
+  };
+
   // Start/stop as the user switches skins.
   window.addEventListener('themechange', function (e) {
     if (e.detail && e.detail.theme === 'starfield') start();

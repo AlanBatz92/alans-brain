@@ -37,6 +37,12 @@ Closing out the rest of Alan's list (front-end only).
   safe. Verified with an extended stubbed-DOM harness — **14 checks** (new-lifer→comet,
   rare→comet, common→streak, rare-doesn't-also-streak, ambient comet, fallback streak,
   two poll loops).
+- **Verification hooks** for the (event-driven, hard-to-observe) bird triggers:
+  `window.__starfield.status()` reports whether `/api/detections` + `/api/lifetime` were
+  reached and the current queue/effect state, and `testStreak(name)` / `testComet(reason,
+  name)` force one on demand — so the live integration can be confirmed from the console
+  (CORS allows the real `alansbrain.com` origin, **not** Vercel preview URLs). Harness now
+  **19 checks**.
 
 ---
 

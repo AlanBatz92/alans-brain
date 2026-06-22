@@ -75,8 +75,10 @@ palette/visual overrides scoped to `html[data-theme="…"]`.
     promoted from a streak to a comet), with a long **ambient fallback** (~6–16 min);
     `requestComet()` feeds it, one-at-a-time + `minSpacing` so events can't burst.
     Fails silent, honors reduced-motion (no events/polling), pauses on hidden tabs.
-    Knobs in `window.STARFIELD_CONFIG`. Add a new event by writing a `make…Type()`
-    and pushing it to `EVENT_TYPES`.
+    Knobs in `window.STARFIELD_CONFIG`; **verification hooks in `window.__starfield`**
+    (`status()` → is the box reached + state; `testStreak(name)` / `testComet(reason,name)`
+    → force one on demand) for confirming the bird-driven events on the live site. Add a
+    new event by writing a `make…Type()` and pushing it to `EVENT_TYPES`.
 
 ## Conventions (authoritative)
 
