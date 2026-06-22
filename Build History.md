@@ -10,6 +10,28 @@
 
 ---
 
+## 2026-06-22 — Starfield: make bird-driven streaks legible (tuning + distinct look)
+
+From Alan's feedback — "lots of streaks, but the dashboard shows no new detections."
+The mechanism was fine (`__starfield.status()` confirmed both endpoints connected), but
+with no new detections the **random fallback** was carrying the sky, and (a) it kicked in
+after only 45s of quiet and fired often, and (b) bird-driven and random streaks looked
+identical — so it read as "random, unrelated to birds." Fixes (`starfield.js`):
+
+- **Fallback is now rare + overnight-scoped:** `idleBeforeRandom` 45s → **5 min** (random
+  only fills genuinely long quiet gaps) and `randChance` 0.004 → **0.001** (a gentle
+  trickle, not a shower).
+- **Bird-driven streaks are visually distinct:** brighter, thicker, **green-tinted** (nods
+  to the comet + Observatory); ambient fallback streaks are dimmer/thinner cool-white — so
+  an active sky now visibly means *birds*.
+- **`status()` gains `fallbackActive`** (+ `newestDetection`) so it's clear at a glance
+  whether the streaks on screen are bird-driven or the fallback. `lastBirdSpawn` lifted to
+  module scope for it.
+
+Harness still **19 checks**; `node --check` clean.
+
+---
+
 ## 2026-06-22 — Follow-ups: setlist→Spotify graphic, Personal Projects philosophy icon, comet on rare-bird events
 
 Closing out the rest of Alan's list (front-end only).

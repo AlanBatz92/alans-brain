@@ -55,10 +55,10 @@
       minSpacing: 30000                 // never two comets closer than this (caps bursts)
     },
     shooter: {
-      randChance: 0.004,    // per-frame odds of a fallback streak when birds are quiet
+      randChance: 0.001,    // per-frame odds of a fallback streak when birds are quiet (rare)
       maxActive: 3,
       releaseGap: 2600,     // ms between releasing queued bird streaks (so they don't burst)
-      idleBeforeRandom: 45000 // ms of bird silence before random streaks take over
+      idleBeforeRandom: 300000 // ms of bird silence (5 min) before random streaks fill in (≈ overnight)
     },
     birds: {
       url: 'https://birds.alansbrain.com/api/detections?limit=8&min_confidence=0.85',
@@ -166,10 +166,19 @@
       // viewport, so it always flies off screen rather than blinking out mid-flight.
       if (tailX > w || tailY > h) return false;
       var grad = ctx.createLinearGradient(sh.x, sh.y, tailX, tailY);
-      grad.addColorStop(0, 'rgba(255,255,255,0.9)');
-      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      if (sh.bird) {
+        // A real detection — a brighter, green-tinted streak (nods to the comet +
+        // the Observatory) so it's visibly distinct from the plain ambient ones.
+        grad.addColorStop(0, 'rgba(178,255,206,0.98)');
+        grad.addColorStop(1, 'rgba(178,255,206,0)');
+        ctx.lineWidth = 2.2;
+      } else {
+        // Ambient fallback — a dimmer, thinner cool-white streak.
+        grad.addColorStop(0, 'rgba(255,255,255,0.7)');
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.lineWidth = 1.3;
+      }
       ctx.strokeStyle = grad;
-      ctx.lineWidth = 1.6;
       ctx.beginPath();
       ctx.moveTo(sh.x, sh.y);
       ctx.lineTo(tailX, tailY);
@@ -271,6 +280,7 @@
   var lifeCount = {};        // species name → all-time count (for rarity)
   var pendingComet = null;   // a requested special-event comet, awaiting a free slot
   var lastCometAt = -1e9;    // last comet spawn time (enforces CFG.comet.minSpacing)
+  var lastBirdSpawn = -1e9;  // last detection-driven streak (gates the random fallback)
 
   function pollBirds() {
     if (!running || document.hidden || reduceMotion) return;
@@ -420,10 +430,9 @@
   }
 
   function makeShooterType() {
-    // Start "long ago" so random fallback streaks fire from the first second
-    // (when the box is offline); a real bird streak then suppresses them for a
-    // window, so during active birding the sky is detection-driven.
-    var lastBirdSpawn = -1e9; // last time a detection-driven streak fired
+    // `lastBirdSpawn` is module-scoped (status() reports it). A real bird streak
+    // suppresses the random fallback for `idleBeforeRandom`, so during active
+    // birding the sky is detection-driven and random only fills long quiet gaps.
     var lastRelease = 0;      // last time we popped the bird queue
     return {
       id: 'shooter',
@@ -521,7 +530,7 @@
     effects = [];
     birdQueue = [];
     lastSeenTs = null; lifeSet = null; lifeCount = {};
-    pendingComet = null; lastCometAt = -1e9;
+    pendingComet = null; lastCometAt = -1e9; lastBirdSpawn = -1e9;
     for (var k = 0; k < EVENT_TYPES.length; k++) EVENT_TYPES[k].reset();
   }
 
@@ -543,11 +552,15 @@
   //   __starfield.testComet('lifer','Pileated Woodpecker')  → a comet now
   window.__starfield = {
     status: function () {
+      var nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
       return {
         running: running,
         detectionsConnected: lastSeenTs !== null, // /api/detections reached (baseline set)
         lifeListConnected: lifeSet !== null,       // /api/lifetime reached
+        newestDetection: lastSeenTs,               // newest detection timestamp seen
         queuedStreaks: birdQueue.length,
+        // true ⇒ no recent bird streak, so streaks you see now are the random fallback
+        fallbackActive: (nowMs - lastBirdSpawn) > CFG.shooter.idleBeforeRandom,
         activeEffects: effects.length
       };
     },

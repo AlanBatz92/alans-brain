@@ -68,8 +68,10 @@ palette/visual overrides scoped to `html[data-theme="…"]`.
     tapering tail, pure canvas gradients, ~30s to cross) and **bird-detection-driven
     shooting stars** — it polls `birds.alansbrain.com/api/detections` (~90s, ≥0.85)
     and fires a streak per *new* detection (species logged to the console — an easter
-    egg), **falling back** to the original random streaks when the box is offline or
-    quiet (overnight). **The comet is the "special event":** it's triggered by a **new
+    egg). Bird-driven streaks are **green-tinted + brighter** to read distinctly from
+    the **rare cool-white fallback** streaks, which only fill in after a long quiet gap
+    (`idleBeforeRandom` 5 min, low `randChance`) — i.e. ≈ overnight. **The comet is the
+    "special event":** it's triggered by a **new
     lifer** (a second `/api/lifetime` poll, ~5 min, sees a species that wasn't there)
     or a **rare detection** (a life-listed species with ≤ `rareMax` (3) all-time hits is
     promoted from a streak to a comet), with a long **ambient fallback** (~6–16 min);
