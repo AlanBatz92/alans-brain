@@ -49,6 +49,13 @@ before paint (no flash). Skins: **Deep Space** (default; no CSS file), **Starfie
 (`themes/starfield.css`), **Quake II** (`themes/quake2.css`). Non-default skins are
 palette/visual overrides scoped to `html[data-theme="…"]`.
 
+**Cache-busting (2026-06-22):** `theme-switcher.js` is loaded as `theme-switcher.js?v=sf2`
+on every page and reads its own `?v=` token (`ASSET_V` via `document.currentScript`),
+injecting **`starfield.js?v=<token>`** so the lazy-loaded starfield inherits it. To ship a
+`starfield.js`/`theme-switcher.js` change, **bump the `theme-switcher.js?v=` token in all
+pages** (scripted) — there's no `vercel.json`, so the `?v=` query is the bust mechanism,
+same as `observatory.js?v=…`/`style.css?v=…`.
+
 - **Starfield (2026-06-19):** the deep-space palette plus an **animated canvas
   starfield** — a fixed full-viewport `<canvas id="starfield-canvas">` (`z-index:0`,
   behind `.page`, alongside the ambient blobs) with drifting, twinkling **parallax**

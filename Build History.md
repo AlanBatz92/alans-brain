@@ -10,6 +10,26 @@
 
 ---
 
+## 2026-06-22 — Cache-bust the lazy-loaded starfield (versioned loader)
+
+`starfield.js` had a **static URL** (injected by `theme-switcher.js` as plain
+`starfield.js`), so returning visitors kept a cached copy and needed a hard-refresh to
+see changes — unlike the HTML-referenced assets that already carry `?v=` tokens. Fixed
+the whole lazy-load chain:
+
+- **`theme-switcher.js`** captures its **own** `?v=` token (from `document.currentScript`)
+  into `ASSET_V` and injects **`starfield.js?v=<that token>`** — so a single token busts
+  both the loader and the lazy asset (no two-place bump).
+- **All 16 pages** now load **`theme-switcher.js?v=sf2`** (was un-versioned, which would
+  itself have gone stale and kept injecting the old URL).
+
+**Convention going forward:** to ship a `starfield.js` *or* `theme-switcher.js` change,
+bump the `theme-switcher.js?v=` token in the page `<script>` tags (scripted across the 16
+files); `starfield.js` inherits it automatically. (No `vercel.json`, so query-string
+busting is the mechanism — same as `observatory.js?v=…` / `style.css?v=…`.)
+
+---
+
 ## 2026-06-22 — Starfield: make bird-driven streaks legible (tuning + distinct look)
 
 From Alan's feedback — "lots of streaks, but the dashboard shows no new detections."

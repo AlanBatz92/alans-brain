@@ -12,6 +12,16 @@ var THEMES = {
 
 var STORAGE_KEY = 'ab_theme';
 
+// This script's own ?v= cache-busting token (from each page's
+// <script src="theme-switcher.js?v=N">), so lazy-loaded assets inherit it and a
+// single token bump busts both this loader and starfield.js.
+var ASSET_V = (function () {
+  try {
+    var m = document.currentScript && document.currentScript.src.match(/[?&]v=([^&]+)/);
+    return m ? m[1] : '';
+  } catch (e) { return ''; }
+})();
+
 /**
  * Lazy-load the starfield canvas script — only ever fetched when the
  * Starfield theme is actually used, so it adds no overhead otherwise.
@@ -21,7 +31,7 @@ function ensureStarfield() {
   if (document.getElementById('starfield-js')) return;
   var s = document.createElement('script');
   s.id = 'starfield-js';
-  s.src = 'starfield.js';
+  s.src = 'starfield.js' + (ASSET_V ? '?v=' + ASSET_V : '');
   s.defer = true;
   document.head.appendChild(s);
 }
