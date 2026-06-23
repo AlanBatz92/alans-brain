@@ -10,6 +10,32 @@
 
 ---
 
+## 2026-06-22 — Starfield: harden the loop + rebalance streak frequency (fix "no twinkle / no streaks")
+
+Alan reported the stars stopped twinkling and no shooting stars over a long watch. A
+browser-accurate simulation (a ctx that throws on bad colors, 400 frames, real House
+Sparrow data) showed the loop **healthy** — couldn't reproduce a crash — so the fixes are
+defensive + a rebalance (`starfield.js`, token `sf3 → sf4`):
+
+- **The loop can no longer freeze.** `frame()` now wraps the event-spawn pass and each
+  effect's `step()` in `try/catch`, so a single bad effect/event is dropped (warned to
+  console) instead of throwing out of `frame()` and stopping the `requestAnimationFrame`
+  chain. `drawStars()` runs first, before the guards, so **the stars keep twinkling no
+  matter what**. (Verified: a deliberately-throwing effect no longer stops the loop.)
+- **Streaks were too sparse — rebalanced.** The previous pass set `idleBeforeRandom` to
+  5 min and `randChance` to 0.001; combined with the new 1-in-10 per-species cap, active-
+  but-not-busy birding could leave the sky empty for minutes. Now **`idleBeforeRandom`
+  60s** and **`randChance` 0.0007** (≈ one ambient streak every ~25s) for a gentle, ever-
+  present baseline under the colored bird streaks.
+- **`status()` gains `reducedMotion`** — if the OS "reduce motion" setting is on,
+  `starfield.js` intentionally renders a *static* field (no loop, no streaks); this flag
+  makes that diagnosable at a glance.
+
+Verified: `node --check`; regression harness 24 checks; new robustness check (throwing
+effect → loop survives + stars still drawn).
+
+---
+
 ## 2026-06-22 — Starfield: rarity-keyed streak colors + per-species rate cap
 
 Two refinements from Alan (`starfield.js`, token `sf2 → sf3`):

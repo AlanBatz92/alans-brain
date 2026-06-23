@@ -67,10 +67,10 @@
       minSpacing: 30000                 // never two comets closer than this (caps bursts)
     },
     shooter: {
-      randChance: 0.001,    // per-frame odds of a fallback streak when birds are quiet (rare)
+      randChance: 0.0007,   // per-frame odds of a fallback streak (≈ one every ~25s)
       maxActive: 3,
       releaseGap: 2600,     // ms between releasing queued bird streaks (so they don't burst)
-      idleBeforeRandom: 300000 // ms of bird silence (5 min) before random streaks fill in (≈ overnight)
+      idleBeforeRandom: 60000 // ms of bird silence before the gentle fallback fills in
     },
     birds: {
       url: 'https://birds.alansbrain.com/api/detections?limit=8&min_confidence=0.85',
@@ -512,13 +512,18 @@
 
     drawStars(true, dt);
 
-    // Spawn pass: let each event type decide whether to add an effect.
+    // Spawn + tick passes are guarded so a single bad effect/event can NEVER
+    // freeze the whole field (the stars keep twinkling no matter what).
     var now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-    for (var k = 0; k < EVENT_TYPES.length; k++) EVENT_TYPES[k].onFrame(now, dt);
+    try {
+      for (var k = 0; k < EVENT_TYPES.length; k++) EVENT_TYPES[k].onFrame(now, dt);
+    } catch (e) { if (window.console && console.warn) console.warn('starfield: event error', e); }
 
-    // Tick pass: update + draw effects, drop the finished ones.
     for (var j = effects.length - 1; j >= 0; j--) {
-      if (!effects[j].step(dt)) effects.splice(j, 1);
+      var alive;
+      try { alive = effects[j].step(dt); }
+      catch (e2) { alive = false; if (window.console && console.warn) console.warn('starfield: effect error', e2); }
+      if (!alive) effects.splice(j, 1);
     }
     ctx.globalAlpha = 1;
 
@@ -583,6 +588,7 @@
       var nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
       return {
         running: running,
+        reducedMotion: reduceMotion,               // true ⇒ static field (OS "reduce motion")
         detectionsConnected: lastSeenTs !== null, // /api/detections reached (baseline set)
         lifeListConnected: lifeSet !== null,       // /api/lifetime reached
         newestDetection: lastSeenTs,               // newest detection timestamp seen

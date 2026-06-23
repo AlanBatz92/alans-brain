@@ -49,7 +49,7 @@ before paint (no flash). Skins: **Deep Space** (default; no CSS file), **Starfie
 (`themes/starfield.css`), **Quake II** (`themes/quake2.css`). Non-default skins are
 palette/visual overrides scoped to `html[data-theme="…"]`.
 
-**Cache-busting (2026-06-22):** `theme-switcher.js` is loaded as `theme-switcher.js?v=sf3`
+**Cache-busting (2026-06-22):** `theme-switcher.js` is loaded as `theme-switcher.js?v=sf4`
 (bump on each starfield/loader change) on every page and reads its own `?v=` token (`ASSET_V` via `document.currentScript`),
 injecting **`starfield.js?v=<token>`** so the lazy-loaded starfield inherits it. To ship a
 `starfield.js`/`theme-switcher.js` change, **bump the `theme-switcher.js?v=` token in all
@@ -79,8 +79,11 @@ same as `observatory.js?v=…`/`style.css?v=…`.
     (`streakColor()`: amber scarce → teal uncommon → green common → pale-blue abundant),
     and a **per-species cap** (`perSpeciesEvery` 10) means a common bird only streaks on
     its 1st/11th/21st… detection so a chatty species can't monopolize the sky. They read
-    distinctly from the **rare cool-white fallback** streaks, which only fill in after a
-    long quiet gap (`idleBeforeRandom` 5 min, low `randChance`) — i.e. ≈ overnight. **The
+    distinctly from the **gentle cool-white fallback** streaks (`idleBeforeRandom` 60s,
+    `randChance` ≈ one every ~25s) that keep the sky alive between detections. **The
+    loop is crash-hardened** (2026-06-22): `frame()` guards the event/effect passes in
+    `try/catch` so a bad effect can't freeze the field — the stars always twinkle;
+    `status().reducedMotion` flags the OS "reduce motion" static-field case. **The
     comet is the "special event":** it's triggered by a **new
     lifer** (a second `/api/lifetime` poll, ~5 min, sees a species that wasn't there)
     or a **rare detection** (a life-listed species with ≤ `rareMax` (3) all-time hits is
