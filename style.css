@@ -150,10 +150,18 @@ nav {
   font-size: 1.4rem;
   color: var(--teal);
   text-decoration: none;
+  /* Keep "Alan's Brain" + the brain icon on one line — the wider 5-item nav
+     was squeezing the logo and dropping the icon onto a second line. */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .nav-logo .nav-mobile-icon {
   width: 34px;
   height: 34px;
+  margin: 0;
 }
 .nav-links {
   display: flex;
@@ -355,7 +363,9 @@ nav {
   background: none;
 }
 
-@media (max-width: 600px) {
+/* Switch to the hamburger early enough that the 5-item bar
+   (Home · Weather · Pulse · Explore · Stack) never crowds the logo. */
+@media (max-width: 700px) {
   .nav-links { display: none; }
   .nav-hamburger { display: flex; }
 }
@@ -2807,11 +2817,16 @@ nav {
 }
 .w-best:empty { display: none; }
 .w-best-label {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-dim);
-  margin-right: 2px;
+  color: var(--green);
+  font-weight: 800;
+  /* Own line above the chips — keeps the chips from wrapping awkwardly around
+     the label (e.g. "Wed PM" dropping below it on its own). */
+  flex-basis: 100%;
+  width: 100%;
+  margin: 0 0 2px;
 }
 .w-best-chip {
   display: inline-flex;
@@ -3312,13 +3327,28 @@ nav {
   border-color: var(--teal);
   font-weight: 700;
 }
+.w-hr-readout {
+  height: 18px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.w-hr-readout.show { opacity: 1; }
+.w-hr-readout strong { color: var(--text); font-family: var(--font-mono); }
 .w-hr-chart {
   display: flex;
   align-items: flex-end;
   gap: 2px;
   height: 132px;
   padding-top: 16px;   /* headroom for the peak label */
+  touch-action: pan-y; /* let vertical page scroll through, but scrub horizontally */
+  cursor: crosshair;
 }
+.w-hr-col.hovered .w-hr-track { background: rgba(255, 255, 255, 0.06); border-radius: 4px 4px 0 0; }
+.w-hr-col.hovered .w-hr-bar { opacity: 1; filter: brightness(1.15); }
 .w-hr-col {
   flex: 1;
   min-width: 0;
@@ -3353,6 +3383,9 @@ nav {
   color: var(--text);
   white-space: nowrap;
 }
+/* Near the chart edges, anchor the peak label inward so it can't run off-screen. */
+.w-hr-peak.w-hr-peak-l { left: 0; transform: translate(0, -2px); }
+.w-hr-peak.w-hr-peak-r { left: auto; right: 0; transform: translate(0, -2px); }
 .w-hr-axis {
   height: 14px;
   margin-top: 3px;
@@ -3503,13 +3536,19 @@ nav {
 }
 .w-uv-badge {
   display: inline-block;
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: #000;
-  padding: 1px 6px;
-  border-radius: 4px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  /* text color is set inline to the level color; border follows it. A dark
+     neutral pill keeps every level (incl. yellow/green) readable — black text
+     on a saturated fill was hard to read. */
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid currentColor;
+  padding: 1px 7px;
+  border-radius: 5px;
   vertical-align: 1px;
-  margin-left: 4px;
+  margin-left: 5px;
+  letter-spacing: 0.02em;
 }
 .w-uv-details {
   /* toggled via inline styles in toggleUvDetails() */

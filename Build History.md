@@ -10,6 +10,57 @@
 
 ---
 
+## 2026-06-23 — Home/nav/Stack/Weather UI refinements (Alan's review list)
+
+A batch of UI fixes from Alan's walkthrough notes. Front-end only, no box change.
+
+**Home (`index.html`):** removed the hero sub-line "An emulation of my Brain and the
+multitudes it contains." (kept the "my little pinch of the internet" tagline).
+
+**Site-wide nav — consistent + de-crowded.** Every page's top bar is now
+**Home · Weather · Pulse · Explore ▾ · Stack** (Pulse was only on Observatory before;
+inserted after Weather in both the desktop `.nav-links` and the mobile overlay on all
+16 pages via a scripted pass). Fixed the bug Alan saw on Observatory where the 5-item bar
+**pushed the brain icon under "Alan's Brain"**: `.nav-logo` is now `inline-flex` +
+`white-space:nowrap` + `flex-shrink:0` (logo never wraps), and the hamburger breakpoint
+moved **600 → 700px** so the wider bar switches to the mobile menu before it crowds.
+
+**Personal Projects (`projects.html`) tech tags** (RSS / BirdNET / Raspberry Pi /
+Spotify API / Setlist.fm) now reliably deep-link into the Tech Stack instead of opening the
+project: the tag click is intercepted in the **capture phase** on `document`, so
+`preventDefault()` wins the race against the card's own `<a>` navigation.
+
+**New "thinking brain" icon** replaces the disliked `philosophy.png` for **Personal
+Projects everywhere** (nav dropdowns + mobile overlays on every page, the home Explore card,
+and the `projects.html` hero). `img/Icons/icons/Projects/brain-thoughts.svg` — the site's
+hero-brain geometry (gradient teal→blue→purple) plus three rising **thought bubbles** in a
+square 120 viewBox so it reads at 24px.
+
+**Tech Stack (`techstack.html`):**
+- **Spotify API** and **setlist.fm** nodes now reuse real marks instead of 🎵/🎤 — new
+  standalone `img/Icons/icons/Stack/spotify.svg` (green disc + 3 white arcs) and
+  `setlist.svg` (a setlist sheet), extracted from the Setlist→Spotify composed graphic.
+- **Color key now keys the dashed style** — added a "dashed = delegated / pull link" note
+  (`.ts-leg-note`) so the diagram's dashed edges (SSH, git pull, nameserver delegation) have
+  a match in the legend.
+- **Mobile de-crunch** — the 14-node graph got a much taller portrait canvas
+  (`aspect-ratio: 1/2`, min-height 660px; `4/9`/700px ≤380px) so the %-positioned nodes
+  spread out instead of overlapping; nudged the external-API cluster (setlist/Spotify/
+  OpenWeatherMap) for label room.
+
+**Weather (`weather.js` / `style.css`, `?v=w7`):**
+- **"Best rest of week"** label is now **green + bold** and sits on **its own line**, so the
+  day chips wrap cleanly below it (fixes the "Wed PM dropped under the label" wrap).
+- **Sensible activity windows** — `findOptimalWindow` only considers **6 AM–8 PM** start
+  hours (`isReasonableHour`), so it never suggests a 3–7 AM run; if nothing good falls in
+  regular hours, no window is shown.
+- **Hour-by-hour chart is interactive** — point/drag anywhere and a live readout shows that
+  hour's value (e.g. "**3 PM** · 80% rain"), with the hovered bar highlighted — same idea as
+  the Observatory bird/train charts. The peak value label is also **clamped at the chart
+  edges** so it can't run off-screen.
+- **UV Index badge readability** — the Low/Moderate/High pill switched from black text on a
+  saturated fill to **colored text + matching border on a dark neutral pill**.
+
 ## 2026-06-22 — Starfield: harden the loop + rebalance streak frequency (fix "no twinkle / no streaks")
 
 Alan reported the stars stopped twinkling and no shooting stars over a long watch. A
