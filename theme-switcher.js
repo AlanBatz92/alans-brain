@@ -14,12 +14,15 @@ var STORAGE_KEY = 'ab_theme';
 
 // This script's own ?v= cache-busting token (from each page's
 // <script src="theme-switcher.js?v=N">), so lazy-loaded assets inherit it and a
-// single token bump busts both this loader and starfield.js.
+// single token bump busts both this loader and starfield.js. Falls back to a
+// hardcoded token (never an unversioned URL) if currentScript can't be read, so
+// the lazy asset is never requested at a stale, cacheable bare URL.
 var ASSET_V = (function () {
   try {
     var m = document.currentScript && document.currentScript.src.match(/[?&]v=([^&]+)/);
-    return m ? m[1] : '';
-  } catch (e) { return ''; }
+    if (m) return m[1];
+  } catch (e) { /* fall through */ }
+  return 'sf5';
 })();
 
 /**
@@ -31,7 +34,7 @@ function ensureStarfield() {
   if (document.getElementById('starfield-js')) return;
   var s = document.createElement('script');
   s.id = 'starfield-js';
-  s.src = 'starfield.js' + (ASSET_V ? '?v=' + ASSET_V : '');
+  s.src = 'starfield.js?v=' + ASSET_V;   // always versioned (never a bare, cacheable URL)
   s.defer = true;
   document.head.appendChild(s);
 }
