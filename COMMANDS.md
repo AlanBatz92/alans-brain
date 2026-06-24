@@ -164,6 +164,14 @@ sudo systemctl restart pulse-fetch.timer pulse-enrich.timer pulse-digest.timer
 python3 ~/alans-brain/birdstation/pulse_digest.py        # force a brief now
 # if an API outage capped enrich attempts, reset them:
 sqlite3 ~/birdnet.db "UPDATE feed_items SET enrich_attempts=0 WHERE enriched_at IS NULL;"
+
+# Add Lehigh Valley events to the "What's On" board (paste-to-capture; run on the box).
+# Paste a flyer / forwarded newsletter / copied page; AI parses -> you review -> publish.
+python3 ~/alans-brain/birdstation/pulse_add.py                 # opens $EDITOR
+python3 ~/alans-brain/birdstation/pulse_add.py --file blob.txt # from a file
+pbpaste | python3 ~/alans-brain/birdstation/pulse_add.py -     # from stdin
+# peek at upcoming events
+sqlite3 ~/birdnet.db "SELECT starts_at, kind, title, venue FROM events ORDER BY starts_at LIMIT 20;"
 ```
 
 ---

@@ -127,6 +127,16 @@ AI enrichment, and the daily digest; the website just reads JSON and renders.
 - `escapeHtml()` is the shared sanitizer; all rendered strings go through it.
 - Category filter order mirrors birdstation's taxonomy via the `TAXONOMY` const in `pulse.js`.
 - **To add/remove a news source you do NOT touch the front-end** — it's a row in birdstation's `feed_sources` table.
+- **"What's On" — Lehigh Valley events + civic (flagship slice 1, 2026-06-23):** a thin reader card
+  on `pulse.html` (`#pulse-whatson`, `.pulse-whatson*`; `loadWhatsOn()` over `GET /api/events`) with
+  **two sections — Events and Civic & Government** (split on the `kind` column); hides when nothing's
+  upcoming or the box is offline. Backed by an **`events`** table on the box, populated by the
+  **paste-to-capture pipeline** — **`birdstation/pulse_add.py`** (a box CLI: paste a flyer/email/page →
+  **`event_parser.py`** runs a grounded `claude-haiku-4-5` pass → review → dedup-guarded insert; keys
+  stay on the box) — and, later, iCal/RSS/scrape/email adapters. `event_parser.normalize()` is a pure,
+  tested step (`test_event_parser.py`, 22 checks). The reframed flagship is **venue + civic, LV-focused**
+  (Ticketmaster/artist-based dropped, 2026-06-23). Next: source-feasibility audit (music/theater venues
+  first) → feed adapters → IMAP forward-inbox.
 
 ### Observatory front-end (`observatory.html`, `observatory.js`, `.obs-*` in `style.css`)
 
@@ -441,6 +451,7 @@ same FastAPI app. As of 2026-05-30 the box's code lives in this repo under
   - `feed_sources` — `key` (PK), `label`, `url`, `enabled`, `last_status`, `last_count`, `last_fetch`.
   - `feed_items` — **PK is `url`** (no integer id/link column; code uses `rowid AS id`). Columns: `title`, `source_key`, `source`, `published` (INTEGER), `fetched_at`, `summary`, `category`, `ai_summary`, `enriched_at`, `enrich_attempts`.
   - `feed_digests` — PK **`(date, slot)`** (was `date`; `slot ∈ {morning, evening}`, 2026-06-05), `generated_at`, `headline`, `sections_json`, `citations_json`, `model`, `item_count`. Migrated idempotently by `pulse_digest.ensure_schema()`.
+  - `events` — **Lehigh Valley "What's On"** (2026-06-23). `id`, `title`, `kind` (`event`|`civic`), `starts_at`/`ends_at`/`all_day`, `venue`, `location`, `url`, `description`, `source` (manual/ical/rss/scrape/email), `source_key`, `dedup_key` (UNIQUE — blocks dup inserts), `added_at`. Migrated idempotently by `bird_api.ensure_events_schema()`. Served by `GET /api/events` (public, upcoming-only by Eastern date, `kind` filter) + key-guarded `POST /api/events`. Populated by `pulse_add.py` + `event_parser.py`.
 - **Jobs (systemd timers):**
   - `pulse_fetcher.py` — `pulse-fetch.timer`, every 15 min: pulls every enabled source (feedparser), dedupes by `url`, stores, and **purges items older than 30 days** (`RETENTION_DAYS`). **Captures the fullest article text (2026-06-04):** `extract_body()` prefers `content:encoded` (feedparser `e.content[*].value`) over the teaser; cap raised 500 → 2000 (`BODY_CAP`). This richer body lands in `summary` and grounds the AI steps (reduces hallucination). Forward-looking only — existing rows are deduped by `url`, so the fuller body fills in on new items.
   - `pulse_enrich.py` — `pulse-enrich.timer` (every 20 min): batched (20/run) AI tagging + one-sentence summaries via **`claude-haiku-4-5`**, prompt-cached system prompt. Prompt has a **GROUNDING rule (2026-06-04):** summarize only from the provided headline/blurb; don't invent specifics. **Retry budget (`enrich_attempts`, cap 3) is only burned on a genuine per-item miss (2026-06-05):** a *successful* call that omits an item. Batch-level API/account/network failures (`anthropic.APIError` — billing, auth, rate-limit, 5xx, timeouts) roll back **without** bumping and retry next run, so an outage (e.g. an empty credit balance) can't permanently exclude the items it touched. (Previously any exception bumped the whole batch, so a billing outage silently capped items at `>=3` and they never re-enriched — fixed; one-time cleanup was `UPDATE feed_items SET enrich_attempts=0 WHERE enriched_at IS NULL`.)

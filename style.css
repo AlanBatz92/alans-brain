@@ -4353,6 +4353,60 @@ nav {
   border-radius: 16px;
   background: var(--surface);
 }
+
+/* ── What's On — Lehigh Valley events + civic ── */
+.pulse-whatson {
+  max-width: 760px;
+  margin: 12px auto 0;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.pulse-whatson:empty { display: none; }
+.pulse-whatson-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--green);
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.pulse-whatson-section { margin-top: 14px; }
+.pulse-whatson-section:first-of-type { margin-top: 0; }
+.pulse-whatson-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--teal);
+  margin: 0 0 8px;
+}
+.pulse-event-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.pulse-event {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.pulse-event:last-child { border-bottom: 0; padding-bottom: 0; }
+.pulse-event-when {
+  flex-shrink: 0;
+  width: 116px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74rem;
+  color: var(--green);
+  font-weight: 700;
+}
+.pulse-event-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pulse-event-title { font-size: 0.92rem; font-weight: 700; color: var(--text); text-decoration: none; }
+a.pulse-event-title:hover { color: var(--teal); text-decoration: underline; }
+.pulse-event-meta { font-size: 0.76rem; color: var(--text-muted); }
+.pulse-event-desc { font-size: 0.8rem; color: var(--text-dim); line-height: 1.45; }
+@media (max-width: 560px) {
+  .pulse-event { flex-direction: column; gap: 2px; }
+  .pulse-event-when { width: auto; }
+}
 .pulse-brief-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;

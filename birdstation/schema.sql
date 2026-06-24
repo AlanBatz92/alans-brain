@@ -88,6 +88,31 @@ CREATE TABLE feed_digests (
     PRIMARY KEY (date, slot)          -- two briefs per day coexist (2026-06-05)
 );
 
+-- ── Pulse events / civic notices (Lehigh Valley "What's On", 2026-06-23) ──────
+-- Venue events + local-government/civic notices for the Pulse "What's On" surface.
+-- Populated mostly by the paste-to-capture pipeline (an AI parser turns a pasted
+-- blob — a flyer, an email, a webpage copy — into rows; see event_parser.py /
+-- pulse_add.py) and, later, by iCal/RSS/scrape/email adapters. `kind` splits the
+-- two on-page sections (event = venue happening, civic = government/meeting/ballot).
+CREATE TABLE events (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    title       TEXT NOT NULL,
+    kind        TEXT NOT NULL DEFAULT 'event',  -- 'event' | 'civic'
+    starts_at   TEXT NOT NULL,        -- ISO 8601 local-to-venue start (date or date+time)
+    ends_at     TEXT,                 -- optional ISO end
+    all_day     INTEGER NOT NULL DEFAULT 0,
+    venue       TEXT,                 -- e.g. "Miller Symphony Hall"
+    location    TEXT,                 -- city / address text, e.g. "Allentown, PA"
+    url         TEXT,                 -- canonical link (tickets / agenda / source)
+    description TEXT,                 -- short blurb
+    source      TEXT NOT NULL DEFAULT 'manual',  -- manual / ical / rss / scrape / email
+    source_key  TEXT,                 -- which feed_source/adapter produced it (NULL for paste)
+    dedup_key   TEXT UNIQUE,          -- title|starts_at|venue slug — blocks dup inserts
+    added_at    TEXT NOT NULL         -- ISO timestamp the row was created
+);
+CREATE INDEX idx_events_starts ON events(starts_at);
+CREATE INDEX idx_events_kind ON events(kind);
+
 -- ── Migrations ──────────────────────────────────────────────
 -- Apply each block once against the live ~/birdnet.db, then leave it here as a
 -- record. A fresh DB built from the CREATE statements above is already current.
@@ -134,3 +159,12 @@ CREATE TABLE feed_digests (
 --   SELECT date, 'morning', generated_at, headline, sections_json,
 --          citations_json, model, item_count FROM feed_digests_old;
 -- DROP TABLE feed_digests_old;
+
+-- migration 2026-06-23: Pulse events / civic "What's On" surface
+-- CREATE TABLE events ( ...as above... );
+-- CREATE INDEX idx_events_starts ON events(starts_at);
+-- CREATE INDEX idx_events_kind   ON events(kind);
+-- Applied idempotently at startup by bird_api.ensure_events_schema() (same pattern
+-- as ensure_train_schema / ensure_life_schema), so a plain `git pull` + restart of
+-- birdapi migrates the live DB with no manual step. Rows come from the
+-- paste-to-capture pipeline (event_parser.py + pulse_add.py) and, later, feed adapters.

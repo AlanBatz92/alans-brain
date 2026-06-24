@@ -146,17 +146,23 @@ Bigger / more data or math:
 ✓ **Done from this backlog:** dawn-chorus shading on the hour chart (2026-06-05); the
 **"Almost a lifer" shelf** (2026-06-05) — both in "Done (recent)" above.
 
-### 4. Pulse ingestion — Phase 4 (full design in `PLAN-ingestion.md`)  **▶ first source decided**
-Generalize ingestion beyond RSS: pluggable adapters (**api**/scrape/email/manual), a
-separate `events` store + "What's On" surface, AI-as-parser (for scrape only).
-**First event source: Archer Music Hall (Allentown) via a new `api` adapter on the
-Ticketmaster Discovery API** — decided 2026-06-04 after testing showed every HTML
-source (official site, Bandsintown, JamBase, Concertfix, SeatGeek) 403s a server
-fetch. Build order: add `type`/`config`/`content_kind` to `feed_sources` + the
-`events` table + router → the `api` adapter → Archer row (needs a free
-`TICKETMASTER_API_KEY` in `/etc/birdstation.env`) → `GET /api/events` + a "What's On"
-card. Then the `scrape` adapter (AI-as-parser) for no-API sources like the Emmaus
-Theater calendar, and `pulse_add` paste-capture for one-offs / Bug Club.
+### 4. Pulse flagship — "What's On" (venue + civic, Lehigh Valley)  **▶ slice 1 shipped 2026-06-23**
+**Reframed 2026-06-23 (Alan):** venue + civic, LV-focused — **not** artist/Ticketmaster.
+One "What's On" page with **separate Events / Civic-Government sections**; the priority is a
+**near-effortless manual pipeline** (scrape where possible, manual where not).
+- **✓ Slice 1 (done 2026-06-23):** `events` table + `ensure_events_schema()`, **`event_parser.py`**
+  (grounded Haiku → structured events + tested `normalize()`), **`pulse_add.py`** paste-to-capture
+  CLI (runs on the box; keys never leave it), `GET`/`POST /api/events`, and the **"What's On"
+  reader card** on Pulse. See "Done (recent)".
+- **▶ Next slices:** (a) **source-feasibility audit** — test LV sources for iCal/RSS/server-fetch,
+  **music & theater venues first** (then govt, aggregators, elections); (b) **`ical`/`rss` adapters**
+  for sources that expose feeds (local-government meeting calendars usually do); (c) **`scrape`
+  adapter** (AI-as-parser) only where a server fetch actually works (many 403); (d) **IMAP
+  `email` adapter** — forward newsletters/notices to a **dedicated read-only inbox** (creds only
+  in `/etc/birdstation.env`); (e) an **admin-GUI hook** for the paste flow.
+- **Ticketmaster/Archer `api` adapter: dropped** (artist-centric, not the LV-venue framing).
+- **Ballot / "who's on the docket":** periodic + PDF-heavy (county voter services / Ballotpedia);
+  handle via the paste pipeline around election windows rather than fragile year-round scraping.
 
 ### 4b. Pulse hallucination — full-text scraping follow-up
 The 2026-06-04 grounding work (capture `content:encoded`, feed the digest real
@@ -203,6 +209,17 @@ Two parts, both asset-gated:
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-23** — **Pulse flagship, slice 1: events store + paste-to-capture + "What's On".**
+  Reframed the flagship (Alan): **venue + civic, Lehigh Valley-focused** (dropped
+  Ticketmaster/artist-based); **one "What's On" page, separate Events / Civic sections**;
+  **paste-to-capture built first** (manual entry must be near-effortless). Shipped: the
+  `events` table (idempotent `ensure_events_schema()`), **`event_parser.py`** (grounded
+  Haiku → structured events + a pure, tested `normalize()`), **`pulse_add.py`** (box CLI:
+  paste → AI-parse → review → dedup-guarded insert; keys stay on the box), `GET /api/events`
+  (public reader) + key-guarded `POST /api/events`, and a **"What's On" reader card** on
+  `pulse.html`/`pulse.js` (two sections, hides when empty). 22 parser tests pass. **Deploy:**
+  box `git pull` + `restart birdapi`. See `Build History.md` (2026-06-23) + Phase 4 below.
 
 - **2026-06-23** — **Home / nav / Stack / Weather UI refinements** (Alan's review list;
   front-end only). Home: dropped the "An emulation of my Brain…" hero sub-line. **Nav is now

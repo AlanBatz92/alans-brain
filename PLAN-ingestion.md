@@ -4,6 +4,16 @@
 > (local-only) for what's shipped. This file is the design for the next phase:
 > bringing in non-RSS sources (web-scraped calendars, email newsletters,
 > one-off announcements) without sacrificing maintainability or robustness.
+>
+> **⚠️ Reframed 2026-06-23 (Alan).** The flagship is now a **venue + civic,
+> Lehigh Valley "What's On"** surface — one page with **separate Events / Civic
+> sections** — **not** the artist/Ticketmaster `api` framing this doc opens with.
+> **The Ticketmaster/Archer `api` adapter is dropped.** **Slice 1 shipped** (the
+> `events` table, `event_parser.py`, the **paste-to-capture** `pulse_add.py` CLI,
+> `GET`/`POST /api/events`, and the "What's On" reader) — see `Build History.md`
+> (2026-06-23) + `ROADMAP.md` §4. The adapter/`events`-store/AI-as-parser design
+> below still holds; just read "first source = a feed/scrape LV venue," and the
+> **paste-to-capture + IMAP-forward** paths are the priority manual pipeline.
 
 ## Why
 
