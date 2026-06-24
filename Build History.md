@@ -10,6 +10,19 @@
 
 ---
 
+## 2026-06-24 — "Personal Projects" icon: brain hub with thought-spokes
+
+Reworked `img/Icons/icons/Projects/brain-thoughts.svg` per Alan: keep the brain, but make
+it a **hub with many "thoughts" radiating in like spokes on a wheel** — the brain has many
+thoughts/projects. The brain is now scaled/centered as the hub (wrapped in a
+`translate(21.6 14.88) scale(0.64)` group); around it sit **8 thought nodes on a rim**,
+each joined to the hub by a thin gradient spoke (the old top-right thought-bubble cluster is
+gone). Same `#bt` teal→sky→violet gradient, same 120×120 viewBox and `aria-label`, so every
+nav/dropdown/hero/home-card `<img>` reference picks it up unchanged. Verified by rendering to
+PNG at hero (240px) and nav (28px) sizes. Docs only beyond the SVG.
+
+---
+
 ## 2026-06-23 — Pulse flagship, slice 1: events store + paste-to-capture + "What's On"
 
 Kicked off the Pulse flagship after Alan reframed it: **drop Ticketmaster/artist-based**,
