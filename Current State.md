@@ -128,15 +128,17 @@ AI enrichment, and the daily digest; the website just reads JSON and renders.
 - Category filter order mirrors birdstation's taxonomy via the `TAXONOMY` const in `pulse.js`.
 - **To add/remove a news source you do NOT touch the front-end** — it's a row in birdstation's `feed_sources` table.
 - **"What's On" — Lehigh Valley events + civic (flagship slice 1, 2026-06-23):** a thin reader card
-  on `pulse.html` (`#pulse-whatson`, `.pulse-whatson*`; `loadWhatsOn()` over `GET /api/events`) with
-  **two sections — Events and Civic & Government** (split on the `kind` column); hides when nothing's
-  upcoming or the box is offline. Backed by an **`events`** table on the box, populated by the
-  **paste-to-capture pipeline** — **`birdstation/pulse_add.py`** (a box CLI: paste a flyer/email/page →
-  **`event_parser.py`** runs a grounded `claude-haiku-4-5` pass → review → dedup-guarded insert; keys
-  stay on the box) — and, later, iCal/RSS/scrape/email adapters. `event_parser.normalize()` is a pure,
-  tested step (`test_event_parser.py`, 22 checks). The reframed flagship is **venue + civic, LV-focused**
-  (Ticketmaster/artist-based dropped, 2026-06-23). Next: source-feasibility audit (music/theater venues
-  first) → feed adapters → IMAP forward-inbox.
+  on `pulse.html` (`#pulse-whatson`, `.pulse-whatson*`; `loadWhatsOn()` over `GET /api/events`); hides
+  when nothing's upcoming or the box is offline. Backed by an **`events`** table on the box, populated
+  by the **paste-to-capture pipeline** — **`birdstation/pulse_add.py`** (a box CLI: paste a
+  flyer/email/page → **`event_parser.py`** runs a grounded `claude-haiku-4-5` pass → review →
+  dedup-guarded insert; keys stay on the box) — and, later, iCal/RSS/scrape/email adapters.
+  `event_parser.normalize()` is a pure, tested step (`test_event_parser.py`, 22 checks). The reframed
+  flagship is **venue + civic, LV-focused** (Ticketmaster/artist-based dropped, 2026-06-23).
+  **⚠️ Direction refined 2026-06-23, not yet reflected in code:** the chosen layout is **one combined,
+  type-filterable feed** (the shipped reader still renders two `kind` sections — flip it when building
+  resumes), and the priority manual UI is an **admin-GUI "Events" panel** (runs `pulse_add.py` over SSH).
+  **Building is paused** ("refine the plan for now") pending Alan's source list + Phase 3 content.
 
 ### Observatory front-end (`observatory.html`, `observatory.js`, `.obs-*` in `style.css`)
 

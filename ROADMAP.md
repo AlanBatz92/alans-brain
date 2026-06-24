@@ -146,20 +146,29 @@ Bigger / more data or math:
 ✓ **Done from this backlog:** dawn-chorus shading on the hour chart (2026-06-05); the
 **"Almost a lifer" shelf** (2026-06-05) — both in "Done (recent)" above.
 
-### 4. Pulse flagship — "What's On" (venue + civic, Lehigh Valley)  **▶ slice 1 shipped 2026-06-23**
+### 4. Pulse flagship — "What's On" (venue + civic, Lehigh Valley)  **▶ slice 1 shipped 2026-06-23 · building paused for Alan's input**
 **Reframed 2026-06-23 (Alan):** venue + civic, LV-focused — **not** artist/Ticketmaster.
-One "What's On" page with **separate Events / Civic-Government sections**; the priority is a
-**near-effortless manual pipeline** (scrape where possible, manual where not).
+The priority is a **near-effortless manual pipeline** (scrape where possible, manual where not).
+- **Layout (refined 2026-06-23):** **one combined "What's On" feed, filterable by type** —
+  *not* two separate sections. ⚠️ Slice-1's reader (`loadWhatsOn` in `pulse.js`) currently renders
+  two sections (Events / Civic); **flip it to a single type-filterable list** when building resumes.
+- **Manual pipeline (refined 2026-06-23):** the wanted face is an **"Events" panel in
+  `admin-gui.py`** (paste → AI parse → review → publish), built on the shipped `pulse_add.py`
+  **run over SSH on the box** (so `ANTHROPIC_API_KEY`/DB stay on the box, like the BoxPanel
+  commands). The box CLI is the engine; the GUI panel is the priority UI.
 - **✓ Slice 1 (done 2026-06-23):** `events` table + `ensure_events_schema()`, **`event_parser.py`**
   (grounded Haiku → structured events + tested `normalize()`), **`pulse_add.py`** paste-to-capture
   CLI (runs on the box; keys never leave it), `GET`/`POST /api/events`, and the **"What's On"
   reader card** on Pulse. See "Done (recent)".
-- **▶ Next slices:** (a) **source-feasibility audit** — test LV sources for iCal/RSS/server-fetch,
+- **⏸ Building paused (Alan, 2026-06-23): "refine the plan for now."** Resume once Alan has
+  (a) gathered the priority **venue/org/gov source list** and (b) batched Phase 3 content.
+- **▶ Next slices (when resumed):** (0) admin-GUI Events panel + flip reader to a combined
+  filterable feed; (a) **source-feasibility audit** — test LV sources for iCal/RSS/server-fetch,
   **music & theater venues first** (then govt, aggregators, elections); (b) **`ical`/`rss` adapters**
   for sources that expose feeds (local-government meeting calendars usually do); (c) **`scrape`
   adapter** (AI-as-parser) only where a server fetch actually works (many 403); (d) **IMAP
   `email` adapter** — forward newsletters/notices to a **dedicated read-only inbox** (creds only
-  in `/etc/birdstation.env`); (e) an **admin-GUI hook** for the paste flow.
+  in `/etc/birdstation.env`).
 - **Ticketmaster/Archer `api` adapter: dropped** (artist-centric, not the LV-venue framing).
 - **Ballot / "who's on the docket":** periodic + PDF-heavy (county voter services / Ballotpedia);
   handle via the paste pipeline around election windows rather than fragile year-round scraping.

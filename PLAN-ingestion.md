@@ -6,8 +6,12 @@
 > one-off announcements) without sacrificing maintainability or robustness.
 >
 > **⚠️ Reframed 2026-06-23 (Alan).** The flagship is now a **venue + civic,
-> Lehigh Valley "What's On"** surface — one page with **separate Events / Civic
-> sections** — **not** the artist/Ticketmaster `api` framing this doc opens with.
+> Lehigh Valley "What's On"** surface — **one combined, type-filterable feed**
+> (refined from "separate sections" later the same day) — **not** the
+> artist/Ticketmaster `api` framing this doc opens with. The priority manual UI is
+> an **admin-GUI "Events" panel** (paste → parse → review → publish, running the
+> box CLI over SSH). **Building is paused** ("refine the plan for now") pending
+> Alan's source list + Phase 3 content.
 > **The Ticketmaster/Archer `api` adapter is dropped.** **Slice 1 shipped** (the
 > `events` table, `event_parser.py`, the **paste-to-capture** `pulse_add.py` CLI,
 > `GET`/`POST /api/events`, and the "What's On" reader) — see `Build History.md`
