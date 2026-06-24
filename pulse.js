@@ -262,9 +262,80 @@ function renderCitations(citations) {
          '</details>';
 }
 
+/* ── What's On — Lehigh Valley events + civic notices ──────────
+   Thin reader over GET /api/events (populated by the paste-to-capture pipeline
+   on the box). One card, two labeled sections: Events and Civic / Government.
+   Hides itself when there's nothing upcoming or the box is offline. */
+const EVENTS_URL = 'https://birds.alansbrain.com/api/events?limit=120';
+
+function fmtEventWhen(ev) {
+  // starts_at is venue-local ISO ("2026-07-04" or "2026-07-04T19:30"); render plainly.
+  const iso = ev.starts_at || '';
+  const datePart = iso.slice(0, 10);
+  const d = new Date(datePart + 'T00:00:00');
+  let out = isNaN(d) ? datePart
+    : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  if (!ev.all_day && iso.length >= 16) {
+    const t = new Date(iso);
+    if (!isNaN(t)) {
+      let h = t.getHours(), m = t.getMinutes();
+      const ap = h >= 12 ? 'pm' : 'am';
+      h = h % 12 || 12;
+      out += ' · ' + h + (m ? ':' + (m < 10 ? '0' + m : m) : '') + ap;
+    }
+  }
+  return out;
+}
+
+function renderEventRow(ev) {
+  const meta = [ev.venue, ev.location].filter(Boolean).map(escapeHtml).join(' · ');
+  const title = ev.url
+    ? '<a class="pulse-event-title" href="' + escapeHtml(ev.url) + '" target="_blank" rel="noopener">' + escapeHtml(ev.title) + '</a>'
+    : '<span class="pulse-event-title">' + escapeHtml(ev.title) + '</span>';
+  return '<li class="pulse-event">' +
+           '<span class="pulse-event-when">' + escapeHtml(fmtEventWhen(ev)) + '</span>' +
+           '<span class="pulse-event-main">' + title +
+             (meta ? '<span class="pulse-event-meta">' + meta + '</span>' : '') +
+             (ev.description ? '<span class="pulse-event-desc">' + escapeHtml(ev.description) + '</span>' : '') +
+           '</span>' +
+         '</li>';
+}
+
+function renderWhatsOnSection(label, list) {
+  if (!list.length) return '';
+  return '<div class="pulse-whatson-section">' +
+           '<h3 class="pulse-whatson-heading">' + escapeHtml(label) + '</h3>' +
+           '<ul class="pulse-event-list">' + list.map(renderEventRow).join('') + '</ul>' +
+         '</div>';
+}
+
+async function loadWhatsOn() {
+  const card = document.getElementById('pulse-whatson');
+  if (!card) return;
+  let events = [];
+  try {
+    const resp = await fetch(EVENTS_URL, { cache: 'no-store' });
+    if (!resp.ok) throw new Error('bad status');
+    const d = await resp.json();
+    events = (d && Array.isArray(d.events)) ? d.events : [];
+  } catch (err) {
+    card.hidden = true;   // box offline or endpoint missing — degrade quietly
+    return;
+  }
+  if (!events.length) { card.hidden = true; return; }
+
+  const evs   = events.filter((e) => e.kind !== 'civic');
+  const civic = events.filter((e) => e.kind === 'civic');
+  card.innerHTML =
+    '<div class="pulse-whatson-label">📍 What\'s On · Lehigh Valley</div>' +
+    renderWhatsOnSection('Events', evs) +
+    renderWhatsOnSection('Civic & Government', civic);
+  card.hidden = false;
+}
+
 function initPulse() {
   const btn = document.getElementById('pulse-refresh');
-  if (btn) btn.addEventListener('click', () => { loadPulse(); loadDigest(); });
+  if (btn) btn.addEventListener('click', () => { loadPulse(); loadDigest(); loadWhatsOn(); });
 
   const search = document.getElementById('pulse-search');
   if (search) {
@@ -276,6 +347,7 @@ function initPulse() {
 
   loadPulse();
   loadDigest();
+  loadWhatsOn();
 }
 
 document.addEventListener('DOMContentLoaded', initPulse);

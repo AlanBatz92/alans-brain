@@ -10,6 +10,47 @@
 
 ---
 
+## 2026-06-23 — Pulse flagship, slice 1: events store + paste-to-capture + "What's On"
+
+Kicked off the Pulse flagship after Alan reframed it: **drop Ticketmaster/artist-based**,
+make it **venue + civic, Lehigh Valley-focused** (venue events *and* local-government
+notices — meetings, agendas, ballot info). Top requirement: manual entry must be
+near-effortless. Decisions: **one "What's On" page with separate Events / Civic sections**;
+**paste-to-capture built first**; venue audit (later) prioritizes music & theater.
+
+This slice is the foundation + the fast manual path, end-to-end and unit-tested.
+
+- **`events` table** (`birdstation/schema.sql`): `title, kind (event|civic), starts_at,
+  ends_at, all_day, venue, location, url, description, source, source_key, dedup_key
+  (UNIQUE), added_at`. Migrated idempotently at API startup by **`bird_api.ensure_events_schema()`**
+  (same pattern as `ensure_train_schema`), so a plain `git pull` + `restart birdapi`
+  creates it — no manual SQL.
+- **`event_parser.py`** — the AI brain: one **grounded** `claude-haiku-4-5` pass
+  (`messages.parse` → `EventBatch` pydantic schema) turns a pasted blob (flyer / newsletter
+  email / copied page / civic notice) into structured events. The prompt forbids invented
+  specifics ("be vague rather than wrong"), normalizes dates to ISO against a supplied
+  TODAY, infers `kind`, and drops anything without a title + resolvable date. A **pure
+  `normalize()`** step (validate, clamp `kind`/`source`, compute a date-granular `dedup_key`,
+  de-dupe within batch, stamp `added_at`) is split out so it's testable without the API.
+- **`pulse_add.py`** — the paste-to-capture CLI, **run on the box** (where
+  `ANTHROPIC_API_KEY` + the DB already live, so no secret touches a laptop). Reads a blob
+  from `$EDITOR` / `--file` / stdin → parses → per-event review (`[y]/[n]/[e]dit/[q]`) →
+  `INSERT OR IGNORE` (dedup-guarded). `--yes` skips review.
+- **API:** `GET /api/events` (public reader — upcoming-only by Eastern date, `kind` filter,
+  degrades to `{events:[]}` if unmigrated) + `POST /api/events` (key-guarded bulk insert for
+  future remote/web entry; box CLI writes the DB directly).
+- **Public "What's On"** on `pulse.html` / `pulse.js`: a thin reader card over `/api/events`
+  with the two sections (Events / Civic & Government), date·time/venue/desc per row, links
+  out where present. Hides itself when nothing's upcoming or the box is offline (same
+  degrade-quietly pattern as the digest). `.pulse-whatson*` styles.
+- **Tests:** `birdstation/test_event_parser.py` — 22 checks (normalize validation/clamp/
+  dedup, stubbed-client `parse_events`, and an in-memory `INSERT OR IGNORE` dedup test). All pass.
+
+**Deploy:** box `git pull` → `systemctl restart birdapi` (creates the table + serves
+`/api/events`). Then `python3 ~/alans-brain/birdstation/pulse_add.py` to start adding events.
+**Still ahead (next slices):** source-feasibility audit (music/theater venues first) →
+iCal/RSS adapters → IMAP forward-inbox; an admin-GUI hook for the paste flow.
+
 ## 2026-06-23 — Home/nav/Stack/Weather UI refinements (Alan's review list)
 
 A batch of UI fixes from Alan's walkthrough notes. Front-end only, no box change.

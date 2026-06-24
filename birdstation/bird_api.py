@@ -163,6 +163,47 @@ def ensure_life_schema():
 ensure_life_schema()
 
 
+def ensure_events_schema():
+    """
+    Idempotently create the Pulse `events` table (Lehigh Valley "What's On") so a
+    plain `git pull` + `systemctl restart birdapi` migrates the live DB — same
+    pattern as ensure_train_schema / ensure_life_schema. Rows come from the
+    paste-to-capture pipeline (pulse_add.py / event_parser.py) and, later, feed
+    adapters. The dedup_key UNIQUE index makes re-inserts a no-op.
+    """
+    try:
+        conn = get_db()
+        conn.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS events (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                title       TEXT NOT NULL,
+                kind        TEXT NOT NULL DEFAULT 'event',
+                starts_at   TEXT NOT NULL,
+                ends_at     TEXT,
+                all_day     INTEGER NOT NULL DEFAULT 0,
+                venue       TEXT,
+                location    TEXT,
+                url         TEXT,
+                description TEXT,
+                source      TEXT NOT NULL DEFAULT 'manual',
+                source_key  TEXT,
+                dedup_key   TEXT UNIQUE,
+                added_at    TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_events_starts ON events(starts_at);
+            CREATE INDEX IF NOT EXISTS idx_events_kind ON events(kind);
+            """
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass  # never block API startup on a migration hiccup
+
+
+ensure_events_schema()
+
+
 # ─────────────────────────────────────────────────────────────
 # Bird Detection Endpoints
 # ─────────────────────────────────────────────────────────────
@@ -537,6 +578,89 @@ def get_feed(limit: int = 80):
         "items":   [dict(r) for r in items],
         "sources": [dict(r) for r in sources],
     }
+
+# ─────────────────────────────────────────────────────────────
+# Pulse events / civic "What's On" Endpoints
+# ─────────────────────────────────────────────────────────────
+
+_EVENT_COLS = ("title", "kind", "starts_at", "ends_at", "all_day", "venue",
+               "location", "url", "description", "source", "source_key",
+               "dedup_key", "added_at")
+
+
+def _eastern_today_date():
+    """Today's date (YYYY-MM-DD) in Eastern, so 'upcoming' follows the venue clock
+    rather than the box's UTC day."""
+    if _EASTERN is not None:
+        return datetime.now(_EASTERN).date().isoformat()
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+@app.get("/api/events")
+def get_events(kind: str = None, limit: int = 100, include_past: int = 0):
+    """Public reader for the 'What's On' surface. Returns upcoming events
+    (starts_at on/after today, Eastern) ordered soonest-first; `kind=event|civic`
+    filters to one section. `include_past=1` returns everything (admin/debug)."""
+    where, params = [], []
+    if not include_past:
+        where.append("substr(starts_at, 1, 10) >= ?")
+        params.append(_eastern_today_date())
+    if kind in ("event", "civic"):
+        where.append("kind = ?")
+        params.append(kind)
+    sql = "SELECT " + ", ".join(_EVENT_COLS) + " FROM events"
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY starts_at ASC LIMIT ?"
+    params.append(max(1, min(limit, 500)))
+    conn = get_db()
+    try:
+        rows = conn.execute(sql, tuple(params)).fetchall()
+    except sqlite3.OperationalError:
+        conn.close()
+        return {"events": []}  # table not migrated yet — degrade quietly
+    conn.close()
+    return {"events": [dict(r) for r in rows]}
+
+
+@app.post("/api/events", dependencies=[Depends(require_key)])
+def add_events(body: dict):
+    """Key-guarded writer: insert already-reviewed events (a list of row dicts, the
+    shape event_parser.normalize() emits). dedup_key UNIQUE makes re-sends no-ops.
+    Used by remote/web entry paths; the box CLI (pulse_add.py) writes the DB directly."""
+    items = body.get("events") if isinstance(body, dict) else None
+    if not isinstance(items, list) or not items:
+        return {"error": "body must be {events: [ ... ]}"}
+    now = datetime.now(timezone.utc).isoformat()
+    conn = get_db()
+    added = 0
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        title = (it.get("title") or "").strip()
+        starts_at = (it.get("starts_at") or "").strip()
+        if not title or len(starts_at) < 10:
+            continue
+        kind = it.get("kind") if it.get("kind") in ("event", "civic") else "event"
+        dk = (it.get("dedup_key") or "").strip() or "|".join(
+            (title.lower(), starts_at[:10], (it.get("venue") or "").lower()))
+        row = {
+            "title": title, "kind": kind, "starts_at": starts_at,
+            "ends_at": it.get("ends_at"), "all_day": 1 if it.get("all_day") else 0,
+            "venue": it.get("venue"), "location": it.get("location"),
+            "url": it.get("url"), "description": it.get("description"),
+            "source": it.get("source") or "manual", "source_key": it.get("source_key"),
+            "dedup_key": dk, "added_at": it.get("added_at") or now,
+        }
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO events (" + ", ".join(_EVENT_COLS) + ") VALUES ("
+            + ", ".join("?" for _ in _EVENT_COLS) + ")",
+            tuple(row[c] for c in _EVENT_COLS),
+        )
+        added += cur.rowcount
+    conn.commit()
+    conn.close()
+    return {"ok": True, "added": added, "received": len(items)}
 
 # ─────────────────────────────────────────────────────────────
 # Train Detection Endpoints
