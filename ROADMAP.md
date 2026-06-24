@@ -204,6 +204,21 @@ Two parts, both asset-gated:
 
 ## ✓ Done (recent)
 
+- **2026-06-23** — **Home / nav / Stack / Weather UI refinements** (Alan's review list;
+  front-end only). Home: dropped the "An emulation of my Brain…" hero sub-line. **Nav is now
+  consistent on every page** — Home · Weather · Pulse · Explore · Stack — and the
+  brain-icon-gets-pushed bug is fixed (`.nav-logo` nowrap/no-shrink + hamburger breakpoint
+  600→700px). **Personal Projects tech tags** deep-link into the Tech Stack reliably now
+  (capture-phase click intercept). New **"thinking brain" SVG** (`Projects/brain-thoughts.svg`)
+  replaces `philosophy.png` for Personal Projects everywhere. Tech Stack: **Spotify**/**setlist**
+  nodes reuse real SVG marks (`Stack/spotify.svg`, `Stack/setlist.svg`), the **color key keys the
+  dashed style**, and the **mobile graph got a much taller canvas** so the 14 nodes stop
+  crunching. Weather (`?v=w7`): "Best rest of week" label **green/bold on its own line** (fixes
+  chip wrapping), activity best-windows confined to **regular hours (6 AM–8 PM)**, the
+  **hour-by-hour chart is now scrub-interactive** (live value at the pointer) with edge labels
+  clamped, and the **UV badge** is readable (colored text/border on a neutral pill). See
+  `Build History.md` (2026-06-23).
+
 - **2026-06-22** — Follow-ups (completes Alan's 5-item list): **Setlist→Spotify graphic**
   (a composed inline SVG — setlist → arrow → Spotify mark — replacing the 🎵 on the card +
   hero), **Personal Projects philosophy icon** wired everywhere (Alan supplied

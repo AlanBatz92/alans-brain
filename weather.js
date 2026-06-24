@@ -483,12 +483,20 @@ function scoreDroneHour(hr, sunrise, sunset) {
 
 /* ── OPTIMAL WINDOW FINDER ────────────── */
 
+// Suggested activity windows stay within regular waking hours — no 4 AM runs or
+// 10 PM "best time" picks. Forecast hours fall on the hour, so 6 AM–8 PM as start
+// hours keeps every suggestion inside the ~5:30 AM–8:30 PM range we want.
+var REASONABLE_START_HOUR = 6;
+var REASONABLE_END_HOUR = 20;
+function isReasonableHour(h) { return h >= REASONABLE_START_HOUR && h <= REASONABLE_END_HOUR; }
+
 function findOptimalWindow(hours, scoreFn, sunrise, sunset) {
   if (!hours || hours.length === 0) return null;
 
   var scores = [];
   for (var i = 0; i < hours.length; i++) {
-    scores.push({ dt: hours[i].dt, hour: locHour(hours[i].dt), score: scoreFn(hours[i], sunrise, sunset) });
+    var hr = locHour(hours[i].dt);
+    scores.push({ dt: hours[i].dt, hour: hr, score: scoreFn(hours[i], sunrise, sunset), ok: isReasonableHour(hr) });
   }
 
   var bestStart = -1;
@@ -496,11 +504,11 @@ function findOptimalWindow(hours, scoreFn, sunrise, sunset) {
   var bestAvg = 0;
 
   for (var start = 0; start < scores.length; start++) {
-    if (scores[start].score < 30) continue;
+    if (scores[start].score < 30 || !scores[start].ok) continue;
     var sum = 0;
     var count = 0;
     for (var end = start; end < scores.length; end++) {
-      if (scores[end].score < 30) break;
+      if (scores[end].score < 30 || !scores[end].ok) break;
       sum += scores[end].score;
       count++;
       var avg = sum / count;
@@ -515,11 +523,12 @@ function findOptimalWindow(hours, scoreFn, sunrise, sunset) {
   }
 
   if (bestStart === -1) {
-    var peakIdx = 0;
-    for (var k = 1; k < scores.length; k++) {
-      if (scores[k].score > scores[peakIdx].score) peakIdx = k;
+    var peakIdx = -1;
+    for (var k = 0; k < scores.length; k++) {
+      if (!scores[k].ok) continue;
+      if (peakIdx === -1 || scores[k].score > scores[peakIdx].score) peakIdx = k;
     }
-    if (scores[peakIdx].score < 10) return null;
+    if (peakIdx === -1 || scores[peakIdx].score < 10) return null;
     return {
       startHour: scores[peakIdx].hour,
       endHour: (scores[peakIdx].hour + 1) % 24,
@@ -662,7 +671,7 @@ function uvExpandableHTML(uvi) {
   var current = uvLevelFor(uvi);
   var html = '<div class="w-uv-expandable" onclick="toggleUvDetails(this)">'
     + '<div class="w-drawer-row" style="border-bottom:0;padding-bottom:0">'
-      + '<span>UV Index <span class="w-uv-badge" style="background:' + current.color + '">' + current.label + '</span>'
+      + '<span>UV Index <span class="w-uv-badge" style="color:' + current.color + '">' + current.label + '</span>'
       + ' <span class="w-score-hint">(tap for info)</span></span>'
       + '<span>' + uvi + '</span>'
     + '</div>'
@@ -987,9 +996,11 @@ function hourlyChartHTML(series) {
     var pct = scaleMax > 0 ? Math.round(v / scaleMax * 100) : 0;
     var hr = locHour(hours[j].dt);
     var isPeak = (j === peakIdx && maxVal > 0);
-    bars += '<div class="w-hr-col">'
+    // Clamp the peak label at the chart edges so it can't run off-screen.
+    var edge = j <= 1 ? ' w-hr-peak-l' : (j >= hours.length - 2 ? ' w-hr-peak-r' : '');
+    bars += '<div class="w-hr-col" data-time="' + formatHour(hr) + '" data-val="' + series.fmt(v) + '">'
       + '<div class="w-hr-track">'
-        + (isPeak ? '<span class="w-hr-peak">' + series.fmt(v) + '</span>' : '')
+        + (isPeak ? '<span class="w-hr-peak' + edge + '">' + series.fmt(v) + '</span>' : '')
         + '<div class="w-hr-bar' + (isPeak ? ' peak' : '') + '" style="height:' + Math.max(2, pct) + '%;background:' + series.color + '"></div>'
       + '</div>'
       + '<div class="w-hr-axis">' + (hr % 3 === 0 ? formatHour(hr) : '') + '</div>'
@@ -1003,8 +1014,45 @@ function hourlyChartHTML(series) {
     caption = series.noun + ' peaks at <strong>' + series.fmt(vals[peakIdx])
             + '</strong> around <strong>' + formatHour(locHour(hours[peakIdx].dt)) + '</strong>.';
   }
-  return '<div class="w-hr-chart">' + bars + '</div>'
-    + '<div class="w-hr-caption">' + caption + '</div>';
+  // The readout fills in live as you drag/hover across the bars (touch-friendly);
+  // the caption is the default "peak" summary when you're not pointing at anything.
+  return '<div class="w-hr-readout" id="wHrReadout" aria-hidden="true"></div>'
+    + '<div class="w-hr-chart">' + bars + '</div>'
+    + '<div class="w-hr-caption" id="wHrCaption">' + caption + '</div>';
+}
+
+// Wire the hover/touch scrubbing — point anywhere on the chart and see that hour's
+// value, like the Observatory bird/train analytics charts.
+function initHourlyChartScrub(el, series) {
+  var chart = el.querySelector('.w-hr-chart');
+  var readout = el.querySelector('#wHrReadout');
+  var caption = el.querySelector('#wHrCaption');
+  if (!chart || !readout) return;
+  var cols = chart.querySelectorAll('.w-hr-col');
+  if (!cols.length) return;
+
+  function showAt(clientX) {
+    var rect = chart.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    var idx = Math.floor((clientX - rect.left) / rect.width * cols.length);
+    if (idx < 0) idx = 0;
+    if (idx >= cols.length) idx = cols.length - 1;
+    for (var i = 0; i < cols.length; i++) cols[i].classList.toggle('hovered', i === idx);
+    var c = cols[idx];
+    readout.innerHTML = '<strong>' + c.getAttribute('data-time') + '</strong> · '
+      + '<span style="color:' + series.color + '">' + c.getAttribute('data-val') + '</span> ' + series.label.toLowerCase();
+    readout.classList.add('show');
+    if (caption) caption.style.visibility = 'hidden';
+  }
+  function clearScrub() {
+    for (var i = 0; i < cols.length; i++) cols[i].classList.remove('hovered');
+    readout.classList.remove('show');
+    if (caption) caption.style.visibility = '';
+  }
+  chart.addEventListener('pointermove', function(e) { showAt(e.clientX); });
+  chart.addEventListener('pointerdown', function(e) { showAt(e.clientX); });
+  chart.addEventListener('pointerleave', clearScrub);
+  chart.addEventListener('pointercancel', clearScrub);
 }
 
 function renderHourlyMetric() {
@@ -1024,6 +1072,7 @@ function renderHourlyMetric() {
       renderHourlyMetric();
     });
   });
+  initHourlyChartScrub(el, series);
 }
 
 /* ── WEATHER DETAIL DRAWER ────────────── */

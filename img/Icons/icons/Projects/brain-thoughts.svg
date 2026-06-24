@@ -1,0 +1,27 @@
+<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Personal Projects">
+  <defs>
+    <linearGradient id="bt" x1="20" y1="10" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <!-- Brain — left & right hemispheres -->
+  <path d="M58 24c-8-1-16 3-21 9-6 7-8 15-7 23 0 3-1 5-3 7-4 4-7 10-6 16 1 5 4 10 8 13 2 2 3 4 3 7-1 5 1 10 5 13s9 4 14 3l3-1"
+        stroke="url(#bt)" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+  <path d="M62 24c8-1 16 3 21 9 6 7 8 15 7 23 0 3 1 5 3 7 4 4 7 10 6 16-1 5-4 10-8 13-2 2-3 4-3 7 1 5-1 10-5 13s-9 4-14 3l-3-1"
+        stroke="url(#bt)" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+  <path d="M60 111 L60 117" stroke="url(#bt)" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M60 24 L60 111" stroke="url(#bt)" stroke-width="1.6" stroke-linecap="round" opacity="0.4"/>
+  <!-- Folds -->
+  <path d="M38 41c-3 5-2 12 2 16" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M30 58c0 6 3 11 7 14" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M35 81c2 4 6 7 10 8" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <path d="M82 41c3 5 2 12-2 16" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M90 58c0 6-3 11-7 14" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M85 81c-2 4-6 7-10 8" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <!-- Thought bubbles in the top-right corner — the "thinking / thoughts" motif -->
+  <circle cx="98" cy="22" r="8" fill="url(#bt)" opacity="0.95"/>
+  <circle cx="110" cy="10" r="4.5" fill="url(#bt)" opacity="0.78"/>
+  <circle cx="116" cy="3.5" r="2.6" fill="url(#bt)" opacity="0.58"/>
+</svg>
