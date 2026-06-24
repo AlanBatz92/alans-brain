@@ -6,22 +6,39 @@
       <stop offset="100%" stop-color="#a78bfa"/>
     </linearGradient>
   </defs>
-  <!-- Brain — left & right hemispheres -->
-  <path d="M58 24c-8-1-16 3-21 9-6 7-8 15-7 23 0 3-1 5-3 7-4 4-7 10-6 16 1 5 4 10 8 13 2 2 3 4 3 7-1 5 1 10 5 13s9 4 14 3l3-1"
-        stroke="url(#bt)" stroke-width="3.2" stroke-linecap="round" fill="none"/>
-  <path d="M62 24c8-1 16 3 21 9 6 7 8 15 7 23 0 3 1 5 3 7 4 4 7 10 6 16-1 5-4 10-8 13-2 2-3 4-3 7 1 5-1 10-5 13s-9 4-14 3l-3-1"
-        stroke="url(#bt)" stroke-width="3.2" stroke-linecap="round" fill="none"/>
-  <path d="M60 111 L60 117" stroke="url(#bt)" stroke-width="3.2" stroke-linecap="round"/>
-  <path d="M60 24 L60 111" stroke="url(#bt)" stroke-width="1.6" stroke-linecap="round" opacity="0.4"/>
-  <!-- Folds -->
-  <path d="M38 41c-3 5-2 12 2 16" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.7"/>
-  <path d="M30 58c0 6 3 11 7 14" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.6"/>
-  <path d="M35 81c2 4 6 7 10 8" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.5"/>
-  <path d="M82 41c3 5 2 12-2 16" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.7"/>
-  <path d="M90 58c0 6-3 11-7 14" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.6"/>
-  <path d="M85 81c-2 4-6 7-10 8" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.5"/>
-  <!-- Thought bubbles in the top-right corner — the "thinking / thoughts" motif -->
-  <circle cx="98" cy="22" r="8" fill="url(#bt)" opacity="0.95"/>
-  <circle cx="110" cy="10" r="4.5" fill="url(#bt)" opacity="0.78"/>
-  <circle cx="116" cy="3.5" r="2.6" fill="url(#bt)" opacity="0.58"/>
+  <!-- Spokes — many thoughts/projects radiating in toward the brain hub -->
+  <g stroke="url(#bt)" stroke-width="2.2" stroke-linecap="round" opacity="0.5">
+    <path d="M93 60 L107 60"/>
+    <path d="M83.3 83.3 L93.2 93.2"/>
+    <path d="M60 93 L60 107"/>
+    <path d="M36.7 83.3 L26.8 93.2"/>
+    <path d="M27 60 L13 60"/>
+    <path d="M36.7 36.7 L26.8 26.8"/>
+    <path d="M60 27 L60 13"/>
+    <path d="M83.3 36.7 L93.2 26.8"/>
+  </g>
+  <!-- Thought nodes at the rim of the wheel -->
+  <circle cx="112" cy="60" r="4.4" fill="url(#bt)" opacity="0.95"/>
+  <circle cx="96.8" cy="96.8" r="3.6" fill="url(#bt)" opacity="0.8"/>
+  <circle cx="60" cy="112" r="4.6" fill="url(#bt)" opacity="0.98"/>
+  <circle cx="23.2" cy="96.8" r="3.4" fill="url(#bt)" opacity="0.75"/>
+  <circle cx="8" cy="60" r="4.2" fill="url(#bt)" opacity="0.9"/>
+  <circle cx="23.2" cy="23.2" r="3.6" fill="url(#bt)" opacity="0.8"/>
+  <circle cx="60" cy="8" r="4.6" fill="url(#bt)" opacity="0.98"/>
+  <circle cx="96.8" cy="23.2" r="3.4" fill="url(#bt)" opacity="0.78"/>
+  <!-- Brain hub (left & right hemispheres), centered in the wheel -->
+  <g transform="translate(21.6 14.88) scale(0.64)">
+    <path d="M58 24c-8-1-16 3-21 9-6 7-8 15-7 23 0 3-1 5-3 7-4 4-7 10-6 16 1 5 4 10 8 13 2 2 3 4 3 7-1 5 1 10 5 13s9 4 14 3l3-1"
+          stroke="url(#bt)" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+    <path d="M62 24c8-1 16 3 21 9 6 7 8 15 7 23 0 3 1 5 3 7 4 4 7 10 6 16-1 5-4 10-8 13-2 2-3 4-3 7 1 5-1 10-5 13s-9 4-14 3l-3-1"
+          stroke="url(#bt)" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+    <path d="M60 24 L60 111" stroke="url(#bt)" stroke-width="1.6" stroke-linecap="round" opacity="0.4"/>
+    <!-- Folds -->
+    <path d="M38 41c-3 5-2 12 2 16" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.7"/>
+    <path d="M30 58c0 6 3 11 7 14" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.6"/>
+    <path d="M35 81c2 4 6 7 10 8" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.5"/>
+    <path d="M82 41c3 5 2 12-2 16" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.7"/>
+    <path d="M90 58c0 6-3 11-7 14" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.6"/>
+    <path d="M85 81c-2 4-6 7-10 8" stroke="url(#bt)" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.5"/>
+  </g>
 </svg>
