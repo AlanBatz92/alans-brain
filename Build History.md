@@ -59,6 +59,27 @@ clean empty scaffolds.
 
 ---
 
+## 2026-06-27 — UAP Shape Census: first real book ingested + lexicon v2
+
+Alan uploaded Coulthart's *In Plain Sight* (2021) EPUB to the branch. Ran it through the
+pipeline (installed `ebooklib`+`beautifulsoup4` locally): **2078 segments → 245 candidate
+mentions**. Eyeballing the noise-prone buckets caught two false-positive clusters, so bumped
+the taxonomy to **v2**: dropped bare `bell` from Cone (22 hits were the surname / Bell
+Helicopter, not "bell-shaped") and bare `box`/`square`/`block` from Cube (metaphors like "back
+into the box", "square kilometres"). Re-ran → **219 clean mentions across all 10 shapes**:
+Disc 91, Tic-Tac 50, Triangle 34, Egg 13, Sphere 11, Diamond 6, Cylinder 5, Cube 5,
+Boomerang 3, Cone 1 — a credible disc-dominant / heavy-Tic-Tac profile for this source. The
+high-recall-lexical-then-prune loop is exactly the intended calibration workflow.
+
+**Copyright hygiene:** the GitHub web upload committed the full ~3 MB EPUB to the branch
+(web uploads bypass `.gitignore`). `git rm --cached`'d it so the raw book leaves the committed
+tree (kept locally for reprocessing; now gitignored) — it won't reach `main` on a squash-merge.
+The blob still lingers in this feature branch's history (commit 712a297); a history rewrite +
+force-push would be needed to fully scrub it if ever wanted. Only the derived, short-snippet,
+cited JSON is committed.
+
+---
+
 ## 2026-06-24 — "Personal Projects" icon: brain hub with thought-spokes
 
 Reworked `img/Icons/icons/Projects/brain-thoughts.svg` per Alan: keep the brain, but make

@@ -206,13 +206,16 @@ fuller quoting, reconsider per-source.
 ## 9. Next steps (clearly identified for future sessions)
 
 ### Phase 1 — first real data + working receipts
-- [ ] **Validate `ingest.py` against a real EPUB and a real PDF** (the extractors
-      are written but unverified). Install `ebooklib`/`beautifulsoup4`/`pymupdf`
-      into `ufo-shapes/.venv`. Tune segmenting (drop front-matter/index/footnote
-      noise; PDF headers/footers).
-- [ ] Ingest the **first real book** (good candidate: Coulthart, *In Plain Sight*
-      — Alan's example). Eyeball `mentions.json` for false positives to calibrate
-      the lexicon.
+- [x] **Validate `ingest.py` against a real EPUB** (2026-06-27) — Coulthart,
+      *In Plain Sight* (EPUB, `ebooklib`+`beautifulsoup4`): 2078 segments
+      extracted cleanly. PDF path still unverified. Segmenting was good enough
+      out of the box; revisit front-matter/index trimming if a noisier book needs it.
+- [x] Ingest the **first real book** + calibrate the lexicon (2026-06-27):
+      219 mentions across all 10 shapes (Disc 91, Tic-Tac 50, Triangle 34…).
+      Eyeballing `mentions.json` caught two false-positive clusters → **taxonomy
+      v2** dropped bare `bell` from Cone (22 surname/Bell-Helicopter hits) and
+      bare `box`/`square`/`block` from Cube (metaphors). This is the calibration
+      loop working as intended.
 - [ ] Add **snippet-level drill-down** to `ufo-shapes.html`: clicking a shape (or
       a source's shape chip) lazy-loads `mentions.json`, filters to those
       mentions, and lists snippet + locator + "view source" + tier badge. This is

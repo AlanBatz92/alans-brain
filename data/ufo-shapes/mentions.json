@@ -1,1 +1,2801 @@
-[]
+[
+  {
+    "id": "M000001",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "diamond",
+    "raw_term": "diamond-shaped",
+    "locator": "ch:5#para:5",
+    "snippet": "‘Eventually, Kevin pulled my head forward. “Look up!” he said. Then I saw it. A long diamond-shaped craft hovering overhead with the rear edge chopped off, rows of lights running towards the craft’s tip. It was a dark grey colour but not…",
+    "modifiers": [
+      "dark",
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000002",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "saucer",
+    "locator": "ch:6#para:2",
+    "snippet": "…Bob, who knew the landscape like the back of his hand. Had he seen the Min Min lights, I asked? He chuckled and referred me to images of saucer- and orb-shaped objects that appear in Aboriginal art across the country. ‘We see them all the time. They’ve always been in our stories,’…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000003",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "orb",
+    "locator": "ch:6#para:2",
+    "snippet": "…the landscape like the back of his hand. Had he seen the Min Min lights, I asked? He chuckled and referred me to images of saucer- and orb-shaped objects that appear in Aboriginal art across the country. ‘We see them all the time. They’ve always been in our stories,’ he told…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000004",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:6#para:7",
+    "snippet": "Through the viewfinder, following the lights shooting around the cargo plane, the cameraman described seeing a classic ‘flying saucer’ shaped object, with a brightly lit bottom and a transparent sphere on top. But when we all finally got to see the TV images, while they…",
+    "modifiers": [
+      "transparent"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000005",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:6#para:7",
+    "snippet": "…lights, the vision was underwhelming. It did not show an apparent craft or object of any kind behind the darting lights – certainly not a ‘flying saucer’. After some initial excitement, like most people, I surmised the whole story was a flap about nothing much, that there would be some…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000006",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "sphere",
+    "locator": "ch:6#para:7",
+    "snippet": "…the cargo plane, the cameraman described seeing a classic ‘flying saucer’ shaped object, with a brightly lit bottom and a transparent sphere on top. But when we all finally got to see the TV images, while they showed distant unexplained lights, the vision was underwhelming. It…",
+    "modifiers": [
+      "transparent"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000007",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:6#para:11",
+    "snippet": "…a very senior officer and, to my surprise, over a beer, he and another serving senior officer started talking expansively about ‘UFO’ or ‘flying saucer sightings’ they had experienced during their careers. The air force veterans encouraged me to take another look at UAP mysteries,…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000008",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "egg-shaped",
+    "locator": "ch:7#para:5",
+    "snippet": "…being seen in the Southern Hemisphere. In February 1947, there were three independent and well-verified sightings of a formation of five egg-shaped wingless and tailless craft flying over southern Australia, which defied official explanation. A farmer on South Australia’s Eyre…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000009",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "egg-shaped",
+    "locator": "ch:7#para:5",
+    "snippet": "…His account corroborated another made earlier by workmen at Port Augusta, 260 kilometres north-east, who also reported seeing five white egg-shaped objects flying in formation from north to south. ‘Owing to their great speed, they were out of sight within a few seconds,’ the Advertiser…",
+    "modifiers": [
+      "white"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000010",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "boomerang",
+    "raw_term": "v formation",
+    "locator": "ch:7#para:6",
+    "snippet": "…kilometres east in New South Wales. A Gogeldrie farmer working on his rice harvest looked up to also see ‘five metal bodies flying in V formation with the sun glistening on them’. The farmer, a Mr Nettlebeck, reportedly estimated the speed at about 1000 miles an hour (1600 km/h). A…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000011",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "egg-shaped",
+    "locator": "ch:7#para:6",
+    "snippet": "The third sighting of a formation of five weird, high-speed, egg-shaped UAPs came two months later, a thousand kilometres east in New South Wales. A Gogeldrie farmer working on his rice harvest looked up to…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000012",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "egg-shaped",
+    "locator": "ch:7#para:6",
+    "snippet": "…(1600 km/h). A curious coincidence indeed that three separate sets of witnesses independently saw a similar formation of five high-speed egg-shaped objects in different locations over 1200 kilometres apart across southern Australia. These events also all happened just before a sighting…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000013",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "boomerang",
+    "raw_term": "crescent-shaped",
+    "locator": "ch:7#para:8",
+    "snippet": "…and Arnold watched as they passed in front of its snow-covered slopes. He described their shape as convex with one object differently as crescent-shaped. As a pilot, Arnold was experienced in approximating the speed of distant objects and he estimated their speed as they tracked across the…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000014",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:7#para:8",
+    "snippet": "Almost as soon as Hillenkoetter took over the top intelligence job, the post-war flying saucer frenzy began in the American press. On 24 June 1947, businessman Kenneth Arnold had his seminal sighting of what became notoriously known…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000015",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:8",
+    "snippet": "…the Chicago Sun headlined its story ‘Supersonic Flying Saucers Sighted by Idaho Pilot’. 7 And the sightings kept coming. On 1 July, a disc-shaped UAP was seen zigzagging across the sky in New Mexico and on 3 July, an astronomer in Maine reported seeing an object about 100 feet…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000016",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:9",
+    "snippet": "Ten days after Arnold’s sighting, on the 4 July Independence Day national holiday, a United Airlines crew reported seeing five to nine disc-shaped objects that kept pace with their aircraft. 9 That same day, Portland police officers also reported seeing a large number of UAPs…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000017",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:9",
+    "snippet": "…aircraft. 9 That same day, Portland police officers also reported seeing a large number of UAPs overhead, and a carload of people saw four disc-shaped craft going past Mount Jefferson in Oregon. It seemed flying discs were everywhere that summer holiday period. The US Army was…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000018",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:7#para:13",
+    "snippet": "…had touched down and skipped along’. 11 Marcel later showed his family some of the strange debris, saying it was wreckage from a ‘flying saucer’. 12 This included foil metal sheets that were as light as a feather yet incredibly strong and impervious to tearing. He also described…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000019",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:13",
+    "snippet": "…Major Jesse Marcel and his colleague Captain Sheridan Cavitt out to the crash site and Marcel came back clearly convinced that a flying disc of extra-terrestrial origin had crashed on the ranch. Marcel described a massive field of debris 1200 metres long and 60 to 90 metres…",
+    "modifiers": [
+      "massive"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000020",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:7#para:14",
+    "snippet": "…office of the 509th Bombardment Group at Roswell Army Air Field announced at noon today that the field has come into possession of a flying saucer.’ 13 (The Army actually never said that it was a ‘flying saucer’; it only referred to a ‘disc’.) The story also carried claims from locals…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000021",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:7#para:14",
+    "snippet": "…Field announced at noon today that the field has come into possession of a flying saucer.’ 13 (The Army actually never said that it was a ‘flying saucer’; it only referred to a ‘disc’.) The story also carried claims from locals Mr and Mrs Dan Wilmot, claiming that earlier that week they had…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000022",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:7#para:14",
+    "snippet": "…body glowed as though light were showing through from inside’. Not surprisingly, this incredible story asserting there was a recovered ‘flying saucer’, supposedly the first-ever official acknowledgement anywhere in the world of what was possibly extra-terrestrial life, went around the…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000023",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:14",
+    "snippet": "…his base public information officer Lieutenant Walter Haut to issue a press release announcing that the US Army had recovered a flying disc. The story hit the newswires in the early afternoon and, coming as it did straight after the many UAP sightings over the previous weeks,…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000024",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:14",
+    "snippet": "…field has come into possession of a flying saucer.’ 13 (The Army actually never said that it was a ‘flying saucer’; it only referred to a ‘disc’.) The story also carried claims from locals Mr and Mrs Dan Wilmot, claiming that earlier that week they had seen a speeding disc overhead…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000025",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:14",
+    "snippet": "…to a ‘disc’.) The story also carried claims from locals Mr and Mrs Dan Wilmot, claiming that earlier that week they had seen a speeding disc overhead that ‘looked oval in shape like two inverted saucers, faced mouth to mouth . . . The entire body glowed as though light were…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000026",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "oval",
+    "locator": "ch:7#para:14",
+    "snippet": "…also carried claims from locals Mr and Mrs Dan Wilmot, claiming that earlier that week they had seen a speeding disc overhead that ‘looked oval in shape like two inverted saucers, faced mouth to mouth . . . The entire body glowed as though light were showing through from inside’.…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000027",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:7#para:15",
+    "snippet": "…how trusting America was in its military right after World War Two that, within days, the press accepted this assurance and the Roswell ‘flying saucer’ story disappeared without trace for over three decades.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000028",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:15",
+    "snippet": "…after the noon Roswell press release, General Ramey issued a new statement through Associated Press asserting that the supposed flying disc was simply a weather balloon. It is a measure of how trusting America was in its military right after World War Two that, within days, the…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000029",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:7#para:16",
+    "snippet": "…weather balloon to debunk the flying disc crash story. In retirement, Marcel told the ‘real’ story to nuclear physicist and self-described flying saucer researcher Stanton Friedman. Friedman then alleged a ‘cosmic Watergate cover-up’ of a recovered alien spacecraft and alien bodies. 14 The…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000030",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:16",
+    "snippet": "…a decorated lieutenant colonel in 1958, said he was forced to pose for photographs with pieces of a weather balloon to debunk the flying disc crash story. In retirement, Marcel told the ‘real’ story to nuclear physicist and self-described flying saucer researcher Stanton…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000031",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:18",
+    "snippet": "The initial press release issued by the US Army clearly referred to a recovered ‘flying disc’. It began: ‘The many rumors regarding the flying disc became a reality yesterday when the intelligence office of 509th Bomb Group of the…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000032",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:18",
+    "snippet": "…initial press release issued by the US Army clearly referred to a recovered ‘flying disc’. It began: ‘The many rumors regarding the flying disc became a reality yesterday when the intelligence office of 509th Bomb Group of the Eighth Air Force, Roswell Army Air Field, was fortunate…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000033",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:18",
+    "snippet": "…the intelligence office of 509th Bomb Group of the Eighth Air Force, Roswell Army Air Field, was fortunate enough to gain possession of a disc.’ 18 What has never been satisfactorily explained is why Roswell’s commanding officer Colonel Blanchard so quickly concluded that what had…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000034",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:18",
+    "snippet": "…satisfactorily explained is why Roswell’s commanding officer Colonel Blanchard so quickly concluded that what had crashed was a ‘flying disc’ when, supposedly, all he was shown at the base by Marcel and Cavitt were small pieces of debris.",
+    "modifiers": [
+      "small"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000035",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:7#para:19",
+    "snippet": "…press release saying a ‘flying disc’ had been recovered, unless he knew that for sure? Did two highly experienced army officers really let flying saucer fever get the better of them?",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000036",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:19",
+    "snippet": "…with the air force’s 1994 Mogul spy balloon explanation is that declassified images of the Mogul balloon-train from that period show no disc and Mogul’s radar reflector debris would have been clearly recognisable as conventional material, especially to Major Marcel. The Mogul…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000037",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:7#para:19",
+    "snippet": "…radar reflectors on the Mogul balloon-train were not discs. So, why did Blanchard authorise issuing a press release saying a ‘flying disc’ had been recovered, unless he knew that for sure? Did two highly experienced army officers really let flying saucer fever get the better…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000038",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "egg",
+    "locator": "ch:7#para:21",
+    "snippet": "…him to see an apparent alien craft in a hangar ‘approx. 12 to 15 feet in length, not quite as wide, about 6 feet high and more of an egg shape. Lighting was poor, but its surface did appear metallic’. Haut said, ‘I am convinced that what I personally observed was some type…",
+    "modifiers": [
+      "metallic"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000039",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:7#para:23",
+    "snippet": "…admitted privately to them, verifying the alien spacecraft story. But, unless we one day get the chance to kick the tyres of a recovered flying saucer, the evidence is simply nowhere near convincing enough to nail Roswell down as the cover-up of a supposedly recovered craft.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000040",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "saucer",
+    "locator": "ch:8#para:2",
+    "snippet": "…He recommended a detailed study of the UAPs, which became known as Project Sign and commenced in December 1947. Originally dubbed Project Saucer, the air force-controlled investigation ran for one year.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000041",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:8#para:3",
+    "snippet": "…He subsequently claimed to have seen a highly classified 1948 Project Sign report, entitled ‘Estimate of the Situation’, investigating the flying saucer sightings. ‘The situation was the UFOs; the estimate was that they were interplanetary,’ he succinctly admitted. 2 Ruppelt, who later…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000042",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:8#para:6",
+    "snippet": "…the most controversial, and the most popular, file in the FBI’s archive. Seventy years later, on its website, the FBI, no doubt jaded by flying saucer conspiracists seizing on the memo, asserts that the Hottel report was never confirmed or investigated, and that the memo does not prove…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000043",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "egg-shaped",
+    "locator": "ch:8#para:7",
+    "snippet": "…watching it said it flew ‘faster than any known conventional aircraft’. 8 In July 1952, multiple witnesses at Los Alamos saw a white egg-shaped object, larger than a jet, that was at one stage motionless in the sky and then moving extremely fast. It was dismissed by the air force…",
+    "modifiers": [
+      "white"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000044",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:8#para:8",
+    "snippet": "…camera. In May 1950, farmer Paul Trent and his wife from McMinnville, Oregon, had photographed a clear image of what looks like a classic flying saucer over their farm. A subsequent air force inquiry admitted, ‘This is one of the few UFO cases in which all factors investigated, geometric,…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000045",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:8#para:8",
+    "snippet": "…geometric, psychological, and physical, appear to be consistent with the assertion that an extraordinary flying object, silvery, metallic, disc-shaped, tens of metres in diameter, and evidently artificial flew within sight of two witnesses.’ 10",
+    "modifiers": [
+      "metallic",
+      "silvery"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000046",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:8#para:12",
+    "snippet": "…involved in the recovery and have no knowledge regarding the dates of the recoveries . . . Certain materials reported to have come from flying saucer crashes were extremely light and very tough . . . I remember in talking with some of the people at the office that I got the impression…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000047",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:8#para:15",
+    "snippet": "A 1952 CIA document offered prosaic explanations for many flying disc sightings at the time, including ‘mass hysteria . . . Hallucination and hoax’. But it also acknowledged unexplained sightings over the…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000048",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:8#para:19",
+    "snippet": "…quoted Kimball as saying, ‘Somewhere out over the dark Pacific . . . the pilot came back to the cabin visibly excited and reported that a flying saucer had appeared out of nowhere, had flown abeam the Secretary’s plane for some distance, and had just raced ahead and shot up into the sky…",
+    "modifiers": [
+      "dark"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000049",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:8#para:19",
+    "snippet": "…they alert the admiral’s plane astern and keep a lookout. Then, ‘In a matter of minutes, the second plane radioed excitedly that a flying saucer had just come down and flown alongside the wing tip, then had shot ahead and vanished into the sky,’ Kimball said.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000050",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:8#para:19",
+    "snippet": "…Dan Kimball, and Admiral Arthur Radford travelled from Hawaii to Guam on separate aircraft that were both reportedly tracked by mysterious disc-shaped objects. Kimball told his story to an audience of navy officers and air cadets in May 1952 and the story was reported by the Boston…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000051",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:8#para:21",
+    "snippet": "…the Atomic Energy Commission’s Hanford nuclear bomb factory in Richlands, Washington. In July 1952, two pilots witnessed a flat and round flying saucer–shaped object hovering over the highly secure facility and the next day the local Dayton Daily News headlined its story, ‘Flyers Report…",
+    "modifiers": [
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000052",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:9#para:3",
+    "snippet": "…Richard Russell, the head of the powerful Armed Services Committee, looked out of his train window in the Trans-Caucasus region to see a disc-shaped object slowly ascending vertically, with its outer surface revolving slowly and with two lights visible on the top. It sped off…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000053",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:9#para:4",
+    "snippet": "…was only revealed 30 years later by a Freedom of Information Act request. 2 The second object was described by one witness as being triangular in shape with three lights on each point of the triangle. Because both craft were seen being tracked with a searchlight, the report raised…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000054",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangle",
+    "locator": "ch:9#para:4",
+    "snippet": "…Act request. 2 The second object was described by one witness as being triangular in shape with three lights on each point of the triangle. Because both craft were seen being tracked with a searchlight, the report raised concerns that Senator Russell had stumbled across a…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000055",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:9#para:4",
+    "snippet": "…with a searchlight, the report raised concerns that Senator Russell had stumbled across a secret Soviet military project working on flying disc craft, built perhaps with the aid of captured Nazi scientists. The sighting was never explained.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000056",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:9#para:5",
+    "snippet": "…dozen objects suddenly appeared on radar to the south-east of the base, with three objects leading the formation tracking north-east in a triangular configuration. The objects then all converged into one huge target, sitting stationary in the sky for quarter of an hour. RAF Bentwaters…",
+    "modifiers": [
+      "huge"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000057",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:9#para:7",
+    "snippet": "…series of 1956 cables 5 from a US Air Force air attaché in Kabul, Afghanistan, revealed the Governor of Kataghan Province reported that a ‘flying saucer’ had landed near the town of Takala in January after numerous UAP sightings across the country. Wright Patterson Air Force Base in the USA…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000058",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "saucer",
+    "locator": "ch:9#para:7",
+    "snippet": "…The craft was described as 15 metres in circumference, of metal construction, with ‘small, thick glass windows around leading edge of saucer shaped moving object’. (A 15-metre circumference is an 11-metre diameter.) The Afghans were planning to transport it to the Minister of…",
+    "modifiers": [
+      "small"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000059",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:9#para:7",
+    "snippet": "…this US Air Force cable is not in any doubt; it is an official US government document apparently confirming the recovery of a large flying disc. There is no record detailing what was ever discovered about the craft recovered.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000060",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cylinder",
+    "raw_term": "cigar-shaped",
+    "locator": "ch:9#para:10",
+    "snippet": "An earlier secret report to the Director of Air Force Intelligence told how five ‘reliable witnesses’ had observed an illuminated cigar-shaped object flying over Woomera at 9 pm during an open-air movie screening. Warrant Officer EJV Hanley witnessed ‘an illuminated object shaped…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000061",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cylinder",
+    "raw_term": "cylindrical",
+    "locator": "ch:9#para:10",
+    "snippet": "…here. It was of a dark greyish colour and of airship shape’. A Sergeant Phillips said he saw two portholes with internal lighting on the cylindrical object, which was a light grey colour. A similar object was again seen by Adelaide locals and reported in the Adelaide Advertiser over…",
+    "modifiers": [
+      "dark"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000062",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cylinder",
+    "raw_term": "cigar",
+    "locator": "ch:9#para:10",
+    "snippet": "…flying over Woomera at 9 pm during an open-air movie screening. Warrant Officer EJV Hanley witnessed ‘an illuminated object shaped like a cigar with a spurting light at the rear, travelling from west to east in a horizontal way’. 7 Another warrant officer named Walker described it…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000063",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cylinder",
+    "raw_term": "cigar",
+    "locator": "ch:9#para:10",
+    "snippet": "…a spurting light at the rear, travelling from west to east in a horizontal way’. 7 Another warrant officer named Walker described it as ‘cigar shaped, tapering off towards the back. It was lit up like a neon light with a haze around it. The colouring was whitish and the exhausts…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000064",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:9#para:12",
+    "snippet": "…have been observed to behave in a manner suggestive of extra-terrestrial origin.’ 9 However, because Harry Turner quoted US best-selling flying saucer author and National Investigations Committee on Aerial Phenomena director Major Donald Keyhoe in his research, Australia’s Director of Air…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000065",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:9#para:13",
+    "snippet": "…this was a well-verified sighting. But the Royal Australian Air Force elected to heed its American ally and play down Turner’s ‘flying saucer’ ET hypothesis. Bill Chalker, an Australian scientist and UAP researcher trained in mathematics and chemistry, was the first civilian…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000066",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:9#para:13",
+    "snippet": "…detailed that air force files documented that, on 5 May 1954, radar at the Woomera Rocket Range detected what was seen to be a ‘misty grey disc’ at 60,000 feet. It sped off at 3600 miles an hour (5800 km/h). An English scientist had simultaneously viewed the object seen on radar…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000067",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:9#para:15",
+    "snippet": "…the light was not the result of a natural phenomenon but caused by an unidentified flying object, either a cone from a satellite or a “flying saucer”,’ the Range’s security officer wrote in his report. He ignored Harry Turner’s conclusion and went instead with the safer option,…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000068",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cone",
+    "raw_term": "cone",
+    "locator": "ch:9#para:15",
+    "snippet": "…‘He is of the opinion that the light was not the result of a natural phenomenon but caused by an unidentified flying object, either a cone from a satellite or a “flying saucer”,’ the Range’s security officer wrote in his report. He ignored Harry Turner’s conclusion and went…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000069",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:10#para:5",
+    "snippet": "…however, is a heavily redacted declassified Central Intelligence Agency document 6 from March 1968 that describes how a ‘huge metallic disc-shaped object with a six-foot base and four feet in height was found in a crater’ eight kilometres north-east of Pokhara in Nepal.…",
+    "modifiers": [
+      "metallic",
+      "huge"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000070",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:10#para:10",
+    "snippet": "…happened exactly as he told it. Jacobs recalled, ‘He even said that on the higher resolution imagery, they could see it was a domed disc and the strangers who were there that day were CIA agents. He also confirmed the whole event was classified top-secret.’ Mansmann openly…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000071",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "oval-shaped",
+    "locator": "ch:10#para:13",
+    "snippet": "…craft landed in a dry creek bed with two small ‘people’ standing in white coveralls alongside. As he began approaching, the oval-shaped object rose off the ground; he noticed it had red lettering on its side. Indentations and charred bushes were later found on the ground…",
+    "modifiers": [
+      "white",
+      "small",
+      "red"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000072",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "egg-shaped",
+    "locator": "ch:10#para:13",
+    "snippet": "…Indentations and charred bushes were later found on the ground where the craft had landed, and independent witnesses confirmed seeing an egg-shaped craft or bluish flame about the same time as Zamora. Even the US Air Force’s Project Blue Book investigators made no conclusion about the…",
+    "modifiers": [
+      "blue"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000073",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "acorn-shaped",
+    "locator": "ch:10#para:14",
+    "snippet": "…December 1965, which drew a huge military response. Officially, Project Blue Book wrote it off as a meteorite, but witnesses described an acorn-shaped object, 9 to 12 feet in diameter (2.74 to 3.66 metres). Two witnesses, Jim Romansky and Bill Bulebush, said the object had a gold band…",
+    "modifiers": [
+      "huge",
+      "blue"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000074",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:10#para:17",
+    "snippet": "…to try and absorb what I was looking at. I was excited. I was trying to absorb the shape and the size.’ Three classic ‘silvery disc-shaped flying saucer craft’ were hovering right above the children and teachers. The craft slowly moved to a flat hover over electrical power lines and pylons…",
+    "modifiers": [
+      "silvery",
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000075",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:10#para:17",
+    "snippet": "…looking to try and absorb what I was looking at. I was excited. I was trying to absorb the shape and the size.’ Three classic ‘silvery disc-shaped flying saucer craft’ were hovering right above the children and teachers. The craft slowly moved to a flat hover over electrical…",
+    "modifiers": [
+      "silvery",
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000076",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:10#para:18",
+    "snippet": "…inverted on top of each other with a slight dome on top of it.’ Teacher Andrew Greenwood later confirmed he too saw a silvery-green disc.",
+    "modifiers": [
+      "silvery",
+      "green"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000077",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "saucer",
+    "locator": "ch:10#para:19",
+    "snippet": "…the school fence in pursuit. She told me she actually saw the craft close up in The Grange bushland, describing it as a classic silvery saucer-shaped object – she was near enough to feel its heat through her hand. 14 ‘Two girls were there before me. One was terribly upset, and…",
+    "modifiers": [
+      "silvery"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000078",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "saucer",
+    "locator": "ch:10#para:26",
+    "snippet": "…half a century ago so many witnesses at Westall school somehow confused a balloon or some other mundane object for a metallic silver saucer-shaped craft. The most curious aspect of the case was that no official government explanation has ever been ventured for what the huge…",
+    "modifiers": [
+      "metallic",
+      "silver",
+      "huge"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000079",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:10#para:27",
+    "snippet": "Researcher Shane Ryan told me he has interviewed an extraordinary tally of 122 witnesses who clearly saw a ‘flying saucer’ at Westall. Ryan is a dogged investigator who works in his day job at Australia’s Parliament House in Canberra. He has dedicated years of…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000080",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "saucer",
+    "locator": "ch:10#para:27",
+    "snippet": "…Zakry, who claimed to have seen the object at ground level, close enough to touch it. Zakry’s drawings of what he saw portray a metallic saucer-shaped craft. 16",
+    "modifiers": [
+      "metallic"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000081",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:10#para:29",
+    "snippet": "…uprooted and swirled into a floating mat on the surface of the water. The Tully Times banner headlined George Pedley’s story, ‘I’ve Seen A Flying Saucer – As Told by George Pedley’. 18 The subsequent air force investigation weakly speculated the ‘Nests’ were caused by whirling masses of…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000082",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "saucer",
+    "locator": "ch:10#para:29",
+    "snippet": "…and remains unexplained. Pedley was driving his tractor on a cane farm when he heard a hissing noise and noticed a rising light grey saucer-shaped object eight metres long and nearly three metres wide. It rose to about 20 metres and then shot off at 45 degrees. What turned the…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000083",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:11#para:7",
+    "snippet": "…Station near Exmouth on Western Australia’s North West Cape, the same base where local Annette Farinaccio had her strange encounter with a triangular object in the early 1990s.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000084",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "sphere",
+    "locator": "ch:11#para:14",
+    "snippet": "Lynn drove closer in his pick-up truck, then stopped and stepped out to watch what he could now clearly see to be a large hovering black sphere sitting in the cloudless green-blue sky. The sun had set 50 minutes earlier that night at 6.31 pm, but it was still twilight at 7.20 when…",
+    "modifiers": [
+      "black",
+      "hovering",
+      "blue",
+      "green"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000085",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "sphere",
+    "locator": "ch:11#para:14",
+    "snippet": "…green-blue sky. The sun had set 50 minutes earlier that night at 6.31 pm, but it was still twilight at 7.20 when he saw the black sphere. ‘The object was completely stationary except for a halo around the centre which appeared to be either revolving or pulsating,’ he wrote.…",
+    "modifiers": [
+      "black",
+      "blue",
+      "green"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000086",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "saucer",
+    "locator": "ch:11#para:30",
+    "snippet": "…has told this story for decades, unchallenged by any official, asserting that what he saw in the multiple images was a full-scale classic saucer with a dome. The craft he saw had crashed in a field and was covered with snow. He describes how the saucer had ploughed a huge trench…",
+    "modifiers": [
+      "huge"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000087",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "saucer",
+    "locator": "ch:11#para:30",
+    "snippet": "…was a full-scale classic saucer with a dome. The craft he saw had crashed in a field and was covered with snow. He describes how the saucer had ploughed a huge trench across the field and it was stuck at a 45-degree angle in what looked like a snowbank. There were soldiers…",
+    "modifiers": [
+      "huge"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000088",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "diamond",
+    "raw_term": "diamond-shaped",
+    "locator": "ch:12#para:15",
+    "snippet": "…road in dense forest at about 9 pm, Betty Cash, Vickie Landrum and her seven-year-old grandson Colby Landrum witnessed a huge glowing diamond-shaped object hovering above them, radiating massive amounts of heat. The two adults got out of the car to inspect the object, which was…",
+    "modifiers": [
+      "glowing",
+      "huge",
+      "massive",
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000089",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "diamond",
+    "raw_term": "diamond",
+    "locator": "ch:12#para:15",
+    "snippet": "…two adults got out of the car to inspect the object, which was extremely bright, a dull metallic silver colour, and shaped like an upright diamond with the top and bottom flattened off. They also saw small blue lights ringing the centre of what they believed was clearly a craft of…",
+    "modifiers": [
+      "metallic",
+      "silver",
+      "bright",
+      "small",
+      "blue"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000090",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:12#para:22",
+    "snippet": "Later that decade, in 1987, back at Exmouth on Australia’s North West Cape where Annette Farinaccio would see a strange ‘triangular craft’ hovering over the controversial US naval communications station a few years later, two warrant officers from the elite Special Air…",
+    "modifiers": [
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000091",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:13#para:2",
+    "snippet": "In 1989, a huge number of witnesses, including police, described and even photographed huge triangular craft with distinctive lights on their underside, flying often at low altitudes across Belgium and into Germany. The story culminated with…",
+    "modifiers": [
+      "huge"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000092",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:13#para:3",
+    "snippet": "…November that year through to April 1990, inflamed speculation that some nation, possibly the United States, was operating stealthy black triangular craft capable of extraordinary manoeuvres and able to hover motionless and soundlessly in mid-air.",
+    "modifiers": [
+      "black"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000093",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:13#para:5",
+    "snippet": "…Air Force. He detailed the air force’s evidence about these UAPs to a Washington DC press conference. ‘Hundreds of people saw a majestic triangular craft with a span of approximately a hundred and twenty feet, powerful beaming spotlights, moving very slowly without making any…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000094",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:13#para:6",
+    "snippet": "…director of military infrastructure for the Belgian Army, Colonel André Almond, who, together with his wife, personally witnessed a giant triangular craft hovering in the sky above them. 2 Almond was adamant that what he saw was an unknown aerial vehicle, an intelligently guided craft…",
+    "modifiers": [
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000095",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:13#para:8",
+    "snippet": "…he saw while on night patrol at 2.08 am during a 1990 exercise out of RAAF Base Learmonth. He claimed to have witnessed a massive hovering triangular-shaped ‘craft’ that was at least two football fields wide. The former soldier said, ‘I’ve seen a lot of aircraft in my lifetime, but this…",
+    "modifiers": [
+      "massive",
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000096",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:13#para:9",
+    "snippet": "…his pupils witnessed a craft ‘1000 feet long, with a thickness of about 200–250 feet’. It was trapezoidal in shape, with many lights and triangular sub-structures. ‘It was absolutely incredible, like a city floating through the clouds,’ Greslé said. 5",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000097",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangle",
+    "locator": "ch:13#para:9",
+    "snippet": "In late 1990, there were a series of sightings across Europe by civilian and military pilots, including the mysterious black triangle UAPs recorded on radar by Belgium’s air force. In France in November 1990, as Timothy Good relates in Need To Know , a former French air…",
+    "modifiers": [
+      "black"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000098",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "diamond",
+    "raw_term": "diamond-shaped",
+    "locator": "ch:13#para:10",
+    "snippet": "…a 31 March 1993 classified report from a patrol of Royal Air Force police officers at RAF Cosford base near Wolverhampton of a huge diamond-shaped object about 200 metres across, flying just a few hundred metres above them. Pope told me about this incident in a 2009 interview for…",
+    "modifiers": [
+      "huge"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000099",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:13#para:10",
+    "snippet": "…of Defence, Nick Pope detailed his inside knowledge of a major wave of UAP sightings across the UK in March 1993, all involving massive triangular-shaped craft. While with the Ministry of Defence, he had investigated a 31 March 1993 classified report from a patrol of Royal Air Force…",
+    "modifiers": [
+      "massive"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000100",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:13#para:11",
+    "snippet": "…RAF Cosford incident, there was another sighting at RAF Shawbury in Shropshire, reported by the base’s meteorological officer. He saw a triangular-shaped craft with lights on its underside, about the size of a 747 jet, which at one point hovered in the sky and then fired beams of…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000101",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:13#para:13",
+    "snippet": "…that he made exhaustive investigations with the Pentagon and intelligence services, finally declaring, ‘There is no such [secret US triangular craft] program, we don’t have anything like that. And so, whatever these people were seeing in Belgium, the Belgium military, and…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000102",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:13#para:17",
+    "snippet": "…role on the Senate Intelligence Committee staff. It is not hard to imagine Mellon going the extra yard to scour Area 51 for that elusive flying saucer. He was a child when his mind was first seeded with the intriguing possibility that humans are not alone. When he was seven, the principal…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000103",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:13#para:17",
+    "snippet": "…seven, the principal of his boarding school showed a home movie of an object shot by one of his friends. The film showed a huge, golden disc-shaped object moving across sunny, blue skies and passing through cumulous clouds ‘in a manner that would be very hard to fake’. Mellon…",
+    "modifiers": [
+      "huge",
+      "blue",
+      "golden"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000104",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:13#para:23",
+    "snippet": "…he said, ‘there was an error in the equations’. Harzan described how when Ben Rich ended his talk, he showed a slide portraying a black disc zipping off into space, and that Rich’s final words to the packed auditorium were, ‘“We’ve discovered what it is, and we now have the…",
+    "modifiers": [
+      "black"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000105",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:13#para:28",
+    "snippet": "Goodall told me he also believed the controversial self-proclaimed flying saucer whistleblower Bob Lazar. Lazar is a Nevada businessman who went public in the late 1980s with incredible, and much disputed, claims that…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000106",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:13#para:28",
+    "snippet": "…Knapp on Las Vegas TV station KLAS, asserting (anonymously, at first) his purported employment working on a recovered extra-terrestrial flying saucer at the supposed S-4 facility, adjacent to Papoose Lake south of Area 51.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000107",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "discoid",
+    "locator": "ch:13#para:39",
+    "snippet": "…if they ran the country,’ D’Amato said. ‘They only come before us to get the appropriations for their secret projects, like their latest discoid platforms, although they’re not authorized to fool the American public, or to create hoaxes or UFO simulations using taxpayers’ money, as…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000108",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:14#para:27",
+    "snippet": "…as wide as several city blocks, or ‘a mile wide’, hovering as low as 30 metres above the city. Many perceived the object as a single black triangular or chevron-shaped craft hovering noiselessly in the night sky, with lights in each corner. The Air National Guard later implausibly…",
+    "modifiers": [
+      "black",
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000109",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "v-shaped",
+    "locator": "ch:14#para:27",
+    "snippet": "…in history happened over the city of Phoenix, Arizona. On the evening of 13 March 1997, thousands of eyewitnesses reported a massive V-shaped formation of lights as wide as several city blocks, or ‘a mile wide’, hovering as low as 30 metres above the city. Many perceived the…",
+    "modifiers": [
+      "massive",
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000110",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "boomerang",
+    "raw_term": "chevron",
+    "locator": "ch:14#para:27",
+    "snippet": "…city blocks, or ‘a mile wide’, hovering as low as 30 metres above the city. Many perceived the object as a single black triangular or chevron-shaped craft hovering noiselessly in the night sky, with lights in each corner. The Air National Guard later implausibly claimed that all…",
+    "modifiers": [
+      "black",
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000111",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "diamond",
+    "raw_term": "rhombus",
+    "locator": "ch:15#para:21",
+    "snippet": "…the stars and both Hoyt and his co-worker watched the object as it moved over them in the canyon . . . He could tell that the object was rhombus or parallelogram shaped with sides sloping upwards for a great distance. He had no way of estimating how far upwards it went, but he…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000112",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "egg-shaped",
+    "locator": "ch:15#para:22",
+    "snippet": "The previously undisclosed 1997 NIDS documents detail how Velarde also witnessed an egg-shaped craft while working on his father’s farm many years earlier in 1964. Kelleher quoted Velarde saying, ‘the craft was the same as that seen…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000113",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:12",
+    "snippet": "Descending, Commander Fravor was then shocked to discern what he can only describe as a featureless giant white ‘Tic Tac’-candy shaped object with what looked like two appendages below its belly; it was hovering just above the surface of the ocean over the…",
+    "modifiers": [
+      "white",
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000114",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:12",
+    "snippet": "…looked like two appendages below its belly; it was hovering just above the surface of the ocean over the disturbance in the water. The Tic Tac, roughly the length of his FA-18 jet, had no windows, no visible engines, no wings, no exhaust or smoke, and no discernible markings. It…",
+    "modifiers": [
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000115",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:12",
+    "snippet": "…Fravor told Fox News ’ Tucker Carlson. 10 As Fravor descended to take a closer look, the UAP then began mirroring his movement. The Tic Tac ascended, tracking Fravor’s FA-18 as if it was on the opposite hand on a clockface. This was a chilling moment for Fravor because the…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000116",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:13",
+    "snippet": "…13 From above, Fravor’s colleague, Lieutenant Commander Jim Slaight, the weapons systems officer in the second jet, also saw the giant Tic Tac. Slaight described it as having defined edges but with a fuzzy looking border around it. ‘It looked like what the heat waves would look…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000117",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:14",
+    "snippet": "…like it before or since. No human could have withstood that kind of acceleration.’ Twice, Fravor tried to lock his jet’s radar onto the Tic Tac target but his system would not lock. It crossed his mind later that his system had been jammed by whatever or whoever was in the object.…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000118",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:16",
+    "snippet": "In Tucker Carlson’s Fox News interview with Dave Fravor, the host asked if the performance characteristic of the Tic Tac was even possible with known human technology. This was the most revealing moment of the interview. Dave Fravor had clearly made a…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000119",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:17",
+    "snippet": "The significance of this 2004 Tic Tac encounter event is immense. For years, one of the standard military lines used to defuse public concern about UAPs has been that, after…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000120",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:18",
+    "snippet": "What clinched the evidence for the 2004 Tic Tac UAP sighting was that it was captured on multiple independent sensor systems, including video. As Commander Fravor and his wingman…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000121",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:18",
+    "snippet": "…on multiple independent sensor systems, including video. As Commander Fravor and his wingman returned to the USS Nimitz from their Tic Tac encounter that 14 November afternoon, a third pair of aircraft headed out. One of the pilots, Lieutenant Chad Underwood, had what is…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000122",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:20",
+    "snippet": "…they’re manned or unmanned, still have to obey the laws of physics. They have to have some source of lift, some source of propulsion. The Tic Tac was not doing that. It was going from like 50,000 feet to, you know, a hundred feet in like seconds, which is not possible.’ The awesome…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000123",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:21",
+    "snippet": "…to have seen a fuller version of the video on a console monitor in what is called the ship’s Signal Exploitation Space. He described the Tic Tac making a series of manoeuvres not seen on the very brief 76-second clip later released by the Pentagon. ‘This thing was going berserk,…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000124",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:21",
+    "snippet": "…it is standard in such an intercept for him to order ‘tapes on’ onboard the aircraft before the intercept begins; he estimates the full Tic Tac video would have to be at least ten minutes long.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000125",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:16#para:22",
+    "snippet": "…pilots were formally debriefed at the time about what occurred. What the returning pilots did get was a good-natured ribbing about their ‘flying saucer’ sighting from the USS Nimitz ’s deck crew, some of whom were wearing tin-foil hats in jest.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000126",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:22",
+    "snippet": "There is a lot about the Tic Tac story that is mystifying. It was exceedingly strange that one of the most powerful carrier battle fleets in the world engaged with an…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000127",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:23",
+    "snippet": "Curiously, it was only after the Tic Tac video mysteriously surfaced in 2007 on a German website that someone began investigating. Commander Fravor did not disclose who the…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000128",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:23",
+    "snippet": "…Fravor did not disclose who the government investigator was, or where they were from, but he said he was first questioned about the Tic Tac incident in 2009. 24 It was very clear that, behind the scenes, the US Navy took the Tic Tac encounter extremely seriously indeed. When…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000129",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:23",
+    "snippet": "…but he said he was first questioned about the Tic Tac incident in 2009. 24 It was very clear that, behind the scenes, the US Navy took the Tic Tac encounter extremely seriously indeed. When former fighter pilot Paco Chierici researched his 2015 story about the Tic Tac incident, he…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000130",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:23",
+    "snippet": "…US Navy took the Tic Tac encounter extremely seriously indeed. When former fighter pilot Paco Chierici researched his 2015 story about the Tic Tac incident, he learned that all of the personnel involved, including from the E2-Hawkeye, had now been interviewed. Someone was doing an…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000131",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:24",
+    "snippet": "To add to the intrigue surrounding the Tic Tac encounter, there was also the whiff of a cover-up. The morning after the dogfight, Senior Chief Kevin Day went to the USS Princeton ’s…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000132",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:24",
+    "snippet": "…report. It was routine for all communications to be permanently stored on optical disk. But he was shocked to learn that the data for the Tic Tac encounter had been wiped. ‘As it turns out, all of our comms had been erased. Now, every time you key a mic on the ship, it stamps the…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000133",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disk",
+    "locator": "ch:16#para:24",
+    "snippet": "…could get the data he needed to write up an after-action report. It was routine for all communications to be permanently stored on optical disk. But he was shocked to learn that the data for the Tic Tac encounter had been wiped. ‘As it turns out, all of our comms had been erased.…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000134",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disk",
+    "locator": "ch:16#para:24",
+    "snippet": "…had been wiped. ‘As it turns out, all of our comms had been erased. Now, every time you key a mic on the ship, it stamps the optical disk with a date and time stamp. All the date and time stamps were there but the actual comms were all missing. And that was another anomalous…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000135",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:26",
+    "snippet": "…Rogoway, who writes for The War Zone blog on Time Inc’s The Drive , underlined just how uncomfortable the questions were that the 2004 Tic Tac sighting posed for the most powerful nation on Earth. He wrote that ‘The main revelation is that technology exists that is capable of…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000136",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:16#para:26",
+    "snippet": "…of propulsion, flight controls, material science, and even physics. Let me underline this again for you, the Nimitz encounter with the Tic Tac proved that exotic technology that is widely thought of as the domain of science fiction actually exists. It is real . It isn’t the result…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000137",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:17#para:4",
+    "snippet": "…shocked him at the ranch was an incident where a three-dimensional object suddenly materialised in front of him, which looked like the triangular metallic ‘bent bell’ cover art on the front of the Mike Oldfield album Tubular Bells . ‘That’s the closest thing I can come to as to what…",
+    "modifiers": [
+      "metallic"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000138",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cylinder",
+    "raw_term": "tubular",
+    "locator": "ch:17#para:4",
+    "snippet": "…materialised in front of him, which looked like the triangular metallic ‘bent bell’ cover art on the front of the Mike Oldfield album Tubular Bells . ‘That’s the closest thing I can come to as to what the structure of this looked like,’ Bigelow says he was told. 1",
+    "modifiers": [
+      "metallic"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000139",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:17#para:21",
+    "snippet": "…of Bigelow’s first hires in 2007 was former USS Nimitz FA-18 jet pilot Marine Lieutenant Colonel Douglas Kurth, the first witness to the Tic Tac UAP in November 2004. Just over three years after his involvement in that sighting, Kurth, now a civilian, began work in December 2007 as…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000140",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:17#para:22",
+    "snippet": "…to admit it. Nor was any explanation given for why these strange UAPs might be seen as a ‘threat’ but perhaps one explanation was that the Tic Tac, which so comprehensively outperformed the best fighter attack jets in the US Air Force, was clearly a potential threat worthy of intense…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000141",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:17#para:25",
+    "snippet": "Former Bigelow NIDS scientist Dr Eric Davis has admitted that his team was responsible for the covert investigation into the 2004 Tic Tac USS Nimitz incident and they too reached a dramatic conclusion as to who or what was behind it. In a radio interview, he volunteered his…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000142",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:17#para:25",
+    "snippet": "…radio interview, he volunteered his official Defence Intelligence Agency-funded investigation’s dramatic final conclusions about the 2004 Tic Tac UAP: ‘the take on it is that it’s a legitimate UFO . . . this is not a technology that is made on Earth by humans, anywhere. . . . we came…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000143",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:17#para:28",
+    "snippet": "…Frank Thayer tracked down an extraordinary number of witnesses to corroborate what they allege was a giant ‘100-foot diameter (30-metres) flying saucer’ found lying on a mesa above Hart Canyon east of the town of Aztec. 13 This craft was also allegedly retrieved by the US military under a…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000144",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:18#para:3",
+    "snippet": "…with no wings or tail, a round fuselage and a dome on the top, with secret army memos declassified in 1994 referring to it as a ‘flying disc’. Where her book courted most controversy was Jacobsen’s extraordinary assertion that what crashed at Roswell was actually Russian,…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000145",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "ball",
+    "locator": "ch:19#para:4",
+    "snippet": "…spook world at the Pentagon. ‘They happen at places like this, at tables like this, where a few men get together and decide to push the ball down the field.’ 2 (Phwooar – what a jerk, I can hear you thinking. Do people still really talk like that? It has overtones of Jack…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000146",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "delta",
+    "locator": "ch:19#para:13",
+    "snippet": "…I say,’ DeLonge nervously responded, leaving listeners and viewers with the impression that, because he had revealed too much, a pitiless Delta Force commando team was about to kick in Rogan’s studio door and drag both of them off in chains to a dark prison cell in a secure cave at…",
+    "modifiers": [
+      "dark"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000147",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:20#para:8",
+    "snippet": "…positive endorsement for a book that includes fictional US military characters hiding the ‘truth’ about a secret government alien flying saucer program that (without giving away too much of DeLonge’s storyline) has been subverted by traitors from within. Of course, the book is only…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000148",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:20#para:18",
+    "snippet": "…classified files that could be declassified.’ 14 As we have seen in previous chapters, Podesta is not easily dismissed as a tin-foil hat flying saucer looney. He is a senior and well-respected public servant who held top-secret/SCI clearances in his past roles with both Presidents Obama…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000149",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:21#para:7",
+    "snippet": "…to an account of what, at that time in 2017, was still the largely unknown story of the USS Nimitz ’s F-16 encounters with the hypersonic Tic Tac UAP off the coast of San Diego. ‘Bear in mind that naval aviators are the finest observers possible. All have top-secret clearances. All…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000150",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:21#para:9",
+    "snippet": "…think it had to do with aliens.’ 3 As Annie Jacobsen also claimed, DeLonge averred he was told the Roswell crash was a Nazi-built Russian flying saucer, but neither he nor his insider sources have provided any evidence to substantiate such a sensational claim. If any of what DeLonge was…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000151",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:21#para:21",
+    "snippet": "…(or a non-human intra-terrestrial?) intelligence was the elephant in the room. When pushed by CNN’s Erin Burnett on whether he thought the Tic Tac objects were aliens, Elizondo initially ducked the issue. ‘What I wanted to do was to allow the data to speak for itself and then use that…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000152",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:21#para:28",
+    "snippet": "…of the Defence Department’s AATIP investigations into UAPs. One of those videos was the 76-second so-called FLIR1 video, depicting the Tic Tac, the egg- or oblong-shaped UAP filmed by the USS Nimitz pilot in 2004. 20 That FLIR1/Tic Tac film was posted on the TTSA site along with…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000153",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:21#para:28",
+    "snippet": "…so-called FLIR1 video, depicting the Tic Tac, the egg- or oblong-shaped UAP filmed by the USS Nimitz pilot in 2004. 20 That FLIR1/Tic Tac film was posted on the TTSA site along with another undated 34-second video known as the ‘Gimbal’. 21 The Gimbal video shows a UAP…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000154",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "egg",
+    "locator": "ch:21#para:28",
+    "snippet": "…Department’s AATIP investigations into UAPs. One of those videos was the 76-second so-called FLIR1 video, depicting the Tic Tac, the egg- or oblong-shaped UAP filmed by the USS Nimitz pilot in 2004. 20 That FLIR1/Tic Tac film was posted on the TTSA site along with another…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000155",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "egg",
+    "raw_term": "oval",
+    "locator": "ch:21#para:29",
+    "snippet": "…fighter using the jet’s advanced targeting forward-looking infrared (ATFLIR) pod. On the 34-second video, the UAP appeared as a white oval shape moving at apparent high speed from top right to lower left of the screen flying very low over the water (although the claimed high…",
+    "modifiers": [
+      "white"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000156",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "sphere",
+    "locator": "ch:22#para:4",
+    "snippet": "…of nowhere, a mind-bogglingly anomalous object hurtled through the narrow gap that separated them. What the pilots saw was a translucent sphere, like ‘a giant soap bubble’, that passed between the two jets. ‘It was basically a cube inside a sphere with the points of the cube…",
+    "modifiers": [
+      "translucent"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000157",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "sphere",
+    "locator": "ch:22#para:4",
+    "snippet": "…the pilots saw was a translucent sphere, like ‘a giant soap bubble’, that passed between the two jets. ‘It was basically a cube inside a sphere with the points of the cube touching the outside of the sphere,’ navy fighter pilot Lieutenant Ryan Graves said of the serious near-miss…",
+    "modifiers": [
+      "translucent"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000158",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "sphere",
+    "locator": "ch:22#para:4",
+    "snippet": "…that passed between the two jets. ‘It was basically a cube inside a sphere with the points of the cube touching the outside of the sphere,’ navy fighter pilot Lieutenant Ryan Graves said of the serious near-miss incident recounted to him by his anonymous pilot colleague who…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000159",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "sphere",
+    "locator": "ch:22#para:4",
+    "snippet": "…it. 2 ‘I almost hit one of those damn things,’ Graves was told. Christopher Mellon gave more detail about the mysterious cube-inside-a-sphere object seen by the pilots in this incident: ‘They’re perhaps six to ten feet across. And they’re transparent, like a soap bubble with a…",
+    "modifiers": [
+      "transparent"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000160",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cube",
+    "raw_term": "cube",
+    "locator": "ch:22#para:4",
+    "snippet": "…them. What the pilots saw was a translucent sphere, like ‘a giant soap bubble’, that passed between the two jets. ‘It was basically a cube inside a sphere with the points of the cube touching the outside of the sphere,’ navy fighter pilot Lieutenant Ryan Graves said of the…",
+    "modifiers": [
+      "translucent"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000161",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cube",
+    "raw_term": "cube",
+    "locator": "ch:22#para:4",
+    "snippet": "…sphere, like ‘a giant soap bubble’, that passed between the two jets. ‘It was basically a cube inside a sphere with the points of the cube touching the outside of the sphere,’ navy fighter pilot Lieutenant Ryan Graves said of the serious near-miss incident recounted to him by…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000162",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cube",
+    "raw_term": "cube",
+    "locator": "ch:22#para:4",
+    "snippet": "…who experienced it. 2 ‘I almost hit one of those damn things,’ Graves was told. Christopher Mellon gave more detail about the mysterious cube-inside-a-sphere object seen by the pilots in this incident: ‘They’re perhaps six to ten feet across. And they’re transparent, like a soap…",
+    "modifiers": [
+      "transparent"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000163",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cube",
+    "raw_term": "cube",
+    "locator": "ch:22#para:4",
+    "snippet": "…seen by the pilots in this incident: ‘They’re perhaps six to ten feet across. And they’re transparent, like a soap bubble with a black cube inside. And the edges of the cube are touching the interior of the bubble . . .’. 3",
+    "modifiers": [
+      "black",
+      "transparent"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000164",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "cube",
+    "raw_term": "cube",
+    "locator": "ch:22#para:4",
+    "snippet": "…‘They’re perhaps six to ten feet across. And they’re transparent, like a soap bubble with a black cube inside. And the edges of the cube are touching the interior of the bubble . . .’. 3",
+    "modifiers": [
+      "black",
+      "transparent"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000165",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:22#para:7",
+    "snippet": "…technology against your own pilots without warning was immense and a flagrant breach of standard operating procedure. Just like the 2004 Tic Tac, the Gimbal had no visible flight surfaces, no visible propulsion, and no heat signature. It stayed stationary in one spot, even though…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000166",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic-tac",
+    "locator": "ch:22#para:12",
+    "snippet": "…the phenomena its pilots are still witnessing to this day. ‘The Navy considers the phenomena contained/depicted in those three videos [the Tic-Tac, The Go-Fast and the Gimbal UAPs] as unidentified,’ a navy spokesman Joseph Gradisher told John Greenewald’s The Black Vault website. 14…",
+    "modifiers": [
+      "black"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000167",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:22#para:19",
+    "snippet": "…the commander already knew about these mysterious craft, that he was unsurprised. It could also explain why, soon after the USS Nimitz Tic Tac sightings, men clearly working for some arm of the US military or intelligence services arrived to collect the data drives. If the Tic…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000168",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:22#para:19",
+    "snippet": "…Tic Tac sightings, men clearly working for some arm of the US military or intelligence services arrived to collect the data drives. If the Tic Tac, the Gimbal and the Go-Fast UAPs were some super-secret government project testing a major technology breakthrough against US Navy pilots,…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000169",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:22#para:20",
+    "snippet": "…made a Freedom of Information Act request to the US Navy’s Office of Naval Intelligence (ONI), seeking records relating to the USS Nimitz Tic Tac UAP encounter. He cited the former fighter pilot who broke the original Tic Tac story, Paco Chierici, who wrote how he was allowed to view…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000170",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:22#para:20",
+    "snippet": "…(ONI), seeking records relating to the USS Nimitz Tic Tac UAP encounter. He cited the former fighter pilot who broke the original Tic Tac story, Paco Chierici, who wrote how he was allowed to view a classified ONI report before he wrote his article, a document that still has…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000171",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:22#para:23",
+    "snippet": "…their discovery. I surmise that, before TTSA’s implosion, the plot required The General or his henchmen to quietly slip a blueprint for a flying saucer over a discrete café table in the back of Utah somewhere and, after a decent interval, up would bob TTSA’s Steve Justice, Hal Puthoff and…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000172",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:22#para:23",
+    "snippet": "…Justice, Hal Puthoff and Tom DeLonge, slapping themselves on the back with the announcement that they have just discovered how to build a flying saucer with a warp drive. Just to add spice to the conspiracy theory, you will recall that back in March 2016, DeLonge made the curious promise…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000173",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:23#para:2",
+    "snippet": "(Foreboding music rises as the camera closes in on the wreckage of a glowing flying saucer crashed in a lonely desert. We slowly track to a shocking close-up of a dead grey alien face in the smoking wreckage. Then we dissolve to…",
+    "modifiers": [
+      "glowing"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000174",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:23#para:5",
+    "snippet": "…members of his family together and confided he had been a member of a retrieval team sent to the crash site of the so-called Roswell flying saucer craft in 1947. At the empty desert location, his team found two dead alien occupants thrown from a largely intact metallic disc. Inside…",
+    "modifiers": [
+      "metallic"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000175",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:23#para:5",
+    "snippet": "…flying saucer craft in 1947. At the empty desert location, his team found two dead alien occupants thrown from a largely intact metallic disc. Inside the craft, a lone ET survivor was found. The corpses of its dead alien comrades were sent to the Wright-Patterson Air Force Base…",
+    "modifiers": [
+      "metallic"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000176",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "wedge-shaped",
+    "locator": "ch:23#para:11",
+    "snippet": "…a picture of one of these pieces of metal, which is optimistically described as ‘Micron-layered Bismuth and Magnesium Zinc from bottom of wedge-shaped UFO in late 1940s near White Sands Proving Ground, New Mexico’. 7 It is this curved lump of metal – the UFO ‘Skin’ – that has drawn an…",
+    "modifiers": [
+      "white"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000177",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:23#para:11",
+    "snippet": "…very different from the previous chunk of louvered metal. The writer claimed ‘these scrapings came from the exterior underside of the Disc itself’. 6 Linda Moulton Howe’s website has a picture of one of these pieces of metal, which is optimistically described as…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000178",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:23#para:22",
+    "snippet": "…like this, if Tom’s extra-terrestrial-tech conspiracy theory is truly the case, if some arm of the military truly is hiding a recovered flying saucer in a cave somewhere? Moreover, why is the US Army allowing a taxpayer-funded laboratory to be used for the analysis of samples that, at…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000179",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:23#para:26",
+    "snippet": "…the army and TTSA. I strongly doubt the Art’s Part sample truly came from a benevolent grandfather who surreptitiously peeled it off a flying saucer. To understand why everyone, including the US Army, was getting excited about these scraps of metal, it is important to understand what…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000180",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:25#para:9",
+    "snippet": "…to allow docking. There to the left of the command module, clearly defined, is a trio of blue lights grouped in what looks like a dark triangular shape against the pitch black of outer space. It certainly looks like the outline of a triangle to me, as if there is a shape in a…",
+    "modifiers": [
+      "black",
+      "dark",
+      "blue"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000181",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangle",
+    "locator": "ch:25#para:9",
+    "snippet": "…lights grouped in what looks like a dark triangular shape against the pitch black of outer space. It certainly looks like the outline of a triangle to me, as if there is a shape in a slightly lighter shade of charcoal, edged with the eerie blue lights, floating beside the command…",
+    "modifiers": [
+      "black",
+      "dark",
+      "blue"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000182",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "diamond",
+    "raw_term": "diamond-shaped",
+    "locator": "ch:25#para:17",
+    "snippet": "…Dr Davis referred to the infamous 1980 Cash-Landrum UFO case, covered earlier in this book, where the Landrum family reported a massive diamond-shaped UFO hovering over their car in the road near Dayton, Texas. As well as the trio reporting terrible burns from what experts declared was…",
+    "modifiers": [
+      "massive",
+      "hovering"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000183",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:25#para:21",
+    "snippet": "…to show that any of these capabilities have been proven, other than what has been revealed publicly and privately by the data from the Tic Tac, Gimbal and Go Fast encounters. Part of me just wants to shake my head and dismiss the claims made in this document out-of-hand as crazy…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000184",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:27#para:20",
+    "snippet": "…sky and stood still again and then disappeared. The other was a solid vehicle that – the two differed on this shape – one thought it was triangular and the other thought it was elliptical,’ he told me. He would not reveal any more, but it was clear to me that he knew a great deal more…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000185",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic-tac",
+    "locator": "ch:27#para:29",
+    "snippet": "…is being hidden away by the air force, it might explain why the US Navy recently admitted that it cannot prosaically explain the Tic-Tac, Gimbal or Go-Fast videos taken by its carrier battlegroup fighter pilots. Perhaps what is most effectively flushing out this incredible…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000186",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:28#para:3",
+    "snippet": "…he still got his patent, largely because the navy vouched for his discovery. Intriguingly, the plans for his proposed craft resemble a triangular-shaped UAP. Dr Pais claimed to have discovered what he called an ‘inertial mass reduction device’, capable of generating the same kind of…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000187",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:28#para:5",
+    "snippet": "…developing an anti-gravity craft, a patent applied for in April 2016, 12 years after the USS Nimitz and its pilots tracked and videoed the Tic Tac UAP off the west coast. Is it just a coincidence that the craft is shaped exactly like the black triangles seen in the skies for decades?…",
+    "modifiers": [
+      "black"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000188",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:28#para:5",
+    "snippet": "…seen in the skies for decades? Or that the schematic diagram of the ‘gravitational wave generator’ looks just like . . . well . . . a Tic Tac?",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000189",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:28#para:10",
+    "snippet": "The timing of Dr Pais’s patent applications, so soon after The New York Times ’ disclosures about the Tic Tac and other mysterious craft seen by the US Navy off the east and west coast, invited inevitable speculation that what the navy pilots saw…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000190",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:28#para:10",
+    "snippet": "…coupled effects of EM field-induced air/water particles repulsion and vacuum energy polarisation’. 8 (Remember that reference during the Tic Tac saga to an underwater object travelling at hundreds of knots?)",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000191",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:28#para:11",
+    "snippet": "…Defence Department clearances he has held. In an email sent to members of a private news group, Mellon responded to a posted video of a triangular craft recorded in 1997, addressing speculation it could be the mythical so-called TR3B, a rumoured super-hypersonic US stealthy…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000192",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangular",
+    "locator": "ch:28#para:16",
+    "snippet": "…than two metres in diameter. The obvious conclusion to be drawn is that this may be the potential power source for Dr Pais’s proposed triangular hybrid spacecraft. As with every other of Pais’s recent bizarre patents, the Compact Fusion Reactor application left most scientists…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000193",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:28#para:28",
+    "snippet": "…that makes my head spin with its awesome implications, if true. Dr Davis leaves no room for doubt when he says whatever is propelling the Tic Tac, Go Fast and Gimbal UAPs is ‘off-world vehicles not made on this earth’ 30 and that is what he has told the Congress in private briefings.…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000194",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "sphere",
+    "locator": "ch:31#para:29",
+    "snippet": "Hynek, Dr J. Allen, The Hynek UFO Report , 1977, Sphere Books Ltd",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000195",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:32#para:2",
+    "snippet": "1 . Air Marshall Sir George Jones, interview published in Australian Flying Saucer Review , No. 8, June 1965, p. 18. (UFOIC, Sydney edition).",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000196",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:32#para:26",
+    "snippet": "13 . ‘RAAF Captures Flying Saucer on Ranch in Roswell Region’, Roswell Daily Record , 8 Jul 1947, p. 1.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000197",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "sphere",
+    "raw_term": "sphere",
+    "locator": "ch:32#para:46",
+    "snippet": "9 . Dr J. Allen Hynek, The Hynek UFO Report , Sphere Books Ltd, 1977, pp. 63–4.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000198",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:32#para:72",
+    "snippet": "7 . Dept of Supply, ‘Reports on Unidentified Aircraft, Strange Occurrences etc Pt 1 1952–1968’, p. 166–168, ‘Flying Saucer Observed Over Woomera’, 2 Oct 1952.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000199",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:32#para:101",
+    "snippet": "18 . Tully Times , ‘I’ve Seen A Flying Saucer’, Friday 28 Jan 1966, p. 1.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000200",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:32#para:230",
+    "snippet": "5 . Joe Murgia/UFO Joe website, ‘Notes and Quotes from the Military “Tic Tac” Witness Group Interview at UFO MegaCon’, 27 March 2019. Accessed online 6 Feb 2020 at: www.ufojoe.net/?p=805",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000201",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:32#para:245",
+    "snippet": "20 . Matthew Phelan, ‘Navy Pilot Who Filmed the “Tic Tac” UFO Speaks: It Wasn’t Behaving by the Normal Laws of Physics’, New York Magazine , 19 December 2019. Accessed online 9 February 2020:…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000202",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic-tac",
+    "locator": "ch:32#para:245",
+    "snippet": "…by the Normal Laws of Physics’, New York Magazine , 19 December 2019. Accessed online 9 February 2020: nymag.com/intelligencer/2019/12/tic-tac-ufo-video-q-and-a-with-navy-pilot-chad-underwood.html",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000203",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "triangle",
+    "locator": "ch:32#para:267",
+    "snippet": "14 . Art Bell Interview with Dr Colm Kelleher, ‘Black Triangle Phenomenon’, Coast to Coast AM , 24 April 2004. Accessed online 15 December 2019: www.coasttocoastam.com/show/2004-04-24-show/",
+    "modifiers": [
+      "black"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000204",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "delta",
+    "locator": "ch:32#para:324",
+    "snippet": "16 . Space Force website. ‘Star Delta Fact Sheet’. Accessed online 24 March 2021: www.spaceforce.mil/About-Us/STAR-DELTA/.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000205",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "delta",
+    "locator": "ch:32#para:324",
+    "snippet": "16 . Space Force website. ‘Star Delta Fact Sheet’. Accessed online 24 March 2021: www.spaceforce.mil/About-Us/STAR-DELTA/.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000206",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:32#para:375",
+    "snippet": "23 . Paul Dean, ‘Office of Naval Intelligence (ONI) Admits to “Top Secret” Records and “Secret” Video from USS Nimitz “Tic Tac” UFO Incident’, UFOs – Documenting The Evidence Blog , 8 January 2020. Accessed online 8 January 2020: ufos-documenting-the-evidence.blogspot.com/",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000207",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "wedge-shaped",
+    "locator": "ch:32#para:380",
+    "snippet": "1 . Linda Moulton Howe, ‘7-Part Mysterious Bismuth and Magnesium Zinc Metal From Bottom of Wedge-Shaped UFO’, Earthfiles.com, 6 September 2019. Accessed online 12 January 2020: www.earthfiles.com/bismuth/",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000208",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "wedge-shaped",
+    "locator": "ch:32#para:384",
+    "snippet": "5 . 2nd letter of 22 Apr 1996, ‘7-Part Mysterious Bismuth and Magnesium Zinc Metal from Bottom of Wedge-Shaped UFO’, Earthfiles.com, 6 September 2019. Accessed online 12 January 2020: www.earthfiles.com/bismuth/",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000209",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "wedge-shaped",
+    "locator": "ch:32#para:385",
+    "snippet": "6 . 3rd letter of 27 May 1996, ‘7-Part Mysterious Bismuth and Magnesium Zinc Metal from Bottom of Wedge-Shaped UFO’, Earthfiles.com, 6 September 2019. Accessed online 12 January 2020: www.earthfiles.com/bismuth/",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000210",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "wedge-shaped",
+    "locator": "ch:32#para:386",
+    "snippet": "7 . Linda Moulton Howe, ‘7-Part Mysterious Bismuth and Magnesium Zinc Metal from Bottom of Wedge-Shaped UFO’.",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000211",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "triangle",
+    "raw_term": "wedge-shaped",
+    "locator": "ch:32#para:388",
+    "snippet": "9 . Fifth letter of 5 July 1996, ‘7-Part Mysterious Bismuth and Magnesium Zinc Metal from Bottom of Wedge-Shaped UFO’, Earthfiles.com, 6 September 2019. Accessed online 12 January 2020: www.earthfiles.com/bismuth/",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000212",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:32#para:397",
+    "snippet": "…Beck interview 8 May 2020 with Christopher Mellon and Lue Elizondo, ‘Transcript: Mellon & Elizondo on Beck: F-18 Pilots Testified About Tic Tac UFO Before “Very Senior DoD Staff” In Secretary Mattis’ Suite’, 9 May 2020. UfoJoe.net. Accessed online 10 May 2020:…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000213",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "saucer",
+    "locator": "ch:34#para:446",
+    "snippet": "Project Saucer 29",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000214",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic tac",
+    "locator": "ch:34#para:562",
+    "snippet": "Tic Tac sighting 141–8, 154–5, 199–200, 205, 208, 220–1, 286, 290, 292",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000215",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:35#para:24",
+    "snippet": "Dr Bob Jacobs as a young lieutenant (left) and today (right). In 1964 he caught a ‘flying saucer’ craft on film firing beams of light to disable a dummy nuclear warhead on a speeding ICBM rocket fired from Vandenberg Air Force Base.…",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000216",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "disc",
+    "locator": "ch:35#para:30",
+    "snippet": "The Costa Rica UAP: in September 1971, a Costa Rican government aerial mapping team accidentally took this photograph of a metallic disc-shaped object, often hailed as the best UFO photograph ever. (Costa Rican National Geographic Institute / Sergio Loaiza)",
+    "modifiers": [
+      "metallic"
+    ],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000217",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "disc",
+    "raw_term": "flying saucer",
+    "locator": "ch:35#para:32",
+    "snippet": "…investigating what the US Government knew about UFOs for President Jimmy Carter, Dan was shocked to discover archival photographs of a ‘flying saucer’ craft being retrieved by US military. The images remain classified to this day. (Courtesy of Dan Sheehan)",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000218",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic-tac",
+    "locator": "ch:35#para:54",
+    "snippet": "The story that forced the US Navy to admit that UAPs are real: retired US Navy chief petty officer and radar specialist Kevin Day, who, as a TOPGUN air intercept controller, monitored the strange Tic-Tac craft videoed and tracked by US Navy pilots in 2004. (Author)",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  },
+  {
+    "id": "M000219",
+    "source_id": "coulthart_inplainsight",
+    "facet": "craft_shape",
+    "shape": "tictac",
+    "raw_term": "tic-tac",
+    "locator": "ch:35#para:64",
+    "snippet": "Author and journalist Leslie Kean at home in New York, standing in front of her New York Times front-page scoop that revealed the existence of the Pentagon’s secret UFO investigation program and detailed the leaked Tic-Tac video. (Author)",
+    "modifiers": [],
+    "confidence": "lexical",
+    "event_date": null
+  }
+]

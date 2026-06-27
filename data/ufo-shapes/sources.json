@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "coulthart_inplainsight",
+    "title": "In Plain Sight",
+    "author": "Ross Coulthart",
+    "year": 2021,
+    "type": "book",
+    "format": "epub",
+    "reliability_tier": 3,
+    "citation": "Coulthart, In Plain Sight (2021)",
+    "url": "",
+    "ingested_at": "2026-06-27",
+    "segment_count": 2078
+  }
+]

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "updated": "2026-06-27",
   "note": "Controlled vocabulary for the UAP Shape Census. Each canonical shape carries the alias terms the extractor matches (whole-word, case-insensitive; internal spaces match flexible whitespace and optional hyphen). This file is meant to GROW — add aliases as real prose reveals them, and bump `version` when you do so the page's methodology panel can show which lexicon produced the data. Order here is the default display order on the page (most-iconic first).",
   "shapes": [
@@ -56,8 +56,8 @@
       "id": "cone",
       "label": "Cone",
       "icon": "🔻",
-      "aliases": ["cone", "conical", "cone-shaped", "top-shaped", "spinning top", "bell-shaped", "bell"],
-      "disambiguation": "Includes 'spinning top' and 'bell' forms. 'Bell' can collide with the Nazi-Bell trope and with literal bells — keep the snippet."
+      "aliases": ["cone", "conical", "cone-shaped", "top-shaped", "spinning top", "bell-shaped"],
+      "disambiguation": "Includes 'spinning top' and 'bell-shaped' forms. Bare 'bell' was REMOVED in v2 — it overwhelmingly matched the surname/Bell Helicopter/etc. (22 false positives in In Plain Sight). Require 'bell-shaped'."
     },
     {
       "id": "diamond",
@@ -70,8 +70,8 @@
       "id": "cube",
       "label": "Cube / Box",
       "icon": "⬛",
-      "aliases": ["cube", "cubic", "cube-shaped", "box", "box-shaped", "rectangular", "square", "square-shaped", "block"],
-      "disambiguation": "High-noise terms ('square deal', 'box of'). Strongly benefits from the Phase 3 LLM filter."
+      "aliases": ["cube", "cubic", "cube-shaped", "box-shaped", "rectangular", "square-shaped"],
+      "disambiguation": "Bare 'box', 'square', and 'block' were REMOVED in v2 — they matched metaphors ('back into the box', 'square kilometres'). Require the shape-qualified forms. Still benefits from the Phase 3 LLM filter."
     },
     {
       "id": "other",

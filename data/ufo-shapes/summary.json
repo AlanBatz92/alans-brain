@@ -1,10 +1,234 @@
 {
-  "generated_at": null,
-  "taxonomy_version": 1,
-  "totals": { "sources": 0, "mentions": 0, "shapes": 0 },
-  "by_shape": [],
-  "by_source": [],
-  "shape_by_source_matrix": { "shapes": [], "sources": [], "cells": [] },
-  "top_modifiers": [],
+  "generated_at": "2026-06-27T00:51:58",
+  "taxonomy_version": 2,
+  "totals": {
+    "sources": 1,
+    "mentions": 219,
+    "shapes": 10
+  },
+  "by_shape": [
+    {
+      "shape": "disc",
+      "label": "Disc",
+      "icon": "🛸",
+      "count": 91,
+      "source_count": 1
+    },
+    {
+      "shape": "tictac",
+      "label": "Tic-Tac / Pill",
+      "icon": "💊",
+      "count": 50,
+      "source_count": 1
+    },
+    {
+      "shape": "triangle",
+      "label": "Triangle",
+      "icon": "🔺",
+      "count": 34,
+      "source_count": 1
+    },
+    {
+      "shape": "egg",
+      "label": "Egg / Ovoid",
+      "icon": "🥚",
+      "count": 13,
+      "source_count": 1
+    },
+    {
+      "shape": "sphere",
+      "label": "Sphere / Orb",
+      "icon": "⚪",
+      "count": 11,
+      "source_count": 1
+    },
+    {
+      "shape": "diamond",
+      "label": "Diamond",
+      "icon": "🔶",
+      "count": 6,
+      "source_count": 1
+    },
+    {
+      "shape": "cylinder",
+      "label": "Cylinder / Cigar",
+      "icon": "🚬",
+      "count": 5,
+      "source_count": 1
+    },
+    {
+      "shape": "cube",
+      "label": "Cube / Box",
+      "icon": "⬛",
+      "count": 5,
+      "source_count": 1
+    },
+    {
+      "shape": "boomerang",
+      "label": "Boomerang / Chevron",
+      "icon": "🪃",
+      "count": 3,
+      "source_count": 1
+    },
+    {
+      "shape": "cone",
+      "label": "Cone",
+      "icon": "🔻",
+      "count": 1,
+      "source_count": 1
+    }
+  ],
+  "by_source": [
+    {
+      "id": "coulthart_inplainsight",
+      "title": "In Plain Sight",
+      "year": 2021,
+      "reliability_tier": 3,
+      "count": 219
+    }
+  ],
+  "shape_by_source_matrix": {
+    "shapes": [
+      "disc",
+      "sphere",
+      "triangle",
+      "boomerang",
+      "cylinder",
+      "tictac",
+      "egg",
+      "cone",
+      "diamond",
+      "cube"
+    ],
+    "sources": [
+      "coulthart_inplainsight"
+    ],
+    "cells": [
+      {
+        "shape": "boomerang",
+        "source": "coulthart_inplainsight",
+        "count": 3
+      },
+      {
+        "shape": "cone",
+        "source": "coulthart_inplainsight",
+        "count": 1
+      },
+      {
+        "shape": "cube",
+        "source": "coulthart_inplainsight",
+        "count": 5
+      },
+      {
+        "shape": "cylinder",
+        "source": "coulthart_inplainsight",
+        "count": 5
+      },
+      {
+        "shape": "diamond",
+        "source": "coulthart_inplainsight",
+        "count": 6
+      },
+      {
+        "shape": "disc",
+        "source": "coulthart_inplainsight",
+        "count": 91
+      },
+      {
+        "shape": "egg",
+        "source": "coulthart_inplainsight",
+        "count": 13
+      },
+      {
+        "shape": "sphere",
+        "source": "coulthart_inplainsight",
+        "count": 11
+      },
+      {
+        "shape": "tictac",
+        "source": "coulthart_inplainsight",
+        "count": 50
+      },
+      {
+        "shape": "triangle",
+        "source": "coulthart_inplainsight",
+        "count": 34
+      }
+    ]
+  },
+  "top_modifiers": [
+    {
+      "term": "hovering",
+      "count": 15
+    },
+    {
+      "term": "black",
+      "count": 14
+    },
+    {
+      "term": "metallic",
+      "count": 11
+    },
+    {
+      "term": "huge",
+      "count": 10
+    },
+    {
+      "term": "blue",
+      "count": 8
+    },
+    {
+      "term": "dark",
+      "count": 6
+    },
+    {
+      "term": "transparent",
+      "count": 6
+    },
+    {
+      "term": "white",
+      "count": 6
+    },
+    {
+      "term": "massive",
+      "count": 6
+    },
+    {
+      "term": "silvery",
+      "count": 5
+    },
+    {
+      "term": "small",
+      "count": 4
+    },
+    {
+      "term": "green",
+      "count": 3
+    },
+    {
+      "term": "translucent",
+      "count": 3
+    },
+    {
+      "term": "silver",
+      "count": 2
+    },
+    {
+      "term": "glowing",
+      "count": 2
+    },
+    {
+      "term": "red",
+      "count": 1
+    },
+    {
+      "term": "bright",
+      "count": 1
+    },
+    {
+      "term": "golden",
+      "count": 1
+    }
+  ],
   "timeline_buckets": []
 }
