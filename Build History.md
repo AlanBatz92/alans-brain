@@ -10,6 +10,19 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: readable source chips + tier explanation
+
+Two fixes from Alan's photo. **(1) Source shape-chips were nearly illegible** — the real culprit
+(the previous pass fixed the wrong pills): the per-source chips are `<button>`s and only `font` was
+inherited, so the shape-name text rendered in the browser's default dark button-text colour. Set an
+explicit `color:var(--text)` on `.us-chip`/`.us-chip-btn` (white name + green count on a dark pill,
+confirmed `rgb(232,236,244)` via computed style + screenshot). **(2) Reliability tiers were
+unexplained** — added a "Reliability tiers" section to the "How this census is built" panel
+(Tier 1 primary firsthand … Tier 4 unverified community), a one-line legend under the "By source"
+heading, and a hover `title` on every Tier badge (source cards + modal passages). `ufo-shapes.html` only.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: leaderboard + modal UI cleanup
 
 Quick visual polish from Alan's screenshots. (1) **Leaderboard labels no longer truncate** — the
