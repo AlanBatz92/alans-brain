@@ -10,6 +10,33 @@
 
 ---
 
+## 2026-06-26 — UAP Shape Census: 5 additional books ingested + full extract/build
+
+Ingested 5 more EPUBs into the Shape Census alongside the already-ingested Coulthart
+(*In Plain Sight*, 2021), bringing the corpus to **6 sources**:
+
+| id | Author | Year | Tier | Segments |
+|---|---|---|---|---|
+| `jung_flying_saucers` | C.G. Jung | 1958 | 3 | 1,087 |
+| `vallee_passport_magonia` | Jacques Vallee | 1969 | 3 | 4,532 |
+| `hastings_ufos_nukes` | Robert L. Hastings | 2008 | 3 | 3,090 |
+| `kean_ufos_generals` | Leslie Kean | 2010 | **2** | 1,820 |
+| `coulthart_inplainsight` | Ross Coulthart | 2021 | 3 | 2,078 |
+| `graff_ufo_inside_story` | Garrett M. Graff | 2023 | **2** | 1,409 |
+
+**13,016 total segments.** Ran `extract.py` + `build.py` for the first time against the
+full corpus: **1,083 high-confidence shape mentions** across **11 canonical shapes** committed
+to `data/ufo-shapes/`. 548 review-tier mentions withheld locally (breakdown: Sphere 273,
+Egg 82, Triangle 53, Disc 40, Tic-Tac 37, Cone 22, Cylinder 17, Diamond 8, Boomerang 8,
+Cube 6, Other 2). Tier assignments: Kean and Graff at Tier 2 (investigative journalism
+with named primary sources); Jung, Vallee, Hastings, Coulthart at Tier 3 (synthesis /
+editorial perspective / advocacy research).
+
+Committed `data/ufo-shapes/{sources,mentions,summary}.json`; PR open against `main`.
+`ufo-shapes.html` will show live data on merge — the page was already scaffolded.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: Phase 0 scaffold
 
 Started an ancillary paranormal project (and deliberate proving ground for the larger

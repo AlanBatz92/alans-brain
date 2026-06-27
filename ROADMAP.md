@@ -61,9 +61,13 @@ deliberate proving ground for the larger Cartography / Node-Graph projects.
   (documented empty schemas, source reliability tiers), `ufo-shapes.html` stub (stats +
   leaderboard + **per-source drill-down** + methodology panel; not yet nav-linked), and the
   comprehensive `PLAN-ufo-shapes.md`. Pipeline smoke-tested end-to-end.
-- **▶ Phase 1 (next):** validate `ingest.py` on a real EPUB/PDF, ingest the first real book
-  (Coulthart, *In Plain Sight*), add snippet-level **drill-down** ("the receipts") to the page,
-  then link it from `paranormal.html` + nav + add a Tech Stack node.
+- **✓ Phase 1 ingestion (done 2026-06-26):** validated `ingest.py` on real EPUBs; **6 books
+  ingested** (Jung 1958 · Vallee 1969 · Hastings 2008 · Kean 2010 · Coulthart 2021 · Graff 2023)
+  → 13,016 segments → **1,083 high-confidence mentions / 11 shapes** in `data/ufo-shapes/`.
+  PR open against `main`; page has real data on merge.
+- **▶ Phase 1 remaining (next):** add snippet-level **drill-down** ("the receipts" — clicking a
+  shape/source shows the actual passage snippets from `mentions.json`), then link from
+  `paranormal.html` + nav + add a Tech Stack node.
 - **◷ Later:** Phase 2 shape×source heatmap → Phase 3 LLM disambiguation (`classify.py`) →
   Phase 4 timeline by sighting decade. **Then:** extend to a **humanoid/entity facet** (Alan's
   near-future want — mentions already carry a `facet` field; the prize is cross-facet
