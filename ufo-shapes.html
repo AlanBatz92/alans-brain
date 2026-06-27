@@ -63,6 +63,41 @@
 
     .us-empty { text-align:center; padding:50px 20px; color:var(--text-muted) }
     .us-empty-icon img { width:54px; height:54px; opacity:.7 }
+
+    /* clickable affordance on drill-in targets */
+    .us-bar-row:hover .us-bar-label { color:var(--green) }
+    .us-chip.us-chip-btn { cursor:pointer; background:var(--bg); border:1px solid var(--border);
+      font:inherit; font-size:.82rem }
+    .us-chip.us-chip-btn:hover { border-color:var(--green) }
+
+    /* drill-down modal: the cited passages ("the receipts") */
+    .us-modal { position:fixed; inset:0; z-index:400; display:none; background:rgba(0,0,0,.6);
+      backdrop-filter:blur(2px); align-items:flex-end; justify-content:center }
+    .us-modal.us-open { display:flex }
+    @media (min-width:640px) { .us-modal { align-items:center } }
+    .us-modal-panel { background:var(--surface); border:1px solid var(--border);
+      width:100%; max-width:720px; max-height:86vh; display:flex; flex-direction:column;
+      border-radius:16px 16px 0 0 }
+    @media (min-width:640px) { .us-modal-panel { border-radius:16px } }
+    .us-modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:16px 18px; border-bottom:1px solid var(--border); position:sticky; top:0 }
+    .us-modal-title { font-size:1.05rem; font-weight:700 }
+    .us-modal-sub { color:var(--text-muted); font-size:.8rem; margin-top:2px }
+    .us-modal-close { background:var(--bg); border:1px solid var(--border); color:var(--text);
+      width:38px; height:38px; border-radius:10px; cursor:pointer; font-size:1.1rem; flex:0 0 auto }
+    .us-modal-body { overflow-y:auto; padding:8px 18px 18px }
+    .us-mention { border-bottom:1px solid var(--border); padding:13px 0 }
+    .us-mention:last-child { border-bottom:0 }
+    .us-mention-snip { font-size:.92rem; line-height:1.5; color:var(--text) }
+    .us-mention-snip mark { background:transparent; color:var(--green); font-weight:700; padding:0 }
+    .us-mention-meta { margin-top:6px; font-size:.78rem; color:var(--text-muted);
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center }
+    .us-mention-tier { font-family:'JetBrains Mono',monospace; font-size:.7rem;
+      border:1px solid var(--border); border-radius:5px; padding:0 5px; color:var(--text-dim) }
+    .us-modal-srcfilter { padding:10px 18px 0; display:flex; gap:7px; flex-wrap:wrap }
+    .us-srcpill { font-size:.76rem; background:var(--bg); border:1px solid var(--border);
+      border-radius:16px; padding:3px 10px; cursor:pointer; color:var(--text-muted) }
+    .us-srcpill.us-active { border-color:var(--green); color:var(--text) }
   </style>
 </head>
 <body>
@@ -144,6 +179,21 @@
     <!-- ══════ CONTENT (rendered from summary.json) ══════ -->
     <div id="usContent"></div>
 
+    <!-- ══════ DRILL-DOWN MODAL (the cited passages) ══════ -->
+    <div class="us-modal" id="usModal" aria-hidden="true">
+      <div class="us-modal-panel" role="dialog" aria-modal="true" aria-labelledby="usModalTitle">
+        <div class="us-modal-head">
+          <div>
+            <div class="us-modal-title" id="usModalTitle">—</div>
+            <div class="us-modal-sub" id="usModalSub"></div>
+          </div>
+          <button class="us-modal-close" id="usModalClose" aria-label="Close">✕</button>
+        </div>
+        <div class="us-modal-srcfilter" id="usModalSrcFilter"></div>
+        <div class="us-modal-body" id="usModalBody"></div>
+      </div>
+    </div>
+
     <!-- ══════ EMPTY STATE ══════ -->
     <div class="us-empty" id="usEmpty" style="display:none">
       <div class="us-empty-icon"><img src="img/Icons/icons/Nothing_To_See/eye.png" alt=""></div>
@@ -188,12 +238,16 @@
 
 <script>
   /* ── UAP Shape Census — reads data/ufo-shapes/summary.json ──────────────
-     Phase 0 stub: renders headline stats, the shape leaderboard, and the
-     per-source drill-down (click a source → its shape profile) entirely from
-     summary.json. Snippet-level drill-down (lazy-loading mentions.json when a
-     shape or source is opened) is the Phase 1 TODO — see PLAN-ufo-shapes.md. */
+     Renders headline stats, the shape leaderboard, and the per-source shape
+     profile from summary.json. Tapping a shape (or a source's shape chip)
+     lazy-loads mentions.json once and opens the drill-down modal of cited
+     passages, filterable by source. See PLAN-ufo-shapes.md. */
 
   function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+
+  var SUMMARY = null;       // the loaded summary.json
+  var MENTIONS = null;      // lazy-loaded mentions.json (only on first drill-down)
+  var SRC = {};             // sourceId → {title, year, tier}
 
   fetch('data/ufo-shapes/summary.json')
     .then(function(r){ return r.json(); })
@@ -203,6 +257,10 @@
     });
 
   function render(s) {
+    SUMMARY = s;
+    (s.by_source || []).forEach(function(r){
+      SRC[r.id] = { title: r.title, year: r.year, tier: r.reliability_tier };
+    });
     var t = s.totals || { sources:0, mentions:0, shapes:0 };
     document.getElementById('usStats').innerHTML =
       stat(t.sources, 'Sources ingested') +
@@ -217,7 +275,7 @@
     if (s.by_shape && s.by_shape.length) {
       var max = s.by_shape[0].count || 1;
       html += '<div class="us-section reveal"><h2>Shapes, most to least</h2>' +
-              '<p class="us-sub">Total mentions across every ingested source. Tap a shape for the receipts (coming next).</p>' +
+              '<p class="us-sub">Total mentions across every ingested source. Tap a shape to read the cited passages.</p>' +
               '<div class="us-bars">';
       s.by_shape.forEach(function(r){
         html += '<div class="us-bar-row" data-shape="' + esc(r.shape) + '">' +
@@ -231,13 +289,19 @@
     // Per-source view — click a source to see what shapes it references
     if (s.by_source && s.by_source.length) {
       html += '<div class="us-section reveal"><h2>By source</h2>' +
-              '<p class="us-sub">Click a source to see which shapes it references and how often.</p>' +
+              '<p class="us-sub">Click a source to see which shapes it references — then tap a shape to read that source’s passages.</p>' +
               '<div class="us-sources" id="usSources"></div></div>';
     }
 
     document.getElementById('usContent').innerHTML = html;
     if (s.by_source && s.by_source.length) renderSources(s);
     initReveal();
+
+    // Leaderboard: tap a shape → all its cited passages (across sources)
+    document.getElementById('usContent').addEventListener('click', function(e){
+      var row = e.target.closest('.us-bar-row');
+      if (row && row.dataset.shape) openDrill(row.dataset.shape, null);
+    });
   }
 
   function stat(n, label) {
@@ -259,8 +323,9 @@
     s.by_source.forEach(function(src){
       var shapes = (byShapeAll[src.id] || []).slice().sort(function(a,b){ return b.count - a.count; });
       var chips = shapes.map(function(c){
-        return '<span class="us-chip">' + esc(iconOf[c.shape] || '') + ' ' +
-               esc(labelOf[c.shape] || c.shape) + ' <b>' + c.count + '</b></span>';
+        return '<button type="button" class="us-chip us-chip-btn" data-shape="' + esc(c.shape) +
+               '" data-src="' + esc(src.id) + '">' + esc(iconOf[c.shape] || '') + ' ' +
+               esc(labelOf[c.shape] || c.shape) + ' <b>' + c.count + '</b></button>';
       }).join('');
       html += '<div class="us-source" data-src="' + esc(src.id) + '">' +
         '<div class="us-source-head">' +
@@ -276,6 +341,10 @@
     document.getElementById('usSources').innerHTML = html;
 
     document.getElementById('usSources').addEventListener('click', function(e){
+      // A shape chip → that shape's passages within this source
+      var chip = e.target.closest('.us-chip-btn');
+      if (chip) { e.stopPropagation(); openDrill(chip.dataset.shape, chip.dataset.src); return; }
+      // Otherwise toggle the card's shape-chip panel
       var card = e.target.closest('.us-source'); if (!card) return;
       var panel = card.querySelector('.us-source-shapes');
       var open = panel.style.display !== 'none';
@@ -283,6 +352,114 @@
       card.classList.toggle('us-open', !open);
     });
   }
+
+  /* ── Drill-down: the cited passages (lazy-loads mentions.json once) ──────── */
+  function loadMentions() {
+    if (MENTIONS) return Promise.resolve(MENTIONS);
+    return fetch('data/ufo-shapes/mentions.json')
+      .then(function(r){ return r.json(); })
+      .then(function(m){ MENTIONS = m; return m; });
+  }
+
+  function labelFor(shapeId) {
+    var r = (SUMMARY.by_shape || []).filter(function(x){ return x.shape === shapeId; })[0];
+    return r ? (r.icon + ' ' + r.label) : shapeId;
+  }
+
+  // drill state. `pinned` = opened from a source chip (locked to that source);
+  // `source` = the active filter (also used as the pinned source when pinned).
+  var DRILL = { shape: null, source: null, pinned: false };
+
+  function openDrill(shapeId, sourceId) {
+    DRILL.shape = shapeId; DRILL.source = sourceId || null; DRILL.pinned = !!sourceId;
+    var modal = document.getElementById('usModal');
+    document.getElementById('usModalTitle').textContent = labelFor(shapeId);
+    document.getElementById('usModalBody').innerHTML =
+      '<p class="us-sub" style="padding:16px 0">Loading passages…</p>';
+    modal.classList.add('us-open'); modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    loadMentions().then(function(){ renderDrill(); })
+      .catch(function(){
+        document.getElementById('usModalBody').innerHTML =
+          '<p class="us-sub" style="padding:16px 0">Could not load passages.</p>';
+      });
+  }
+
+  function renderDrill() {
+    var rows = MENTIONS.filter(function(m){
+      return m.shape === DRILL.shape && (!DRILL.source || m.source_id === DRILL.source);
+    });
+    // newest sources first feels odd; group by source, ordered by count desc via SUMMARY order
+    rows.sort(function(a, b){
+      if (a.source_id !== b.source_id) return a.source_id < b.source_id ? -1 : 1;
+      return 0;
+    });
+
+    // sub line + source filter pills (only when not already pinned to one source)
+    var total = rows.length;
+    document.getElementById('usModalSub').textContent =
+      total + ' cited passage' + (total === 1 ? '' : 's') +
+      (DRILL.source ? ' in ' + (SRC[DRILL.source] ? SRC[DRILL.source].title : DRILL.source) : ' across all sources');
+
+    var filterEl = document.getElementById('usModalSrcFilter');
+    if (DRILL.pinned) {
+      filterEl.innerHTML = '';   // locked to one source — no filter row
+    } else {
+      var counts = {}, grand = 0;
+      MENTIONS.forEach(function(m){ if (m.shape === DRILL.shape) { counts[m.source_id] = (counts[m.source_id]||0)+1; grand++; } });
+      var ids = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
+      var pills = ['<button class="us-srcpill' + (DRILL.source ? '' : ' us-active') + '" data-src="">All (' + grand + ')</button>'];
+      ids.forEach(function(id){
+        var title = SRC[id] ? (SRC[id].title || id) : id;
+        pills.push('<button class="us-srcpill' + (DRILL.source === id ? ' us-active' : '') + '" data-src="' + esc(id) + '">' +
+                   esc(shortTitle(title)) + ' (' + counts[id] + ')</button>');
+      });
+      filterEl.innerHTML = pills.join('');
+    }
+
+    var body = rows.map(function(m){
+      var s = SRC[m.source_id] || {};
+      var cite = esc(s.title || m.source_id) + (s.year ? ' (' + s.year + ')' : '') +
+                 (m.locator ? ' · ' + esc(m.locator) : '');
+      var tier = s.tier ? '<span class="us-mention-tier">Tier ' + s.tier + '</span>' : '';
+      return '<div class="us-mention"><div class="us-mention-snip">' + highlight(m.snippet, m.raw_term) +
+             '</div><div class="us-mention-meta">' + tier + '<span>' + cite + '</span></div></div>';
+    }).join('');
+    document.getElementById('usModalBody').innerHTML = body ||
+      '<p class="us-sub" style="padding:16px 0">No passages.</p>';
+  }
+
+  function shortTitle(t) { return t.length > 26 ? t.slice(0, 24) + '…' : t; }
+
+  function highlight(snippet, term) {
+    var safe = esc(snippet);
+    if (!term) return safe;
+    try {
+      var rx = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s-]+') + ')', 'ig');
+      return safe.replace(rx, '<mark>$1</mark>');
+    } catch (e) { return safe; }
+  }
+
+  // in-modal source filter
+  document.getElementById('usModalSrcFilter').addEventListener('click', function(e){
+    var pill = e.target.closest('.us-srcpill'); if (!pill) return;
+    DRILL.source = pill.dataset.src || null;
+    renderDrill();
+  });
+
+  /* close handlers */
+  function closeModal() {
+    var modal = document.getElementById('usModal');
+    modal.classList.remove('us-open'); modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('usModalClose').addEventListener('click', closeModal);
+  document.getElementById('usModal').addEventListener('click', function(e){
+    if (e.target === this) closeModal();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && document.getElementById('usModal').classList.contains('us-open')) closeModal();
+  });
 
   function initReveal() {
     var els = document.querySelectorAll('.reveal:not(.visible)');

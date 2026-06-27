@@ -10,6 +10,27 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: snippet drill-down ("the receipts") + Coulthart re-ingest
+
+Two things. **(1) Coulthart re-ingest:** *In Plain Sight* was missing its `segments.jsonl` from the
+prior multi-book run (its earlier ingest landed elsewhere), so it had contributed **0** published
+mentions. Re-ingested locally, re-ran extract + the high-confidence gate, rebuilt → Coulthart now
+adds **206**; corpus is **1,289 high-confidence mentions across 6 sources / 11 shapes** (Disc 706,
+Sphere 174, Triangle 128, Cylinder 124, Tic-Tac 57 …). Squash-merged to `main`.
+
+**(2) Snippet drill-down on `ufo-shapes.html`** — the highest-value view now that there's real data.
+Tapping a **shape** in the leaderboard, or a **shape chip** within a source, lazy-loads
+`mentions.json` once (659 KB, only on first drill) and opens a modal listing the **actual cited
+passages**: each snippet with the matched term highlighted (`<mark>`), plus its source title, year,
+reliability tier, and in-text locator. When opened from the leaderboard the modal carries a **source
+filter** (pills, count-ordered) so you can narrow a shape to one book; when opened from a source chip
+it's pinned to that source. Verified `summary.json` ↔ `mentions.json` per-shape counts are consistent
+(706/174/128…), inline JS passes `node --check`, modal IDs wired, structure balanced. Vanilla,
+`us-` prefix, self-contained styles; reuses the bottom-sheet-on-mobile / centered-on-desktop modal
+pattern. This lands the "▶ Phase 1 remaining — drill-down" item; only the Tech Stack node is left.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: surfaced on the Paranormal hub + merged to main
 
 With 6 books / 1,083 high-confidence mentions built, integrated the census into the site "within
