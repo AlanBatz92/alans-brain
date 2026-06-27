@@ -28,6 +28,7 @@ a Google Sheet, and a home server called **birdstation**).
 | Art Gallery | `art.html` / `gallery.js` | Slideshow + lightbox |
 | Photo Gallery | `photos.html` | Masonry grid |
 | Paranormal | `paranormal.html` | Curated media grid |
+| UAP Shape Census | `ufo-shapes.html` | Growing census of UFO/UAP craft **shape** descriptions across ingested sources (disc/sphere/triangle/cigar/Tic-Tac/…), every mention cited back to source + a **per-source drill-down**. Vanilla page (`us-` prefix, self-contained styles) reads `data/ufo-shapes/summary.json`; the local `ufo-shapes/` Python toolkit produces the JSON. **Phase 0 scaffold (2026-06-27); not yet nav-linked or in the Tech Stack** (empty until the first book is ingested, like `tasks.html`). Full design + phased next-steps: `PLAN-ufo-shapes.md`. |
 | Pride & Identity | `transart.html` | Tabbed: art, polyamory, resources |
 | Personal Projects | `projects.html` | Hub for the home-built projects — cards link to Pulse, Observatory, and Setlist to Spotify |
 | Setlist to Spotify | `setlist-spotify.html` / `setlist-spotify.js` | Setlists → Spotify playlist |

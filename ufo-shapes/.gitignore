@@ -1,0 +1,19 @@
+# Raw ingested book/document text must NEVER be committed to the public repo.
+# Only the DERIVED, cited data (short fair-use snippets + counts) under
+# data/ufo-shapes/ gets committed. See PLAN-ufo-shapes.md "Copyright posture".
+
+# Per-source working folders: raw text + normalized segments stay local.
+sources/*/
+!sources/.gitkeep
+
+# Any loose book files dropped into the toolkit root for processing.
+*.epub
+*.pdf
+*.txt
+*.mobi
+*.azw3
+
+# Optional local Python venv for the EPUB/PDF libraries (Phase 1).
+.venv/
+__pycache__/
+*.pyc

@@ -50,6 +50,27 @@ events → schedule prior → acoustic fingerprint (details in the plan).
 
 ---
 
+### 4c. UAP Shape Census — **Phase 0 scaffold shipped 2026-06-27**  (design: `PLAN-ufo-shapes.md`)
+A narrow, growing census of how UFO/UAP craft are described by **shape** (disc, sphere,
+triangle, cigar, Tic-Tac, egg…) across ingested source documents — every mention cited back
+to its source, correlated across sources. Built on the **actual vanilla stack** (local Python
+toolkit → committed JSON → vanilla page), *not* the framework docs' Supabase/Next.js; it's the
+deliberate proving ground for the larger Cartography / Node-Graph projects.
+- **✓ Phase 0 (done 2026-06-27):** `ufo-shapes/` toolkit (`shapes.json` taxonomy, `ingest.py`/
+  `extract.py`/`build.py`, gitignore keeping raw book text local), `data/ufo-shapes/*.json`
+  (documented empty schemas, source reliability tiers), `ufo-shapes.html` stub (stats +
+  leaderboard + **per-source drill-down** + methodology panel; not yet nav-linked), and the
+  comprehensive `PLAN-ufo-shapes.md`. Pipeline smoke-tested end-to-end.
+- **▶ Phase 1 (next):** validate `ingest.py` on a real EPUB/PDF, ingest the first real book
+  (Coulthart, *In Plain Sight*), add snippet-level **drill-down** ("the receipts") to the page,
+  then link it from `paranormal.html` + nav + add a Tech Stack node.
+- **◷ Later:** Phase 2 shape×source heatmap → Phase 3 LLM disambiguation (`classify.py`) →
+  Phase 4 timeline by sighting decade. **Then:** extend to a **humanoid/entity facet** (Alan's
+  near-future want — mentions already carry a `facet` field; the prize is cross-facet
+  co-occurrence analysis). See `PLAN-ufo-shapes.md` §9–§10.
+
+---
+
 ## ◷ Soon
 
 ### 3. Confidence-tuning follow-ups (life list)

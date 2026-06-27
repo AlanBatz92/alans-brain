@@ -10,6 +10,55 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: Phase 0 scaffold
+
+Started an ancillary paranormal project (and deliberate proving ground for the larger
+Cartography / Node-Graph projects): a narrow, **growing census of how UFO/UAP craft are
+described by shape** (disc, sphere, triangle, cigar, Tic-Tac, egg…) across ingested source
+documents, every mention traceable back to its source, correlated across sources.
+
+**Key architectural decision (Alan):** the two framework docs assume a Next.js + Supabase +
+React + Neo4j stack, but the live site is **vanilla HTML/CSS/JS + local Python + committed
+JSON**. Built the census on the *actual* pattern — local processing, committed JSON, vanilla
+page — and deferred Supabase/Next.js until/unless static JSON becomes unwieldy. The census is
+partly a test of whether that heavier stack is ever needed. Agreed extraction approach: a
+high-recall **regex/lexicon pass first**, an LLM disambiguation pass later (Phase 3). Taxonomy:
+~10 canonical shapes with **Tic-Tac as its own bucket**.
+
+Phase 0 (scaffold only, no real data) shipped:
+- **`ufo-shapes/` local toolkit** (run-from-clone, stdlib-first): `shapes.json` (the controlled
+  shape vocabulary — canonical shapes + aliases + disambiguation notes), `ingest.py`
+  (TXT/EPUB/PDF → normalized `sources/<id>/segments.jsonl` + a tiered source registry),
+  `extract.py` (whole-word lexicon match → cited mentions with context snippets + modifiers),
+  `build.py` (aggregate → `summary.json`), `_common.py`, `README.md`, and a `.gitignore` that
+  **keeps raw book text out of the public repo** (only derived, short-snippet, cited JSON is
+  committed — fair-use concordance posture).
+- **`data/ufo-shapes/`**: `sources.json`, `mentions.json`, `summary.json` — empty, with
+  documented schemas. `sources.json` carries the Cartography **reliability tier (1–4)** per source.
+- **`ufo-shapes.html`**: vanilla page stub (`us-` prefix, self-contained styles), reads
+  `summary.json`. Renders headline stats, a shape leaderboard, a **per-source drill-down**
+  (Alan's request — click a source, e.g. Coulthart's *In Plain Sight*, to see which shapes it
+  references and how often, straight from the matrix in `summary.json`), and a methodology panel
+  with honest caveats (high-recall lexical pass; mentions ≠ distinct sightings). Not yet nav-linked
+  or wired into the Tech Stack — intentional until it has real data (like `tasks.html`).
+- **`PLAN-ufo-shapes.md`**: comprehensive guide for future sessions — the architecture decision,
+  how it seeds the larger projects, full schemas, the taxonomy, the pipeline, the page design,
+  copyright posture, and an explicit phased next-steps list (Phase 1 first real data + receipts →
+  Phase 2 heatmap → Phase 3 LLM disambiguation → Phase 4 timeline).
+
+**Forward-looking:** Alan wants to extend this to **humanoid/entity descriptions** next, to find
+connections across descriptions and build consensus understanding of the source material. The
+model was generalized for it — mentions carry a **`facet`** field (defaults to `craft_shape`); a
+future `humanoids.json` facet drops into the same pipeline, and the real prize is cross-facet
+co-occurrence analysis ("discs co-occur with Grey-type descriptions"). Documented as
+`PLAN-ufo-shapes.md` §10; deferred until the shape facet has real data.
+
+Pipeline smoke-tested end-to-end on a synthetic TXT source (ingest → extract → build produced
+correct stats, the shape×source matrix, and modifiers); test data then cleared so the repo ships
+clean empty scaffolds.
+
+---
+
 ## 2026-06-24 — "Personal Projects" icon: brain hub with thought-spokes
 
 Reworked `img/Icons/icons/Projects/brain-thoughts.svg` per Alan: keep the brain, but make
