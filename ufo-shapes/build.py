@@ -93,8 +93,10 @@ def main():
             {
                 "id": src["id"],
                 "title": src.get("title"),
+                "author": src.get("author"),
                 "year": src.get("year"),
                 "reliability_tier": src.get("reliability_tier"),
+                "citation": src.get("citation"),
                 "count": by_source[src["id"]],
             }
             for src in sources

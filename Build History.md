@@ -10,6 +10,19 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: source attribution (authors)
+
+Sources now reference their **author(s)**. The data was already captured in `sources.json` but wasn't
+flowing to the page — `build.py`'s `by_source` now carries `author` + `citation` into `summary.json`.
+Regenerated `summary.json` from the committed `mentions.json` (totals unchanged: 6 sources / 1,289
+mentions). On `ufo-shapes.html`: each source card gained an **author · year by-line** under the title
+(e.g. "Jacques Vallee · 1969"), and the drill-down modal's per-passage citation now uses the curated
+`citation` string (author included, e.g. "Coulthart, In Plain Sight (2021) · ch:5#para:5"). Verified
+with headless screenshots. Files: `ufo-shapes/build.py`, `data/ufo-shapes/summary.json`,
+`ufo-shapes.html`.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: source-card meta + methodology spacing polish
 
 Two more cleanups from Alan's photos. **(1) Source-card meta wrapped ugly** — "Tier 3 426" then an
