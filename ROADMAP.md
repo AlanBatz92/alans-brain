@@ -63,7 +63,7 @@ deliberate proving ground for the larger Cartography / Node-Graph projects.
   comprehensive `PLAN-ufo-shapes.md`. Pipeline smoke-tested end-to-end.
 - **✓ Phase 1 ingestion (done 2026-06-26):** validated `ingest.py` on real EPUBs; **6 books
   ingested** (Jung 1958 · Vallee 1969 · Hastings 2008 · Kean 2010 · Coulthart 2021 · Graff 2023)
-  → 13,016 segments → **1,083 high-confidence mentions / 11 shapes** in `data/ufo-shapes/`.
+  → 13,016 segments → **1,289 high-confidence mentions / 11 shapes** in `data/ufo-shapes/`.
 - **✓ Surfaced + merged (done 2026-06-27):** featured card on `paranormal.html` (live counts from
   `summary.json`) → `ufo-shapes.html`, with a back-link; census nests **under** Paranormal (no
   separate top-nav entry). Branch squash-merged to `main`.

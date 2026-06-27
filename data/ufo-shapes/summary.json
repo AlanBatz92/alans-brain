@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-26T23:17:14",
+  "generated_at": "2026-06-27T00:13:16",
   "taxonomy_version": 3,
   "totals": {
     "sources": 6,
-    "mentions": 1083,
+    "mentions": 1289,
     "shapes": 11
   },
   "by_shape": [
@@ -11,36 +11,50 @@
       "shape": "disc",
       "label": "Disc",
       "icon": "🛸",
-      "count": 615,
-      "source_count": 5
+      "count": 706,
+      "source_count": 6
     },
     {
       "shape": "sphere",
       "label": "Sphere / Orb",
       "icon": "⚪",
-      "count": 162,
+      "count": 174,
+      "source_count": 6
+    },
+    {
+      "shape": "triangle",
+      "label": "Triangle",
+      "icon": "🔺",
+      "count": 128,
       "source_count": 5
     },
     {
       "shape": "cylinder",
       "label": "Cylinder / Cigar",
       "icon": "🚬",
-      "count": 119,
-      "source_count": 5
+      "count": 124,
+      "source_count": 6
     },
     {
-      "shape": "triangle",
-      "label": "Triangle",
-      "icon": "🔺",
-      "count": 97,
-      "source_count": 4
+      "shape": "tictac",
+      "label": "Tic-Tac / Pill",
+      "icon": "💊",
+      "count": 57,
+      "source_count": 2
     },
     {
       "shape": "egg",
       "label": "Egg / Ovoid",
       "icon": "🥚",
-      "count": 43,
-      "source_count": 5
+      "count": 52,
+      "source_count": 6
+    },
+    {
+      "shape": "boomerang",
+      "label": "Boomerang / Chevron",
+      "icon": "🪃",
+      "count": 14,
+      "source_count": 4
     },
     {
       "shape": "cone",
@@ -50,11 +64,11 @@
       "source_count": 3
     },
     {
-      "shape": "boomerang",
-      "label": "Boomerang / Chevron",
-      "icon": "🪃",
+      "shape": "diamond",
+      "label": "Diamond",
+      "icon": "🔶",
       "count": 11,
-      "source_count": 3
+      "source_count": 2
     },
     {
       "shape": "cube",
@@ -62,20 +76,6 @@
       "icon": "⬛",
       "count": 10,
       "source_count": 4
-    },
-    {
-      "shape": "tictac",
-      "label": "Tic-Tac / Pill",
-      "icon": "💊",
-      "count": 7,
-      "source_count": 1
-    },
-    {
-      "shape": "diamond",
-      "label": "Diamond",
-      "icon": "🔶",
-      "count": 6,
-      "source_count": 1
     },
     {
       "shape": "other",
@@ -108,6 +108,13 @@
       "count": 218
     },
     {
+      "id": "coulthart_inplainsight",
+      "title": "In Plain Sight",
+      "year": 2021,
+      "reliability_tier": 3,
+      "count": 206
+    },
+    {
       "id": "kean_ufos_generals",
       "title": "UFOs: Generals, Pilots, and Government Officials Go on the Record",
       "year": 2010,
@@ -120,13 +127,6 @@
       "year": 1958,
       "reliability_tier": 3,
       "count": 80
-    },
-    {
-      "id": "coulthart_inplainsight",
-      "title": "In Plain Sight",
-      "year": 2021,
-      "reliability_tier": 3,
-      "count": 0
     }
   ],
   "shape_by_source_matrix": {
@@ -152,6 +152,11 @@
       "graff_ufo_inside_story"
     ],
     "cells": [
+      {
+        "shape": "boomerang",
+        "source": "coulthart_inplainsight",
+        "count": 3
+      },
       {
         "shape": "boomerang",
         "source": "hastings_ufos_nukes",
@@ -204,6 +209,11 @@
       },
       {
         "shape": "cylinder",
+        "source": "coulthart_inplainsight",
+        "count": 5
+      },
+      {
+        "shape": "cylinder",
         "source": "graff_ufo_inside_story",
         "count": 15
       },
@@ -229,8 +239,18 @@
       },
       {
         "shape": "diamond",
+        "source": "coulthart_inplainsight",
+        "count": 5
+      },
+      {
+        "shape": "diamond",
         "source": "hastings_ufos_nukes",
         "count": 6
+      },
+      {
+        "shape": "disc",
+        "source": "coulthart_inplainsight",
+        "count": 91
       },
       {
         "shape": "disc",
@@ -256,6 +276,11 @@
         "shape": "disc",
         "source": "vallee_passport_magonia",
         "count": 231
+      },
+      {
+        "shape": "egg",
+        "source": "coulthart_inplainsight",
+        "count": 9
       },
       {
         "shape": "egg",
@@ -289,6 +314,11 @@
       },
       {
         "shape": "sphere",
+        "source": "coulthart_inplainsight",
+        "count": 12
+      },
+      {
+        "shape": "sphere",
         "source": "graff_ufo_inside_story",
         "count": 11
       },
@@ -314,8 +344,18 @@
       },
       {
         "shape": "tictac",
+        "source": "coulthart_inplainsight",
+        "count": 50
+      },
+      {
+        "shape": "tictac",
         "source": "graff_ufo_inside_story",
         "count": 7
+      },
+      {
+        "shape": "triangle",
+        "source": "coulthart_inplainsight",
+        "count": 31
       },
       {
         "shape": "triangle",
@@ -342,30 +382,42 @@
   "top_modifiers": [
     {
       "term": "hovering",
-      "count": 67
+      "count": 82
     },
     {
       "term": "white",
-      "count": 57
+      "count": 62
     },
     {
       "term": "red",
-      "count": 53
+      "count": 54
     },
     {
       "term": "bright",
       "count": 44
     },
     {
+      "term": "small",
+      "count": 41
+    },
+    {
       "term": "luminous",
       "count": 40
     },
     {
-      "term": "small",
-      "count": 38
+      "term": "metallic",
+      "count": 39
     },
     {
       "term": "green",
+      "count": 39
+    },
+    {
+      "term": "blue",
+      "count": 39
+    },
+    {
+      "term": "black",
       "count": 36
     },
     {
@@ -373,32 +425,20 @@
       "count": 33
     },
     {
-      "term": "blue",
-      "count": 32
-    },
-    {
-      "term": "metallic",
-      "count": 30
+      "term": "dark",
+      "count": 31
     },
     {
       "term": "glowing",
-      "count": 27
-    },
-    {
-      "term": "dark",
-      "count": 26
-    },
-    {
-      "term": "black",
-      "count": 24
-    },
-    {
-      "term": "silvery",
-      "count": 20
+      "count": 30
     },
     {
       "term": "huge",
-      "count": 18
+      "count": 28
+    },
+    {
+      "term": "silvery",
+      "count": 25
     },
     {
       "term": "spinning",
@@ -406,10 +446,14 @@
     },
     {
       "term": "silver",
-      "count": 16
+      "count": 17
     },
     {
       "term": "silent",
+      "count": 14
+    },
+    {
+      "term": "transparent",
       "count": 14
     },
     {
@@ -421,19 +465,19 @@
       "count": 12
     },
     {
-      "term": "transparent",
-      "count": 11
+      "term": "massive",
+      "count": 9
     },
     {
       "term": "enormous",
       "count": 5
     },
     {
-      "term": "massive",
+      "term": "golden",
       "count": 3
     },
     {
-      "term": "golden",
+      "term": "translucent",
       "count": 2
     }
   ],
