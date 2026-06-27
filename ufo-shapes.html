@@ -51,9 +51,12 @@
     .us-source { background:var(--surface); border:1px solid var(--border); border-radius:12px;
       padding:12px 14px; cursor:pointer; transition:border-color .2s }
     .us-source:hover, .us-source.us-open { border-color:var(--green) }
-    .us-source-head { display:flex; justify-content:space-between; align-items:center; gap:10px }
-    .us-source-title { font-weight:700; font-size:.95rem }
-    .us-source-meta { color:var(--text-muted); font-size:.8rem }
+    .us-source-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px }
+    .us-source-title { font-weight:700; font-size:.95rem; flex:1 1 auto; min-width:0; line-height:1.3 }
+    .us-source-meta { color:var(--text-muted); font-size:.8rem; font-weight:400 }
+    .us-source-stat { flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end;
+      gap:5px; white-space:nowrap; padding-top:1px }
+    .us-source-count { color:var(--text-muted); font-size:.8rem }
     .us-tier { font-family:'JetBrains Mono',monospace; font-size:.72rem; border:1px solid var(--border);
       border-radius:6px; padding:1px 6px; color:var(--text-muted) }
     .us-source-shapes { margin-top:12px; display:flex; flex-wrap:wrap; gap:7px }
@@ -62,9 +65,12 @@
     .us-chip b { color:var(--green); font-family:'JetBrains Mono',monospace; margin-left:2px }
 
     .us-method { background:var(--surface); border:1px solid var(--border); border-radius:12px;
-      padding:4px 16px; margin-top:30px }
-    .us-method summary { cursor:pointer; padding:12px 0; font-weight:700 }
-    .us-method p, .us-method li { color:var(--text-muted); font-size:.88rem; line-height:1.5 }
+      padding:4px 22px 18px; margin-top:30px }
+    .us-method summary { cursor:pointer; padding:14px 0; font-weight:700 }
+    .us-method p, .us-method li { color:var(--text-muted); font-size:.88rem; line-height:1.55 }
+    .us-method p { margin:0 0 12px }
+    .us-method ul { margin:10px 0 12px; padding-left:20px }
+    .us-method li { margin-bottom:8px; padding-left:4px }
 
     .us-empty { text-align:center; padding:50px 20px; color:var(--text-muted) }
     .us-empty-icon img { width:54px; height:54px; opacity:.7 }
@@ -360,9 +366,10 @@
         '<div class="us-source-head">' +
           '<span class="us-source-title">' + esc(src.title || src.id) +
             (src.year ? ' <span class="us-source-meta">(' + src.year + ')</span>' : '') + '</span>' +
-          '<span class="us-source-meta">' +
-            (src.reliability_tier ? '<span class="us-tier" title="' + esc(tierTitle(src.reliability_tier)) + '">Tier ' + src.reliability_tier + '</span> ' : '') +
-            src.count + ' mention' + (src.count === 1 ? '' : 's') + '</span>' +
+          '<span class="us-source-stat">' +
+            (src.reliability_tier ? '<span class="us-tier" title="' + esc(tierTitle(src.reliability_tier)) + '">Tier ' + src.reliability_tier + '</span>' : '') +
+            '<span class="us-source-count">' + src.count + ' mention' + (src.count === 1 ? '' : 's') + '</span>' +
+          '</span>' +
         '</div>' +
         '<div class="us-source-shapes" style="display:none">' + chips + '</div>' +
       '</div>';
