@@ -10,6 +10,19 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: source-card meta + methodology spacing polish
+
+Two more cleanups from Alan's photos. **(1) Source-card meta wrapped ugly** — "Tier 3 426" then an
+orphaned "mentions" on the next line, vertically mis-centered against multi-line titles. Restructured:
+the header is now `align-items:flex-start`, the title flexes/wraps on the left, and a new
+`.us-source-stat` column stacks the **Tier badge over "N mentions"** (right-aligned, `nowrap`) so it
+reads cleanly. **(2) Methodology "How this census is built" panel was crunched** — bullets jammed
+against the drawer edge. Bumped panel padding (16→22px sides + bottom), gave the `<ul>` real indent
+(`padding-left:20px`) and per-item spacing, and added paragraph margins/line-height. Verified both
+with headless screenshots. `ufo-shapes.html` only.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: readable source chips + tier explanation
 
 Two fixes from Alan's photo. **(1) Source shape-chips were nearly illegible** — the real culprit
