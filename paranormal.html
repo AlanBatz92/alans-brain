@@ -16,6 +16,28 @@
     })();
   </script>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Featured UAP Shape Census card on the Paranormal hub */
+    .para-census-card { display:flex; align-items:center; gap:18px; text-decoration:none;
+      background:var(--surface); border:1px solid var(--border); border-radius:16px;
+      padding:18px 20px; margin-bottom:24px; transition:border-color .2s, transform .2s }
+    .para-census-card:hover { border-color:var(--green); transform:translateY(-2px) }
+    .para-census-icon { flex:0 0 auto }
+    .para-census-icon img { display:block }
+    .para-census-body { flex:1 1 auto; min-width:0 }
+    .para-census-kicker { font-family:'JetBrains Mono',monospace; font-size:.7rem;
+      text-transform:uppercase; letter-spacing:.12em; color:var(--green); margin-bottom:3px }
+    .para-census-title { margin:0 0 5px; font-size:1.25rem; color:var(--text) }
+    .para-census-desc { margin:0; color:var(--text-muted); font-size:.9rem; line-height:1.45 }
+    .para-census-stats { display:flex; gap:16px; margin-top:11px; flex-wrap:wrap }
+    .para-census-stat { font-size:.82rem; color:var(--text-muted) }
+    .para-census-stat b { font-family:'JetBrains Mono',monospace; color:var(--text); font-size:1rem }
+    .para-census-go { flex:0 0 auto; align-self:center; font-weight:700; color:var(--green); white-space:nowrap }
+    @media (max-width:560px) {
+      .para-census-card { flex-wrap:wrap; gap:12px }
+      .para-census-go { width:100%; text-align:right }
+    }
+  </style>
 </head>
 <body>
 
@@ -88,6 +110,22 @@
       </h1>
       <div class="page-hero-tagline anim" style="animation-delay:0.35s">Is there a there, there?</div>
     </section>
+
+    <!-- ══════ FEATURED: UAP SHAPE CENSUS ══════ -->
+    <a href="ufo-shapes.html" class="anim para-census-card" id="paraCensusCard" style="animation-delay:0.4s">
+      <div class="para-census-icon"><img width="56" height="56" src="img/Icons/icons/UFO/ufo.png" alt=""></div>
+      <div class="para-census-body">
+        <div class="para-census-kicker">Research project</div>
+        <h2 class="para-census-title">The UAP Shape Census</h2>
+        <p class="para-census-desc">Every craft shape — disc, sphere, triangle, cigar, Tic-Tac, egg — counted across ingested books and correlated source by source, each mention cited back to where it was found.</p>
+        <div class="para-census-stats" id="paraCensusStats" hidden>
+          <span class="para-census-stat"><b id="censusMentions">—</b> mentions</span>
+          <span class="para-census-stat"><b id="censusSources">—</b> sources</span>
+          <span class="para-census-stat"><b id="censusShapes">—</b> shapes</span>
+        </div>
+      </div>
+      <div class="para-census-go">Explore →</div>
+    </a>
 
     <!-- ══════ FILTERS ══════ -->
     <div class="anim" style="animation-delay:0.45s;display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px" id="paraFilterBar">
@@ -182,6 +220,19 @@
     'Ancient': '🏛️',
     'Other': '🌀'
   };
+
+  /* Populate the UAP Shape Census featured card with live counts */
+  fetch('data/ufo-shapes/summary.json')
+    .then(function(r){ return r.json(); })
+    .then(function(s){
+      var t = s && s.totals;
+      if (!t || !t.mentions) return;  // leave the card description-only until there's data
+      document.getElementById('censusMentions').textContent = t.mentions.toLocaleString();
+      document.getElementById('censusSources').textContent = t.sources;
+      document.getElementById('censusShapes').textContent = t.shapes;
+      document.getElementById('paraCensusStats').hidden = false;
+    })
+    .catch(function(){ /* card stays description-only */ });
 
   fetch('data/paranormal.json')
     .then(function(r) { return r.json(); })

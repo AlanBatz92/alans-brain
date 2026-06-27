@@ -10,6 +10,22 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: surfaced on the Paranormal hub + merged to main
+
+With 6 books / 1,083 high-confidence mentions built, integrated the census into the site "within
+the Paranormal page" as planned: a **featured card on `paranormal.html`** (`.para-census-*`,
+self-contained styles) that fetches `data/ufo-shapes/summary.json` and shows **live counts**
+(mentions · sources · shapes), linking to `ufo-shapes.html`; the card stays description-only if
+the data is ever empty/unreachable. `ufo-shapes.html` got a "← Back to Paranormal" link so the two
+read as a section. Chose to nest the census **under** Paranormal (reached via the featured card)
+rather than add a separate top-nav entry, consistent with how other sub-pages nest — so the global
+Explore nav is unchanged. Verified: card IDs wired to the populate script, `summary.json` +
+`ufo-shapes.html` serve 200, HTML structure balanced. **Merged the branch to `main`** (squash) so
+the EPUB blob in the feature-branch history never reaches `main`. Remaining per the plan: snippet
+drill-down ("the receipts") and a Tech Stack node.
+
+---
+
 ## 2026-06-26 — UAP Shape Census: 5 additional books ingested + full extract/build
 
 Ingested 5 more EPUBs into the Shape Census alongside the already-ingested Coulthart

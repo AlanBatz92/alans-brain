@@ -64,10 +64,11 @@ deliberate proving ground for the larger Cartography / Node-Graph projects.
 - **✓ Phase 1 ingestion (done 2026-06-26):** validated `ingest.py` on real EPUBs; **6 books
   ingested** (Jung 1958 · Vallee 1969 · Hastings 2008 · Kean 2010 · Coulthart 2021 · Graff 2023)
   → 13,016 segments → **1,083 high-confidence mentions / 11 shapes** in `data/ufo-shapes/`.
-  PR open against `main`; page has real data on merge.
+- **✓ Surfaced + merged (done 2026-06-27):** featured card on `paranormal.html` (live counts from
+  `summary.json`) → `ufo-shapes.html`, with a back-link; census nests **under** Paranormal (no
+  separate top-nav entry). Branch squash-merged to `main`.
 - **▶ Phase 1 remaining (next):** add snippet-level **drill-down** ("the receipts" — clicking a
-  shape/source shows the actual passage snippets from `mentions.json`), then link from
-  `paranormal.html` + nav + add a Tech Stack node.
+  shape/source shows the actual passage snippets from `mentions.json`); add a **Tech Stack node**.
 - **◷ Later:** Phase 2 shape×source heatmap → Phase 3 LLM disambiguation (`classify.py`) →
   Phase 4 timeline by sighting decade. **Then:** extend to a **humanoid/entity facet** (Alan's
   near-future want — mentions already carry a `facet` field; the prize is cross-facet
