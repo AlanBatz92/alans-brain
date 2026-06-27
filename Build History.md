@@ -59,6 +59,26 @@ clean empty scaffolds.
 
 ---
 
+## 2026-06-27 — UAP Shape Census: high-confidence publish gate (taxonomy v3)
+
+Per Alan ("commit only high confidence shapes"), added a publish gate enforced by the toolkit.
+Each alias in `shapes.json` is now tiered: **`aliases`** (shape-explicit, e.g. "flying saucer",
+"cigar-shaped", "tic tac", "diamond-shaped" → published) vs **`review_aliases`** (ambiguous
+common words, e.g. "ball", "cube", "delta", "egg", "diamond" → captured locally, withheld).
+`extract.py` writes the FULL set (high + review) to a gitignored `ufo-shapes/work/mentions.full.json`
+(the private layer); `build.py` is the **gate** — by default it publishes only high-confidence
+mentions to `data/ufo-shapes/`, reports a per-shape breakdown of what it withheld, and takes
+`--include-review` as an escape hatch. Mirrors the framework's private→gate→public pattern.
+
+Also documented the **ingestion path**: get the EPUB onto the local machine (hand it to the
+session) rather than uploading to GitHub (which commits the raw book + bypasses `.gitignore`).
+
+Re-ran *In Plain Sight* under v3: 229 candidates → **206 published high-confidence** across 8
+shapes (Disc 91, Tic-Tac 50, Triangle 31, Sphere 12, Egg 9, Cylinder 5, Diamond 5, Boomerang 3);
+23 review-tier withheld. README + `PLAN-ufo-shapes.md` §11 document the gate.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: first real book ingested + lexicon v2
 
 Alan uploaded Coulthart's *In Plain Sight* (2021) EPUB to the branch. Ran it through the

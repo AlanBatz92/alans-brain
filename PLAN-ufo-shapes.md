@@ -166,10 +166,13 @@ source is ingested — intentional, like `tasks.html`. Link it from
 ## 6. The local pipeline (`ufo-shapes/`)
 
 ```
-ingest.py  →  sources/<id>/segments.jsonl   (+ register in sources.json)
-extract.py →  data/ufo-shapes/mentions.json (regex lexicon over all segments)
-build.py   →  data/ufo-shapes/summary.json  (aggregate)
+ingest.py  →  sources/<id>/segments.jsonl      (+ register in sources.json)
+extract.py →  work/mentions.full.json          (regex lexicon; high + review tiers; LOCAL ONLY)
+build.py   →  data/ufo-shapes/{mentions,summary}.json   (PUBLISH GATE: high-confidence only)
 ```
+
+See §11 for the gate. `work/` is gitignored — the full mention set is the private
+layer; the committed `data/ufo-shapes/` is the gated public layer.
 
 Then `git add data/ufo-shapes && commit && push` → live. See `ufo-shapes/README.md`
 for exact commands. Stdlib-only except the optional EPUB (`ebooklib` +
@@ -253,6 +256,34 @@ fuller quoting, reconsider per-source.
       *sightings* — or keep "mentions" as the honest unit and just say so.
 - [ ] Cross-link to the eventual node graph (a shape mention ↔ a CLAIM node).
 - [ ] Revisit Supabase only if static JSON becomes unwieldy.
+
+---
+
+## 11. The high-confidence publish gate (Alan 2026-06-27)
+
+Requirement: **commit only high-confidence shapes.** Enforced by the toolkit, not
+by memory, mirroring the framework's private-layer → publishing-gate → public-layer
+pattern.
+
+- **Two alias tiers in `shapes.json`.** `aliases` = shape-explicit terms that
+  reliably denote a craft ("flying saucer", "cigar-shaped", "tic tac",
+  "diamond-shaped", "ovoid"). `review_aliases` = ambiguous common words that need
+  context to trust ("ball", "globe", "cube", "delta", "egg", "oval", "diamond",
+  "cone").
+- **`extract.py` captures both** into local `work/mentions.full.json`, tagging
+  each mention `confidence: "high"` or `"review"`.
+- **`build.py` is the gate.** By default it publishes only `high` mentions into
+  `data/ufo-shapes/{mentions,summary}.json` and prints a per-shape breakdown of
+  what it withheld. `--include-review` publishes everything (escape hatch).
+- **Promoting a withheld term:** if a `review_alias` proves reliably a craft in
+  the corpus, move it into `aliases` and re-run. The Phase 3 LLM pass will do this
+  per-mention (read context → promote/drop), which is finer-grained than the
+  per-term tiers.
+
+First real run (Coulthart, *In Plain Sight*, 2021, taxonomy v3): 229 candidates →
+**206 published high-confidence** across 8 shapes (Disc 91, Tic-Tac 50, Triangle 31,
+Sphere 12, Egg 9, Cylinder 5, Diamond 5, Boomerang 3); 23 review-tier withheld
+(bare "round"/"cube"/"delta"/"oval"/"egg"/"diamond"/"ball").
 
 ---
 

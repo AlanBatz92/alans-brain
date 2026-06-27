@@ -13,13 +13,21 @@ The page lazy-loads mentions.json only when a visitor drills into a shape/source
 Usage:  python build.py
 Then:   git add data/ufo-shapes && git commit && git push   (→ live)
 """
+import argparse
 import collections
 import datetime as _dt
+import os
+import sys
 
 import _common as C
 
 
 def main():
+    ap = argparse.ArgumentParser(description="Publish-gate: build committed JSON from the full mention set.")
+    ap.add_argument("--include-review", action="store_true",
+                    help="Also publish review-tier (ambiguous) mentions. Default: high-confidence only.")
+    args = ap.parse_args()
+
     taxonomy = C.load_json(C.SHAPES_PATH)
     shapes = taxonomy["shapes"]
     shape_order = [s["id"] for s in shapes]
@@ -27,7 +35,21 @@ def main():
     shape_icon = {s["id"]: s.get("icon", "") for s in shapes}
 
     sources = C.load_json(C.SOURCES_JSON, []) or []
-    mentions = C.load_json(C.MENTIONS_JSON, []) or []
+
+    if not os.path.exists(C.MENTIONS_FULL):
+        sys.exit(f"No {C.MENTIONS_FULL} — run `python extract.py` first. "
+                 "(Refusing to overwrite committed data with nothing.)")
+    full = C.load_json(C.MENTIONS_FULL, []) or []
+
+    # THE PUBLISH GATE: high-confidence only, unless --include-review.
+    if args.include_review:
+        mentions = full
+    else:
+        mentions = [m for m in full if m.get("confidence") == "high"]
+    withheld = len(full) - len(mentions)
+
+    # Write the committed mention set (what the page reads for drill-down).
+    C.write_json(C.MENTIONS_JSON, mentions)
 
     by_shape = collections.Counter()
     shape_sources = collections.defaultdict(set)
@@ -98,10 +120,22 @@ def main():
     summary["by_source"].sort(key=lambda r: r["count"], reverse=True)
 
     C.write_json(C.SUMMARY_JSON, summary)
-    print(f"Built summary → {C.SUMMARY_JSON}")
+    gate = "ALL (high+review)" if args.include_review else "high-confidence only"
+    print(f"Published [{gate}] → {C.MENTIONS_JSON} + {C.SUMMARY_JSON}")
     print(f"  sources={summary['totals']['sources']}  "
           f"mentions={summary['totals']['mentions']}  "
           f"distinct shapes={summary['totals']['shapes']}")
+    if withheld and not args.include_review:
+        by_shape_withheld = collections.Counter(
+            m["shape"] for m in full if m.get("confidence") != "high")
+        terms = collections.Counter(
+            m["raw_term"] for m in full if m.get("confidence") != "high")
+        print(f"  withheld {withheld} review-tier mention(s) — NOT committed:")
+        for shp, c in by_shape_withheld.most_common():
+            print(f"      {c:4d}  {shape_label.get(shp, shp)}")
+        print(f"    review terms: {', '.join(t for t, _ in terms.most_common(12))}")
+        print("    → inspect work/mentions.full.json; re-run with --include-review to publish them,")
+        print("      or promote specific terms to `aliases` in shapes.json.")
 
 
 if __name__ == "__main__":

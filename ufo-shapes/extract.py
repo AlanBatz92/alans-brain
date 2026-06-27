@@ -43,14 +43,19 @@ SNIPPET_MAX = 280
 
 
 def compile_lexicon(shapes):
-    """Return list of (shape_id, raw_term, compiled_regex), longest alias first."""
+    """Return list of (shape_id, raw_term, tier, compiled_regex), longest alias first.
+
+    tier is "high" (shape-explicit → published) or "review" (ambiguous → captured
+    locally, withheld from the committed data unless promoted). See shapes.json.
+    """
     out = []
     for shape in shapes:
-        for alias in shape["aliases"]:
-            # internal spaces → flexible whitespace + optional hyphen between tokens
-            tokens = re.escape(alias).replace(r"\ ", r"[\s-]+")
-            pattern = re.compile(rf"\b{tokens}\b", re.IGNORECASE)
-            out.append((shape["id"], alias, pattern))
+        for tier, key in (("high", "aliases"), ("review", "review_aliases")):
+            for alias in shape.get(key, []):
+                # internal spaces → flexible whitespace + optional hyphen between tokens
+                tokens = re.escape(alias).replace(r"\ ", r"[\s-]+")
+                pattern = re.compile(rf"\b{tokens}\b", re.IGNORECASE)
+                out.append((shape["id"], alias, tier, pattern))
     # match longer phrases before their sub-words ("flying saucer" before "saucer")
     out.sort(key=lambda t: len(t[1]), reverse=True)
     return out
@@ -91,7 +96,7 @@ def main():
         for seg in segs:
             text = seg["text"]
             claimed = []  # (start, end) spans already matched in this segment
-            for shape_id, raw_term, rx in lexicon:
+            for shape_id, raw_term, tier, rx in lexicon:
                 for m in rx.finditer(text):
                     span = (m.start(), m.end())
                     # skip if this span overlaps a longer alias already taken
@@ -99,6 +104,7 @@ def main():
                         continue
                     claimed.append(span)
                     n += 1
+                    snip = make_snippet(text, m.start(), m.end())
                     mentions.append({
                         "id": f"M{n:06d}",
                         "source_id": sid,
@@ -106,16 +112,19 @@ def main():
                         "shape": shape_id,
                         "raw_term": m.group(0).lower(),
                         "locator": seg["locator"],
-                        "snippet": make_snippet(text, m.start(), m.end()),
-                        "modifiers": find_modifiers(make_snippet(text, m.start(), m.end())),
-                        "confidence": "lexical",
+                        "snippet": snip,
+                        "modifiers": find_modifiers(snip),
+                        "confidence": tier,   # "high" → published, "review" → withheld by the gate
                         "event_date": None,
                     })
 
-    C.write_json(C.MENTIONS_JSON, mentions)
-    print(f"Extracted {len(mentions)} candidate mentions "
-          f"from {len(sources)} source(s) → {C.MENTIONS_JSON}")
-    print("Next: python build.py")
+    C.write_json(C.MENTIONS_FULL, mentions)
+    high = sum(1 for m in mentions if m["confidence"] == "high")
+    review = len(mentions) - high
+    print(f"Extracted {len(mentions)} candidate mentions from {len(sources)} source(s) "
+          f"→ {C.MENTIONS_FULL}")
+    print(f"  high-confidence: {high}   review (withheld unless promoted): {review}")
+    print("Next: python build.py   (publishes high-confidence only)")
 
 
 if __name__ == "__main__":

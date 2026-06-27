@@ -13,9 +13,12 @@ REPO_ROOT = os.path.dirname(TOOLKIT_DIR)
 SOURCES_DIR = os.path.join(TOOLKIT_DIR, "sources")            # raw + segments (gitignored)
 SHAPES_PATH = os.path.join(TOOLKIT_DIR, "shapes.json")        # the taxonomy
 
-DATA_DIR = os.path.join(REPO_ROOT, "data", "ufo-shapes")      # committed outputs
+WORK_DIR = os.path.join(TOOLKIT_DIR, "work")                  # local-only (gitignored)
+MENTIONS_FULL = os.path.join(WORK_DIR, "mentions.full.json")  # ALL mentions, high + review
+
+DATA_DIR = os.path.join(REPO_ROOT, "data", "ufo-shapes")      # committed outputs (PUBLISHED)
 SOURCES_JSON = os.path.join(DATA_DIR, "sources.json")
-MENTIONS_JSON = os.path.join(DATA_DIR, "mentions.json")
+MENTIONS_JSON = os.path.join(DATA_DIR, "mentions.json")       # high-confidence only (the gate)
 SUMMARY_JSON = os.path.join(DATA_DIR, "summary.json")
 
 

@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-06-27T00:51:58",
-  "taxonomy_version": 2,
+  "generated_at": "2026-06-27T00:56:24",
+  "taxonomy_version": 3,
   "totals": {
     "sources": 1,
-    "mentions": 219,
-    "shapes": 10
+    "mentions": 206,
+    "shapes": 8
   },
   "by_shape": [
     {
@@ -25,28 +25,21 @@
       "shape": "triangle",
       "label": "Triangle",
       "icon": "🔺",
-      "count": 34,
-      "source_count": 1
-    },
-    {
-      "shape": "egg",
-      "label": "Egg / Ovoid",
-      "icon": "🥚",
-      "count": 13,
+      "count": 31,
       "source_count": 1
     },
     {
       "shape": "sphere",
       "label": "Sphere / Orb",
       "icon": "⚪",
-      "count": 11,
+      "count": 12,
       "source_count": 1
     },
     {
-      "shape": "diamond",
-      "label": "Diamond",
-      "icon": "🔶",
-      "count": 6,
+      "shape": "egg",
+      "label": "Egg / Ovoid",
+      "icon": "🥚",
+      "count": 9,
       "source_count": 1
     },
     {
@@ -57,9 +50,9 @@
       "source_count": 1
     },
     {
-      "shape": "cube",
-      "label": "Cube / Box",
-      "icon": "⬛",
+      "shape": "diamond",
+      "label": "Diamond",
+      "icon": "🔶",
       "count": 5,
       "source_count": 1
     },
@@ -69,13 +62,6 @@
       "icon": "🪃",
       "count": 3,
       "source_count": 1
-    },
-    {
-      "shape": "cone",
-      "label": "Cone",
-      "icon": "🔻",
-      "count": 1,
-      "source_count": 1
     }
   ],
   "by_source": [
@@ -84,7 +70,7 @@
       "title": "In Plain Sight",
       "year": 2021,
       "reliability_tier": 3,
-      "count": 219
+      "count": 206
     }
   ],
   "shape_by_source_matrix": {
@@ -96,9 +82,7 @@
       "cylinder",
       "tictac",
       "egg",
-      "cone",
-      "diamond",
-      "cube"
+      "diamond"
     ],
     "sources": [
       "coulthart_inplainsight"
@@ -110,16 +94,6 @@
         "count": 3
       },
       {
-        "shape": "cone",
-        "source": "coulthart_inplainsight",
-        "count": 1
-      },
-      {
-        "shape": "cube",
-        "source": "coulthart_inplainsight",
-        "count": 5
-      },
-      {
         "shape": "cylinder",
         "source": "coulthart_inplainsight",
         "count": 5
@@ -127,7 +101,7 @@
       {
         "shape": "diamond",
         "source": "coulthart_inplainsight",
-        "count": 6
+        "count": 5
       },
       {
         "shape": "disc",
@@ -137,12 +111,12 @@
       {
         "shape": "egg",
         "source": "coulthart_inplainsight",
-        "count": 13
+        "count": 9
       },
       {
         "shape": "sphere",
         "source": "coulthart_inplainsight",
-        "count": 11
+        "count": 12
       },
       {
         "shape": "tictac",
@@ -152,7 +126,7 @@
       {
         "shape": "triangle",
         "source": "coulthart_inplainsight",
-        "count": 34
+        "count": 31
       }
     ]
   },
@@ -163,58 +137,54 @@
     },
     {
       "term": "black",
-      "count": 14
-    },
-    {
-      "term": "metallic",
-      "count": 11
+      "count": 12
     },
     {
       "term": "huge",
       "count": 10
     },
     {
+      "term": "metallic",
+      "count": 9
+    },
+    {
       "term": "blue",
-      "count": 8
-    },
-    {
-      "term": "dark",
-      "count": 6
-    },
-    {
-      "term": "transparent",
-      "count": 6
-    },
-    {
-      "term": "white",
-      "count": 6
+      "count": 7
     },
     {
       "term": "massive",
       "count": 6
     },
     {
+      "term": "dark",
+      "count": 5
+    },
+    {
+      "term": "white",
+      "count": 5
+    },
+    {
       "term": "silvery",
       "count": 5
     },
     {
+      "term": "transparent",
+      "count": 3
+    },
+    {
       "term": "small",
-      "count": 4
+      "count": 3
     },
     {
       "term": "green",
       "count": 3
     },
     {
-      "term": "translucent",
+      "term": "glowing",
       "count": 3
     },
     {
-      "term": "silver",
-      "count": 2
-    },
-    {
-      "term": "glowing",
+      "term": "translucent",
       "count": 2
     },
     {
@@ -222,7 +192,7 @@
       "count": 1
     },
     {
-      "term": "bright",
+      "term": "silver",
       "count": 1
     },
     {

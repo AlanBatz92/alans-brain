@@ -13,6 +13,10 @@ sources/*/
 *.mobi
 *.azw3
 
+# Local working layer: the FULL mention set (high + review) before the publish gate.
+# Only the gated, high-confidence subset under data/ufo-shapes/ is committed.
+work/
+
 # Optional local Python venv for the EPUB/PDF libraries (Phase 1).
 .venv/
 __pycache__/
