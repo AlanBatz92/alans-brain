@@ -1,204 +1,28 @@
 {
-  "generated_at": "2026-06-27T00:56:24",
+  "generated_at": "2026-06-26T22:36:40",
   "taxonomy_version": 3,
   "totals": {
     "sources": 1,
-    "mentions": 206,
-    "shapes": 8
+    "mentions": 0,
+    "shapes": 0
   },
-  "by_shape": [
-    {
-      "shape": "disc",
-      "label": "Disc",
-      "icon": "🛸",
-      "count": 91,
-      "source_count": 1
-    },
-    {
-      "shape": "tictac",
-      "label": "Tic-Tac / Pill",
-      "icon": "💊",
-      "count": 50,
-      "source_count": 1
-    },
-    {
-      "shape": "triangle",
-      "label": "Triangle",
-      "icon": "🔺",
-      "count": 31,
-      "source_count": 1
-    },
-    {
-      "shape": "sphere",
-      "label": "Sphere / Orb",
-      "icon": "⚪",
-      "count": 12,
-      "source_count": 1
-    },
-    {
-      "shape": "egg",
-      "label": "Egg / Ovoid",
-      "icon": "🥚",
-      "count": 9,
-      "source_count": 1
-    },
-    {
-      "shape": "cylinder",
-      "label": "Cylinder / Cigar",
-      "icon": "🚬",
-      "count": 5,
-      "source_count": 1
-    },
-    {
-      "shape": "diamond",
-      "label": "Diamond",
-      "icon": "🔶",
-      "count": 5,
-      "source_count": 1
-    },
-    {
-      "shape": "boomerang",
-      "label": "Boomerang / Chevron",
-      "icon": "🪃",
-      "count": 3,
-      "source_count": 1
-    }
-  ],
+  "by_shape": [],
   "by_source": [
     {
       "id": "coulthart_inplainsight",
       "title": "In Plain Sight",
       "year": 2021,
       "reliability_tier": 3,
-      "count": 206
+      "count": 0
     }
   ],
   "shape_by_source_matrix": {
-    "shapes": [
-      "disc",
-      "sphere",
-      "triangle",
-      "boomerang",
-      "cylinder",
-      "tictac",
-      "egg",
-      "diamond"
-    ],
+    "shapes": [],
     "sources": [
       "coulthart_inplainsight"
     ],
-    "cells": [
-      {
-        "shape": "boomerang",
-        "source": "coulthart_inplainsight",
-        "count": 3
-      },
-      {
-        "shape": "cylinder",
-        "source": "coulthart_inplainsight",
-        "count": 5
-      },
-      {
-        "shape": "diamond",
-        "source": "coulthart_inplainsight",
-        "count": 5
-      },
-      {
-        "shape": "disc",
-        "source": "coulthart_inplainsight",
-        "count": 91
-      },
-      {
-        "shape": "egg",
-        "source": "coulthart_inplainsight",
-        "count": 9
-      },
-      {
-        "shape": "sphere",
-        "source": "coulthart_inplainsight",
-        "count": 12
-      },
-      {
-        "shape": "tictac",
-        "source": "coulthart_inplainsight",
-        "count": 50
-      },
-      {
-        "shape": "triangle",
-        "source": "coulthart_inplainsight",
-        "count": 31
-      }
-    ]
+    "cells": []
   },
-  "top_modifiers": [
-    {
-      "term": "hovering",
-      "count": 15
-    },
-    {
-      "term": "black",
-      "count": 12
-    },
-    {
-      "term": "huge",
-      "count": 10
-    },
-    {
-      "term": "metallic",
-      "count": 9
-    },
-    {
-      "term": "blue",
-      "count": 7
-    },
-    {
-      "term": "massive",
-      "count": 6
-    },
-    {
-      "term": "dark",
-      "count": 5
-    },
-    {
-      "term": "white",
-      "count": 5
-    },
-    {
-      "term": "silvery",
-      "count": 5
-    },
-    {
-      "term": "transparent",
-      "count": 3
-    },
-    {
-      "term": "small",
-      "count": 3
-    },
-    {
-      "term": "green",
-      "count": 3
-    },
-    {
-      "term": "glowing",
-      "count": 3
-    },
-    {
-      "term": "translucent",
-      "count": 2
-    },
-    {
-      "term": "red",
-      "count": 1
-    },
-    {
-      "term": "silver",
-      "count": 1
-    },
-    {
-      "term": "golden",
-      "count": 1
-    }
-  ],
+  "top_modifiers": [],
   "timeline_buckets": []
 }
