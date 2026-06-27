@@ -57,9 +57,9 @@
     .us-tier { font-family:'JetBrains Mono',monospace; font-size:.72rem; border:1px solid var(--border);
       border-radius:6px; padding:1px 6px; color:var(--text-muted) }
     .us-source-shapes { margin-top:12px; display:flex; flex-wrap:wrap; gap:7px }
-    .us-chip { font-size:.82rem; background:var(--bg); border:1px solid var(--border); border-radius:20px;
-      padding:4px 11px }
-    .us-chip b { color:var(--green); font-family:'JetBrains Mono',monospace }
+    .us-chip { font-size:.84rem; background:var(--bg); border:1px solid var(--border); border-radius:20px;
+      padding:5px 12px; color:var(--text) }
+    .us-chip b { color:var(--green); font-family:'JetBrains Mono',monospace; margin-left:2px }
 
     .us-method { background:var(--surface); border:1px solid var(--border); border-radius:12px;
       padding:4px 16px; margin-top:30px }
@@ -72,8 +72,8 @@
     /* clickable affordance on drill-in targets */
     .us-bar-row:hover .us-bar-label { color:var(--green) }
     .us-chip.us-chip-btn { cursor:pointer; background:var(--bg); border:1px solid var(--border);
-      font:inherit; font-size:.82rem }
-    .us-chip.us-chip-btn:hover { border-color:var(--green) }
+      font-family:inherit; font-size:.84rem; color:var(--text) }
+    .us-chip.us-chip-btn:hover { border-color:var(--green); background:var(--surface) }
 
     /* drill-down modal: the cited passages ("the receipts") */
     .us-modal { position:fixed; inset:0; z-index:400; display:none; background:rgba(0,0,0,.6);
@@ -224,6 +224,17 @@
         craft and extract its descriptive modifiers. Counts shown here are <i>mentions</i>, not
         confirmed distinct sightings — a single famous case described across ten books counts ten
         times. Read the snippets, not just the numbers.</p>
+      <p><b>Reliability tiers.</b> Every source carries a tier marking how close it sits to the
+        original evidence — the same discipline used across the research project:</p>
+      <ul>
+        <li><b>Tier 1</b> — primary firsthand testimony or an official/government document.</li>
+        <li><b>Tier 2</b> — verified third-party account or corroborating public record (named
+          investigators with a track record, on-the-record officials).</li>
+        <li><b>Tier 3</b> — secondary reporting or synthesis (most journalistic UFO books).</li>
+        <li><b>Tier 4</b> — unverified community source (forums, anonymous claims). Leads only.</li>
+      </ul>
+      <p>A higher mention count from a Tier 3 book is not "more true" than a handful from a Tier 2
+        source — the tier is context for weighing what you read.</p>
     </details>
 
     <!-- ══════ FOOTER ══════ -->
@@ -257,6 +268,14 @@
   var SUMMARY = null;       // the loaded summary.json
   var MENTIONS = null;      // lazy-loaded mentions.json (only on first drill-down)
   var SRC = {};             // sourceId → {title, year, tier}
+
+  var TIER_LABEL = {
+    1: 'Tier 1 — primary firsthand testimony or official document',
+    2: 'Tier 2 — verified third-party account or corroborating public record',
+    3: 'Tier 3 — secondary reporting or synthesis (most journalistic books)',
+    4: 'Tier 4 — unverified community source (leads only)'
+  };
+  function tierTitle(t) { return TIER_LABEL[t] || ('Tier ' + t); }
 
   fetch('data/ufo-shapes/summary.json')
     .then(function(r){ return r.json(); })
@@ -299,7 +318,7 @@
     // Per-source view — click a source to see what shapes it references
     if (s.by_source && s.by_source.length) {
       html += '<div class="us-section reveal"><h2>By source</h2>' +
-              '<p class="us-sub">Click a source to see which shapes it references — then tap a shape to read that source’s passages.</p>' +
+              '<p class="us-sub">Click a source to see which shapes it references — then tap a shape to read that source’s passages. The <span class="us-tier">Tier</span> badge is each source’s reliability (1 = primary firsthand … 4 = unverified) — see <i>“How this census is built”</i> below.</p>' +
               '<div class="us-sources" id="usSources"></div></div>';
     }
 
@@ -342,7 +361,7 @@
           '<span class="us-source-title">' + esc(src.title || src.id) +
             (src.year ? ' <span class="us-source-meta">(' + src.year + ')</span>' : '') + '</span>' +
           '<span class="us-source-meta">' +
-            (src.reliability_tier ? '<span class="us-tier">Tier ' + src.reliability_tier + '</span> ' : '') +
+            (src.reliability_tier ? '<span class="us-tier" title="' + esc(tierTitle(src.reliability_tier)) + '">Tier ' + src.reliability_tier + '</span> ' : '') +
             src.count + ' mention' + (src.count === 1 ? '' : 's') + '</span>' +
         '</div>' +
         '<div class="us-source-shapes" style="display:none">' + chips + '</div>' +
@@ -431,7 +450,7 @@
       var s = SRC[m.source_id] || {};
       var cite = esc(s.title || m.source_id) + (s.year ? ' (' + s.year + ')' : '') +
                  (m.locator ? ' · ' + esc(m.locator) : '');
-      var tier = s.tier ? '<span class="us-mention-tier">Tier ' + s.tier + '</span>' : '';
+      var tier = s.tier ? '<span class="us-mention-tier" title="' + esc(tierTitle(s.tier)) + '">Tier ' + s.tier + '</span>' : '';
       return '<div class="us-mention"><div class="us-mention-snip">' + highlight(m.snippet, m.raw_term) +
              '</div><div class="us-mention-meta">' + tier + '<span>' + cite + '</span></div></div>';
     }).join('');
