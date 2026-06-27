@@ -219,13 +219,15 @@ fuller quoting, reconsider per-source.
       v2** dropped bare `bell` from Cone (22 surname/Bell-Helicopter hits) and
       bare `box`/`square`/`block` from Cube (metaphors). This is the calibration
       loop working as intended.
-- [ ] Add **snippet-level drill-down** to `ufo-shapes.html`: clicking a shape (or
-      a source's shape chip) lazy-loads `mentions.json`, filters to those
-      mentions, and lists snippet + locator + "view source" + tier badge. This is
-      "the receipts" and the heart of the per-source idea — going from "what
-      shapes are in this source" to "show me the exact passages".
-- [ ] Link the page from `paranormal.html`; add it to the Explore nav; add a
-      **Tech Stack node** (`techstack.html`) per the repo convention.
+- [x] Add **snippet-level drill-down** to `ufo-shapes.html` (2026-06-27): tapping a
+      shape (leaderboard) or a source's shape chip lazy-loads `mentions.json` once
+      and opens a modal of the cited passages — snippet with the matched term
+      highlighted, plus source · year · tier · locator. Leaderboard drills carry a
+      source-filter pill row; chip drills are pinned to that source. "The receipts."
+- [x] Link the page from `paranormal.html` (2026-06-27) — featured card with live
+      counts; census nests under Paranormal (no separate top-nav entry).
+- [ ] Add a **Tech Stack node** (`techstack.html`) for the census page + toolkit,
+      per the repo convention. (Deferred to avoid crowding the hand-tuned graph.)
 
 ### Phase 2 — correlation views
 - [ ] **Shape × source heatmap** (reuse the Observatory `obs-an-*` heatmap CSS) —

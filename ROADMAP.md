@@ -67,8 +67,10 @@ deliberate proving ground for the larger Cartography / Node-Graph projects.
 - **✓ Surfaced + merged (done 2026-06-27):** featured card on `paranormal.html` (live counts from
   `summary.json`) → `ufo-shapes.html`, with a back-link; census nests **under** Paranormal (no
   separate top-nav entry). Branch squash-merged to `main`.
-- **▶ Phase 1 remaining (next):** add snippet-level **drill-down** ("the receipts" — clicking a
-  shape/source shows the actual passage snippets from `mentions.json`); add a **Tech Stack node**.
+- **✓ Snippet drill-down (done 2026-06-27):** tap a shape (or a source's shape chip) → modal of the
+  **actual cited passages** (matched term highlighted, source · year · tier · locator), lazy-loading
+  `mentions.json`, with a source filter. "The receipts" are live.
+- **▶ Phase 1 remaining (next):** add a **Tech Stack node** for the census page + toolkit.
 - **◷ Later:** Phase 2 shape×source heatmap → Phase 3 LLM disambiguation (`classify.py`) →
   Phase 4 timeline by sighting decade. **Then:** extend to a **humanoid/entity facet** (Alan's
   near-future want — mentions already carry a `facet` field; the prize is cross-facet
