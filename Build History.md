@@ -10,6 +10,19 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: leaderboard + modal UI cleanup
+
+Quick visual polish from Alan's screenshots. (1) **Leaderboard labels no longer truncate** — the
+fixed 150px ellipsis column became a 168px column with the emoji split into a no-shrink `.us-bar-ico`
+span and the name in a wrapping `.us-bar-name` span, so "Boomerang / Chevron" wraps to two clean
+lines and "Other / Unspecified" fits (responsive narrower column < 520px). (2) **Modal source-filter
+pills are readable** — were near-black bg + dim muted text (very low contrast); now legible
+(`--text` on `--bg`, visible border, green hover) with a clear **selected** state (green fill, dark
+text). Tier badge bumped `--text-dim` → `--text-muted`. Verified with a headless Chromium screenshot
+of the leaderboard + the Disc drill-down. `ufo-shapes.html` only.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: snippet drill-down ("the receipts") + Coulthart re-ingest
 
 Two things. **(1) Coulthart re-ingest:** *In Plain Sight* was missing its `segments.jsonl` from the

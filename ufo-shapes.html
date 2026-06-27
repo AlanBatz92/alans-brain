@@ -31,9 +31,14 @@
 
     /* horizontal bar list (shape leaderboard) */
     .us-bars { display:flex; flex-direction:column; gap:9px }
-    .us-bar-row { display:grid; grid-template-columns:150px 1fr 46px; align-items:center; gap:12px;
+    .us-bar-row { display:grid; grid-template-columns:168px 1fr 40px; align-items:center; gap:12px;
       cursor:pointer }
-    .us-bar-label { font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .us-bar-label { font-size:.9rem; line-height:1.2; min-width:0;
+      display:flex; align-items:center; gap:7px }
+    .us-bar-label .us-bar-ico { flex:0 0 auto }
+    .us-bar-label .us-bar-name { min-width:0 }
+    @media (max-width:520px) { .us-bar-row { grid-template-columns:132px 1fr 36px; gap:9px }
+      .us-bar-label { font-size:.84rem } }
     .us-bar-track { background:var(--bg); border:1px solid var(--border); border-radius:7px; height:20px;
       overflow:hidden }
     .us-bar-fill { height:100%; background:linear-gradient(90deg,var(--teal),var(--green)); border-radius:6px;
@@ -50,7 +55,7 @@
     .us-source-title { font-weight:700; font-size:.95rem }
     .us-source-meta { color:var(--text-muted); font-size:.8rem }
     .us-tier { font-family:'JetBrains Mono',monospace; font-size:.72rem; border:1px solid var(--border);
-      border-radius:6px; padding:1px 6px; color:var(--text-dim) }
+      border-radius:6px; padding:1px 6px; color:var(--text-muted) }
     .us-source-shapes { margin-top:12px; display:flex; flex-wrap:wrap; gap:7px }
     .us-chip { font-size:.82rem; background:var(--bg); border:1px solid var(--border); border-radius:20px;
       padding:4px 11px }
@@ -94,10 +99,14 @@
       display:flex; gap:8px; flex-wrap:wrap; align-items:center }
     .us-mention-tier { font-family:'JetBrains Mono',monospace; font-size:.7rem;
       border:1px solid var(--border); border-radius:5px; padding:0 5px; color:var(--text-dim) }
-    .us-modal-srcfilter { padding:10px 18px 0; display:flex; gap:7px; flex-wrap:wrap }
-    .us-srcpill { font-size:.76rem; background:var(--bg); border:1px solid var(--border);
-      border-radius:16px; padding:3px 10px; cursor:pointer; color:var(--text-muted) }
-    .us-srcpill.us-active { border-color:var(--green); color:var(--text) }
+    .us-modal-srcfilter { padding:12px 18px 4px; display:flex; gap:7px; flex-wrap:wrap }
+    .us-modal-srcfilter:empty { display:none }
+    .us-srcpill { font-size:.78rem; background:var(--bg); border:1px solid var(--border);
+      border-radius:16px; padding:4px 11px; cursor:pointer; color:var(--text);
+      transition:border-color .15s, background .15s, color .15s }
+    .us-srcpill:hover { border-color:var(--green) }
+    .us-srcpill.us-active { background:var(--green); border-color:var(--green);
+      color:#06140d; font-weight:700 }
   </style>
 </head>
 <body>
@@ -279,7 +288,8 @@
               '<div class="us-bars">';
       s.by_shape.forEach(function(r){
         html += '<div class="us-bar-row" data-shape="' + esc(r.shape) + '">' +
-          '<div class="us-bar-label">' + esc(r.icon || '') + ' ' + esc(r.label) + '</div>' +
+          '<div class="us-bar-label"><span class="us-bar-ico">' + esc(r.icon || '') +
+            '</span><span class="us-bar-name">' + esc(r.label) + '</span></div>' +
           '<div class="us-bar-track"><div class="us-bar-fill" style="width:' + Math.round(r.count / max * 100) + '%"></div></div>' +
           '<div class="us-bar-num">' + r.count + '</div></div>';
       });
