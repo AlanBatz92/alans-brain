@@ -105,42 +105,18 @@ def prompt(label, current):
     return input(f"  {label}: ").strip() or None
 
 
-def main():
-    ap = argparse.ArgumentParser(description="Ingest a source into normalized segments.")
-    ap.add_argument("file", help="Path to the .txt / .pdf / .epub source")
-    ap.add_argument("--id", help="Stable source id (slug, e.g. vallee_passport)")
-    ap.add_argument("--title")
-    ap.add_argument("--author")
-    ap.add_argument("--year", type=int)
-    ap.add_argument("--type", default=None,
-                    help="book | report | article | case-db (default: book)")
-    ap.add_argument("--tier", type=int,
-                    help="Reliability tier 1-4 (1=primary firsthand, 4=community). "
-                         "See PLAN-ufo-shapes.md / Cartography source discipline.")
-    ap.add_argument("--citation", help="Full human-readable citation string")
-    ap.add_argument("--url", default=None)
-    args = ap.parse_args()
+def slugify(path):
+    base = os.path.splitext(os.path.basename(path))[0]
+    s = re.sub(r"[^a-z0-9]+", "_", base.lower()).strip("_")
+    return (s[:60] or "source")
 
-    ext = os.path.splitext(args.file)[1].lower()
-    if ext not in EXTRACTORS:
-        sys.exit(f"Unsupported format '{ext}'. Supported: {', '.join(EXTRACTORS)}")
-    if not os.path.exists(args.file):
-        sys.exit(f"No such file: {args.file}")
 
-    print("Source metadata (Enter to skip a field):")
-    sid = args.id or input("  id (slug): ").strip()
-    if not sid:
-        sys.exit("An --id is required.")
-    title = prompt("title", args.title)
-    author = prompt("author", args.author)
-    year = args.year if args.year is not None else (input("  year: ").strip() or None)
-    stype = args.type or (input("  type [book]: ").strip() or "book")
-    tier = args.tier if args.tier is not None else (input("  reliability tier 1-4: ").strip() or None)
-    citation = prompt("citation", args.citation)
-    url = prompt("url (optional)", args.url)
-
-    print(f"\nExtracting segments from {args.file} ...")
-    segments = EXTRACTORS[ext](args.file)
+def register_and_extract(path, meta):
+    """Extract a single file to segments + register it in sources.json."""
+    ext = os.path.splitext(path)[1].lower()
+    print(f"\nExtracting segments from {os.path.basename(path)} ...")
+    segments = EXTRACTORS[ext](path)
+    sid = meta["id"]
     rows = [{"source_id": sid, "locator": loc, "text": txt} for loc, txt in segments]
     C.write_jsonl(C.segments_path(sid), rows)
     print(f"  → {len(rows)} segments → {C.segments_path(sid)}")
@@ -149,20 +125,110 @@ def main():
     sources = [s for s in sources if s.get("id") != sid]  # replace on re-ingest
     sources.append({
         "id": sid,
-        "title": title,
-        "author": author,
-        "year": int(year) if year else None,
-        "type": stype,
+        "title": meta.get("title"),
+        "author": meta.get("author"),
+        "year": int(meta["year"]) if meta.get("year") else None,
+        "type": meta.get("type") or "book",
         "format": ext.lstrip("."),
-        "reliability_tier": int(tier) if tier else None,
-        "citation": citation,
-        "url": url,
+        "reliability_tier": int(meta["tier"]) if meta.get("tier") else None,
+        "citation": meta.get("citation"),
+        "url": meta.get("url"),
+        "file": os.path.basename(path),       # lets --all skip already-ingested files
         "ingested_at": _dt.date.today().isoformat(),
         "segment_count": len(rows),
     })
     sources.sort(key=lambda s: (s.get("year") or 0, s.get("title") or ""))
     C.write_json(C.SOURCES_JSON, sources)
-    print(f"  → registered in {C.SOURCES_JSON}")
+    print(f"  → registered '{sid}' in {C.SOURCES_JSON}")
+
+
+def prompt_meta(path):
+    """Interactively collect metadata for one book; returns dict or None to skip."""
+    default_id = slugify(path)
+    print(f"\n── {os.path.basename(path)} ──")
+    sid = input(f"  id (slug) [{default_id}] (or 's' to skip): ").strip() or default_id
+    if sid.lower() == "s":
+        print("  skipped.")
+        return None
+    return {
+        "id": sid,
+        "title": input("  title: ").strip() or None,
+        "author": input("  author: ").strip() or None,
+        "year": input("  year: ").strip() or None,
+        "type": input("  type [book]: ").strip() or "book",
+        "tier": input("  reliability tier 1-4: ").strip() or None,
+        "citation": input("  citation: ").strip() or None,
+        "url": input("  url (optional): ").strip() or None,
+    }
+
+
+def find_books():
+    out = []
+    for name in sorted(os.listdir(C.SOURCES_DIR)):
+        p = os.path.join(C.SOURCES_DIR, name)
+        if os.path.isfile(p) and os.path.splitext(name)[1].lower() in EXTRACTORS:
+            out.append(p)
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Ingest source document(s) into normalized segments.")
+    ap.add_argument("file", nargs="?", help="Path to a single .txt / .pdf / .epub source")
+    ap.add_argument("--all", action="store_true",
+                    help="Batch mode: interactively ingest every new book in ufo-shapes/sources/.")
+    ap.add_argument("--reingest", action="store_true",
+                    help="With --all, also re-process files already in sources.json.")
+    ap.add_argument("--id", help="Stable source id (slug). Single-file mode only.")
+    ap.add_argument("--title")
+    ap.add_argument("--author")
+    ap.add_argument("--year", type=int)
+    ap.add_argument("--type", default=None, help="book | report | article | case-db (default: book)")
+    ap.add_argument("--tier", type=int, help="Reliability tier 1-4 (1=primary firsthand … 4=community).")
+    ap.add_argument("--citation", help="Full human-readable citation string")
+    ap.add_argument("--url", default=None)
+    args = ap.parse_args()
+
+    # ── Batch mode ──────────────────────────────────────────────────────────
+    if args.all:
+        books = find_books()
+        if not books:
+            sys.exit(f"No .epub/.pdf/.txt files found in {C.SOURCES_DIR}")
+        done = {s.get("file") for s in (C.load_json(C.SOURCES_JSON, []) or [])}
+        todo = [b for b in books if args.reingest or os.path.basename(b) not in done]
+        skipped = len(books) - len(todo)
+        print(f"Found {len(books)} book(s) in sources/  ·  {len(todo)} to ingest"
+              + (f"  ·  {skipped} already done (skip)" if skipped else ""))
+        n = 0
+        for path in todo:
+            meta = prompt_meta(path)
+            if meta:
+                register_and_extract(path, meta)
+                n += 1
+        print(f"\nIngested {n} book(s).  Next: python extract.py   (then python build.py)")
+        return
+
+    # ── Single-file mode ────────────────────────────────────────────────────
+    if not args.file:
+        sys.exit("Give a file, or use --all to batch-ingest ufo-shapes/sources/.")
+    ext = os.path.splitext(args.file)[1].lower()
+    if ext not in EXTRACTORS:
+        sys.exit(f"Unsupported format '{ext}'. Supported: {', '.join(EXTRACTORS)}")
+    if not os.path.exists(args.file):
+        sys.exit(f"No such file: {args.file}")
+
+    print("Source metadata (Enter to skip a field):")
+    sid = args.id or input(f"  id (slug) [{slugify(args.file)}]: ").strip() or slugify(args.file)
+    meta = {
+        "id": sid,
+        "title": prompt("title", args.title),
+        "author": prompt("author", args.author),
+        "year": args.year if args.year is not None else (input("  year: ").strip() or None),
+        "type": args.type or (input("  type [book]: ").strip() or "book"),
+        "tier": args.tier if args.tier is not None else (input("  reliability tier 1-4: ").strip() or None),
+        "citation": prompt("citation", args.citation),
+        "url": prompt("url (optional)", args.url),
+    }
+    register_and_extract(args.file, meta)
     print("\nNext: python extract.py   (then python build.py)")
 
 
