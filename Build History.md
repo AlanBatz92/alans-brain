@@ -10,6 +10,30 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: AI disambiguation pass (classify.py) built
+
+Built Phase 3 — the LLM rigor pass — defaulting to **claude-haiku-4-5** (Alan's choice). `classify.py`
+sits between `extract.py` and `build.py`: it reads `work/mentions.full.json` and, per candidate, asks
+the model whether the snippet really describes a craft's shape, setting `confidence` to
+`llm-confirmed` / `llm-rejected`, correcting the canonical shape, and attaching modifiers to that
+specific mention (fixing the lexical pass's per-paragraph modifier over-attach). Batched, temperature
+0, **resumable** (cached in `work/classify_cache.json` so re-runs never re-spend), with an `--engine
+mock` for plumbing tests and `--limit N` for a cheap trial. Needs `ANTHROPIC_API_KEY` + `pip install
+anthropic`; runs locally where the text + key live.
+
+`build.py`'s publish gate now publishes `high` + `llm-confirmed` (never `llm-rejected`;
+`--include-review` still adds the ambiguous lexical tier). The page marks confirmed passages with a
+**✓ AI-checked** badge in the drill-down and the methodology copy now describes the pass. Verified the
+full extract→classify→build plumbing end-to-end with the mock engine (1289 → all confirmed → published
+1289, totals intact); then restored the committed lexical data (mock labels must not ship).
+
+**Not yet run for real** — that's a local step for Alan: `python classify.py` (try `--limit 40`
+first), then `python build.py` and commit the re-gated data. That run is what drops the lexical false
+positives from the published set. Files: new `ufo-shapes/classify.py`; `ufo-shapes/build.py`,
+`ufo-shapes.html`, `ufo-shapes/README.md`, `PLAN-ufo-shapes.md`.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: source attribution (authors)
 
 Sources now reference their **author(s)**. The data was already captured in `sources.json` but wasn't

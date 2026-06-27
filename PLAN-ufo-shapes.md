@@ -238,13 +238,23 @@ fuller quoting, reconsider per-source.
       gets large, so drill-down stays light.
 
 ### Phase 3 — LLM disambiguation (the rigor pass)
-- [ ] `classify.py`: for each lexical candidate, a local **Ollama (llama3)** or
-      **`claude-haiku-4-5`** call answers "does this describe the shape of a
-      craft/object? → keep/drop", sets `confidence: "llm-confirmed"`, fixes the
-      canonical shape if the lexical guess was wrong, and **properly attaches
-      modifiers to the specific mention** (the lexical pass over-attaches every
-      modifier in a paragraph to every mention in it — known limitation).
-- [ ] Page shows a confirmed/unconfirmed distinction; methodology panel updated.
+- [x] **`classify.py` built (2026-06-27).** Sits between `extract.py` and
+      `build.py`; reads `work/mentions.full.json`, and for each candidate a model
+      (default **`claude-haiku-4-5`**; `--engine mock` for plumbing tests) answers
+      "does this snippet describe a craft's shape? → keep/drop", sets
+      `confidence` to `llm-confirmed`/`llm-rejected`, corrects the canonical shape,
+      and attaches modifiers to that specific mention. Batched, resumable (cached
+      in `work/classify_cache.json` — re-runs never re-spend). `build.py`'s gate
+      now publishes `high` + `llm-confirmed` (never `llm-rejected`). Plumbing
+      verified end-to-end with the mock engine.
+- [x] Page shows confirmed passages with a **✓ AI-checked** badge in the
+      drill-down; methodology copy updated.
+- [ ] **Run it for real (Alan, locally):** `export ANTHROPIC_API_KEY=…; pip install
+      anthropic; cd ufo-shapes; python classify.py` (consider `--limit 40` first to
+      eyeball quality/cost), then `python build.py` and commit the re-gated data.
+      This is the step that actually drops the lexical false positives from the
+      published set. A local Ollama engine could be added later if an offline
+      option is wanted.
 
 ### Phase 4 — timeline
 - [ ] Extract the **sighting's date** (not the book's) where stated, into

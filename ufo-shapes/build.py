@@ -41,11 +41,15 @@ def main():
                  "(Refusing to overwrite committed data with nothing.)")
     full = C.load_json(C.MENTIONS_FULL, []) or []
 
-    # THE PUBLISH GATE: high-confidence only, unless --include-review.
+    # THE PUBLISH GATE.
+    #   Lexical pass:  "high" (published) · "review" (withheld, --include-review to add).
+    #   After classify.py:  "llm-confirmed" (published) · "llm-rejected" (always withheld).
+    # So we publish high-confidence + AI-confirmed; --include-review also adds the
+    # ambiguous lexical tier (never the AI-rejected ones).
+    publish = {"high", "llm-confirmed"}
     if args.include_review:
-        mentions = full
-    else:
-        mentions = [m for m in full if m.get("confidence") == "high"]
+        publish.add("review")
+    mentions = [m for m in full if m.get("confidence") in publish]
     withheld = len(full) - len(mentions)
 
     # Write the committed mention set (what the page reads for drill-down).

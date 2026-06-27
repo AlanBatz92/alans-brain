@@ -32,10 +32,16 @@ python ingest.py sources/In_Plain_Sight.epub --id coulthart_inplainsight \
 #    (local only; high + review tiers)
 python extract.py
 
-# 3. PUBLISH GATE: write the committed JSON — HIGH-CONFIDENCE ONLY by default.
-#    Reports which review-tier mentions it withheld.
+# 2b. (Optional but recommended) AI disambiguation pass: confirm each mention
+#     actually describes a craft's shape, drop false positives, pull modifiers.
+#     Needs ANTHROPIC_API_KEY + `pip install anthropic`. Resumable + cached.
+python classify.py                 # or --engine mock to test plumbing
+#     (python classify.py --limit 40   → cheap trial on 40 mentions first)
+
+# 3. PUBLISH GATE: write the committed JSON. Publishes high-confidence +
+#    AI-confirmed; reports what it withheld (review-tier, AI-rejected).
 python build.py
-#    (python build.py --include-review  → also publish the ambiguous ones)
+#    (python build.py --include-review  → also publish the ambiguous lexical tier)
 
 # 4. Commit ONLY the derived data
 cd .. && git add data/ufo-shapes ufo-shapes/shapes.json \
@@ -54,8 +60,19 @@ You commit **only high-confidence shapes**. How that's enforced:
   you what it withheld. The ambiguous hits stay local for inspection.
 - To rescue a good ambiguous hit: either move that term into `aliases` in
   `shapes.json` (if it's reliably a craft in your corpus) and re-run, or run
-  `build.py --include-review` for a one-off. The eventual Phase 3 LLM pass will
-  promote review→published per-mention by reading context.
+  `build.py --include-review` for a one-off.
+
+### The AI disambiguation pass (`classify.py`)
+
+`classify.py` is the finer gate: it reads each mention's snippet and asks a model
+(default **claude-haiku-4-5**) whether it actually describes a craft's shape. It
+sets `confidence` to `llm-confirmed` (published) or `llm-rejected` (always
+withheld), corrects the canonical shape when the lexical guess was wrong, and
+attaches modifiers to that specific mention. It can **promote a good
+`review`-tier hit** to published, and **drop a bad `high`-tier hit** — finer than
+the per-term tiers. It's resumable (cached in `work/classify_cache.json`, so a
+re-run never re-spends) and runs locally with `ANTHROPIC_API_KEY`. Confirmed
+passages show a ✓ AI-checked badge in the page's drill-down.
 
 ## Files
 
@@ -63,8 +80,9 @@ You commit **only high-confidence shapes**. How that's enforced:
 |---|---|
 | `shapes.json` | The controlled shape vocabulary (canonical shapes + aliases). Grows over time. |
 | `ingest.py` | TXT/EPUB/PDF → `sources/<id>/segments.jsonl` + registers metadata. |
-| `extract.py` | Lexicon match over all segments → `data/ufo-shapes/mentions.json`. |
-| `build.py` | Aggregate → `data/ufo-shapes/summary.json`. |
+| `extract.py` | Lexicon match over all segments → `work/mentions.full.json`. |
+| `classify.py` | Optional AI disambiguation pass (Claude Haiku) → confirms/drops mentions. |
+| `build.py` | Publish gate → aggregate to `data/ufo-shapes/{mentions,summary}.json`. |
 | `_common.py` | Shared paths + JSON/JSONL helpers. |
 | `sources/` | Per-source raw text + segments. **Gitignored** (copyright). |
 

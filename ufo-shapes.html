@@ -106,7 +106,9 @@
     .us-mention-meta { margin-top:6px; font-size:.78rem; color:var(--text-muted);
       display:flex; gap:8px; flex-wrap:wrap; align-items:center }
     .us-mention-tier { font-family:'JetBrains Mono',monospace; font-size:.7rem;
-      border:1px solid var(--border); border-radius:5px; padding:0 5px; color:var(--text-dim) }
+      border:1px solid var(--border); border-radius:5px; padding:0 5px; color:var(--text-muted) }
+    .us-mention-ai { font-size:.7rem; color:var(--green); border:1px solid var(--green);
+      border-radius:5px; padding:0 5px; white-space:nowrap }
     .us-modal-srcfilter { padding:12px 18px 4px; display:flex; gap:7px; flex-wrap:wrap }
     .us-modal-srcfilter:empty { display:none }
     .us-srcpill { font-size:.78rem; background:var(--bg); border:1px solid var(--border);
@@ -228,8 +230,10 @@
         mention can be checked against the original.</p>
       <p><b>This is a high-recall lexical pass.</b> It deliberately catches everything and will
         include false positives (a "disc" that means a record, a "triangle" that means a love
-        triangle). A planned disambiguation pass will confirm each mention actually describes a
-        craft and extract its descriptive modifiers. Counts shown here are <i>mentions</i>, not
+        triangle). An optional <b>AI disambiguation pass</b> then reads each snippet and confirms
+        whether it really describes a craft's shape (dropping the false positives) and pulls its
+        descriptive modifiers; passages it has confirmed are marked <span class="us-mention-ai">✓ AI-checked</span>
+        in the drill-down. Counts shown here are <i>mentions</i>, not
         confirmed distinct sightings — a single famous case described across ten books counts ten
         times. Read the snippets, not just the numbers.</p>
       <p><b>Reliability tiers.</b> Every source carries a tier marking how close it sits to the
@@ -466,8 +470,10 @@
                  ((s.author ? s.author + ', ' : '') + (s.title || m.source_id) + (s.year ? ' (' + s.year + ')' : ''));
       var cite = esc(base) + (m.locator ? ' · ' + esc(m.locator) : '');
       var tier = s.tier ? '<span class="us-mention-tier" title="' + esc(tierTitle(s.tier)) + '">Tier ' + s.tier + '</span>' : '';
+      var ai = m.confidence === 'llm-confirmed'
+        ? '<span class="us-mention-ai" title="Confirmed by the AI disambiguation pass">✓ AI-checked</span>' : '';
       return '<div class="us-mention"><div class="us-mention-snip">' + highlight(m.snippet, m.raw_term) +
-             '</div><div class="us-mention-meta">' + tier + '<span>' + cite + '</span></div></div>';
+             '</div><div class="us-mention-meta">' + tier + ai + '<span>' + cite + '</span></div></div>';
     }).join('');
     document.getElementById('usModalBody').innerHTML = body ||
       '<p class="us-sub" style="padding:16px 0">No passages.</p>';

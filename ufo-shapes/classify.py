@@ -1,0 +1,192 @@
+#!/usr/bin/env python3
+"""classify.py — LLM disambiguation pass (Phase 3 of the UAP Shape Census).
+
+Runs AFTER extract.py and BEFORE build.py. Reads the full lexical mention set
+(work/mentions.full.json), and for each candidate asks a model — given the
+snippet — whether it actually describes the SHAPE of a witnessed craft/object
+(vs. a metaphor or an unrelated use of the word). It then:
+
+  • sets confidence to "llm-confirmed" (kept) or "llm-rejected" (dropped),
+  • corrects the canonical shape when the lexical guess was wrong,
+  • attaches descriptive modifiers to that specific mention,
+
+and writes the enriched records back to work/mentions.full.json. build.py then
+publishes only confirmed mentions (see its publish gate). Because the lexical
+pass is high-recall, this is what turns the census from "every keyword hit" into
+"passages that actually describe a craft's shape".
+
+Runs LOCALLY where the API key + text live (like the rest of the toolkit). It is
+**resumable**: results are cached in work/classify_cache.json keyed by mention id
++ snippet, so a re-run only classifies new/changed items and never re-spends.
+
+Engines:
+  claude  — Anthropic API, default claude-haiku-4-5 (needs ANTHROPIC_API_KEY and
+            `pip install anthropic`). ~cheap: short, batched calls.
+  mock    — no API; marks everything confirmed with the lexical shape. For
+            testing the plumbing only.
+
+Usage:
+  export ANTHROPIC_API_KEY=...           # or set it in your shell/profile
+  python classify.py                     # classify all un-checked mentions
+  python classify.py --limit 40          # cheap trial on the first 40
+  python classify.py --engine mock       # plumbing test, no API
+  python build.py                        # then publish the confirmed set
+"""
+import argparse
+import hashlib
+import json
+import os
+import sys
+
+import _common as C
+
+CACHE_PATH = os.path.join(C.WORK_DIR, "classify_cache.json")
+DEFAULT_MODEL = "claude-haiku-4-5"
+
+SYSTEM = (
+    "You classify candidate UFO/UAP craft-shape mentions pulled from books by a "
+    "keyword matcher. For each item you get the matched TERM, a SHAPE_GUESS "
+    "(a canonical shape id), and a SNIPPET of surrounding text. Decide whether "
+    "the snippet is actually describing the SHAPE of a witnessed or reported "
+    "craft/object/light in the sky — NOT a metaphor (\"love triangle\"), a "
+    "figure of speech, an unrelated object (a vinyl disc, a box of files), or "
+    "discussion of the word itself. Be strict: when the snippet does not clearly "
+    "attribute the shape to a craft/object, mark craft=false.\n"
+    "Return ONLY a strict JSON array. Each element: "
+    '{"id": <string>, "craft": true|false, "shape": <one canonical id or null>, '
+    '"modifiers": [<=4 short adjectives describing the object, e.g. "metallic", '
+    '"glowing", "huge">]}. '
+    "If craft is false, set shape=null and modifiers=[]. Choose `shape` from the "
+    "allowed ids; keep SHAPE_GUESS unless the snippet clearly indicates a "
+    "different one."
+)
+
+
+def cache_key(m):
+    h = hashlib.sha1((m["id"] + "|" + (m.get("snippet") or "")).encode("utf-8")).hexdigest()
+    return h[:16]
+
+
+def allowed_ids(shapes):
+    return [s["id"] for s in shapes]
+
+
+def build_payload(batch, shapes):
+    allowed = ", ".join(s["id"] + " (" + s["label"] + ")" for s in shapes)
+    lines = ["Allowed shape ids: " + allowed, "", "Items:"]
+    for m in batch:
+        snip = (m.get("snippet") or "").replace("\n", " ")
+        lines.append(json.dumps({
+            "id": m["id"], "term": m.get("raw_term"),
+            "shape_guess": m.get("shape"), "snippet": snip,
+        }, ensure_ascii=False))
+    lines.append("\nReturn the JSON array now.")
+    return "\n".join(lines)
+
+
+def parse_json_array(text):
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("```", 2)[1]
+        if text.startswith("json"):
+            text = text[4:]
+    a, b = text.find("["), text.rfind("]")
+    if a == -1 or b == -1:
+        raise ValueError("no JSON array in model output")
+    return json.loads(text[a:b + 1])
+
+
+# ── Engines ─────────────────────────────────────────────────────────────────
+
+def engine_mock(batch, shapes):
+    return [{"id": m["id"], "craft": True, "shape": m.get("shape"), "modifiers": []}
+            for m in batch]
+
+
+def make_claude_engine(model):
+    try:
+        import anthropic
+    except ImportError:
+        sys.exit("Claude engine needs the SDK:  pip install anthropic")
+    client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+
+    def run(batch, shapes):
+        resp = client.messages.create(
+            model=model, max_tokens=2000, temperature=0, system=SYSTEM,
+            messages=[{"role": "user", "content": build_payload(batch, shapes)}],
+        )
+        return parse_json_array(resp.content[0].text)
+
+    return run
+
+
+# ── Main ────────────────────────────────────────────────────────────────────
+
+def main():
+    ap = argparse.ArgumentParser(description="LLM disambiguation pass over the lexical mentions.")
+    ap.add_argument("--engine", choices=["claude", "mock"], default="claude")
+    ap.add_argument("--model", default=DEFAULT_MODEL)
+    ap.add_argument("--batch-size", type=int, default=12)
+    ap.add_argument("--limit", type=int, default=0, help="Only classify the first N un-checked (trial).")
+    ap.add_argument("--refresh", action="store_true", help="Ignore cache; re-classify everything.")
+    args = ap.parse_args()
+
+    if not os.path.exists(C.MENTIONS_FULL):
+        sys.exit(f"No {C.MENTIONS_FULL} — run extract.py first.")
+    mentions = C.load_json(C.MENTIONS_FULL, []) or []
+    shapes = C.load_json(C.SHAPES_PATH)["shapes"]
+    valid = set(allowed_ids(shapes))
+
+    cache = {} if args.refresh else (C.load_json(CACHE_PATH, {}) or {})
+    todo = [m for m in mentions if args.refresh or cache_key(m) not in cache]
+    if args.limit:
+        todo = todo[:args.limit]
+    print(f"{len(mentions)} mentions · {len(mentions) - len(todo)} cached · {len(todo)} to classify "
+          f"[engine={args.engine}, model={args.model if args.engine=='claude' else '-'}]")
+
+    run = engine_mock if args.engine == "mock" else make_claude_engine(args.model)
+
+    done = 0
+    for i in range(0, len(todo), args.batch_size):
+        batch = todo[i:i + args.batch_size]
+        try:
+            results = run(batch, shapes)
+        except Exception as e:
+            print(f"  batch {i//args.batch_size} failed ({e}); saving progress and stopping.")
+            break
+        by_id = {r.get("id"): r for r in results}
+        for m in batch:
+            r = by_id.get(m["id"]) or {"craft": True, "shape": m.get("shape"), "modifiers": []}
+            cache[cache_key(m)] = {
+                "craft": bool(r.get("craft")),
+                "shape": r.get("shape") if r.get("shape") in valid else m.get("shape"),
+                "modifiers": [str(x) for x in (r.get("modifiers") or [])][:4],
+            }
+        done += len(batch)
+        C.write_json(CACHE_PATH, cache)
+        if done % 120 == 0 or i + args.batch_size >= len(todo):
+            print(f"  classified {done}/{len(todo)}")
+
+    # Apply cache → mentions
+    confirmed = rejected = 0
+    for m in mentions:
+        c = cache.get(cache_key(m))
+        if not c:
+            continue
+        if c["craft"]:
+            m["confidence"] = "llm-confirmed"
+            if c.get("shape") in valid:
+                m["shape"] = c["shape"]
+            if c.get("modifiers"):
+                m["modifiers"] = c["modifiers"]
+            confirmed += 1
+        else:
+            m["confidence"] = "llm-rejected"
+            rejected += 1
+    C.write_json(C.MENTIONS_FULL, mentions)
+    print(f"Applied: {confirmed} confirmed, {rejected} rejected → {C.MENTIONS_FULL}")
+    print("Next: python build.py   (publishes confirmed only)")
+
+
+if __name__ == "__main__":
+    main()
