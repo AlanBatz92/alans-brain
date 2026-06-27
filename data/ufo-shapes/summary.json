@@ -1,0 +1,441 @@
+{
+  "generated_at": "2026-06-26T23:17:14",
+  "taxonomy_version": 3,
+  "totals": {
+    "sources": 6,
+    "mentions": 1083,
+    "shapes": 11
+  },
+  "by_shape": [
+    {
+      "shape": "disc",
+      "label": "Disc",
+      "icon": "🛸",
+      "count": 615,
+      "source_count": 5
+    },
+    {
+      "shape": "sphere",
+      "label": "Sphere / Orb",
+      "icon": "⚪",
+      "count": 162,
+      "source_count": 5
+    },
+    {
+      "shape": "cylinder",
+      "label": "Cylinder / Cigar",
+      "icon": "🚬",
+      "count": 119,
+      "source_count": 5
+    },
+    {
+      "shape": "triangle",
+      "label": "Triangle",
+      "icon": "🔺",
+      "count": 97,
+      "source_count": 4
+    },
+    {
+      "shape": "egg",
+      "label": "Egg / Ovoid",
+      "icon": "🥚",
+      "count": 43,
+      "source_count": 5
+    },
+    {
+      "shape": "cone",
+      "label": "Cone",
+      "icon": "🔻",
+      "count": 12,
+      "source_count": 3
+    },
+    {
+      "shape": "boomerang",
+      "label": "Boomerang / Chevron",
+      "icon": "🪃",
+      "count": 11,
+      "source_count": 3
+    },
+    {
+      "shape": "cube",
+      "label": "Cube / Box",
+      "icon": "⬛",
+      "count": 10,
+      "source_count": 4
+    },
+    {
+      "shape": "tictac",
+      "label": "Tic-Tac / Pill",
+      "icon": "💊",
+      "count": 7,
+      "source_count": 1
+    },
+    {
+      "shape": "diamond",
+      "label": "Diamond",
+      "icon": "🔶",
+      "count": 6,
+      "source_count": 1
+    },
+    {
+      "shape": "other",
+      "label": "Other / Unspecified",
+      "icon": "🌀",
+      "count": 1,
+      "source_count": 1
+    }
+  ],
+  "by_source": [
+    {
+      "id": "vallee_passport_magonia",
+      "title": "Passport to Magonia: From Folklore to Flying Saucers",
+      "year": 1969,
+      "reliability_tier": 3,
+      "count": 426
+    },
+    {
+      "id": "hastings_ufos_nukes",
+      "title": "UFOs and Nukes: Extraordinary Encounters at Nuclear Weapons Sites",
+      "year": 2008,
+      "reliability_tier": 3,
+      "count": 249
+    },
+    {
+      "id": "graff_ufo_inside_story",
+      "title": "UFO: The Inside Story of the U.S. Government's Search for Alien Life Here—and Out There",
+      "year": 2023,
+      "reliability_tier": 2,
+      "count": 218
+    },
+    {
+      "id": "kean_ufos_generals",
+      "title": "UFOs: Generals, Pilots, and Government Officials Go on the Record",
+      "year": 2010,
+      "reliability_tier": 2,
+      "count": 110
+    },
+    {
+      "id": "jung_flying_saucers",
+      "title": "Flying Saucers: A Modern Myth of Things Seen in the Skies",
+      "year": 1958,
+      "reliability_tier": 3,
+      "count": 80
+    },
+    {
+      "id": "coulthart_inplainsight",
+      "title": "In Plain Sight",
+      "year": 2021,
+      "reliability_tier": 3,
+      "count": 0
+    }
+  ],
+  "shape_by_source_matrix": {
+    "shapes": [
+      "disc",
+      "sphere",
+      "triangle",
+      "boomerang",
+      "cylinder",
+      "tictac",
+      "egg",
+      "cone",
+      "diamond",
+      "cube",
+      "other"
+    ],
+    "sources": [
+      "jung_flying_saucers",
+      "vallee_passport_magonia",
+      "hastings_ufos_nukes",
+      "kean_ufos_generals",
+      "coulthart_inplainsight",
+      "graff_ufo_inside_story"
+    ],
+    "cells": [
+      {
+        "shape": "boomerang",
+        "source": "hastings_ufos_nukes",
+        "count": 8
+      },
+      {
+        "shape": "boomerang",
+        "source": "kean_ufos_generals",
+        "count": 1
+      },
+      {
+        "shape": "boomerang",
+        "source": "vallee_passport_magonia",
+        "count": 2
+      },
+      {
+        "shape": "cone",
+        "source": "hastings_ufos_nukes",
+        "count": 1
+      },
+      {
+        "shape": "cone",
+        "source": "kean_ufos_generals",
+        "count": 2
+      },
+      {
+        "shape": "cone",
+        "source": "vallee_passport_magonia",
+        "count": 9
+      },
+      {
+        "shape": "cube",
+        "source": "graff_ufo_inside_story",
+        "count": 3
+      },
+      {
+        "shape": "cube",
+        "source": "hastings_ufos_nukes",
+        "count": 2
+      },
+      {
+        "shape": "cube",
+        "source": "kean_ufos_generals",
+        "count": 3
+      },
+      {
+        "shape": "cube",
+        "source": "vallee_passport_magonia",
+        "count": 2
+      },
+      {
+        "shape": "cylinder",
+        "source": "graff_ufo_inside_story",
+        "count": 15
+      },
+      {
+        "shape": "cylinder",
+        "source": "hastings_ufos_nukes",
+        "count": 30
+      },
+      {
+        "shape": "cylinder",
+        "source": "jung_flying_saucers",
+        "count": 16
+      },
+      {
+        "shape": "cylinder",
+        "source": "kean_ufos_generals",
+        "count": 4
+      },
+      {
+        "shape": "cylinder",
+        "source": "vallee_passport_magonia",
+        "count": 54
+      },
+      {
+        "shape": "diamond",
+        "source": "hastings_ufos_nukes",
+        "count": 6
+      },
+      {
+        "shape": "disc",
+        "source": "graff_ufo_inside_story",
+        "count": 164
+      },
+      {
+        "shape": "disc",
+        "source": "hastings_ufos_nukes",
+        "count": 140
+      },
+      {
+        "shape": "disc",
+        "source": "jung_flying_saucers",
+        "count": 29
+      },
+      {
+        "shape": "disc",
+        "source": "kean_ufos_generals",
+        "count": 51
+      },
+      {
+        "shape": "disc",
+        "source": "vallee_passport_magonia",
+        "count": 231
+      },
+      {
+        "shape": "egg",
+        "source": "graff_ufo_inside_story",
+        "count": 4
+      },
+      {
+        "shape": "egg",
+        "source": "hastings_ufos_nukes",
+        "count": 4
+      },
+      {
+        "shape": "egg",
+        "source": "jung_flying_saucers",
+        "count": 1
+      },
+      {
+        "shape": "egg",
+        "source": "kean_ufos_generals",
+        "count": 2
+      },
+      {
+        "shape": "egg",
+        "source": "vallee_passport_magonia",
+        "count": 32
+      },
+      {
+        "shape": "other",
+        "source": "kean_ufos_generals",
+        "count": 1
+      },
+      {
+        "shape": "sphere",
+        "source": "graff_ufo_inside_story",
+        "count": 11
+      },
+      {
+        "shape": "sphere",
+        "source": "hastings_ufos_nukes",
+        "count": 19
+      },
+      {
+        "shape": "sphere",
+        "source": "jung_flying_saucers",
+        "count": 34
+      },
+      {
+        "shape": "sphere",
+        "source": "kean_ufos_generals",
+        "count": 9
+      },
+      {
+        "shape": "sphere",
+        "source": "vallee_passport_magonia",
+        "count": 89
+      },
+      {
+        "shape": "tictac",
+        "source": "graff_ufo_inside_story",
+        "count": 7
+      },
+      {
+        "shape": "triangle",
+        "source": "graff_ufo_inside_story",
+        "count": 14
+      },
+      {
+        "shape": "triangle",
+        "source": "hastings_ufos_nukes",
+        "count": 39
+      },
+      {
+        "shape": "triangle",
+        "source": "kean_ufos_generals",
+        "count": 37
+      },
+      {
+        "shape": "triangle",
+        "source": "vallee_passport_magonia",
+        "count": 7
+      }
+    ]
+  },
+  "top_modifiers": [
+    {
+      "term": "hovering",
+      "count": 67
+    },
+    {
+      "term": "white",
+      "count": 57
+    },
+    {
+      "term": "red",
+      "count": 53
+    },
+    {
+      "term": "bright",
+      "count": 44
+    },
+    {
+      "term": "luminous",
+      "count": 40
+    },
+    {
+      "term": "small",
+      "count": 38
+    },
+    {
+      "term": "green",
+      "count": 36
+    },
+    {
+      "term": "orange",
+      "count": 33
+    },
+    {
+      "term": "blue",
+      "count": 32
+    },
+    {
+      "term": "metallic",
+      "count": 30
+    },
+    {
+      "term": "glowing",
+      "count": 27
+    },
+    {
+      "term": "dark",
+      "count": 26
+    },
+    {
+      "term": "black",
+      "count": 24
+    },
+    {
+      "term": "silvery",
+      "count": 20
+    },
+    {
+      "term": "huge",
+      "count": 18
+    },
+    {
+      "term": "spinning",
+      "count": 17
+    },
+    {
+      "term": "silver",
+      "count": 16
+    },
+    {
+      "term": "silent",
+      "count": 14
+    },
+    {
+      "term": "shiny",
+      "count": 12
+    },
+    {
+      "term": "rotating",
+      "count": 12
+    },
+    {
+      "term": "transparent",
+      "count": 11
+    },
+    {
+      "term": "enormous",
+      "count": 5
+    },
+    {
+      "term": "massive",
+      "count": 3
+    },
+    {
+      "term": "golden",
+      "count": 2
+    }
+  ],
+  "timeline_buckets": []
+}

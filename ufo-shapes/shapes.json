@@ -1,0 +1,95 @@
+{
+  "version": 3,
+  "updated": "2026-06-27",
+  "note": "Controlled vocabulary for the UAP Shape Census. Each shape has two alias lists: `aliases` (HIGH confidence — shape-explicit terms that rarely mean anything but a craft; these get PUBLISHED to the committed data) and `review_aliases` (ambiguous common words that need human/LLM context; these are captured locally in work/mentions.full.json but are NOT committed by default — see build.py --include-review and PLAN-ufo-shapes.md §11). Matching is whole-word, case-insensitive; internal spaces match flexible whitespace + optional hyphen. GROW these lists as real prose reveals new terms, and bump `version` when you do.",
+  "shapes": [
+    {
+      "id": "disc",
+      "label": "Disc",
+      "icon": "🛸",
+      "aliases": ["disc", "disk", "saucer", "flying saucer", "discoid", "saucer-shaped", "disc-shaped"],
+      "review_aliases": ["plate", "dish"],
+      "disambiguation": "Classic 'flying saucer'. 'disc'/'disk' are kept high (in UFO prose they overwhelmingly mean the craft); 'plate'/'dish' are review (literal tableware/satellite dish)."
+    },
+    {
+      "id": "sphere",
+      "label": "Sphere / Orb",
+      "icon": "⚪",
+      "aliases": ["sphere", "spheroid", "orb", "spherical", "globular", "glowing ball", "ball of light", "round object"],
+      "review_aliases": ["ball", "globe", "round"],
+      "disambiguation": "Shape-explicit forms high; bare 'ball'/'globe'/'round' are review (ball game, round trip)."
+    },
+    {
+      "id": "triangle",
+      "label": "Triangle",
+      "icon": "🔺",
+      "aliases": ["triangle", "triangular", "delta-shaped", "v-shaped", "wedge-shaped", "arrowhead"],
+      "review_aliases": ["delta", "wedge"],
+      "disambiguation": "Belgian-wave / Phoenix-Lights morphology. Bare 'delta' (river/airline) and 'wedge' are review."
+    },
+    {
+      "id": "boomerang",
+      "label": "Boomerang / Chevron",
+      "icon": "🪃",
+      "aliases": ["boomerang", "chevron", "crescent-shaped", "v formation", "v-formation"],
+      "review_aliases": ["crescent", "winged"],
+      "disambiguation": "Open/bent/winged shape, distinct from a solid triangle. Bare 'crescent' (moon) and 'winged' (bird/metaphor) are review."
+    },
+    {
+      "id": "cylinder",
+      "label": "Cylinder / Cigar",
+      "icon": "🚬",
+      "aliases": ["cigar", "cigar-shaped", "cylinder", "cylindrical", "tubular", "lozenge", "rod-shaped"],
+      "review_aliases": ["tube", "rod"],
+      "disambiguation": "Long-axis craft, kept separate from Tic-Tac. Bare 'tube'/'rod' are review (literal)."
+    },
+    {
+      "id": "tictac",
+      "label": "Tic-Tac / Pill",
+      "icon": "💊",
+      "aliases": ["tic tac", "tic-tac", "tictac", "pill-shaped", "capsule-shaped", "oblong white", "white oblong"],
+      "review_aliases": ["pill", "capsule"],
+      "disambiguation": "Own bucket — iconic, time-stamped post-2004 (Nimitz). Bare 'pill' (medication) and 'capsule' (space capsule) are review."
+    },
+    {
+      "id": "egg",
+      "label": "Egg / Ovoid",
+      "icon": "🥚",
+      "aliases": ["egg-shaped", "ovoid", "oval-shaped", "teardrop", "teardrop-shaped", "acorn-shaped"],
+      "review_aliases": ["egg", "oval", "acorn"],
+      "disambiguation": "Includes the teardrop/acorn crash-retrieval morphology. Bare 'egg'/'oval'/'acorn' are review."
+    },
+    {
+      "id": "cone",
+      "label": "Cone",
+      "icon": "🔻",
+      "aliases": ["conical", "cone-shaped", "bell-shaped", "spinning top"],
+      "review_aliases": ["cone", "top-shaped"],
+      "disambiguation": "Bare 'bell' was removed in v2 (surname/Bell Helicopter). Bare 'cone' (ice-cream/traffic) is review; require 'cone-shaped'/'conical'."
+    },
+    {
+      "id": "diamond",
+      "label": "Diamond",
+      "icon": "🔶",
+      "aliases": ["diamond-shaped", "rhomboid", "rhombus", "kite-shaped"],
+      "review_aliases": ["diamond"],
+      "disambiguation": "Shape-explicit forms high; bare 'diamond' (gemstone/baseball) is review."
+    },
+    {
+      "id": "cube",
+      "label": "Cube / Box",
+      "icon": "⬛",
+      "aliases": ["cube-shaped", "cubic", "box-shaped", "rectangular", "square-shaped"],
+      "review_aliases": ["cube", "rectangle"],
+      "disambiguation": "Bare 'box'/'square'/'block' removed in v2 (metaphors). Require shape-qualified forms; bare 'cube' is review."
+    },
+    {
+      "id": "other",
+      "label": "Other / Unspecified",
+      "icon": "🌀",
+      "aliases": ["structured craft", "amorphous", "shape-shifting", "morphing craft"],
+      "review_aliases": ["irregular shape", "indistinct shape", "changing shape", "shapeless"],
+      "disambiguation": "Catch-all for explicitly unspecified / shape-shifting morphology. Only matched on these explicit phrases, never a default dumping ground."
+    }
+  ]
+}

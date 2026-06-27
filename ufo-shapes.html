@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>UAP Shape Census — Alan's Brain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      var t = localStorage.getItem('ab_theme');
+      if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── UAP Shape Census — self-contained styles, us- prefix ──────────── */
+    .us-stats { display:flex; gap:14px; flex-wrap:wrap; margin:8px 0 28px }
+    .us-stat { flex:1 1 140px; background:var(--surface); border:1px solid var(--border);
+      border-radius:14px; padding:16px 18px }
+    .us-stat-num { font-family:'JetBrains Mono',monospace; font-size:1.9rem; font-weight:700;
+      color:var(--green); line-height:1 }
+    .us-stat-label { color:var(--text-muted); font-size:.82rem; margin-top:6px; text-transform:uppercase;
+      letter-spacing:.04em }
+
+    .us-section { margin:34px 0 }
+    .us-section h2 { font-size:1.15rem; margin:0 0 4px }
+    .us-section .us-sub { color:var(--text-muted); font-size:.85rem; margin:0 0 16px }
+
+    /* horizontal bar list (shape leaderboard) */
+    .us-bars { display:flex; flex-direction:column; gap:9px }
+    .us-bar-row { display:grid; grid-template-columns:150px 1fr 46px; align-items:center; gap:12px;
+      cursor:pointer }
+    .us-bar-label { font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .us-bar-track { background:var(--bg); border:1px solid var(--border); border-radius:7px; height:20px;
+      overflow:hidden }
+    .us-bar-fill { height:100%; background:linear-gradient(90deg,var(--teal),var(--green)); border-radius:6px;
+      min-width:2px; transition:width .4s }
+    .us-bar-num { font-family:'JetBrains Mono',monospace; font-size:.85rem; color:var(--text-muted);
+      text-align:right }
+
+    /* source list + per-source drill-down */
+    .us-sources { display:flex; flex-direction:column; gap:8px }
+    .us-source { background:var(--surface); border:1px solid var(--border); border-radius:12px;
+      padding:12px 14px; cursor:pointer; transition:border-color .2s }
+    .us-source:hover, .us-source.us-open { border-color:var(--green) }
+    .us-source-head { display:flex; justify-content:space-between; align-items:center; gap:10px }
+    .us-source-title { font-weight:700; font-size:.95rem }
+    .us-source-meta { color:var(--text-muted); font-size:.8rem }
+    .us-tier { font-family:'JetBrains Mono',monospace; font-size:.72rem; border:1px solid var(--border);
+      border-radius:6px; padding:1px 6px; color:var(--text-dim) }
+    .us-source-shapes { margin-top:12px; display:flex; flex-wrap:wrap; gap:7px }
+    .us-chip { font-size:.82rem; background:var(--bg); border:1px solid var(--border); border-radius:20px;
+      padding:4px 11px }
+    .us-chip b { color:var(--green); font-family:'JetBrains Mono',monospace }
+
+    .us-method { background:var(--surface); border:1px solid var(--border); border-radius:12px;
+      padding:4px 16px; margin-top:30px }
+    .us-method summary { cursor:pointer; padding:12px 0; font-weight:700 }
+    .us-method p, .us-method li { color:var(--text-muted); font-size:.88rem; line-height:1.5 }
+
+    .us-empty { text-align:center; padding:50px 20px; color:var(--text-muted) }
+    .us-empty-icon img { width:54px; height:54px; opacity:.7 }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Alan's Brain <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Alan's_Brain/world-creativity-and-innovation-day.png" alt=""></a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="weather.html">Weather</a>
+        <a href="pulse.html">Pulse</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+            Explore <span class="nav-dropdown-arrow">▼</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="youtube.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
+            <a href="transart.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
+            <a href="soundboards.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
+            <a href="tools.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""> Great & Free</a>
+            <a href="photos.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
+            <a href="art.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
+            <a href="paranormal.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
+            <a href="observatory.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Projects/observatory.png" alt=""> Observatory</a>
+            <a href="projects.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Projects/brain-thoughts.svg" alt=""> Personal Projects</a>
+          </div>
+        </div>
+        <a href="techstack.html">Stack</a>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <div class="nav-hamburger-lines">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="nav-mobile-overlay">
+    <a href="index.html">Home</a>
+    <a href="weather.html">Weather</a>
+    <a href="pulse.html">Pulse</a>
+    <a href="techstack.html"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">⚙️</span> Stack</a>
+    <span class="mobile-section-label">Explore</span>
+    <a href="youtube.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
+    <a href="transart.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
+    <a href="soundboards.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
+    <a href="tools.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""> Great & Free</a>
+    <a href="photos.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
+    <a href="art.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
+    <a href="paranormal.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
+    <a href="observatory.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Projects/observatory.png" alt=""> Observatory</a>
+    <a href="projects.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Projects/brain-thoughts.svg" alt=""> Personal Projects</a>
+  </div>
+
+  <div class="page">
+
+    <!-- ══════ PAGE HERO ══════ -->
+    <section class="page-hero">
+      <div class="page-hero-icon anim" style="animation-delay:0.1s"><img width="72" height="72" src="img/Icons/icons/UFO/ufo.png" alt=""></div>
+      <h1 class="anim" style="animation-delay:0.2s">
+        <span class="gradient-text">The UAP Shape Census</span>
+      </h1>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">Every craft has a shape. This counts them.</div>
+      <div class="anim" style="animation-delay:0.4s;margin-top:10px"><a href="paranormal.html" style="color:var(--text-muted);text-decoration:none;font-size:.85rem">← Back to Paranormal</a></div>
+    </section>
+
+    <!-- ══════ HEADLINE STATS ══════ -->
+    <div class="us-stats anim" style="animation-delay:0.45s" id="usStats"></div>
+
+    <!-- ══════ CONTENT (rendered from summary.json) ══════ -->
+    <div id="usContent"></div>
+
+    <!-- ══════ EMPTY STATE ══════ -->
+    <div class="us-empty" id="usEmpty" style="display:none">
+      <div class="us-empty-icon"><img src="img/Icons/icons/Nothing_To_See/eye.png" alt=""></div>
+      <p>No sources ingested yet. The census begins once the first book is processed.</p>
+      <p style="font-size:.82rem">Run the <code>ufo-shapes/</code> toolkit locally → commit <code>data/ufo-shapes/</code> → it appears here.</p>
+    </div>
+
+    <!-- ══════ METHODOLOGY ══════ -->
+    <details class="us-method reveal">
+      <summary>ℹ️ How this census is built</summary>
+      <p>Each source (book, report, interview transcript) is ingested locally and normalized into
+        located text segments. A controlled shape vocabulary — disc, sphere, triangle, cigar,
+        Tic-Tac, egg, cone, diamond, cube, and more — is matched against every segment, and each
+        hit is logged with its source, its location in the text, and the surrounding snippet so the
+        mention can be checked against the original.</p>
+      <p><b>This is a high-recall lexical pass.</b> It deliberately catches everything and will
+        include false positives (a "disc" that means a record, a "triangle" that means a love
+        triangle). A planned disambiguation pass will confirm each mention actually describes a
+        craft and extract its descriptive modifiers. Counts shown here are <i>mentions</i>, not
+        confirmed distinct sightings — a single famous case described across ten books counts ten
+        times. Read the snippets, not just the numbers.</p>
+    </details>
+
+    <!-- ══════ FOOTER ══════ -->
+    <footer class="site-footer reveal">
+      <div class="footer-stamp">Crafted by Alan <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/UFO/ufo.png" alt=""></div>
+      <div class="footer-text">
+        Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. Just a human on the internet.
+      </div>
+      <div class="footer-buttons">
+        <span class="footer-btn">HTML</span>
+        <span class="footer-btn">CSS</span>
+        <span class="footer-btn">JS</span>
+      </div>
+      <div class="visit-ticker">
+        <span class="ticker-label">visitors</span>
+        <div class="ticker-digits" id="visitTicker"></div>
+      </div>
+    </footer>
+
+  </div><!-- /.page -->
+
+<script>
+  /* ── UAP Shape Census — reads data/ufo-shapes/summary.json ──────────────
+     Phase 0 stub: renders headline stats, the shape leaderboard, and the
+     per-source drill-down (click a source → its shape profile) entirely from
+     summary.json. Snippet-level drill-down (lazy-loading mentions.json when a
+     shape or source is opened) is the Phase 1 TODO — see PLAN-ufo-shapes.md. */
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+
+  fetch('data/ufo-shapes/summary.json')
+    .then(function(r){ return r.json(); })
+    .then(render)
+    .catch(function(){
+      document.getElementById('usEmpty').style.display = 'block';
+    });
+
+  function render(s) {
+    var t = s.totals || { sources:0, mentions:0, shapes:0 };
+    document.getElementById('usStats').innerHTML =
+      stat(t.sources, 'Sources ingested') +
+      stat(t.mentions, 'Shape mentions') +
+      stat(t.shapes, 'Distinct shapes');
+
+    if (!t.sources) { document.getElementById('usEmpty').style.display = 'block'; return; }
+
+    var html = '';
+
+    // Shape leaderboard
+    if (s.by_shape && s.by_shape.length) {
+      var max = s.by_shape[0].count || 1;
+      html += '<div class="us-section reveal"><h2>Shapes, most to least</h2>' +
+              '<p class="us-sub">Total mentions across every ingested source. Tap a shape for the receipts (coming next).</p>' +
+              '<div class="us-bars">';
+      s.by_shape.forEach(function(r){
+        html += '<div class="us-bar-row" data-shape="' + esc(r.shape) + '">' +
+          '<div class="us-bar-label">' + esc(r.icon || '') + ' ' + esc(r.label) + '</div>' +
+          '<div class="us-bar-track"><div class="us-bar-fill" style="width:' + Math.round(r.count / max * 100) + '%"></div></div>' +
+          '<div class="us-bar-num">' + r.count + '</div></div>';
+      });
+      html += '</div></div>';
+    }
+
+    // Per-source view — click a source to see what shapes it references
+    if (s.by_source && s.by_source.length) {
+      html += '<div class="us-section reveal"><h2>By source</h2>' +
+              '<p class="us-sub">Click a source to see which shapes it references and how often.</p>' +
+              '<div class="us-sources" id="usSources"></div></div>';
+    }
+
+    document.getElementById('usContent').innerHTML = html;
+    if (s.by_source && s.by_source.length) renderSources(s);
+    initReveal();
+  }
+
+  function stat(n, label) {
+    return '<div class="us-stat"><div class="us-stat-num">' + (n||0) + '</div>' +
+           '<div class="us-stat-label">' + label + '</div></div>';
+  }
+
+  /* Build a {sourceId: [{shape,label,icon,count}]} index from the matrix in
+     summary.json — no need to load mentions.json for the shape profile. */
+  function renderSources(s) {
+    var labelOf = {}, iconOf = {};
+    (s.by_shape || []).forEach(function(r){ labelOf[r.shape] = r.label; iconOf[r.shape] = r.icon; });
+    var byShapeAll = {};
+    ((s.shape_by_source_matrix || {}).cells || []).forEach(function(c){
+      (byShapeAll[c.source] = byShapeAll[c.source] || []).push(c);
+    });
+
+    var html = '';
+    s.by_source.forEach(function(src){
+      var shapes = (byShapeAll[src.id] || []).slice().sort(function(a,b){ return b.count - a.count; });
+      var chips = shapes.map(function(c){
+        return '<span class="us-chip">' + esc(iconOf[c.shape] || '') + ' ' +
+               esc(labelOf[c.shape] || c.shape) + ' <b>' + c.count + '</b></span>';
+      }).join('');
+      html += '<div class="us-source" data-src="' + esc(src.id) + '">' +
+        '<div class="us-source-head">' +
+          '<span class="us-source-title">' + esc(src.title || src.id) +
+            (src.year ? ' <span class="us-source-meta">(' + src.year + ')</span>' : '') + '</span>' +
+          '<span class="us-source-meta">' +
+            (src.reliability_tier ? '<span class="us-tier">Tier ' + src.reliability_tier + '</span> ' : '') +
+            src.count + ' mention' + (src.count === 1 ? '' : 's') + '</span>' +
+        '</div>' +
+        '<div class="us-source-shapes" style="display:none">' + chips + '</div>' +
+      '</div>';
+    });
+    document.getElementById('usSources').innerHTML = html;
+
+    document.getElementById('usSources').addEventListener('click', function(e){
+      var card = e.target.closest('.us-source'); if (!card) return;
+      var panel = card.querySelector('.us-source-shapes');
+      var open = panel.style.display !== 'none';
+      panel.style.display = open ? 'none' : 'flex';
+      card.classList.toggle('us-open', !open);
+    });
+  }
+
+  function initReveal() {
+    var els = document.querySelectorAll('.reveal:not(.visible)');
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if (en.isIntersecting){ en.target.classList.add('visible'); io.unobserve(en.target); } });
+    }, { threshold: 0.1 });
+    els.forEach(function(el){ io.observe(el); });
+  }
+  initReveal();
+
+  /* ── Nav dropdown ── */
+  (function() {
+    var dropdown = document.querySelector('.nav-dropdown');
+    if (!dropdown) return;
+    var toggle = dropdown.querySelector('.nav-dropdown-toggle');
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = dropdown.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) { dropdown.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); }
+    });
+  })();
+
+  /* ── Mobile hamburger ── */
+  (function() {
+    var hamburger = document.querySelector('.nav-hamburger');
+    var overlay = document.querySelector('.nav-mobile-overlay');
+    if (!hamburger || !overlay) return;
+    hamburger.addEventListener('click', function() {
+      var isOpen = hamburger.classList.toggle('open');
+      overlay.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    overlay.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        hamburger.classList.remove('open');
+        overlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  })();
+</script>
+
+<script src="nav-menu.js" defer></script>
+<script src="theme-switcher.js?v=sf5" defer></script>
+<script src="visit-ticker.js" defer></script>
+<script data-goatcounter="https://dbatz92.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

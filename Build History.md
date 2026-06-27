@@ -10,6 +10,139 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: surfaced on the Paranormal hub + merged to main
+
+With 6 books / 1,083 high-confidence mentions built, integrated the census into the site "within
+the Paranormal page" as planned: a **featured card on `paranormal.html`** (`.para-census-*`,
+self-contained styles) that fetches `data/ufo-shapes/summary.json` and shows **live counts**
+(mentions · sources · shapes), linking to `ufo-shapes.html`; the card stays description-only if
+the data is ever empty/unreachable. `ufo-shapes.html` got a "← Back to Paranormal" link so the two
+read as a section. Chose to nest the census **under** Paranormal (reached via the featured card)
+rather than add a separate top-nav entry, consistent with how other sub-pages nest — so the global
+Explore nav is unchanged. Verified: card IDs wired to the populate script, `summary.json` +
+`ufo-shapes.html` serve 200, HTML structure balanced. **Merged the branch to `main`** (squash) so
+the EPUB blob in the feature-branch history never reaches `main`. Remaining per the plan: snippet
+drill-down ("the receipts") and a Tech Stack node.
+
+---
+
+## 2026-06-26 — UAP Shape Census: 5 additional books ingested + full extract/build
+
+Ingested 5 more EPUBs into the Shape Census alongside the already-ingested Coulthart
+(*In Plain Sight*, 2021), bringing the corpus to **6 sources**:
+
+| id | Author | Year | Tier | Segments |
+|---|---|---|---|---|
+| `jung_flying_saucers` | C.G. Jung | 1958 | 3 | 1,087 |
+| `vallee_passport_magonia` | Jacques Vallee | 1969 | 3 | 4,532 |
+| `hastings_ufos_nukes` | Robert L. Hastings | 2008 | 3 | 3,090 |
+| `kean_ufos_generals` | Leslie Kean | 2010 | **2** | 1,820 |
+| `coulthart_inplainsight` | Ross Coulthart | 2021 | 3 | 2,078 |
+| `graff_ufo_inside_story` | Garrett M. Graff | 2023 | **2** | 1,409 |
+
+**13,016 total segments.** Ran `extract.py` + `build.py` for the first time against the
+full corpus: **1,083 high-confidence shape mentions** across **11 canonical shapes** committed
+to `data/ufo-shapes/`. 548 review-tier mentions withheld locally (breakdown: Sphere 273,
+Egg 82, Triangle 53, Disc 40, Tic-Tac 37, Cone 22, Cylinder 17, Diamond 8, Boomerang 8,
+Cube 6, Other 2). Tier assignments: Kean and Graff at Tier 2 (investigative journalism
+with named primary sources); Jung, Vallee, Hastings, Coulthart at Tier 3 (synthesis /
+editorial perspective / advocacy research).
+
+Committed `data/ufo-shapes/{sources,mentions,summary}.json`; PR open against `main`.
+`ufo-shapes.html` will show live data on merge — the page was already scaffolded.
+
+---
+
+## 2026-06-27 — UAP Shape Census: Phase 0 scaffold
+
+Started an ancillary paranormal project (and deliberate proving ground for the larger
+Cartography / Node-Graph projects): a narrow, **growing census of how UFO/UAP craft are
+described by shape** (disc, sphere, triangle, cigar, Tic-Tac, egg…) across ingested source
+documents, every mention traceable back to its source, correlated across sources.
+
+**Key architectural decision (Alan):** the two framework docs assume a Next.js + Supabase +
+React + Neo4j stack, but the live site is **vanilla HTML/CSS/JS + local Python + committed
+JSON**. Built the census on the *actual* pattern — local processing, committed JSON, vanilla
+page — and deferred Supabase/Next.js until/unless static JSON becomes unwieldy. The census is
+partly a test of whether that heavier stack is ever needed. Agreed extraction approach: a
+high-recall **regex/lexicon pass first**, an LLM disambiguation pass later (Phase 3). Taxonomy:
+~10 canonical shapes with **Tic-Tac as its own bucket**.
+
+Phase 0 (scaffold only, no real data) shipped:
+- **`ufo-shapes/` local toolkit** (run-from-clone, stdlib-first): `shapes.json` (the controlled
+  shape vocabulary — canonical shapes + aliases + disambiguation notes), `ingest.py`
+  (TXT/EPUB/PDF → normalized `sources/<id>/segments.jsonl` + a tiered source registry),
+  `extract.py` (whole-word lexicon match → cited mentions with context snippets + modifiers),
+  `build.py` (aggregate → `summary.json`), `_common.py`, `README.md`, and a `.gitignore` that
+  **keeps raw book text out of the public repo** (only derived, short-snippet, cited JSON is
+  committed — fair-use concordance posture).
+- **`data/ufo-shapes/`**: `sources.json`, `mentions.json`, `summary.json` — empty, with
+  documented schemas. `sources.json` carries the Cartography **reliability tier (1–4)** per source.
+- **`ufo-shapes.html`**: vanilla page stub (`us-` prefix, self-contained styles), reads
+  `summary.json`. Renders headline stats, a shape leaderboard, a **per-source drill-down**
+  (Alan's request — click a source, e.g. Coulthart's *In Plain Sight*, to see which shapes it
+  references and how often, straight from the matrix in `summary.json`), and a methodology panel
+  with honest caveats (high-recall lexical pass; mentions ≠ distinct sightings). Not yet nav-linked
+  or wired into the Tech Stack — intentional until it has real data (like `tasks.html`).
+- **`PLAN-ufo-shapes.md`**: comprehensive guide for future sessions — the architecture decision,
+  how it seeds the larger projects, full schemas, the taxonomy, the pipeline, the page design,
+  copyright posture, and an explicit phased next-steps list (Phase 1 first real data + receipts →
+  Phase 2 heatmap → Phase 3 LLM disambiguation → Phase 4 timeline).
+
+**Forward-looking:** Alan wants to extend this to **humanoid/entity descriptions** next, to find
+connections across descriptions and build consensus understanding of the source material. The
+model was generalized for it — mentions carry a **`facet`** field (defaults to `craft_shape`); a
+future `humanoids.json` facet drops into the same pipeline, and the real prize is cross-facet
+co-occurrence analysis ("discs co-occur with Grey-type descriptions"). Documented as
+`PLAN-ufo-shapes.md` §10; deferred until the shape facet has real data.
+
+Pipeline smoke-tested end-to-end on a synthetic TXT source (ingest → extract → build produced
+correct stats, the shape×source matrix, and modifiers); test data then cleared so the repo ships
+clean empty scaffolds.
+
+---
+
+## 2026-06-27 — UAP Shape Census: high-confidence publish gate (taxonomy v3)
+
+Per Alan ("commit only high confidence shapes"), added a publish gate enforced by the toolkit.
+Each alias in `shapes.json` is now tiered: **`aliases`** (shape-explicit, e.g. "flying saucer",
+"cigar-shaped", "tic tac", "diamond-shaped" → published) vs **`review_aliases`** (ambiguous
+common words, e.g. "ball", "cube", "delta", "egg", "diamond" → captured locally, withheld).
+`extract.py` writes the FULL set (high + review) to a gitignored `ufo-shapes/work/mentions.full.json`
+(the private layer); `build.py` is the **gate** — by default it publishes only high-confidence
+mentions to `data/ufo-shapes/`, reports a per-shape breakdown of what it withheld, and takes
+`--include-review` as an escape hatch. Mirrors the framework's private→gate→public pattern.
+
+Also documented the **ingestion path**: get the EPUB onto the local machine (hand it to the
+session) rather than uploading to GitHub (which commits the raw book + bypasses `.gitignore`).
+
+Re-ran *In Plain Sight* under v3: 229 candidates → **206 published high-confidence** across 8
+shapes (Disc 91, Tic-Tac 50, Triangle 31, Sphere 12, Egg 9, Cylinder 5, Diamond 5, Boomerang 3);
+23 review-tier withheld. README + `PLAN-ufo-shapes.md` §11 document the gate.
+
+---
+
+## 2026-06-27 — UAP Shape Census: first real book ingested + lexicon v2
+
+Alan uploaded Coulthart's *In Plain Sight* (2021) EPUB to the branch. Ran it through the
+pipeline (installed `ebooklib`+`beautifulsoup4` locally): **2078 segments → 245 candidate
+mentions**. Eyeballing the noise-prone buckets caught two false-positive clusters, so bumped
+the taxonomy to **v2**: dropped bare `bell` from Cone (22 hits were the surname / Bell
+Helicopter, not "bell-shaped") and bare `box`/`square`/`block` from Cube (metaphors like "back
+into the box", "square kilometres"). Re-ran → **219 clean mentions across all 10 shapes**:
+Disc 91, Tic-Tac 50, Triangle 34, Egg 13, Sphere 11, Diamond 6, Cylinder 5, Cube 5,
+Boomerang 3, Cone 1 — a credible disc-dominant / heavy-Tic-Tac profile for this source. The
+high-recall-lexical-then-prune loop is exactly the intended calibration workflow.
+
+**Copyright hygiene:** the GitHub web upload committed the full ~3 MB EPUB to the branch
+(web uploads bypass `.gitignore`). `git rm --cached`'d it so the raw book leaves the committed
+tree (kept locally for reprocessing; now gitignored) — it won't reach `main` on a squash-merge.
+The blob still lingers in this feature branch's history (commit 712a297); a history rewrite +
+force-push would be needed to fully scrub it if ever wanted. Only the derived, short-snippet,
+cited JSON is committed.
+
+---
+
 ## 2026-06-24 — "Personal Projects" icon: brain hub with thought-spokes
 
 Reworked `img/Icons/icons/Projects/brain-thoughts.svg` per Alan: keep the brain, but make

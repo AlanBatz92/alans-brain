@@ -1,0 +1,82 @@
+# UAP Shape Census — local toolkit
+
+Local Python tooling that ingests UFO/UAP source documents, finds every
+**shape** description (disc, sphere, triangle, cigar, Tic-Tac, egg…), and emits
+the cited JSON that `ufo-shapes.html` renders on the site.
+
+Runs **locally** (Dell Optiplex). Raw books stay on your machine; only the
+derived, cited JSON under `../data/ufo-shapes/` is committed. Full design,
+schemas, and the phase plan live in **`../PLAN-ufo-shapes.md`** — read that first.
+
+## Ingestion path (do it this way)
+
+1. **Get the book onto the machine running this session — do NOT upload it to
+   GitHub.** A GitHub web upload commits the raw (copyrighted) file into the repo
+   and bypasses `.gitignore`. Instead drop the EPUB into `ufo-shapes/sources/`
+   locally (in a Claude Code session, hand it to the session). The `.gitignore`
+   keeps it out of git; only derived JSON is ever committed.
+2. **Prefer EPUB.** Born-digital PDF works too (real page numbers); avoid scanned
+   PDFs. First time with non-TXT: `pip install ebooklib beautifulsoup4 pymupdf`.
+
+## The loop
+
+```bash
+cd ufo-shapes
+
+# 1. Ingest a source → normalized segments + tiered metadata in sources.json
+python ingest.py sources/In_Plain_Sight.epub --id coulthart_inplainsight \
+    --title "In Plain Sight" --author "Ross Coulthart" --year 2021 \
+    --tier 3 --type book --citation "Coulthart, In Plain Sight (2021)" --url ""
+
+# 2. Extract every shape mention across ALL sources → work/mentions.full.json
+#    (local only; high + review tiers)
+python extract.py
+
+# 3. PUBLISH GATE: write the committed JSON — HIGH-CONFIDENCE ONLY by default.
+#    Reports which review-tier mentions it withheld.
+python build.py
+#    (python build.py --include-review  → also publish the ambiguous ones)
+
+# 4. Commit ONLY the derived data
+cd .. && git add data/ufo-shapes ufo-shapes/shapes.json \
+  && git commit -m "shape census: add In Plain Sight" && git push
+```
+
+## The high-confidence gate
+
+You commit **only high-confidence shapes**. How that's enforced:
+
+- Every alias in `shapes.json` is tiered: **`aliases`** (shape-explicit — "flying
+  saucer", "cigar-shaped", "tic tac", "diamond-shaped") vs **`review_aliases`**
+  (ambiguous common words — "ball", "cube", "delta", "egg", "diamond").
+- `extract.py` captures **both** tiers into local `work/mentions.full.json`.
+- `build.py` **publishes only the high tier** into `data/ufo-shapes/` and tells
+  you what it withheld. The ambiguous hits stay local for inspection.
+- To rescue a good ambiguous hit: either move that term into `aliases` in
+  `shapes.json` (if it's reliably a craft in your corpus) and re-run, or run
+  `build.py --include-review` for a one-off. The eventual Phase 3 LLM pass will
+  promote review→published per-mention by reading context.
+
+## Files
+
+| File | Role |
+|---|---|
+| `shapes.json` | The controlled shape vocabulary (canonical shapes + aliases). Grows over time. |
+| `ingest.py` | TXT/EPUB/PDF → `sources/<id>/segments.jsonl` + registers metadata. |
+| `extract.py` | Lexicon match over all segments → `data/ufo-shapes/mentions.json`. |
+| `build.py` | Aggregate → `data/ufo-shapes/summary.json`. |
+| `_common.py` | Shared paths + JSON/JSONL helpers. |
+| `sources/` | Per-source raw text + segments. **Gitignored** (copyright). |
+
+## Format notes
+
+- **EPUB** is best (clean text, chapter structure): `pip install ebooklib beautifulsoup4`
+- **PDF** (born-digital, has a text layer) gives real page-number citations: `pip install pymupdf`
+- **TXT** works with stdlib alone.
+- Scanned/image PDFs need OCR first — out of scope for now.
+
+## Status: Phase 0 (scaffold)
+
+The TXT path and `extract.py`/`build.py` are exercised and working. The EPUB/PDF
+extractors are implemented but **not yet validated against a real file** — that's
+the Phase 1 first task. See `../PLAN-ufo-shapes.md` § "Next steps".
