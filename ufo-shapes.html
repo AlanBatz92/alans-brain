@@ -52,7 +52,9 @@
       padding:12px 14px; cursor:pointer; transition:border-color .2s }
     .us-source:hover, .us-source.us-open { border-color:var(--green) }
     .us-source-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px }
-    .us-source-title { font-weight:700; font-size:.95rem; flex:1 1 auto; min-width:0; line-height:1.3 }
+    .us-source-titlewrap { flex:1 1 auto; min-width:0 }
+    .us-source-title { font-weight:700; font-size:.95rem; line-height:1.3 }
+    .us-source-by { display:block; color:var(--text-muted); font-size:.8rem; margin-top:3px }
     .us-source-meta { color:var(--text-muted); font-size:.8rem; font-weight:400 }
     .us-source-stat { flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end;
       gap:5px; white-space:nowrap; padding-top:1px }
@@ -293,7 +295,8 @@
   function render(s) {
     SUMMARY = s;
     (s.by_source || []).forEach(function(r){
-      SRC[r.id] = { title: r.title, year: r.year, tier: r.reliability_tier };
+      SRC[r.id] = { title: r.title, author: r.author, year: r.year,
+                    tier: r.reliability_tier, citation: r.citation };
     });
     var t = s.totals || { sources:0, mentions:0, shapes:0 };
     document.getElementById('usStats').innerHTML =
@@ -364,8 +367,12 @@
       }).join('');
       html += '<div class="us-source" data-src="' + esc(src.id) + '">' +
         '<div class="us-source-head">' +
-          '<span class="us-source-title">' + esc(src.title || src.id) +
-            (src.year ? ' <span class="us-source-meta">(' + src.year + ')</span>' : '') + '</span>' +
+          '<span class="us-source-titlewrap">' +
+            '<span class="us-source-title">' + esc(src.title || src.id) + '</span>' +
+            '<span class="us-source-by">' +
+              (src.author ? esc(src.author) + (src.year ? ' · ' : '') : '') +
+              (src.year ? esc(src.year) : '') + '</span>' +
+          '</span>' +
           '<span class="us-source-stat">' +
             (src.reliability_tier ? '<span class="us-tier" title="' + esc(tierTitle(src.reliability_tier)) + '">Tier ' + src.reliability_tier + '</span>' : '') +
             '<span class="us-source-count">' + src.count + ' mention' + (src.count === 1 ? '' : 's') + '</span>' +
@@ -455,8 +462,9 @@
 
     var body = rows.map(function(m){
       var s = SRC[m.source_id] || {};
-      var cite = esc(s.title || m.source_id) + (s.year ? ' (' + s.year + ')' : '') +
-                 (m.locator ? ' · ' + esc(m.locator) : '');
+      var base = s.citation ||
+                 ((s.author ? s.author + ', ' : '') + (s.title || m.source_id) + (s.year ? ' (' + s.year + ')' : ''));
+      var cite = esc(base) + (m.locator ? ' · ' + esc(m.locator) : '');
       var tier = s.tier ? '<span class="us-mention-tier" title="' + esc(tierTitle(s.tier)) + '">Tier ' + s.tier + '</span>' : '';
       return '<div class="us-mention"><div class="us-mention-snip">' + highlight(m.snippet, m.raw_term) +
              '</div><div class="us-mention-meta">' + tier + '<span>' + cite + '</span></div></div>';

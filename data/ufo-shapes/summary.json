@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-27T00:13:16",
+  "generated_at": "2026-06-27T14:40:38",
   "taxonomy_version": 3,
   "totals": {
     "sources": 6,
@@ -89,43 +89,55 @@
     {
       "id": "vallee_passport_magonia",
       "title": "Passport to Magonia: From Folklore to Flying Saucers",
+      "author": "Jacques Vallee",
       "year": 1969,
       "reliability_tier": 3,
+      "citation": "Vallee, Passport to Magonia (1969)",
       "count": 426
     },
     {
       "id": "hastings_ufos_nukes",
       "title": "UFOs and Nukes: Extraordinary Encounters at Nuclear Weapons Sites",
+      "author": "Robert L. Hastings",
       "year": 2008,
       "reliability_tier": 3,
+      "citation": "Hastings, UFOs and Nukes (2008)",
       "count": 249
     },
     {
       "id": "graff_ufo_inside_story",
       "title": "UFO: The Inside Story of the U.S. Government's Search for Alien Life Here—and Out There",
+      "author": "Garrett M. Graff",
       "year": 2023,
       "reliability_tier": 2,
+      "citation": "Graff, UFO: The Inside Story (2023)",
       "count": 218
     },
     {
       "id": "coulthart_inplainsight",
       "title": "In Plain Sight",
+      "author": "Ross Coulthart",
       "year": 2021,
       "reliability_tier": 3,
+      "citation": "Coulthart, In Plain Sight (2021)",
       "count": 206
     },
     {
       "id": "kean_ufos_generals",
       "title": "UFOs: Generals, Pilots, and Government Officials Go on the Record",
+      "author": "Leslie Kean",
       "year": 2010,
       "reliability_tier": 2,
+      "citation": "Kean, UFOs: Generals, Pilots, and Government Officials Go on the Record (2010)",
       "count": 110
     },
     {
       "id": "jung_flying_saucers",
       "title": "Flying Saucers: A Modern Myth of Things Seen in the Skies",
+      "author": "C.G. Jung",
       "year": 1958,
       "reliability_tier": 3,
+      "citation": "Jung, Flying Saucers: A Modern Myth of Things Seen in the Skies (1958)",
       "count": 80
     }
   ],
