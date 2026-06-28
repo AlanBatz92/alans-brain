@@ -10,6 +10,22 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: handle un-ingestable (scanned) sources
+
+Alan batch-ingested 7 more books; two yielded **0 segments** — a scanned/image **PDF** (MAJIC EYES
+ONLY, photographed FOIA docs, no text layer) and an image-based/DRM **EPUB** (Above Black) — but the
+ingester silently **registered them as empty sources** anyway. Fixes:
+- **`ingest.py` refuses to register a 0-segment source** and explains why (PDF → needs OCR; EPUB →
+  image-based/DRM; else empty), so `sources.json` stays clean. `--all` reports how many were skipped.
+- **`build.py` ignores empty sources** everywhere (`totals.sources`, `by_source`, the matrix) so a
+  stray 0-mention source never shows a blank card on the page.
+- `INGESTING.md` documents the scanned-file caveat.
+
+Verified the empty-file guard (no registration, `sources.json` untouched) and that the build skips
+zero-mention sources. Files: `ufo-shapes/ingest.py`, `ufo-shapes/build.py`, `ufo-shapes/INGESTING.md`.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: classify/build reporting fixes + rejection samples
 
 From Alan's first real `--limit 40` trial (20 confirmed / 20 rejected). Fixed two misleading reports

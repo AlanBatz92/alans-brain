@@ -24,6 +24,12 @@ Run everything from inside the `ufo-shapes/` folder.
   - **`.txt`** — transcribed interviews, notes, pasted text. Works with no extra installs.
   - **`.epub`** — best for books (clean text). Needs `pip install ebooklib beautifulsoup4`.
   - **`.pdf`** — born-digital only (real page numbers). Needs `pip install pymupdf`.
+
+> **Scanned/image files won't ingest.** If a `.pdf` is photographed pages (e.g. a
+> FOIA-document book) or an `.epub` is image-based/DRM-wrapped, there's no text to
+> extract — `ingest.py` will report **"0 extractable text segments — NOT registered"**
+> and skip it. You'd need to OCR it first (or find a text-based copy) before it can
+> join the census.
 - The raw files are **git-ignored** — they never get committed. Only the derived,
   cited JSON under `data/ufo-shapes/` is committed.
 

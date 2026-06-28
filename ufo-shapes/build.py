@@ -79,7 +79,7 @@ def main():
         "generated_at": _dt.datetime.now().isoformat(timespec="seconds"),
         "taxonomy_version": taxonomy.get("version"),
         "totals": {
-            "sources": len(sources),
+            "sources": sum(1 for src in sources if by_source[src["id"]] > 0),
             "mentions": len(mentions),
             "shapes": sum(1 for s in shape_order if by_shape[s] > 0),
         },
@@ -103,11 +103,11 @@ def main():
                 "citation": src.get("citation"),
                 "count": by_source[src["id"]],
             }
-            for src in sources
+            for src in sources if by_source[src["id"]] > 0
         ],
         "shape_by_source_matrix": {
             "shapes": [s for s in shape_order if by_shape[s] > 0],
-            "sources": [src["id"] for src in sources],
+            "sources": [src["id"] for src in sources if by_source[src["id"]] > 0],
             "cells": [
                 {"shape": shp, "source": sid, "count": cnt}
                 for (shp, sid), cnt in sorted(matrix.items())
