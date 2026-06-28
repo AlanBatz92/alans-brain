@@ -10,6 +10,20 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: classify.py runs on a fresh clone (no books needed)
+
+Alan tried the AI pass on a different machine and `extract.py` found **0 mentions** — that clone
+has the repo but not the book *segments* (`sources/<id>/segments.jsonl` are git-ignored and live only
+where the EPUBs were ingested). Fix: `classify.py` now **falls back to the committed
+`data/ufo-shapes/mentions.json`** when `work/mentions.full.json` is absent — its snippets are all the
+disambiguation pass needs, so the published set can be refined on any clone without the books. Also
+added a **friendly preflight**: if `--engine claude` and `ANTHROPIC_API_KEY` isn't set, it exits with
+copy-paste instructions (cmd/setx/export) instead of an SDK stack trace. README documents the
+"just the AI pass on a fresh clone" path. Verified the fallback + preflight + mock build end-to-end;
+committed lexical data left untouched.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: AI disambiguation pass (classify.py) built
 
 Built Phase 3 — the LLM rigor pass — defaulting to **claude-haiku-4-5** (Alan's choice). `classify.py`
