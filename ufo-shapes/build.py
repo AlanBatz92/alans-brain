@@ -131,17 +131,25 @@ def main():
     print(f"  sources={summary['totals']['sources']}  "
           f"mentions={summary['totals']['mentions']}  "
           f"distinct shapes={summary['totals']['shapes']}")
-    if withheld and not args.include_review:
-        by_shape_withheld = collections.Counter(
-            m["shape"] for m in full if m.get("confidence") != "high")
-        terms = collections.Counter(
-            m["raw_term"] for m in full if m.get("confidence") != "high")
-        print(f"  withheld {withheld} review-tier mention(s) — NOT committed:")
-        for shp, c in by_shape_withheld.most_common():
+    if withheld:
+        wrows = [m for m in full if m.get("confidence") not in publish]
+        n_rej = sum(1 for m in wrows if m.get("confidence") == "llm-rejected")
+        n_rev = sum(1 for m in wrows if m.get("confidence") == "review")
+        bits = []
+        if n_rej:
+            bits.append(f"{n_rej} AI-rejected")
+        if n_rev:
+            bits.append(f"{n_rev} review-tier (ambiguous lexical)")
+        print(f"  withheld {withheld} mention(s) — NOT committed"
+              + (f" ({', '.join(bits)})" if bits else "") + ":")
+        for shp, c in collections.Counter(m["shape"] for m in wrows).most_common():
             print(f"      {c:4d}  {shape_label.get(shp, shp)}")
-        print(f"    review terms: {', '.join(t for t, _ in terms.most_common(12))}")
-        print("    → inspect work/mentions.full.json; re-run with --include-review to publish them,")
-        print("      or promote specific terms to `aliases` in shapes.json.")
+        terms = collections.Counter(m["raw_term"] for m in wrows)
+        print(f"    terms: {', '.join(t for t, _ in terms.most_common(12))}")
+        if n_rev and not args.include_review:
+            print("    review-tier → `build.py --include-review` to publish, or promote terms in shapes.json.")
+        if n_rej:
+            print("    AI-rejected → the disambiguation pass judged these not craft-shape mentions.")
 
 
 if __name__ == "__main__":
