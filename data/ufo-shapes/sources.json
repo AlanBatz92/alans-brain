@@ -42,6 +42,20 @@
     "segment_count": 3090
   },
   {
+    "id": "abduction_human_encounters_with_aliens_john_e_mack_2009",
+    "title": "Abduction - Human Encounters with Aliens",
+    "author": "John E. Mack",
+    "year": 2009,
+    "type": "book",
+    "format": "epub",
+    "reliability_tier": 2,
+    "citation": "Mack. Abduction: Human Encounters with Aliens. Simon and Schuster, 15 Dec. 2009.",
+    "url": null,
+    "file": "Abduction_Human_Encounters_with_Aliens_John E_ Mack_2009.epub",
+    "ingested_at": "2026-06-28",
+    "segment_count": 1918
+  },
+  {
     "id": "kean_ufos_generals",
     "title": "UFOs: Generals, Pilots, and Government Officials Go on the Record",
     "author": "Leslie Kean",
@@ -54,6 +68,34 @@
     "file": "UFOs_Generals_Pilots_and_Government_Officials_Go_on_the_Leslie_Kean_2010.epub",
     "ingested_at": "2026-06-26",
     "segment_count": 1820
+  },
+  {
+    "id": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+    "title": "UFOs for the 21st Century Mind: A Fresh Guide to an Ancient Mystery",
+    "author": "Richard M. Dolan",
+    "year": 2014,
+    "type": "book",
+    "format": "epub",
+    "reliability_tier": 3,
+    "citation": "Dolan, Richard M. UFOs for the 21st Century Mind : A Fresh Guide to an Ancient Mystery. Rochester, Ny, Richard Dolan Press, 2014.",
+    "url": null,
+    "file": "UFOs for the 21st century mind _ a fresh guide to an ancient -- Richard M__ Noory, George Dolan -- Trade paperback edition, Rochester, NY, 2014 -- isbn13 9781495291609 -- 2618fd79462f2732836b13b759032aa4 -- Anna’s .epub",
+    "ingested_at": "2026-06-28",
+    "segment_count": 2494
+  },
+  {
+    "id": "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
+    "title": "Onboard UFO Encounters: True Accounts of Contact with Extraterrestrials",
+    "author": "Preston Dennett",
+    "year": 2020,
+    "type": "book",
+    "format": "epub",
+    "reliability_tier": 3,
+    "citation": "Dennett, Preston. Onboard UFO Encounters: True Accounts of Contact with Extraterrestrials. Independently Published, 1 Mar. 2020.",
+    "url": null,
+    "file": "Onboard_UFO_Encounters__True_Accounts_of_C_Preston_Dennett_2020.epub",
+    "ingested_at": "2026-06-28",
+    "segment_count": 1860
   },
   {
     "id": "coulthart_inplainsight",
@@ -70,6 +112,20 @@
     "segment_count": 2078
   },
   {
+    "id": "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+    "title": "Skinwalkers at the Pentagon: An Insider's Account of  the Government's Secret UFO Program",
+    "author": "Colm A. Kelleher, James T. Lacatski, George Knapp",
+    "year": 2021,
+    "type": "book",
+    "format": "epub",
+    "reliability_tier": 2,
+    "citation": "Lacatski, James T, et al. Skinwalkers at the Pentagon : An Insiders’ Account of the Government’s Secret UFO Program. Henderson, Nevada, Rtma, Llc, 2021.",
+    "url": null,
+    "file": "Skinwalkers_at_the_Pentagon_Colm_A_Kelleher_2021.epub",
+    "ingested_at": "2026-06-28",
+    "segment_count": 1366
+  },
+  {
     "id": "graff_ufo_inside_story",
     "title": "UFO: The Inside Story of the U.S. Government's Search for Alien Life Here—and Out There",
     "author": "Garrett M. Graff",
@@ -82,5 +138,19 @@
     "file": "Garrett_M_Graff_UFO_The_Inside_Story_of_the_US_Government's_Search_for_Alien_Life_Here_and_Out_There_2023.epub",
     "ingested_at": "2026-06-26",
     "segment_count": 1409
+  },
+  {
+    "id": "a_history_of_usos_richard_dollan_2025",
+    "title": "A History of USOs",
+    "author": "Richard M. Dolan",
+    "year": 2025,
+    "type": "book",
+    "format": "epub",
+    "reliability_tier": 3,
+    "citation": "Dolan, Richard M. A History of USOs. Rochester, Ny, Richard Dolan Press, 2025.",
+    "url": null,
+    "file": "A_History_of_USOs_Richard_Dollan_2025.epub",
+    "ingested_at": "2026-06-28",
+    "segment_count": 2716
   }
 ]
