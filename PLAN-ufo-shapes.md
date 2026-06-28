@@ -174,6 +174,13 @@ build.py   →  data/ufo-shapes/{mentions,summary}.json   (PUBLISH GATE: high-co
 See §11 for the gate. `work/` is gitignored — the full mention set is the private
 layer; the committed `data/ufo-shapes/` is the gated public layer.
 
+**`extract.py` is additive (2026-06-27).** Per source: if its segments are present
+locally it's re-extracted fresh; otherwise its mentions are carried forward from the
+committed `mentions.json`. So a contributor with only some of the books can run
+`extract → build` without dropping the rest — the cross-machine reality of a
+local-processing project. Fresh ids continue above carried ids so they never collide;
+`classify.py` skips already-AI-judged (carried) mentions so re-runs don't re-spend.
+
 Then `git add data/ufo-shapes && commit && push` → live. See `ufo-shapes/README.md`
 for exact commands. Stdlib-only except the optional EPUB (`ebooklib` +
 `beautifulsoup4`) and PDF (`pymupdf`) extractors, which a future session installs
