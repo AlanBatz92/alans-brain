@@ -48,6 +48,23 @@ cd .. && git add data/ufo-shapes ufo-shapes/shapes.json \
   && git commit -m "shape census: add In Plain Sight" && git push
 ```
 
+### Running just the AI pass on a fresh clone (no books needed)
+
+The disambiguation pass only needs each mention's snippet, which is already in the
+committed `data/ufo-shapes/mentions.json`. So on any clone — even one without the
+EPUBs or local `work/` segments — you can refine the published set directly:
+
+```bash
+cd ufo-shapes
+python classify.py            # falls back to the committed mentions.json
+python build.py               # re-publishes high + AI-confirmed
+cd .. && git add data/ufo-shapes && git commit -m "shape census: AI disambiguation" && git push
+```
+
+`extract.py` is the part that needs the books (it scans `sources/<id>/segments.jsonl`,
+which are git-ignored and live only where you ingested). You only need `extract.py`
+when adding or changing sources.
+
 ## The high-confidence gate
 
 You commit **only high-confidence shapes**. How that's enforced:

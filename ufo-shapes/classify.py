@@ -131,9 +131,28 @@ def main():
     ap.add_argument("--refresh", action="store_true", help="Ignore cache; re-classify everything.")
     args = ap.parse_args()
 
-    if not os.path.exists(C.MENTIONS_FULL):
-        sys.exit(f"No {C.MENTIONS_FULL} — run extract.py first.")
-    mentions = C.load_json(C.MENTIONS_FULL, []) or []
+    # Friendly preflight: the Claude engine needs an API key in the environment.
+    if args.engine == "claude" and not os.environ.get("ANTHROPIC_API_KEY"):
+        sys.exit(
+            "ANTHROPIC_API_KEY is not set.\n"
+            "  Windows (cmd):       set ANTHROPIC_API_KEY=sk-ant-...\n"
+            "  Windows (permanent): setx ANTHROPIC_API_KEY \"sk-ant-...\"  (then reopen the terminal)\n"
+            "  macOS/Linux:         export ANTHROPIC_API_KEY=sk-ant-...\n"
+            "Get a key at console.anthropic.com. Or test the plumbing with --engine mock."
+        )
+
+    # Input: prefer the local full lexical set (work/mentions.full.json from extract.py);
+    # otherwise fall back to the COMMITTED published mentions.json — its snippets are all
+    # the disambiguation pass needs, so you can run this on a fresh clone WITHOUT the
+    # books/segments. Output always goes to work/mentions.full.json for build.py.
+    if os.path.exists(C.MENTIONS_FULL):
+        src_path = C.MENTIONS_FULL
+    elif os.path.exists(C.MENTIONS_JSON):
+        src_path = C.MENTIONS_JSON
+    else:
+        sys.exit("No mentions found — run extract.py, or ensure data/ufo-shapes/mentions.json exists.")
+    mentions = C.load_json(src_path, []) or []
+    print(f"input: {src_path}  ({len(mentions)} mentions)")
     shapes = C.load_json(C.SHAPES_PATH)["shapes"]
     valid = set(allowed_ids(shapes))
 
