@@ -141,17 +141,22 @@ def main():
             "Get a key at console.anthropic.com. Or test the plumbing with --engine mock."
         )
 
-    # Input: prefer the local full lexical set (work/mentions.full.json from extract.py);
-    # otherwise fall back to the COMMITTED published mentions.json — its snippets are all
-    # the disambiguation pass needs, so you can run this on a fresh clone WITHOUT the
-    # books/segments. Output always goes to work/mentions.full.json for build.py.
+    # Input: prefer the local full lexical set (work/mentions.full.json from extract.py)
+    # WHEN IT HAS MENTIONS; otherwise fall back to the COMMITTED published mentions.json —
+    # its snippets are all the disambiguation pass needs, so you can run this on a fresh
+    # clone WITHOUT the books/segments (and an empty work/ from a no-op extract is ignored).
+    # Output always goes to work/mentions.full.json for build.py.
+    mentions, src_path = [], None
     if os.path.exists(C.MENTIONS_FULL):
-        src_path = C.MENTIONS_FULL
-    elif os.path.exists(C.MENTIONS_JSON):
+        w = C.load_json(C.MENTIONS_FULL, []) or []
+        if w:
+            mentions, src_path = w, C.MENTIONS_FULL
+    if not mentions and os.path.exists(C.MENTIONS_JSON):
+        mentions = C.load_json(C.MENTIONS_JSON, []) or []
         src_path = C.MENTIONS_JSON
-    else:
-        sys.exit("No mentions found — run extract.py, or ensure data/ufo-shapes/mentions.json exists.")
-    mentions = C.load_json(src_path, []) or []
+    if not mentions:
+        sys.exit("No mentions found — run extract.py (with the source files present), "
+                 "or ensure data/ufo-shapes/mentions.json exists.")
     print(f"input: {src_path}  ({len(mentions)} mentions)")
     shapes = C.load_json(C.SHAPES_PATH)["shapes"]
     valid = set(allowed_ids(shapes))
