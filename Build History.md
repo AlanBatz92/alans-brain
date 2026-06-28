@@ -10,6 +10,21 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: additive extract (don't drop books you don't have locally)
+
+Alan works across machines, and `extract.py` re-scanned from local segments only — so on a machine
+missing some books, those sources produced 0 mentions and would be dropped from the published data.
+Made **`extract.py` additive**: per source, if its `segments.jsonl` is present locally it's
+re-extracted fresh; otherwise its mentions are **carried forward unchanged from the committed
+`mentions.json`**. On a machine with every book nothing is carried (identical to before). Fresh ids
+continue above the max carried id so they never collide (verified unique); `classify.py` now skips
+mentions already marked `llm-confirmed`/`llm-rejected` (i.e. carried-forward), so re-runs don't
+re-spend. `extract` prints re-extracted vs. carried vs. skipped counts. Verified end-to-end (1 source
+local + 5 carried → 1085 mentions, unique ids; build published 1085; committed data restored).
+`INGESTING.md` + `PLAN-ufo-shapes.md` updated. Files: `ufo-shapes/extract.py`, `ufo-shapes/classify.py`.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: handle un-ingestable (scanned) sources
 
 Alan batch-ingested 7 more books; two yielded **0 segments** — a scanned/image **PDF** (MAJIC EYES

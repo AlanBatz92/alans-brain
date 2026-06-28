@@ -20,6 +20,7 @@ then, `confidence` is "lexical" and the snippet is the receipt a human reads.
 
 Usage:  python extract.py
 """
+import collections
 import re
 
 import _common as C
@@ -88,43 +89,82 @@ def main():
     lexicon = compile_lexicon(shapes)
     sources = C.load_json(C.SOURCES_JSON, []) or []
 
-    mentions = []
-    n = 0
+    # ADDITIVE: for each source, re-extract it fresh IF its segments are present
+    # locally; otherwise carry its mentions forward from the committed published
+    # mentions.json. This means you can run extract on a machine that only has
+    # SOME of the books without dropping the rest. On a machine with every book,
+    # nothing is carried and this behaves exactly like a full re-scan.
+    committed = C.load_json(C.MENTIONS_JSON, []) or []
+    committed_by_src = collections.defaultdict(list)
+    for m in committed:
+        committed_by_src[m.get("source_id")].append(m)
+
+    # First pass: classify each source as locally-present, carried, or skipped.
+    seg_cache = {}
+    fresh_srcs, carried_srcs, skipped_srcs = [], [], []
     for src in sources:
         sid = src["id"]
         segs = C.load_jsonl(C.segments_path(sid))
-        for seg in segs:
-            text = seg["text"]
-            claimed = []  # (start, end) spans already matched in this segment
-            for shape_id, raw_term, tier, rx in lexicon:
-                for m in rx.finditer(text):
-                    span = (m.start(), m.end())
-                    # skip if this span overlaps a longer alias already taken
-                    if any(span[0] < e and s < span[1] for s, e in claimed):
-                        continue
-                    claimed.append(span)
-                    n += 1
-                    snip = make_snippet(text, m.start(), m.end())
-                    mentions.append({
-                        "id": f"M{n:06d}",
-                        "source_id": sid,
-                        "facet": FACET,
-                        "shape": shape_id,
-                        "raw_term": m.group(0).lower(),
-                        "locator": seg["locator"],
-                        "snippet": snip,
-                        "modifiers": find_modifiers(snip),
-                        "confidence": tier,   # "high" → published, "review" → withheld by the gate
-                        "event_date": None,
-                    })
+        if segs:
+            seg_cache[sid] = segs
+            fresh_srcs.append(sid)
+        elif committed_by_src.get(sid):
+            carried_srcs.append(sid)
+        else:
+            skipped_srcs.append(sid)
+
+    # Fresh ids continue above any carried id so the two never collide. When
+    # nothing is carried, this starts at 0 → original M000001… numbering.
+    def idnum(m):
+        try:
+            return int(str(m.get("id", "M0")).lstrip("M"))
+        except ValueError:
+            return 0
+    n = max((idnum(m) for sid in carried_srcs for m in committed_by_src[sid]), default=0)
+
+    mentions = []
+    for src in sources:
+        sid = src["id"]
+        if sid in seg_cache:
+            for seg in seg_cache[sid]:
+                text = seg["text"]
+                claimed = []  # (start, end) spans already matched in this segment
+                for shape_id, raw_term, tier, rx in lexicon:
+                    for m in rx.finditer(text):
+                        span = (m.start(), m.end())
+                        if any(span[0] < e and s < span[1] for s, e in claimed):
+                            continue
+                        claimed.append(span)
+                        n += 1
+                        snip = make_snippet(text, m.start(), m.end())
+                        mentions.append({
+                            "id": f"M{n:06d}",
+                            "source_id": sid,
+                            "facet": FACET,
+                            "shape": shape_id,
+                            "raw_term": m.group(0).lower(),
+                            "locator": seg["locator"],
+                            "snippet": snip,
+                            "modifiers": find_modifiers(snip),
+                            "confidence": tier,
+                            "event_date": None,
+                        })
+        elif sid in committed_by_src:
+            mentions.extend(committed_by_src[sid])   # carry forward, as-is
 
     C.write_json(C.MENTIONS_FULL, mentions)
-    high = sum(1 for m in mentions if m["confidence"] == "high")
-    review = len(mentions) - high
-    print(f"Extracted {len(mentions)} candidate mentions from {len(sources)} source(s) "
-          f"→ {C.MENTIONS_FULL}")
-    print(f"  high-confidence: {high}   review (withheld unless promoted): {review}")
-    print("Next: python build.py   (publishes high-confidence only)")
+    high = sum(1 for m in mentions if m.get("confidence") == "high")
+    review = sum(1 for m in mentions if m.get("confidence") == "review")
+    print(f"Extracted {len(mentions)} mentions → {C.MENTIONS_FULL}")
+    print(f"  re-extracted locally: {len(fresh_srcs)} source(s)  ·  "
+          f"carried from committed data: {len(carried_srcs)}  ·  "
+          f"skipped: {len(skipped_srcs)}")
+    if carried_srcs:
+        print(f"  carried (kept as last published): {', '.join(carried_srcs)}")
+    if skipped_srcs:
+        print(f"  ⚠ skipped — no local segments AND not in committed data: {', '.join(skipped_srcs)}")
+    print(f"  tiers — high: {high}  review: {review}  (carried keep their prior confidence)")
+    print("Next: python classify.py   (optional)   then python build.py")
 
 
 if __name__ == "__main__":

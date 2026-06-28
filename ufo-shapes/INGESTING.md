@@ -136,9 +136,13 @@ The new source and its mentions now appear on the site (Paranormal → UAP Shape
   sensitive ones out.
 - **Books never get committed** — `.gitignore` keeps `sources/` local. Hand files to
   the machine directly; don't upload them to GitHub (that bypasses `.gitignore`).
-- **Segments are local.** They live only where you ingested. To re-extract on another
-  machine you'd need the source files there too — but `classify.py`/`build.py` can
-  refine the already-published set anywhere.
+- **Segments are local, but `extract.py` is additive — you do NOT need every book on
+  one machine.** For each source, if its segments are present locally it's re-extracted
+  fresh; if not, its mentions are **carried forward unchanged from the committed
+  `mentions.json`**. So you can add a couple of new books on whatever machine you're on,
+  run `extract → build`, and the other sources are preserved (not dropped). `extract`
+  prints what it re-extracted vs. carried. A source that's neither local nor in the
+  committed data is reported as **skipped**.
 - **Re-ingesting** a source with the same `--id` replaces it (use this to fix metadata
   or re-slice a file).
 - **Growing the shape vocabulary.** If you notice a shape term being missed or a false

@@ -162,7 +162,14 @@ def main():
     valid = set(allowed_ids(shapes))
 
     cache = {} if args.refresh else (C.load_json(CACHE_PATH, {}) or {})
-    pending = [m for m in mentions if args.refresh or cache_key(m) not in cache]
+
+    def needs(m):
+        if args.refresh:
+            return True
+        if m.get("confidence") in ("llm-confirmed", "llm-rejected"):
+            return False  # already AI-judged (e.g. carried forward from committed data)
+        return cache_key(m) not in cache
+    pending = [m for m in mentions if needs(m)]
     already = len(mentions) - len(pending)
     todo = pending[:args.limit] if args.limit else pending
     deferred = len(pending) - len(todo)            # not done this run because of --limit
