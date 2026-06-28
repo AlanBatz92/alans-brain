@@ -112,12 +112,30 @@ def slugify(path):
 
 
 def register_and_extract(path, meta):
-    """Extract a single file to segments + register it in sources.json."""
+    """Extract a single file to segments + register it in sources.json.
+
+    Returns True if the source was ingested, False if it yielded no text and was
+    skipped (so callers don't count it).
+    """
     ext = os.path.splitext(path)[1].lower()
     print(f"\nExtracting segments from {os.path.basename(path)} ...")
     segments = EXTRACTORS[ext](path)
     sid = meta["id"]
     rows = [{"source_id": sid, "locator": loc, "text": txt} for loc, txt in segments]
+
+    if not rows:
+        # No extractable text — don't pollute sources.json with an empty source.
+        print(f"  ⚠ 0 extractable text segments — NOT registered.")
+        if ext == "pdf":
+            print("    This PDF has no text layer (it's a scanned/image PDF). It needs OCR")
+            print("    before it can be ingested — or find a text-based copy.")
+        elif ext == "epub":
+            print("    This EPUB has no extractable text (image-based/scanned, or DRM-wrapped).")
+            print("    Try a text-based copy, or convert it (e.g. Calibre) first.")
+        else:
+            print("    The file appears to be empty or has no readable text.")
+        return False
+
     C.write_jsonl(C.segments_path(sid), rows)
     print(f"  → {len(rows)} segments → {C.segments_path(sid)}")
 
@@ -140,6 +158,7 @@ def register_and_extract(path, meta):
     sources.sort(key=lambda s: (s.get("year") or 0, s.get("title") or ""))
     C.write_json(C.SOURCES_JSON, sources)
     print(f"  → registered '{sid}' in {C.SOURCES_JSON}")
+    return True
 
 
 def prompt_meta(path):
@@ -198,13 +217,16 @@ def main():
         skipped = len(books) - len(todo)
         print(f"Found {len(books)} book(s) in sources/  ·  {len(todo)} to ingest"
               + (f"  ·  {skipped} already done (skip)" if skipped else ""))
-        n = 0
+        n = skipped_empty = 0
         for path in todo:
             meta = prompt_meta(path)
             if meta:
-                register_and_extract(path, meta)
-                n += 1
-        print(f"\nIngested {n} book(s).  Next: python extract.py   (then python build.py)")
+                if register_and_extract(path, meta):
+                    n += 1
+                else:
+                    skipped_empty += 1
+        tail = f"  ·  {skipped_empty} skipped (no extractable text)" if skipped_empty else ""
+        print(f"\nIngested {n} book(s).{tail}  Next: python extract.py   (then python build.py)")
         return
 
     # ── Single-file mode ────────────────────────────────────────────────────
