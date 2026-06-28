@@ -10,6 +10,24 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: classify/build reporting fixes + rejection samples
+
+From Alan's first real `--limit 40` trial (20 confirmed / 20 rejected). Fixed two misleading reports
+and made the trial actually informative:
+- **`build.py` withheld report was wrong post-classify.** It counted `confidence != "high"`, which after
+  classification includes the *published* `llm-confirmed` rows — so the breakdown (40) didn't match the
+  header (20) and mislabeled AI-rejected mentions as "review-tier". Now it reports only the actually-
+  withheld rows and distinguishes **AI-rejected** vs **review-tier (ambiguous lexical)**.
+- **`classify.py` "cached" count was misleading under `--limit`** (it conflated "already classified" with
+  "deferred by the limit"). Now prints `N already classified · M to classify this run · K more still pending`.
+- **`classify.py` now prints a sample of rejected passages** at the end (shape/term + snippet) so a
+  `--limit` trial shows *what* the model dropped — the read needed before spending on the full run.
+
+No data committed (the trial/build outputs were restored). Files: `ufo-shapes/build.py`,
+`ufo-shapes/classify.py`.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: classify.py runs on a fresh clone (no books needed)
 
 Alan tried the AI pass on a different machine and `extract.py` found **0 mentions** — that clone

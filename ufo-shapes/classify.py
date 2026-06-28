@@ -162,11 +162,15 @@ def main():
     valid = set(allowed_ids(shapes))
 
     cache = {} if args.refresh else (C.load_json(CACHE_PATH, {}) or {})
-    todo = [m for m in mentions if args.refresh or cache_key(m) not in cache]
-    if args.limit:
-        todo = todo[:args.limit]
-    print(f"{len(mentions)} mentions · {len(mentions) - len(todo)} cached · {len(todo)} to classify "
-          f"[engine={args.engine}, model={args.model if args.engine=='claude' else '-'}]")
+    pending = [m for m in mentions if args.refresh or cache_key(m) not in cache]
+    already = len(mentions) - len(pending)
+    todo = pending[:args.limit] if args.limit else pending
+    deferred = len(pending) - len(todo)            # not done this run because of --limit
+    msg = (f"{len(mentions)} mentions · {already} already classified · "
+           f"{len(todo)} to classify this run")
+    if deferred:
+        msg += f" · {deferred} more still pending (raise/drop --limit for the rest)"
+    print(msg + f"  [engine={args.engine}, model={args.model if args.engine=='claude' else '-'}]")
 
     run = engine_mock if args.engine == "mock" else make_claude_engine(args.model)
 
@@ -208,8 +212,21 @@ def main():
             m["confidence"] = "llm-rejected"
             rejected += 1
     C.write_json(C.MENTIONS_FULL, mentions)
-    print(f"Applied: {confirmed} confirmed, {rejected} rejected → {C.MENTIONS_FULL}")
-    print("Next: python build.py   (publishes confirmed only)")
+    total = confirmed + rejected
+    pct = f" ({100*rejected//total}% rejected)" if total else ""
+    print(f"Applied to {total} classified mention(s): {confirmed} confirmed, {rejected} rejected{pct}")
+    print(f"  → {C.MENTIONS_FULL}")
+
+    # Show a sample of what was rejected so you can sanity-check the model's calls
+    # before committing (especially on a --limit trial).
+    rej = [m for m in mentions if m.get("confidence") == "llm-rejected"]
+    if rej:
+        print(f"\nSample of rejected passages (model judged NOT a craft shape):")
+        for m in rej[:10]:
+            snip = (m.get("snippet") or "").replace("\n", " ")
+            print(f"  · [{m['shape']}/{m['raw_term']}] {snip[:120]}")
+        print("  If these look like correct drops, run the full pass; if too aggressive, tell Claude Code.")
+    print("\nNext: python build.py   (publishes high + AI-confirmed)")
 
 
 if __name__ == "__main__":
