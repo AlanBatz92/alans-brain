@@ -8,6 +8,9 @@ Runs **locally** (Dell Optiplex). Raw books stay on your machine; only the
 derived, cited JSON under `../data/ufo-shapes/` is committed. Full design,
 schemas, and the phase plan live in **`../PLAN-ufo-shapes.md`** — read that first.
 
+> **Adding new sources** (books *or* transcribed interviews)? See the step-by-step
+> **[`INGESTING.md`](INGESTING.md)** reference guide.
+
 ## Ingestion path (do it this way)
 
 1. **Get the book onto the machine running this session — do NOT upload it to
