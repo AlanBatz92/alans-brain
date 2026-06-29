@@ -10,6 +10,22 @@
 
 ---
 
+## 2026-06-29 — UAP Shape Census: `ingest.py` now reads Markdown
+
+Alan had a source saved as Markdown (an OCR'd/converted *Majic Eyes Only*), which `ingest.py` rejected
+("Unsupported format '.md'") — it only dispatched on `.txt/.pdf/.epub`. Added a **Markdown extractor**
+(`.md`/`.markdown`, stdlib-only). `strip_markdown()` removes the markup — fenced code blocks, ATX/setext
+headings (keeps the title text), emphasis/`code`, list & blockquote markers, `[text](url)`/image links
+(keeps the visible text), tables (keeps cell text, drops separator rows), horizontal rules, and raw
+HTML — then splits on blank lines into `para:N` segments like the TXT path. Snippets read as clean
+prose, not `#`/`**`/`[]()` clutter, while every shape descriptor survives. Registered in `EXTRACTORS`;
+docstring + README (format notes + Files table) updated. Verified on a synthetic markdown sample
+(headings/emphasis/links/lists/quotes/tables/code/HTML → clean prose, all shape terms intact). Makes
+the **OCR-a-scanned-book → markdown → ingest** path first-class — useful since scanned PDFs (the old
+dead-end) can be OCR'd to markdown and brought in.
+
+---
+
 ## 2026-06-29 — Repo hygiene: harden `sources/` gitignore + consolidate everything onto `main`
 
 Spotted while helping Alan unstick a local merge: `ufo-shapes/.gitignore` ignored `sources/*/`

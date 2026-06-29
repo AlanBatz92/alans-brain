@@ -103,7 +103,7 @@ passages show a ✓ AI-checked badge in the page's drill-down.
 | File | Role |
 |---|---|
 | `shapes.json` | The controlled shape vocabulary (canonical shapes + aliases). Grows over time. |
-| `ingest.py` | TXT/EPUB/PDF → `sources/<id>/segments.jsonl` + registers metadata. |
+| `ingest.py` | TXT/**MD**/EPUB/PDF → `sources/<id>/segments.jsonl` + registers metadata. |
 | `extract.py` | Lexicon match over all segments → `work/mentions.full.json`. |
 | `classify.py` | Optional AI disambiguation pass (Claude Haiku) → confirms/drops mentions. |
 | `build.py` | Publish gate → aggregate to `data/ufo-shapes/{mentions,summary}.json` (incl. `terms_by_shape`, the vernacular layer). |
@@ -117,7 +117,9 @@ passages show a ✓ AI-checked badge in the page's drill-down.
 - **EPUB** is best (clean text, chapter structure): `pip install ebooklib beautifulsoup4`
 - **PDF** (born-digital, has a text layer) gives real page-number citations: `pip install pymupdf`
 - **TXT** works with stdlib alone.
-- Scanned/image PDFs need OCR first — out of scope for now.
+- **Markdown** (`.md`/`.markdown`) works with stdlib alone — the markup is stripped to clean prose.
+  Handy for an OCR'd or converted book you've saved as markdown.
+- Scanned/image PDFs need OCR first — out of scope for now (but OCR → markdown is a fine path in).
 
 ## Status (2026-06-29)
 

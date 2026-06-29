@@ -20,6 +20,8 @@ in PLAN-ufo-shapes.md.
 
 Format support:
   .txt   — works with stdlib alone (splits on blank lines → paragraphs).
+  .md    — markdown (stdlib alone); strips the markup → clean prose paragraphs.
+           (.markdown too.) Handy for OCR'd/converted books saved as markdown.
   .pdf   — needs PyMuPDF (`pip install pymupdf`); gives real page-number locators.
   .epub  — needs ebooklib + beautifulsoup4 (`pip install ebooklib beautifulsoup4`);
            gives chapter+paragraph locators.
@@ -48,6 +50,50 @@ def extract_txt(path):
     with open(path, "r", encoding="utf-8", errors="replace") as f:
         raw = f.read()
     paras = re.split(r"\n\s*\n", raw)
+    out = []
+    for i, p in enumerate(paras):
+        t = " ".join(p.split())
+        if t:
+            out.append((f"para:{i}", t))
+    return out
+
+
+def strip_markdown(raw):
+    """Markdown → plain prose. Strips the common syntax (headings, emphasis,
+    list/quote markers, link/image URLs, code fences, tables, raw HTML) so the
+    snippets read naturally instead of carrying #/**/[]() clutter. Stdlib-only;
+    keeps the visible text, drops only the markup."""
+    # drop fenced code blocks entirely (``` … ``` or ~~~ … ~~~)
+    raw = re.sub(r"(?ms)^[ \t]*(```|~~~).*?^[ \t]*\1[ \t]*$", "", raw)
+    lines = []
+    for line in raw.split("\n"):
+        # horizontal rules / setext underlines (---, ===, ***) → paragraph break
+        if re.match(r"^[ \t]*([-*_=])\1{2,}[ \t]*$", line):
+            lines.append("")
+            continue
+        # table separator rows (|---|:--:|) → drop
+        if "-" in line and re.match(r"^[ \t]*\|?[ \t:|-]+\|[ \t:|-]*$", line):
+            continue
+        line = re.sub(r"^[ \t]*>+[ \t]?", "", line)            # blockquote marker
+        line = re.sub(r"^[ \t]*#{1,6}[ \t]+", "", line)        # ATX heading hashes (keep title text)
+        line = re.sub(r"^[ \t]*(?:[-*+]|\d+[.)])[ \t]+", "", line)  # list markers
+        line = line.replace("|", " ")                          # table cell pipes
+        lines.append(line)
+    text = "\n".join(lines)
+    text = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", text)      # image  ![alt](url) → alt
+    text = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", text)       # link   [text](url) → text
+    text = re.sub(r"\[([^\]]+)\]\[[^\]]*\]", r"\1", text)      # reference link → text
+    text = re.sub(r"</?[a-zA-Z][^>\n]*>", "", text)            # raw HTML tags
+    text = re.sub(r"[*_`~]+", "", text)                        # emphasis/code/strike markers
+    text = re.sub(r"\\([\\`*_{}\[\]()#+.!>~-])", r"\1", text)  # unescape \* \_ …
+    return text
+
+
+def extract_md(path):
+    """Markdown source → paragraphs (markdown stripped, then split like .txt)."""
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        raw = f.read()
+    paras = re.split(r"\n\s*\n", strip_markdown(raw))
     out = []
     for i, p in enumerate(paras):
         t = " ".join(p.split())
@@ -94,7 +140,8 @@ def extract_epub(path):
     return out
 
 
-EXTRACTORS = {".txt": extract_txt, ".pdf": extract_pdf, ".epub": extract_epub}
+EXTRACTORS = {".txt": extract_txt, ".md": extract_md, ".markdown": extract_md,
+              ".pdf": extract_pdf, ".epub": extract_epub}
 
 
 # ── Metadata ───────────────────────────────────────────────────────────────
@@ -192,7 +239,7 @@ def find_books():
 
 def main():
     ap = argparse.ArgumentParser(description="Ingest source document(s) into normalized segments.")
-    ap.add_argument("file", nargs="?", help="Path to a single .txt / .pdf / .epub source")
+    ap.add_argument("file", nargs="?", help="Path to a single .txt / .md / .pdf / .epub source")
     ap.add_argument("--all", action="store_true",
                     help="Batch mode: interactively ingest every new book in ufo-shapes/sources/.")
     ap.add_argument("--reingest", action="store_true",
@@ -211,7 +258,7 @@ def main():
     if args.all:
         books = find_books()
         if not books:
-            sys.exit(f"No .epub/.pdf/.txt files found in {C.SOURCES_DIR}")
+            sys.exit(f"No .txt/.md/.epub/.pdf files found in {C.SOURCES_DIR}")
         done = {s.get("file") for s in (C.load_json(C.SOURCES_JSON, []) or [])}
         todo = [b for b in books if args.reingest or os.path.basename(b) not in done]
         skipped = len(books) - len(todo)
