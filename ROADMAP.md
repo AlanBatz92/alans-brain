@@ -247,6 +247,21 @@ Two parts, both asset-gated:
 
 ## ✓ Done (recent)
 
+- **2026-06-29** — **UAP Shape Census: drill-down de-duplicates repeated passages** (pre-ship polish,
+  front-end only). The lexical pass logs one mention per matched term, so the drill-down modal could
+  show the same passage as 2–3 near-identical cards — repeat 280-char windows of one paragraph (the
+  1880 "wheel whirling **round** … round and round" anecdote → 3 cards) or a sentence a segmenter
+  split across two locators (Dennett's "ice-cream cone" under `ch:1#para:0` + `ch:1#para:1301`).
+  `ufo-shapes.html` now collapses same-passage mentions into one card (×N badge): merge by a
+  **reliable locator** (`LOC_COUNT` ≤ 6 mentions, so a junk catch-all like Dennett's 85-mention
+  `ch:1#para:0` doesn't fuse 39 distinct disc sightings) **or** snippet **text overlap** (≥ 0.7).
+  Subtitle/pills count distinct passages; the leaderboard still counts every mention (methodology
+  panel says so). 1,852 mentions → 1,377 distinct passages. Verified on live `mentions.json` +
+  headless-Chrome shots. See `Build History.md` (2026-06-29). **Still open (Alan's call):** purge the
+  lexical **false positives** that passed the AI check ("round" adverb → Other/Unspecified, "flying
+  saucer house", bare "ice-cream cone") via a local `classify.py` re-run; tidy the **Paranormal hub**
+  empty grid + inert filters (empty `data/paranormal.json`).
+
 - **2026-06-23** — **Pulse flagship, slice 1: events store + paste-to-capture + "What's On".**
   Reframed the flagship (Alan): **venue + civic, Lehigh Valley-focused** (dropped
   Ticketmaster/artist-based); **one "What's On" page, separate Events / Civic sections**;

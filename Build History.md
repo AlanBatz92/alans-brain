@@ -10,6 +10,43 @@
 
 ---
 
+## 2026-06-29 — UAP Shape Census: drill-down de-duplicates repeated passages
+
+Pre-ship polish (Alan's review of the drill-down). The high-recall lexical pass logs one mention
+per matched term, so a single passage could surface as 2–3 near-identical "receipts" in the modal —
+the same paragraph caught on several 280-char windows (an 1880 "wheel whirling **round** … all the
+way **round** … **round and round**" anecdote in *A History of USOs* showed as three cards), or one
+sentence a segmenter split across two locators (Dennett's "ice-cream cone" sighting under both
+`ch:1#para:0` and `ch:1#para:1301`).
+
+`ufo-shapes.html` now **collapses same-passage mentions into one card** (front-end only, no data
+change). Two mentions merge when they share a **reliable locator** (a low-density paragraph —
+`LOC_COUNT` ≤ 6 mentions at that locator across all shapes) **or** their snippet text overlaps
+heavily (`wordOverlap` ≥ 0.7). The text test catches the window-shift dupes and the segmenter
+splits; the locator-density guard prevents over-merging a **junk catch-all locator** — Dennett's
+`ch:1#para:0` holds 85 distinct mentions, so merging by locator alone would have wrongly fused 39
+separate disc sightings into one. The kept card is the longest-snippet member (most context),
+carries a **×N** badge when it stands for N mentions, and highlights every merged term
+(longest-first + word boundaries, so "flying saucer" wins over "saucer" and "round" no longer lights
+up inside "around"). The modal subtitle + source pills report **distinct passages** ("5 cited
+passages · 8 mentions"); the leaderboard still counts every mention and the methodology panel now
+says so. Globally 1,852 mentions render as 1,377 distinct passages (25.6% were repeats).
+
+Verified against the live `mentions.json`: the three screenshot cases collapse correctly (round
+3→1, cone 2→1, disc/Onboard 71→34 with distinct sightings preserved), `node --check` clean, and
+headless-Chrome shots of both modals + the base page confirm the render.
+
+Deferred for Alan's call: purging the lexical **false positives** that survived the AI pass ("round"
+as an adverb mis-bucketed to Other/Unspecified, "flying saucer house", bare "ice-cream cone") — the
+proper fix re-runs the local `classify.py` (needs Alan's machine + `ANTHROPIC_API_KEY`); and tidying
+the **Paranormal hub** empty media grid + inert Category/Type filters (driven by an empty
+`data/paranormal.json`).
+
+Files: `ufo-shapes.html` (dedup helpers + `LOC_COUNT`, `renderDrill`, `highlightTerms`,
+`.us-mention-dup`, methodology copy).
+
+---
+
 ## 2026-06-27 — UAP Shape Census: corpus grows to 11 sources + contributor tooling
 
 Alan ingested 5 more books and ran the full AI disambiguation pass locally. Corpus is now **11

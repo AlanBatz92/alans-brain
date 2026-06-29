@@ -109,6 +109,8 @@
       border:1px solid var(--border); border-radius:5px; padding:0 5px; color:var(--text-muted) }
     .us-mention-ai { font-size:.7rem; color:var(--green); border:1px solid var(--green);
       border-radius:5px; padding:0 5px; white-space:nowrap }
+    .us-mention-dup { font-family:'JetBrains Mono',monospace; font-size:.7rem; color:var(--text-muted);
+      border:1px solid var(--border); border-radius:5px; padding:0 5px; white-space:nowrap }
     .us-modal-srcfilter { padding:12px 18px 4px; display:flex; gap:7px; flex-wrap:wrap }
     .us-modal-srcfilter:empty { display:none }
     .us-srcpill { font-size:.78rem; background:var(--bg); border:1px solid var(--border);
@@ -235,7 +237,9 @@
         descriptive modifiers; passages it has confirmed are marked <span class="us-mention-ai">✓ AI-checked</span>
         in the drill-down. Counts shown here are <i>mentions</i>, not
         confirmed distinct sightings — a single famous case described across ten books counts ten
-        times. Read the snippets, not just the numbers.</p>
+        times. When several matches land in the same passage, the drill-down folds them into one
+        receipt (marked <span class="us-mention-dup">×N</span>) so the citations don't repeat — the
+        leaderboard still counts every mention. Read the snippets, not just the numbers.</p>
       <p><b>Reliability tiers.</b> Every source carries a tier marking how close it sits to the
         original evidence — the same discipline used across the research project:</p>
       <ul>
@@ -405,7 +409,68 @@
     if (MENTIONS) return Promise.resolve(MENTIONS);
     return fetch('data/ufo-shapes/mentions.json')
       .then(function(r){ return r.json(); })
-      .then(function(m){ MENTIONS = m; return m; });
+      .then(function(m){ MENTIONS = m; buildLocCount(m); return m; });
+  }
+
+  /* ── Passage de-duplication ────────────────────────────────────────────────
+     The lexical pass logs one mention per matched term, so a single passage can
+     surface 2–3 near-identical "receipts" (the same paragraph caught on several
+     windows, or a segmenter that split one sentence across two locators). Collapse
+     those into one card (with a ×N badge) so the drill-down reads cleanly — the
+     leaderboard still counts every mention. */
+  var LOC_COUNT = {};         // source_id → { locator → mentions-at-that-locator (all shapes) }
+  function buildLocCount(all) {
+    LOC_COUNT = {};
+    all.forEach(function(m){
+      (LOC_COUNT[m.source_id] = LOC_COUNT[m.source_id] || {});
+      LOC_COUNT[m.source_id][m.locator] = (LOC_COUNT[m.source_id][m.locator] || 0) + 1;
+    });
+  }
+  var DEDUP_MAXLOC = 6;       // a real paragraph rarely holds >6 shape mentions; above this the locator is too coarse to trust (e.g. a chapter dumped under ch:1#para:0)
+  var DEDUP_WORDOV = 0.7;     // word-overlap at/above this = the same passage text
+
+  function normSnip(s) {
+    return (s || '').replace(/^[\s…]+|[\s…]+$/g, '').toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function wordOverlap(a, b) {
+    if (!a || !b) return 0;
+    var wa = a.split(' '), wb = b.split(' ');
+    var shorter = wa.length <= wb.length ? wa : wb;
+    var longer  = wa.length <= wb.length ? wb : wa;
+    var set = {}; longer.forEach(function(w){ set[w] = 1; });
+    var hit = 0; shorter.forEach(function(w){ if (set[w]) hit++; });
+    return shorter.length ? hit / shorter.length : 0;
+  }
+  /* Group mentions that are the same passage. Two merge when they share a
+     RELIABLE locator (a low-density paragraph) or their snippet text overlaps
+     heavily (catches windows of one passage + segmenter dupes split across
+     locators). Never merges across sources. Returns groups {rep, count, terms[]},
+     rep = the longest-snippet member (most context). */
+  function dedupePassages(rows) {
+    var clusters = [];
+    rows.slice().sort(function(a, b){ return (b.snippet || '').length - (a.snippet || '').length; })
+      .forEach(function(m){
+        var n = normSnip(m.snippet);
+        var dens = (LOC_COUNT[m.source_id] || {})[m.locator] || 0;
+        var reliable = dens > 0 && dens <= DEDUP_MAXLOC;
+        var join = null;
+        for (var i = 0; i < clusters.length; i++) {
+          var c = clusters[i];
+          if (c.rep.source_id !== m.source_id) continue;
+          var byLoc = c.reliable && reliable && c.rep.locator === m.locator;
+          var byTxt = wordOverlap(c.norm, n) >= DEDUP_WORDOV &&
+                      Math.min(c.norm.split(' ').length, n.split(' ').length) >= 8;
+          if (byLoc || byTxt) { join = c; break; }
+        }
+        if (join) {
+          join.count++;
+          if (join.terms.indexOf(m.raw_term) === -1) join.terms.push(m.raw_term);
+        } else {
+          clusters.push({ rep: m, norm: n, reliable: reliable, count: 1, terms: [m.raw_term] });
+        }
+      });
+    return clusters;
   }
 
   function labelFor(shapeId) {
@@ -436,24 +501,29 @@
     var rows = MENTIONS.filter(function(m){
       return m.shape === DRILL.shape && (!DRILL.source || m.source_id === DRILL.source);
     });
-    // newest sources first feels odd; group by source, ordered by count desc via SUMMARY order
-    rows.sort(function(a, b){
-      if (a.source_id !== b.source_id) return a.source_id < b.source_id ? -1 : 1;
+    // collapse repeated hits of the same passage into one receipt
+    var groups = dedupePassages(rows);
+    // group cards by source (stable sort keeps the longest-first order within each)
+    groups.sort(function(a, b){
+      if (a.rep.source_id !== b.rep.source_id) return a.rep.source_id < b.rep.source_id ? -1 : 1;
       return 0;
     });
 
-    // sub line + source filter pills (only when not already pinned to one source)
-    var total = rows.length;
-    document.getElementById('usModalSub').textContent =
-      total + ' cited passage' + (total === 1 ? '' : 's') +
-      (DRILL.source ? ' in ' + (SRC[DRILL.source] ? SRC[DRILL.source].title : DRILL.source) : ' across all sources');
+    // sub line: distinct passages, with the raw mention tally when they differ
+    var distinct = groups.length, raw = rows.length;
+    var sub = distinct + ' cited passage' + (distinct === 1 ? '' : 's');
+    if (raw > distinct) sub += ' · ' + raw + ' mentions';
+    sub += DRILL.source ? ' in ' + (SRC[DRILL.source] ? SRC[DRILL.source].title : DRILL.source) : ' across all sources';
+    document.getElementById('usModalSub').textContent = sub;
 
+    // source filter pills (distinct-passage counts, so they match the body)
     var filterEl = document.getElementById('usModalSrcFilter');
     if (DRILL.pinned) {
       filterEl.innerHTML = '';   // locked to one source — no filter row
     } else {
+      var allGroups = dedupePassages(MENTIONS.filter(function(m){ return m.shape === DRILL.shape; }));
       var counts = {}, grand = 0;
-      MENTIONS.forEach(function(m){ if (m.shape === DRILL.shape) { counts[m.source_id] = (counts[m.source_id]||0)+1; grand++; } });
+      allGroups.forEach(function(g){ counts[g.rep.source_id] = (counts[g.rep.source_id]||0)+1; grand++; });
       var ids = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
       var pills = ['<button class="us-srcpill' + (DRILL.source ? '' : ' us-active') + '" data-src="">All (' + grand + ')</button>'];
       ids.forEach(function(id){
@@ -464,16 +534,18 @@
       filterEl.innerHTML = pills.join('');
     }
 
-    var body = rows.map(function(m){
-      var s = SRC[m.source_id] || {};
+    var body = groups.map(function(g){
+      var m = g.rep, s = SRC[m.source_id] || {};
       var base = s.citation ||
                  ((s.author ? s.author + ', ' : '') + (s.title || m.source_id) + (s.year ? ' (' + s.year + ')' : ''));
       var cite = esc(base) + (m.locator ? ' · ' + esc(m.locator) : '');
       var tier = s.tier ? '<span class="us-mention-tier" title="' + esc(tierTitle(s.tier)) + '">Tier ' + s.tier + '</span>' : '';
       var ai = m.confidence === 'llm-confirmed'
         ? '<span class="us-mention-ai" title="Confirmed by the AI disambiguation pass">✓ AI-checked</span>' : '';
-      return '<div class="us-mention"><div class="us-mention-snip">' + highlight(m.snippet, m.raw_term) +
-             '</div><div class="us-mention-meta">' + tier + ai + '<span>' + cite + '</span></div></div>';
+      var dup = g.count > 1
+        ? '<span class="us-mention-dup" title="This passage was matched ' + g.count + ' times in this source — shown once">×' + g.count + '</span>' : '';
+      return '<div class="us-mention"><div class="us-mention-snip">' + highlightTerms(m.snippet, g.terms) +
+             '</div><div class="us-mention-meta">' + tier + ai + dup + '<span>' + cite + '</span></div></div>';
     }).join('');
     document.getElementById('usModalBody').innerHTML = body ||
       '<p class="us-sub" style="padding:16px 0">No passages.</p>';
@@ -481,11 +553,16 @@
 
   function shortTitle(t) { return t.length > 26 ? t.slice(0, 24) + '…' : t; }
 
-  function highlight(snippet, term) {
+  function highlightTerms(snippet, terms) {
     var safe = esc(snippet);
-    if (!term) return safe;
+    if (!terms || !terms.length) return safe;
+    // longest term first so a phrase ("flying saucer") wins over its sub-word ("saucer")
+    var parts = terms.filter(Boolean).slice()
+      .sort(function(a, b){ return b.length - a.length; })
+      .map(function(t){ return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s-]+'); });
+    if (!parts.length) return safe;
     try {
-      var rx = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s-]+') + ')', 'ig');
+      var rx = new RegExp('\\b(' + parts.join('|') + ')\\b', 'ig');
       return safe.replace(rx, '<mark>$1</mark>');
     } catch (e) { return safe; }
   }
