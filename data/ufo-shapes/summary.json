@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-27T14:40:38",
+  "generated_at": "2026-06-28T11:20:26",
   "taxonomy_version": 3,
   "totals": {
-    "sources": 6,
-    "mentions": 1289,
+    "sources": 11,
+    "mentions": 1852,
     "shapes": 11
   },
   "by_shape": [
@@ -11,78 +11,78 @@
       "shape": "disc",
       "label": "Disc",
       "icon": "🛸",
-      "count": 706,
-      "source_count": 6
+      "count": 722,
+      "source_count": 11
     },
     {
       "shape": "sphere",
       "label": "Sphere / Orb",
       "icon": "⚪",
-      "count": 174,
-      "source_count": 6
+      "count": 372,
+      "source_count": 11
     },
     {
       "shape": "triangle",
       "label": "Triangle",
       "icon": "🔺",
-      "count": 128,
-      "source_count": 5
+      "count": 217,
+      "source_count": 10
     },
     {
       "shape": "cylinder",
       "label": "Cylinder / Cigar",
       "icon": "🚬",
-      "count": 124,
-      "source_count": 6
-    },
-    {
-      "shape": "tictac",
-      "label": "Tic-Tac / Pill",
-      "icon": "💊",
-      "count": 57,
-      "source_count": 2
+      "count": 200,
+      "source_count": 11
     },
     {
       "shape": "egg",
       "label": "Egg / Ovoid",
       "icon": "🥚",
-      "count": 52,
+      "count": 126,
+      "source_count": 11
+    },
+    {
+      "shape": "tictac",
+      "label": "Tic-Tac / Pill",
+      "icon": "💊",
+      "count": 114,
+      "source_count": 6
+    },
+    {
+      "shape": "diamond",
+      "label": "Diamond",
+      "icon": "🔶",
+      "count": 31,
       "source_count": 6
     },
     {
       "shape": "boomerang",
       "label": "Boomerang / Chevron",
       "icon": "🪃",
-      "count": 14,
-      "source_count": 4
+      "count": 29,
+      "source_count": 8
     },
     {
       "shape": "cone",
       "label": "Cone",
       "icon": "🔻",
-      "count": 12,
-      "source_count": 3
-    },
-    {
-      "shape": "diamond",
-      "label": "Diamond",
-      "icon": "🔶",
-      "count": 11,
-      "source_count": 2
+      "count": 20,
+      "source_count": 6
     },
     {
       "shape": "cube",
       "label": "Cube / Box",
       "icon": "⬛",
-      "count": 10,
-      "source_count": 4
+      "count": 13,
+      "source_count": 5
     },
     {
       "shape": "other",
       "label": "Other / Unspecified",
       "icon": "🌀",
-      "count": 1,
-      "source_count": 1
+      "count": 8,
+      "source_count": 4
     }
   ],
   "by_source": [
@@ -93,7 +93,25 @@
       "year": 1969,
       "reliability_tier": 3,
       "citation": "Vallee, Passport to Magonia (1969)",
-      "count": 426
+      "count": 342
+    },
+    {
+      "id": "a_history_of_usos_richard_dollan_2025",
+      "title": "A History of USOs",
+      "author": "Richard M. Dolan",
+      "year": 2025,
+      "reliability_tier": 3,
+      "citation": "Dolan, Richard M. A History of USOs. Rochester, Ny, Richard Dolan Press, 2025.",
+      "count": 330
+    },
+    {
+      "id": "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+      "title": "Skinwalkers at the Pentagon: An Insider's Account of  the Government's Secret UFO Program",
+      "author": "Colm A. Kelleher, James T. Lacatski, George Knapp",
+      "year": 2021,
+      "reliability_tier": 2,
+      "citation": "Lacatski, James T, et al. Skinwalkers at the Pentagon : An Insiders’ Account of the Government’s Secret UFO Program. Henderson, Nevada, Rtma, Llc, 2021.",
+      "count": 232
     },
     {
       "id": "hastings_ufos_nukes",
@@ -102,16 +120,16 @@
       "year": 2008,
       "reliability_tier": 3,
       "citation": "Hastings, UFOs and Nukes (2008)",
-      "count": 249
+      "count": 207
     },
     {
-      "id": "graff_ufo_inside_story",
-      "title": "UFO: The Inside Story of the U.S. Government's Search for Alien Life Here—and Out There",
-      "author": "Garrett M. Graff",
-      "year": 2023,
-      "reliability_tier": 2,
-      "citation": "Graff, UFO: The Inside Story (2023)",
-      "count": 218
+      "id": "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
+      "title": "Onboard UFO Encounters: True Accounts of Contact with Extraterrestrials",
+      "author": "Preston Dennett",
+      "year": 2020,
+      "reliability_tier": 3,
+      "citation": "Dennett, Preston. Onboard UFO Encounters: True Accounts of Contact with Extraterrestrials. Independently Published, 1 Mar. 2020.",
+      "count": 171
     },
     {
       "id": "coulthart_inplainsight",
@@ -120,7 +138,25 @@
       "year": 2021,
       "reliability_tier": 3,
       "citation": "Coulthart, In Plain Sight (2021)",
-      "count": 206
+      "count": 158
+    },
+    {
+      "id": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+      "title": "UFOs for the 21st Century Mind: A Fresh Guide to an Ancient Mystery",
+      "author": "Richard M. Dolan",
+      "year": 2014,
+      "reliability_tier": 3,
+      "citation": "Dolan, Richard M. UFOs for the 21st Century Mind : A Fresh Guide to an Ancient Mystery. Rochester, Ny, Richard Dolan Press, 2014.",
+      "count": 151
+    },
+    {
+      "id": "graff_ufo_inside_story",
+      "title": "UFO: The Inside Story of the U.S. Government's Search for Alien Life Here—and Out There",
+      "author": "Garrett M. Graff",
+      "year": 2023,
+      "reliability_tier": 2,
+      "citation": "Graff, UFO: The Inside Story (2023)",
+      "count": 102
     },
     {
       "id": "kean_ufos_generals",
@@ -129,7 +165,16 @@
       "year": 2010,
       "reliability_tier": 2,
       "citation": "Kean, UFOs: Generals, Pilots, and Government Officials Go on the Record (2010)",
-      "count": 110
+      "count": 81
+    },
+    {
+      "id": "abduction_human_encounters_with_aliens_john_e_mack_2009",
+      "title": "Abduction - Human Encounters with Aliens",
+      "author": "John E. Mack",
+      "year": 2009,
+      "reliability_tier": 2,
+      "citation": "Mack. Abduction: Human Encounters with Aliens. Simon and Schuster, 15 Dec. 2009.",
+      "count": 46
     },
     {
       "id": "jung_flying_saucers",
@@ -138,7 +183,7 @@
       "year": 1958,
       "reliability_tier": 3,
       "citation": "Jung, Flying Saucers: A Modern Myth of Things Seen in the Skies (1958)",
-      "count": 80
+      "count": 32
     }
   ],
   "shape_by_source_matrix": {
@@ -159,140 +204,265 @@
       "jung_flying_saucers",
       "vallee_passport_magonia",
       "hastings_ufos_nukes",
+      "abduction_human_encounters_with_aliens_john_e_mack_2009",
       "kean_ufos_generals",
+      "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+      "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
       "coulthart_inplainsight",
-      "graff_ufo_inside_story"
+      "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+      "graff_ufo_inside_story",
+      "a_history_of_usos_richard_dollan_2025"
     ],
     "cells": [
       {
         "shape": "boomerang",
+        "source": "a_history_of_usos_richard_dollan_2025",
+        "count": 5
+      },
+      {
+        "shape": "boomerang",
+        "source": "abduction_human_encounters_with_aliens_john_e_mack_2009",
+        "count": 1
+      },
+      {
+        "shape": "boomerang",
         "source": "coulthart_inplainsight",
         "count": 3
       },
       {
         "shape": "boomerang",
         "source": "hastings_ufos_nukes",
+        "count": 4
+      },
+      {
+        "shape": "boomerang",
+        "source": "kean_ufos_generals",
+        "count": 1
+      },
+      {
+        "shape": "boomerang",
+        "source": "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+        "count": 2
+      },
+      {
+        "shape": "boomerang",
+        "source": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+        "count": 11
+      },
+      {
+        "shape": "boomerang",
+        "source": "vallee_passport_magonia",
+        "count": 2
+      },
+      {
+        "shape": "cone",
+        "source": "a_history_of_usos_richard_dollan_2025",
+        "count": 7
+      },
+      {
+        "shape": "cone",
+        "source": "abduction_human_encounters_with_aliens_john_e_mack_2009",
+        "count": 1
+      },
+      {
+        "shape": "cone",
+        "source": "hastings_ufos_nukes",
+        "count": 1
+      },
+      {
+        "shape": "cone",
+        "source": "kean_ufos_generals",
+        "count": 1
+      },
+      {
+        "shape": "cone",
+        "source": "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
+        "count": 2
+      },
+      {
+        "shape": "cone",
+        "source": "vallee_passport_magonia",
         "count": 8
       },
       {
-        "shape": "boomerang",
-        "source": "kean_ufos_generals",
-        "count": 1
-      },
-      {
-        "shape": "boomerang",
-        "source": "vallee_passport_magonia",
-        "count": 2
-      },
-      {
-        "shape": "cone",
-        "source": "hastings_ufos_nukes",
-        "count": 1
-      },
-      {
-        "shape": "cone",
-        "source": "kean_ufos_generals",
-        "count": 2
-      },
-      {
-        "shape": "cone",
-        "source": "vallee_passport_magonia",
-        "count": 9
-      },
-      {
         "shape": "cube",
-        "source": "graff_ufo_inside_story",
-        "count": 3
-      },
-      {
-        "shape": "cube",
-        "source": "hastings_ufos_nukes",
-        "count": 2
-      },
-      {
-        "shape": "cube",
-        "source": "kean_ufos_generals",
-        "count": 3
-      },
-      {
-        "shape": "cube",
-        "source": "vallee_passport_magonia",
-        "count": 2
-      },
-      {
-        "shape": "cylinder",
-        "source": "coulthart_inplainsight",
-        "count": 5
-      },
-      {
-        "shape": "cylinder",
-        "source": "graff_ufo_inside_story",
-        "count": 15
-      },
-      {
-        "shape": "cylinder",
-        "source": "hastings_ufos_nukes",
-        "count": 30
-      },
-      {
-        "shape": "cylinder",
-        "source": "jung_flying_saucers",
-        "count": 16
-      },
-      {
-        "shape": "cylinder",
-        "source": "kean_ufos_generals",
-        "count": 4
-      },
-      {
-        "shape": "cylinder",
-        "source": "vallee_passport_magonia",
-        "count": 54
-      },
-      {
-        "shape": "diamond",
-        "source": "coulthart_inplainsight",
-        "count": 5
-      },
-      {
-        "shape": "diamond",
-        "source": "hastings_ufos_nukes",
+        "source": "a_history_of_usos_richard_dollan_2025",
         "count": 6
       },
       {
+        "shape": "cube",
+        "source": "coulthart_inplainsight",
+        "count": 2
+      },
+      {
+        "shape": "cube",
+        "source": "hastings_ufos_nukes",
+        "count": 1
+      },
+      {
+        "shape": "cube",
+        "source": "kean_ufos_generals",
+        "count": 3
+      },
+      {
+        "shape": "cube",
+        "source": "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
+        "count": 1
+      },
+      {
+        "shape": "cylinder",
+        "source": "a_history_of_usos_richard_dollan_2025",
+        "count": 56
+      },
+      {
+        "shape": "cylinder",
+        "source": "abduction_human_encounters_with_aliens_john_e_mack_2009",
+        "count": 8
+      },
+      {
+        "shape": "cylinder",
+        "source": "coulthart_inplainsight",
+        "count": 4
+      },
+      {
+        "shape": "cylinder",
+        "source": "graff_ufo_inside_story",
+        "count": 14
+      },
+      {
+        "shape": "cylinder",
+        "source": "hastings_ufos_nukes",
+        "count": 20
+      },
+      {
+        "shape": "cylinder",
+        "source": "jung_flying_saucers",
+        "count": 7
+      },
+      {
+        "shape": "cylinder",
+        "source": "kean_ufos_generals",
+        "count": 3
+      },
+      {
+        "shape": "cylinder",
+        "source": "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
+        "count": 23
+      },
+      {
+        "shape": "cylinder",
+        "source": "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+        "count": 7
+      },
+      {
+        "shape": "cylinder",
+        "source": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+        "count": 12
+      },
+      {
+        "shape": "cylinder",
+        "source": "vallee_passport_magonia",
+        "count": 46
+      },
+      {
+        "shape": "diamond",
+        "source": "a_history_of_usos_richard_dollan_2025",
+        "count": 5
+      },
+      {
+        "shape": "diamond",
+        "source": "coulthart_inplainsight",
+        "count": 5
+      },
+      {
+        "shape": "diamond",
+        "source": "hastings_ufos_nukes",
+        "count": 7
+      },
+      {
+        "shape": "diamond",
+        "source": "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
+        "count": 12
+      },
+      {
+        "shape": "diamond",
+        "source": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+        "count": 1
+      },
+      {
+        "shape": "diamond",
+        "source": "vallee_passport_magonia",
+        "count": 1
+      },
+      {
+        "shape": "disc",
+        "source": "a_history_of_usos_richard_dollan_2025",
+        "count": 122
+      },
+      {
+        "shape": "disc",
+        "source": "abduction_human_encounters_with_aliens_john_e_mack_2009",
+        "count": 15
+      },
+      {
         "shape": "disc",
         "source": "coulthart_inplainsight",
-        "count": 91
+        "count": 61
       },
       {
         "shape": "disc",
         "source": "graff_ufo_inside_story",
-        "count": 164
+        "count": 64
       },
       {
         "shape": "disc",
         "source": "hastings_ufos_nukes",
-        "count": 140
+        "count": 117
       },
       {
         "shape": "disc",
         "source": "jung_flying_saucers",
-        "count": 29
+        "count": 5
       },
       {
         "shape": "disc",
         "source": "kean_ufos_generals",
-        "count": 51
+        "count": 31
+      },
+      {
+        "shape": "disc",
+        "source": "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
+        "count": 71
+      },
+      {
+        "shape": "disc",
+        "source": "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+        "count": 8
+      },
+      {
+        "shape": "disc",
+        "source": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+        "count": 62
       },
       {
         "shape": "disc",
         "source": "vallee_passport_magonia",
-        "count": 231
+        "count": 166
+      },
+      {
+        "shape": "egg",
+        "source": "a_history_of_usos_richard_dollan_2025",
+        "count": 14
+      },
+      {
+        "shape": "egg",
+        "source": "abduction_human_encounters_with_aliens_john_e_mack_2009",
+        "count": 7
       },
       {
         "shape": "egg",
         "source": "coulthart_inplainsight",
-        "count": 9
+        "count": 12
       },
       {
         "shape": "egg",
@@ -302,7 +472,7 @@
       {
         "shape": "egg",
         "source": "hastings_ufos_nukes",
-        "count": 4
+        "count": 10
       },
       {
         "shape": "egg",
@@ -316,8 +486,28 @@
       },
       {
         "shape": "egg",
+        "source": "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
+        "count": 18
+      },
+      {
+        "shape": "egg",
+        "source": "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+        "count": 15
+      },
+      {
+        "shape": "egg",
+        "source": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+        "count": 10
+      },
+      {
+        "shape": "egg",
         "source": "vallee_passport_magonia",
-        "count": 32
+        "count": 33
+      },
+      {
+        "shape": "other",
+        "source": "a_history_of_usos_richard_dollan_2025",
+        "count": 3
       },
       {
         "shape": "other",
@@ -325,24 +515,44 @@
         "count": 1
       },
       {
-        "shape": "sphere",
-        "source": "coulthart_inplainsight",
-        "count": 12
+        "shape": "other",
+        "source": "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+        "count": 3
+      },
+      {
+        "shape": "other",
+        "source": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+        "count": 1
       },
       {
         "shape": "sphere",
-        "source": "graff_ufo_inside_story",
+        "source": "a_history_of_usos_richard_dollan_2025",
+        "count": 84
+      },
+      {
+        "shape": "sphere",
+        "source": "abduction_human_encounters_with_aliens_john_e_mack_2009",
         "count": 11
       },
       {
         "shape": "sphere",
+        "source": "coulthart_inplainsight",
+        "count": 7
+      },
+      {
+        "shape": "sphere",
+        "source": "graff_ufo_inside_story",
+        "count": 6
+      },
+      {
+        "shape": "sphere",
         "source": "hastings_ufos_nukes",
-        "count": 19
+        "count": 18
       },
       {
         "shape": "sphere",
         "source": "jung_flying_saucers",
-        "count": 34
+        "count": 19
       },
       {
         "shape": "sphere",
@@ -351,146 +561,206 @@
       },
       {
         "shape": "sphere",
+        "source": "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
+        "count": 41
+      },
+      {
+        "shape": "sphere",
+        "source": "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+        "count": 73
+      },
+      {
+        "shape": "sphere",
+        "source": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+        "count": 19
+      },
+      {
+        "shape": "sphere",
         "source": "vallee_passport_magonia",
-        "count": 89
+        "count": 85
+      },
+      {
+        "shape": "tictac",
+        "source": "a_history_of_usos_richard_dollan_2025",
+        "count": 2
+      },
+      {
+        "shape": "tictac",
+        "source": "abduction_human_encounters_with_aliens_john_e_mack_2009",
+        "count": 1
       },
       {
         "shape": "tictac",
         "source": "coulthart_inplainsight",
-        "count": 50
+        "count": 39
       },
       {
         "shape": "tictac",
         "source": "graff_ufo_inside_story",
-        "count": 7
+        "count": 5
+      },
+      {
+        "shape": "tictac",
+        "source": "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+        "count": 66
+      },
+      {
+        "shape": "tictac",
+        "source": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+        "count": 1
+      },
+      {
+        "shape": "triangle",
+        "source": "a_history_of_usos_richard_dollan_2025",
+        "count": 26
+      },
+      {
+        "shape": "triangle",
+        "source": "abduction_human_encounters_with_aliens_john_e_mack_2009",
+        "count": 2
       },
       {
         "shape": "triangle",
         "source": "coulthart_inplainsight",
-        "count": 31
+        "count": 25
       },
       {
         "shape": "triangle",
         "source": "graff_ufo_inside_story",
-        "count": 14
+        "count": 9
       },
       {
         "shape": "triangle",
         "source": "hastings_ufos_nukes",
-        "count": 39
+        "count": 29
       },
       {
         "shape": "triangle",
         "source": "kean_ufos_generals",
-        "count": 37
+        "count": 30
+      },
+      {
+        "shape": "triangle",
+        "source": "onboard_ufo_encounters_true_accounts_of_c_preston_dennett_20",
+        "count": 3
+      },
+      {
+        "shape": "triangle",
+        "source": "skinwalkers_at_the_pentagon_colm_a_kelleher_2021",
+        "count": 58
+      },
+      {
+        "shape": "triangle",
+        "source": "ufos_for_the_21st_century_mind_a_fresh_guide_to_an_ancient_r",
+        "count": 34
       },
       {
         "shape": "triangle",
         "source": "vallee_passport_magonia",
-        "count": 7
+        "count": 1
       }
     ]
   },
   "top_modifiers": [
     {
+      "term": "large",
+      "count": 187
+    },
+    {
       "term": "hovering",
-      "count": 82
-    },
-    {
-      "term": "white",
-      "count": 62
-    },
-    {
-      "term": "red",
-      "count": 54
-    },
-    {
-      "term": "bright",
-      "count": 44
-    },
-    {
-      "term": "small",
-      "count": 41
-    },
-    {
-      "term": "luminous",
-      "count": 40
-    },
-    {
-      "term": "metallic",
-      "count": 39
-    },
-    {
-      "term": "green",
-      "count": 39
-    },
-    {
-      "term": "blue",
-      "count": 39
-    },
-    {
-      "term": "black",
-      "count": 36
-    },
-    {
-      "term": "orange",
-      "count": 33
-    },
-    {
-      "term": "dark",
-      "count": 31
+      "count": 125
     },
     {
       "term": "glowing",
-      "count": 30
+      "count": 112
     },
     {
-      "term": "huge",
-      "count": 28
+      "term": "metallic",
+      "count": 107
     },
     {
-      "term": "silvery",
-      "count": 25
+      "term": "bright",
+      "count": 78
     },
     {
-      "term": "spinning",
-      "count": 17
+      "term": "luminous",
+      "count": 76
     },
     {
-      "term": "silver",
-      "count": 17
+      "term": "round",
+      "count": 68
     },
     {
       "term": "silent",
-      "count": 14
+      "count": 67
     },
     {
-      "term": "transparent",
-      "count": 14
+      "term": "blue",
+      "count": 66
     },
     {
-      "term": "shiny",
-      "count": 12
+      "term": "black",
+      "count": 64
     },
     {
-      "term": "rotating",
-      "count": 12
+      "term": "cigar-shaped",
+      "count": 62
     },
     {
-      "term": "massive",
-      "count": 9
+      "term": "small",
+      "count": 56
     },
     {
-      "term": "enormous",
-      "count": 5
+      "term": "disk-shaped",
+      "count": 53
     },
     {
-      "term": "golden",
-      "count": 3
+      "term": "huge",
+      "count": 48
     },
     {
-      "term": "translucent",
-      "count": 2
+      "term": "saucer-shaped",
+      "count": 46
+    },
+    {
+      "term": "silver",
+      "count": 46
+    },
+    {
+      "term": "flying",
+      "count": 44
+    },
+    {
+      "term": "dark",
+      "count": 44
+    },
+    {
+      "term": "orange",
+      "count": 44
+    },
+    {
+      "term": "domed",
+      "count": 38
+    },
+    {
+      "term": "white",
+      "count": 38
+    },
+    {
+      "term": "landed",
+      "count": 32
+    },
+    {
+      "term": "fast-moving",
+      "count": 31
+    },
+    {
+      "term": "silvery",
+      "count": 29
+    },
+    {
+      "term": "low-flying",
+      "count": 29
     }
   ],
   "timeline_buckets": []

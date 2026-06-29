@@ -10,6 +10,28 @@
 
 ---
 
+## 2026-06-27 — UAP Shape Census: corpus grows to 11 sources + contributor tooling
+
+Alan ingested 5 more books and ran the full AI disambiguation pass locally. Corpus is now **11
+sources / 1,852 AI-confirmed mentions** (Jung, Vallée, Hastings, Kean, Coulthart, Graff + Mack 2009,
+Dolan "21st Century Mind" 2014, Dennett "Onboard" 2020, Kelleher "Skinwalkers" 2021, Dolan "A History
+of USOs" 2025). The classify pass rejected ~32% as non-craft-shape noise (book-title citations, Jung's
+circle/mandala symbolism, "round the earth" directions) — verified as correct drops. Data checked
+clean: no duplicates, no empty sources, scanned files (MAJIC EYES ONLY PDF, Above Black EPUB) correctly
+excluded.
+
+Added two contributor tools to cut the constant "how do I…" friction:
+- **`report.py`** — `python report.py` prints every source with its published-mention count + tier and
+  flags duplicates / empty sources / orphan mentions, ending with ✓ clean or a list of issues. Works
+  on any clone (reads committed JSON; no quoting, no books needed).
+- **`WORKFLOW.md`** — a committed cheat-sheet: the daily loop, API-key setup, and a table mapping every
+  git error Alan has hit (`src refspec…`, `pathspec…`, merge conflicts) to its exact fix. Linked from
+  `README.md`.
+
+Files: `ufo-shapes/report.py`, `ufo-shapes/WORKFLOW.md`, `ufo-shapes/README.md`.
+
+---
+
 ## 2026-06-27 — UAP Shape Census: additive extract (don't drop books you don't have locally)
 
 Alan works across machines, and `extract.py` re-scanned from local segments only — so on a machine
