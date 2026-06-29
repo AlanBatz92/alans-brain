@@ -10,6 +10,25 @@
 
 ---
 
+## 2026-06-29 — Repo hygiene: harden `sources/` gitignore + consolidate everything onto `main`
+
+Spotted while helping Alan unstick a local merge: `ufo-shapes/.gitignore` ignored `sources/*/`
+(per-source folders) and loose `*.epub/*.pdf/*.txt`, but a raw book dropped into `sources/` as a
+**`.md`** (a *Majic Eyes Only* markdown Alan had ingested) slipped through **un-ignored** — one
+`git add -A` away from committing copyrighted source text to the public repo. Broadened the rule to
+**`sources/*` (+ `!sources/.gitkeep`)** so anything under `sources/`, any extension, stays local;
+verified raw sources are ignored while the tracked toolkit `.md` docs and `.gitkeep` are not (kept
+`*.md` *out* of the global loose-files list precisely because the toolkit docs are `.md`).
+
+Also consolidated the branches per Alan ("get everything on `main`"): `claude/brave-galileo-c2nk0o`
+(the de-dup + vernacular + `candidates.py` work) fast-forwards cleanly over `origin/main` — it was
+built on main's 11-source-corpus tip (`894d546`). Alan's local `main` had only drifted in commit
+*hashes* (a parallel `…z5gsku` line already folded into `origin/main`); `git diff` of his local-main
+tip vs `origin/main` showed **+216 insertions / 0 deletions** = fully superseded, no unique content.
+Fast-forwarded `main` to the branch tip; the `…z5gsku` branch is now stale/superseded.
+
+---
+
 ## 2026-06-29 — UAP Shape Census: reframed as a *vernacular / zeitgeist* census + the "described as" view
 
 Direction shift (Alan): the census is **not a "nuts-and-bolts truth" instrument** — it's a read of

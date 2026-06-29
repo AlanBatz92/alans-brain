@@ -2,11 +2,14 @@
 # Only the DERIVED, cited data (short fair-use snippets + counts) under
 # data/ufo-shapes/ gets committed. See PLAN-ufo-shapes.md "Copyright posture".
 
-# Per-source working folders: raw text + normalized segments stay local.
-sources/*/
+# Everything under sources/ stays local — raw book/document text of ANY extension
+# (.md/.epub/.pdf/.txt/…) plus the per-source segment folders. Only .gitkeep is tracked.
+sources/*
 !sources/.gitkeep
 
 # Any loose book files dropped into the toolkit root for processing.
+# (.md is NOT globally ignored — the tracked toolkit docs are .md; raw .md books
+#  belong under sources/, which is fully ignored above.)
 *.epub
 *.pdf
 *.txt
