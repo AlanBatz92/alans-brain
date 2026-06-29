@@ -3,19 +3,42 @@
 > Comprehensive guide for future sessions. Read this before touching the
 > `ufo-shapes/` toolkit, `ufo-shapes.html`, or `data/ufo-shapes/`.
 >
-> **What it is:** a narrow, growing census of how UFO/UAP craft are described
-> by *shape* (disc, sphere, triangle, cigar, Tic-Tac, egg…) across ingested
-> source documents, correlated across sources, presented on the site with every
-> mention traceable back to its source.
+> **What it is:** a census of *how the culture describes* UFO/UAP craft — the
+> shared vocabulary we reach for, by *shape* (disc, sphere, triangle, cigar,
+> Tic-Tac, egg…) — across intentionally-curated source documents, correlated
+> across sources, with every mention traceable back to where it was found.
+>
+> **Direction (Alan, 2026-06-29) — it's a zeitgeist instrument, not a truth one.**
+> This measures *how we talk and think* about the phenomenon, not "nuts-and-bolts"
+> physical fact. An ethereal pass with real merit: the value is in the
+> *convergence* — where independent, non-tabloid sources reach for the same shapes
+> and the same words (only one sighting has to be real for the question to matter).
+> Three consequences drive the build:
+> 1. **Lexical extensibility is the core feature.** The vocabulary (`shapes.json`)
+>    must be *easy to grow* — when "ice-cream cone" or "propane tank" turns out to
+>    be how someone described a craft, you add the term and re-run. `candidates.py`
+>    surfaces the missing ones.
+> 2. **Surface the vernacular.** Under each canonical shape, show the *colloquial*
+>    words that resolved to it ("Triangle ← wedge · arrowhead · ice-cream cone"),
+>    so the broader, more human way of referring to these objects is visible. Built
+>    from `raw_term`; powered by `summary.json`'s `terms_by_shape`.
+> 3. **Intentional sourcing stays.** Curate only what's genuinely relevant to the
+>    UFO/UAP conversation; keep tabloid garbage out as best as possible. Each source
+>    still carries a reliability tier.
 >
 > **Why it exists:** it's a useful artifact in its own right, *and* it's the
 > deliberate proving ground / Layer-1-and-2-in-miniature for the larger
 > paranormal projects (`The_UAP_Evidence_Cartography_Project.md`,
 > `Paranormal_Node_Graph_Architecture.md`). It exercises the full
 > ingest → extract → cite → publish loop on the real, vanilla stack before any
-> heavier infrastructure is committed to.
+> heavier infrastructure is committed to. The reframing makes the **multi-facet
+> description census** (shape now, humanoid/entity next — §10) the central thesis,
+> not an afterthought: the prize is cross-description convergence.
 >
-> **Status:** Phase 0 (scaffold) shipped 2026-06-27. Next steps in the final section.
+> **Status:** Phase 0 (scaffold) shipped 2026-06-27. Drill-down de-dup + the
+> **vernacular ("described as") view** + `candidates.py` shipped 2026-06-29. Alan
+> is rebuilding the corpus from scratch locally (more sources + Jonathan Weygandt
+> interviews). Next steps in the final section.
 
 ---
 
@@ -105,6 +128,10 @@ for everything on first paint; `mentions.json` is lazy-loaded only on drill-down
   "taxonomy_version": 1,
   "totals": { "sources": 1, "mentions": 5, "shapes": 5 },
   "by_shape":  [{ "shape":"disc","label":"Disc","icon":"🛸","count":42,"source_count":7 }],
+  "terms_by_shape": {                 // the VERNACULAR layer — colloquial words per shape
+    "triangle": [{ "term":"triangular","count":82 }, { "term":"wedge-shaped","count":12 },
+                 { "term":"arrowhead","count":6 }, { "term":"ice-cream cone","count":3 }]
+  },
   "by_source": [{ "id":"...","title":"...","year":2021,"reliability_tier":3,"count":120 }],
   "shape_by_source_matrix": {
     "shapes":  ["disc","sphere", ...],
@@ -146,16 +173,26 @@ Vanilla, self-contained styles (a `<style>` block, **`us-` prefix** — like
 `sl-`/`pulse-`/`obs-`), reads `data/ufo-shapes/summary.json`. Sections:
 
 1. **Headline stats** — sources · mentions · distinct shapes.
-2. **Shape leaderboard** — horizontal bars, most→least.
+2. **Shape leaderboard** — horizontal bars, most→least, each carrying a
+   **"described as …" vernacular caption** (2026-06-29): the colloquial words that
+   rolled up to that shape, from `summary.json`'s `terms_by_shape`. The glanceable
+   half of the vernacular feature.
 3. **By source (per-source view)** — *Alan's requested feature.* Click a
    source (e.g. Coulthart's *In Plain Sight*) → it expands to show which shapes
    it references and how often, as count chips. Built from
    `summary.json`'s matrix, no `mentions.json` fetch needed. **First-class, not
    an afterthought.**
-4. **Methodology panel** (`<details>`) — how mentions are found + honest caveats
-   (high-recall lexical pass, mentions ≠ distinct sightings, read the snippets).
-5. *(Phase 1+)* Shape × source **heatmap**, snippet-level **drill-down**
-   (the receipts), and *(Phase 4)* a **timeline** by sighting decade.
+4. **Drill-down modal (the receipts)** — tap a shape → its cited passages, with
+   two filter axes: **source pills** (green) and a **"described as" term row**
+   (teal, 2026-06-29) — tap a colloquialism to read just those passages. Repeated
+   hits of the same passage are **de-duped** into one card (×N badge); see the
+   2026-06-29 Build History entry.
+5. **Methodology panel** (`<details>`) — leads with the **zeitgeist framing**
+   (a census of *description*, not physical truth), then how mentions are found +
+   honest caveats (high-recall lexical pass, mentions ≠ distinct sightings, the
+   vernacular roll-up, read the snippets).
+6. *(Phase 2+)* Shape × source **heatmap** and *(Phase 4)* a **timeline** by
+   sighting decade.
 
 Currently **not linked in any nav** and shows an empty state until the first
 source is ingested — intentional, like `tasks.html`. Link it from
@@ -166,9 +203,11 @@ source is ingested — intentional, like `tasks.html`. Link it from
 ## 6. The local pipeline (`ufo-shapes/`)
 
 ```
-ingest.py  →  sources/<id>/segments.jsonl      (+ register in sources.json)
-extract.py →  work/mentions.full.json          (regex lexicon; high + review tiers; LOCAL ONLY)
-build.py   →  data/ufo-shapes/{mentions,summary}.json   (PUBLISH GATE: high-confidence only)
+ingest.py     →  sources/<id>/segments.jsonl       (+ register in sources.json)
+extract.py    →  work/mentions.full.json           (regex lexicon; high + review tiers; LOCAL ONLY)
+classify.py   →  work/mentions.full.json (enriched) (LLM keep/drop + shape-correct + modifiers; optional)
+build.py      →  data/ufo-shapes/{mentions,summary}.json   (PUBLISH GATE: high + AI-confirmed)
+candidates.py →  (report only) colloquial descriptors not yet aliased — grow shapes.json over time
 ```
 
 See §11 for the gate. `work/` is gitignored — the full mention set is the private

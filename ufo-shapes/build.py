@@ -59,6 +59,7 @@ def main():
     shape_sources = collections.defaultdict(set)
     by_source = collections.Counter()
     matrix = collections.Counter()        # (shape_id, source_id) -> count
+    shape_terms = collections.Counter()   # (shape_id, raw_term) -> count  (the vernacular layer)
     modifiers = collections.Counter()
     timeline = collections.Counter()      # decade -> count
 
@@ -68,12 +69,25 @@ def main():
         shape_sources[shp].add(sid)
         by_source[sid] += 1
         matrix[(shp, sid)] += 1
+        shape_terms[(shp, (m.get("raw_term") or "").strip().lower())] += 1
         for mod in m.get("modifiers", []):
             modifiers[mod] += 1
         d = m.get("event_date")
         if d and len(d) >= 4 and d[:4].isdigit():
             decade = (int(d[:4]) // 10) * 10
             timeline[decade] += 1
+
+    # Vernacular layer: the actual matched phrases under each canonical shape, most
+    # common first ("Triangle ← triangular ×82 · wedge-shaped ×12 · arrowhead ×6").
+    # This is what powers the page's "described as" view — the colloquial words people
+    # reach for, grouped by the shape they resolved to. Built from raw_term, so it
+    # grows automatically as you add aliases to shapes.json.
+    terms_by_shape = {}
+    for (shp, term), cnt in shape_terms.items():
+        if term:
+            terms_by_shape.setdefault(shp, []).append({"term": term, "count": cnt})
+    for shp in terms_by_shape:
+        terms_by_shape[shp].sort(key=lambda r: (-r["count"], r["term"]))
 
     summary = {
         "generated_at": _dt.datetime.now().isoformat(timespec="seconds"),
@@ -112,6 +126,9 @@ def main():
                 {"shape": shp, "source": sid, "count": cnt}
                 for (shp, sid), cnt in sorted(matrix.items())
             ],
+        },
+        "terms_by_shape": {
+            s: terms_by_shape.get(s, []) for s in shape_order if by_shape[s] > 0
         },
         "top_modifiers": [
             {"term": t, "count": c} for t, c in modifiers.most_common(25)

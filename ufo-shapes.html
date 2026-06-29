@@ -45,6 +45,11 @@
       min-width:2px; transition:width .4s }
     .us-bar-num { font-family:'JetBrains Mono',monospace; font-size:.85rem; color:var(--text-muted);
       text-align:right }
+    /* vernacular caption under each bar — the colloquial words that rolled up to this shape */
+    .us-bar-terms { grid-column:1 / -1; margin:2px 0 1px; font-size:.76rem; line-height:1.5;
+      color:var(--text-dim) }
+    .us-bar-terms-lead { color:var(--text-muted); text-transform:uppercase; letter-spacing:.07em;
+      font-size:.64rem; margin-right:6px }
 
     /* source list + per-source drill-down */
     .us-sources { display:flex; flex-direction:column; gap:8px }
@@ -119,6 +124,18 @@
     .us-srcpill:hover { border-color:var(--green) }
     .us-srcpill.us-active { background:var(--green); border-color:var(--green);
       color:#06140d; font-weight:700 }
+    /* "described as" vernacular chips in the drill-down (teal — distinct from the green source pills) */
+    .us-modal-terms { padding:6px 18px 2px; display:flex; gap:7px; flex-wrap:wrap; align-items:center }
+    .us-modal-terms:empty { display:none }
+    .us-modal-terms-lead { font-size:.66rem; color:var(--text-muted); text-transform:uppercase;
+      letter-spacing:.07em; margin-right:2px }
+    .us-term { font-size:.78rem; background:var(--bg); border:1px solid var(--border); border-radius:16px;
+      padding:4px 11px; cursor:pointer; color:var(--text);
+      transition:border-color .15s, background .15s, color .15s }
+    .us-term:hover { border-color:var(--teal) }
+    .us-term b { color:var(--teal); font-family:'JetBrains Mono',monospace; margin-left:3px; font-weight:700 }
+    .us-term.us-active { background:var(--teal); border-color:var(--teal); color:#06140d; font-weight:700 }
+    .us-term.us-active b { color:#06140d }
   </style>
 </head>
 <body>
@@ -190,7 +207,7 @@
       <h1 class="anim" style="animation-delay:0.2s">
         <span class="gradient-text">The UAP Shape Census</span>
       </h1>
-      <div class="page-hero-tagline anim" style="animation-delay:0.35s">Every craft has a shape. This counts them.</div>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">How we describe what we see in the sky — the vernacular of the unexplained.</div>
       <div class="anim" style="animation-delay:0.4s;margin-top:10px"><a href="paranormal.html" style="color:var(--text-muted);text-decoration:none;font-size:.85rem">← Back to Paranormal</a></div>
     </section>
 
@@ -210,6 +227,7 @@
           </div>
           <button class="us-modal-close" id="usModalClose" aria-label="Close">✕</button>
         </div>
+        <div class="us-modal-terms" id="usModalTerms"></div>
         <div class="us-modal-srcfilter" id="usModalSrcFilter"></div>
         <div class="us-modal-body" id="usModalBody"></div>
       </div>
@@ -225,6 +243,12 @@
     <!-- ══════ METHODOLOGY ══════ -->
     <details class="us-method reveal">
       <summary>ℹ️ How this census is built</summary>
+      <p><b>What this is.</b> A census of <i>how we describe</i> what gets seen in the sky — the shared
+        vocabulary a culture reaches for (disc, cigar, Tic-Tac, even “ice-cream cone”) — not a claim
+        about what any object physically was. It's an honest read of the <i>zeitgeist</i>: where
+        independent witnesses and authors, across intentionally-curated (non-tabloid) sources, converge
+        on the same shapes and the same words. The merit is in that convergence — only one sighting has
+        to be real for the question to matter.</p>
       <p>Each source (book, report, interview transcript) is ingested locally and normalized into
         located text segments. A controlled shape vocabulary — disc, sphere, triangle, cigar,
         Tic-Tac, egg, cone, diamond, cube, and more — is matched against every segment, and each
@@ -240,6 +264,11 @@
         times. When several matches land in the same passage, the drill-down folds them into one
         receipt (marked <span class="us-mention-dup">×N</span>) so the citations don't repeat — the
         leaderboard still counts every mention. Read the snippets, not just the numbers.</p>
+      <p><b>The vernacular.</b> Each canonical shape gathers the many colloquial words that map to it —
+        Triangle collects “triangular”, “wedge”, “arrowhead”, and the occasional “ice-cream cone”. The
+        leaderboard shows these under each shape (“described as …”); open a shape and tap a term to read
+        just those passages. The vocabulary is built to <b>grow</b> — as new ways of describing these
+        craft surface (“propane tank”, say), the terms get added and the census keeps up.</p>
       <p><b>Reliability tiers.</b> Every source carries a tier marking how close it sits to the
         original evidence — the same discipline used across the research project:</p>
       <ul>
@@ -320,14 +349,22 @@
     if (s.by_shape && s.by_shape.length) {
       var max = s.by_shape[0].count || 1;
       html += '<div class="us-section reveal"><h2>Shapes, most to least</h2>' +
-              '<p class="us-sub">Total mentions across every ingested source. Tap a shape to read the cited passages.</p>' +
+              '<p class="us-sub">Total mentions across every ingested source, with the colloquial words people actually reached for. Tap a shape to read the cited passages — or, inside, a term to see who used it.</p>' +
               '<div class="us-bars">';
       s.by_shape.forEach(function(r){
+        var terms = (s.terms_by_shape && s.terms_by_shape[r.shape]) || [];
+        var cap = '';
+        if (terms.length) {
+          var shown = terms.slice(0, 6).map(function(t){ return esc(t.term); }).join(' · ');
+          var more = terms.length > 6 ? ' · +' + (terms.length - 6) : '';
+          cap = '<div class="us-bar-terms"><span class="us-bar-terms-lead">described as</span>' + shown + more + '</div>';
+        }
         html += '<div class="us-bar-row" data-shape="' + esc(r.shape) + '">' +
           '<div class="us-bar-label"><span class="us-bar-ico">' + esc(r.icon || '') +
             '</span><span class="us-bar-name">' + esc(r.label) + '</span></div>' +
           '<div class="us-bar-track"><div class="us-bar-fill" style="width:' + Math.round(r.count / max * 100) + '%"></div></div>' +
-          '<div class="us-bar-num">' + r.count + '</div></div>';
+          '<div class="us-bar-num">' + r.count + '</div>' +
+          cap + '</div>';
       });
       html += '</div></div>';
     }
@@ -480,10 +517,10 @@
 
   // drill state. `pinned` = opened from a source chip (locked to that source);
   // `source` = the active filter (also used as the pinned source when pinned).
-  var DRILL = { shape: null, source: null, pinned: false };
+  var DRILL = { shape: null, source: null, pinned: false, term: null };
 
-  function openDrill(shapeId, sourceId) {
-    DRILL.shape = shapeId; DRILL.source = sourceId || null; DRILL.pinned = !!sourceId;
+  function openDrill(shapeId, sourceId, term) {
+    DRILL.shape = shapeId; DRILL.source = sourceId || null; DRILL.pinned = !!sourceId; DRILL.term = term || null;
     var modal = document.getElementById('usModal');
     document.getElementById('usModalTitle').textContent = labelFor(shapeId);
     document.getElementById('usModalBody').innerHTML =
@@ -498,9 +535,33 @@
   }
 
   function renderDrill() {
-    var rows = MENTIONS.filter(function(m){
+    // base rows for this shape (+ source), BEFORE the term filter — drives the "described as" chips
+    var baseRows = MENTIONS.filter(function(m){
       return m.shape === DRILL.shape && (!DRILL.source || m.source_id === DRILL.source);
     });
+
+    // "Described as" — the colloquial words within this shape/source; tap one to filter
+    var termCounts = {};
+    baseRows.forEach(function(m){ var t = (m.raw_term || '').toLowerCase(); if (t) termCounts[t] = (termCounts[t] || 0) + 1; });
+    var termIds = Object.keys(termCounts).sort(function(a, b){ return termCounts[b] - termCounts[a] || (a < b ? -1 : 1); });
+    var termsEl = document.getElementById('usModalTerms');
+    if (termIds.length > 1) {
+      var tchips = ['<span class="us-modal-terms-lead">described as</span>',
+        '<button class="us-term' + (DRILL.term ? '' : ' us-active') + '" data-term="">All</button>'];
+      termIds.forEach(function(t){
+        tchips.push('<button class="us-term' + (DRILL.term === t ? ' us-active' : '') + '" data-term="' + esc(t) + '">' +
+                    esc(t) + ' <b>' + termCounts[t] + '</b></button>');
+      });
+      termsEl.innerHTML = tchips.join('');
+    } else {
+      termsEl.innerHTML = '';
+    }
+
+    // apply the term filter to the passage list
+    var rows = DRILL.term
+      ? baseRows.filter(function(m){ return (m.raw_term || '').toLowerCase() === DRILL.term; })
+      : baseRows;
+
     // collapse repeated hits of the same passage into one receipt
     var groups = dedupePassages(rows);
     // group cards by source (stable sort keeps the longest-first order within each)
@@ -513,6 +574,7 @@
     var distinct = groups.length, raw = rows.length;
     var sub = distinct + ' cited passage' + (distinct === 1 ? '' : 's');
     if (raw > distinct) sub += ' · ' + raw + ' mentions';
+    if (DRILL.term) sub += ' described as “' + DRILL.term + '”';
     sub += DRILL.source ? ' in ' + (SRC[DRILL.source] ? SRC[DRILL.source].title : DRILL.source) : ' across all sources';
     document.getElementById('usModalSub').textContent = sub;
 
@@ -571,6 +633,13 @@
   document.getElementById('usModalSrcFilter').addEventListener('click', function(e){
     var pill = e.target.closest('.us-srcpill'); if (!pill) return;
     DRILL.source = pill.dataset.src || null;
+    renderDrill();
+  });
+
+  // in-modal "described as" vernacular filter
+  document.getElementById('usModalTerms').addEventListener('click', function(e){
+    var chip = e.target.closest('.us-term'); if (!chip) return;
+    DRILL.term = chip.dataset.term || null;
     renderDrill();
   });
 

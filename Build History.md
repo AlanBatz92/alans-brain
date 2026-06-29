@@ -10,6 +10,47 @@
 
 ---
 
+## 2026-06-29 — UAP Shape Census: reframed as a *vernacular / zeitgeist* census + the "described as" view
+
+Direction shift (Alan): the census is **not a "nuts-and-bolts truth" instrument** — it's a read of
+the **zeitgeist**, how the culture *describes and talks about* the phenomenon. An ethereal pass with
+real merit (the value is in the *convergence* — only one sighting has to be real for the question to
+matter). Three build consequences: (1) the vocabulary must be **easy to grow**; (2) **surface the
+vernacular** — the colloquial words under each canonical shape; (3) **intentional, non-tabloid
+sourcing** stays, each source tier-rated. Alan is **rebuilding the corpus from scratch locally**
+(more sources + two Jonathan Weygandt interviews), so this session built the *tooling/schema/page* to
+be ready for that re-run (the mention schema — canonical `shape` + `raw_term` — is unchanged, so it
+all lights up when his data lands). Decisions captured via two design questions: **build the
+rebuild-ready pieces now**, with an **emergent, alias-curated** vernacular model.
+
+Shipped (front-end + toolkit, no schema change):
+- **The "described as" vernacular view** — the headline feature. Each canonical shape rolls up the
+  colloquial words that resolved to it (built from `raw_term`). Two surfaces: a **glanceable caption
+  under every leaderboard bar** ("Triangle — described as: triangular · wedge-shaped · arrowhead · …")
+  and an **interactive teal "described as" chip row in the drill-down** (distinct from the green source
+  pills) — tap a colloquialism to read just those passages ("8 cited passages · 12 mentions described
+  as 'wedge-shaped'"). Term-filter composes with the source filter and the de-dup.
+- **`build.py` emits `terms_by_shape`** in `summary.json` (the `(shape, raw_term)` aggregate, most
+  common first), so the page shows the vernacular without crunching `mentions.json`. Regenerated the
+  committed `summary.json` (mentions.json byte-unchanged).
+- **`ufo-shapes/candidates.py`** — a vocabulary-keeping helper. Scans the *local* segments for
+  "<word>-shaped / in the shape of a ___ / shaped like a ___ / looked like / resembled" and reports the
+  captured descriptors **not yet in `shapes.json`**, most frequent first, with an example — so new
+  colloquialisms ("ice-cream cone", "propane tank") are easy to find and add. Stdlib-only, runs locally,
+  filters out terms already aliased. Verified on a synthetic corpus (caught "ice cream cone"/"propane
+  tank"/"cross", skipped the already-aliased "cigar-shaped").
+- **Zeitgeist copy** — hero tagline → "How we describe what we see in the sky — the vernacular of the
+  unexplained"; methodology panel now leads with a "What this is" framing (a census of *description*,
+  not physical truth) + a "The vernacular" explainer.
+
+Verified: `node --check` + `python ast.parse` clean; headless-Chrome shots of the base page (vernacular
+captions under each shape), the Triangle drill (teal term chips + green source pills), and a
+term-filtered view (`wedge-shaped` active). Docs: `PLAN-ufo-shapes.md` reframed (intro + §3 schema + §5
+page + §6 pipeline). Files: `ufo-shapes.html`, `ufo-shapes/build.py`, `ufo-shapes/candidates.py`,
+`data/ufo-shapes/summary.json`.
+
+---
+
 ## 2026-06-29 — UAP Shape Census: drill-down de-duplicates repeated passages
 
 Pre-ship polish (Alan's review of the drill-down). The high-recall lexical pass logs one mention

@@ -50,12 +50,16 @@ events → schedule prior → acoustic fingerprint (details in the plan).
 
 ---
 
-### 4c. UAP Shape Census — **Phase 0 scaffold shipped 2026-06-27**  (design: `PLAN-ufo-shapes.md`)
-A narrow, growing census of how UFO/UAP craft are described by **shape** (disc, sphere,
-triangle, cigar, Tic-Tac, egg…) across ingested source documents — every mention cited back
-to its source, correlated across sources. Built on the **actual vanilla stack** (local Python
-toolkit → committed JSON → vanilla page), *not* the framework docs' Supabase/Next.js; it's the
-deliberate proving ground for the larger Cartography / Node-Graph projects.
+### 4c. UAP Shape Census — **reframed 2026-06-29 as a vernacular/zeitgeist census**  (design: `PLAN-ufo-shapes.md`)
+A census of **how the culture describes** UFO/UAP craft by **shape** (disc, sphere, triangle, cigar,
+Tic-Tac, egg…) across intentionally-curated sources — *how we talk and think* about the phenomenon,
+**not** a physical-truth claim; every mention cited back to its source. Built on the **actual vanilla
+stack** (local Python toolkit → committed JSON → vanilla page), *not* the framework docs'
+Supabase/Next.js; it's the deliberate proving ground for the larger Cartography / Node-Graph projects.
+**Direction (Alan, 2026-06-29):** lexical extensibility is the core feature (the vocabulary must be
+easy to grow); surface the **vernacular** (colloquial words under each shape); intentional non-tabloid
+sourcing stays. **Alan is rebuilding the corpus from scratch locally** (more sources + Jonathan
+Weygandt interviews); the tooling/schema/page were built rebuild-ready.
 - **✓ Phase 0 (done 2026-06-27):** `ufo-shapes/` toolkit (`shapes.json` taxonomy, `ingest.py`/
   `extract.py`/`build.py`, gitignore keeping raw book text local), `data/ufo-shapes/*.json`
   (documented empty schemas, source reliability tiers), `ufo-shapes.html` stub (stats +
@@ -70,11 +74,19 @@ deliberate proving ground for the larger Cartography / Node-Graph projects.
 - **✓ Snippet drill-down (done 2026-06-27):** tap a shape (or a source's shape chip) → modal of the
   **actual cited passages** (matched term highlighted, source · year · tier · locator), lazy-loading
   `mentions.json`, with a source filter. "The receipts" are live.
-- **▶ Phase 1 remaining (next):** add a **Tech Stack node** for the census page + toolkit.
-- **◷ Later:** Phase 2 shape×source heatmap → Phase 3 LLM disambiguation (`classify.py`) →
-  Phase 4 timeline by sighting decade. **Then:** extend to a **humanoid/entity facet** (Alan's
-  near-future want — mentions already carry a `facet` field; the prize is cross-facet
-  co-occurrence analysis). See `PLAN-ufo-shapes.md` §9–§10.
+- **✓ Drill-down de-dup (done 2026-06-29):** repeated hits of the same passage collapse into one card
+  (×N) — reliable-locator or text-overlap merge. See Done (recent).
+- **✓ Vernacular "described as" view (done 2026-06-29):** `build.py` emits `terms_by_shape`; the page
+  shows the colloquial words under each shape (leaderboard caption + drill-down term filter);
+  `candidates.py` surfaces missing descriptors so the vocabulary grows. Zeitgeist copy reframe. See
+  Done (recent).
+- **▶ Phase 1 remaining (next):** add a **Tech Stack node** for the census page + toolkit. **When Alan's
+  local rebuild lands:** sanity-check the new corpus + `terms_by_shape` render; run `candidates.py` to
+  fold in fresh colloquialisms.
+- **◷ Later:** Phase 2 shape×source heatmap → Phase 4 timeline by sighting decade. **Then:** extend to
+  a **humanoid/entity facet** (now the central thesis, not an afterthought — mentions already carry a
+  `facet` field; the prize is cross-facet/cross-description convergence). See `PLAN-ufo-shapes.md`
+  §9–§10. *(Phase 3 LLM disambiguation `classify.py` already shipped + run.)*
 
 ---
 
@@ -246,6 +258,18 @@ Two parts, both asset-gated:
 ---
 
 ## ✓ Done (recent)
+
+- **2026-06-29** — **UAP Shape Census: reframed as a vernacular/zeitgeist census + the "described as"
+  view.** Direction shift (Alan): it measures *how the culture describes* the phenomenon (the
+  zeitgeist), not physical truth — so the vocabulary must be easy to grow and the **colloquial words
+  under each shape** must be visible. Built (rebuild-ready, since Alan is regenerating the corpus
+  locally): the **"described as" vernacular view** — `build.py` now emits `terms_by_shape`, the page
+  shows a glanceable "described as: triangular · wedge-shaped · arrowhead" caption under every
+  leaderboard bar **and** an interactive teal term-filter row in the drill-down (tap a colloquialism →
+  just those passages); **`ufo-shapes/candidates.py`**, a local helper that surfaces shape-descriptors
+  not yet in `shapes.json` ("ice-cream cone", "propane tank") so the vocabulary keeps up; and a
+  **zeitgeist copy/methodology reframe**. Front-end + toolkit, schema unchanged. Verified with
+  headless-Chrome shots. See `Build History.md` (2026-06-29) + `PLAN-ufo-shapes.md`.
 
 - **2026-06-29** — **UAP Shape Census: drill-down de-duplicates repeated passages** (pre-ship polish,
   front-end only). The lexical pass logs one mention per matched term, so the drill-down modal could

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T11:20:26",
+  "generated_at": "2026-06-29T14:50:38",
   "taxonomy_version": 3,
   "totals": {
     "sources": 11,
@@ -657,6 +657,414 @@
       {
         "shape": "triangle",
         "source": "vallee_passport_magonia",
+        "count": 1
+      }
+    ]
+  },
+  "terms_by_shape": {
+    "disc": [
+      {
+        "term": "disk",
+        "count": 265
+      },
+      {
+        "term": "disc",
+        "count": 138
+      },
+      {
+        "term": "flying saucer",
+        "count": 123
+      },
+      {
+        "term": "saucer",
+        "count": 66
+      },
+      {
+        "term": "disc-shaped",
+        "count": 63
+      },
+      {
+        "term": "saucer-shaped",
+        "count": 44
+      },
+      {
+        "term": "round",
+        "count": 10
+      },
+      {
+        "term": "cigar",
+        "count": 3
+      },
+      {
+        "term": "cylinder",
+        "count": 2
+      },
+      {
+        "term": "oval",
+        "count": 2
+      },
+      {
+        "term": "plate",
+        "count": 2
+      },
+      {
+        "term": "cigar-shaped",
+        "count": 1
+      },
+      {
+        "term": "discoid",
+        "count": 1
+      },
+      {
+        "term": "flying-saucer",
+        "count": 1
+      },
+      {
+        "term": "sphere",
+        "count": 1
+      }
+    ],
+    "sphere": [
+      {
+        "term": "sphere",
+        "count": 106
+      },
+      {
+        "term": "spherical",
+        "count": 69
+      },
+      {
+        "term": "orb",
+        "count": 68
+      },
+      {
+        "term": "round",
+        "count": 44
+      },
+      {
+        "term": "round object",
+        "count": 30
+      },
+      {
+        "term": "ball",
+        "count": 27
+      },
+      {
+        "term": "ball of light",
+        "count": 16
+      },
+      {
+        "term": "globe",
+        "count": 4
+      },
+      {
+        "term": "disk",
+        "count": 2
+      },
+      {
+        "term": "flying saucer",
+        "count": 2
+      },
+      {
+        "term": "spheroid",
+        "count": 2
+      },
+      {
+        "term": "cylinder",
+        "count": 1
+      },
+      {
+        "term": "disc",
+        "count": 1
+      }
+    ],
+    "triangle": [
+      {
+        "term": "triangular",
+        "count": 112
+      },
+      {
+        "term": "triangle",
+        "count": 81
+      },
+      {
+        "term": "wedge-shaped",
+        "count": 12
+      },
+      {
+        "term": "v-shaped",
+        "count": 5
+      },
+      {
+        "term": "delta-shaped",
+        "count": 3
+      },
+      {
+        "term": "arrowhead",
+        "count": 2
+      },
+      {
+        "term": "flying saucer",
+        "count": 1
+      },
+      {
+        "term": "wedge",
+        "count": 1
+      }
+    ],
+    "boomerang": [
+      {
+        "term": "boomerang",
+        "count": 17
+      },
+      {
+        "term": "chevron",
+        "count": 5
+      },
+      {
+        "term": "crescent",
+        "count": 2
+      },
+      {
+        "term": "crescent-shaped",
+        "count": 2
+      },
+      {
+        "term": "round",
+        "count": 1
+      },
+      {
+        "term": "v formation",
+        "count": 1
+      },
+      {
+        "term": "v-shaped",
+        "count": 1
+      }
+    ],
+    "cylinder": [
+      {
+        "term": "cigar-shaped",
+        "count": 81
+      },
+      {
+        "term": "cigar",
+        "count": 45
+      },
+      {
+        "term": "cylinder",
+        "count": 25
+      },
+      {
+        "term": "cylindrical",
+        "count": 25
+      },
+      {
+        "term": "rod",
+        "count": 8
+      },
+      {
+        "term": "tube",
+        "count": 5
+      },
+      {
+        "term": "tubular",
+        "count": 4
+      },
+      {
+        "term": "round",
+        "count": 2
+      },
+      {
+        "term": "cone",
+        "count": 1
+      },
+      {
+        "term": "disc",
+        "count": 1
+      },
+      {
+        "term": "disc-shaped",
+        "count": 1
+      },
+      {
+        "term": "oval",
+        "count": 1
+      },
+      {
+        "term": "sphere",
+        "count": 1
+      }
+    ],
+    "tictac": [
+      {
+        "term": "tic tac",
+        "count": 105
+      },
+      {
+        "term": "tic-tac",
+        "count": 4
+      },
+      {
+        "term": "capsule",
+        "count": 2
+      },
+      {
+        "term": "egg",
+        "count": 1
+      },
+      {
+        "term": "pill-shaped",
+        "count": 1
+      },
+      {
+        "term": "white oblong",
+        "count": 1
+      }
+    ],
+    "egg": [
+      {
+        "term": "egg-shaped",
+        "count": 54
+      },
+      {
+        "term": "oval",
+        "count": 28
+      },
+      {
+        "term": "oval-shaped",
+        "count": 17
+      },
+      {
+        "term": "ovoid",
+        "count": 7
+      },
+      {
+        "term": "egg",
+        "count": 5
+      },
+      {
+        "term": "acorn-shaped",
+        "count": 4
+      },
+      {
+        "term": "boomerang",
+        "count": 2
+      },
+      {
+        "term": "crescent-shaped",
+        "count": 2
+      },
+      {
+        "term": "tic tac",
+        "count": 2
+      },
+      {
+        "term": "tubular",
+        "count": 2
+      },
+      {
+        "term": "disc",
+        "count": 1
+      },
+      {
+        "term": "round",
+        "count": 1
+      },
+      {
+        "term": "sphere",
+        "count": 1
+      }
+    ],
+    "cone": [
+      {
+        "term": "cone-shaped",
+        "count": 7
+      },
+      {
+        "term": "cone",
+        "count": 4
+      },
+      {
+        "term": "conical",
+        "count": 4
+      },
+      {
+        "term": "bell-shaped",
+        "count": 3
+      },
+      {
+        "term": "cylinder",
+        "count": 1
+      },
+      {
+        "term": "disk",
+        "count": 1
+      }
+    ],
+    "diamond": [
+      {
+        "term": "diamond-shaped",
+        "count": 16
+      },
+      {
+        "term": "diamond",
+        "count": 8
+      },
+      {
+        "term": "rhombus",
+        "count": 2
+      },
+      {
+        "term": "round",
+        "count": 2
+      },
+      {
+        "term": "cylinder",
+        "count": 1
+      },
+      {
+        "term": "rectangle",
+        "count": 1
+      },
+      {
+        "term": "triangle",
+        "count": 1
+      }
+    ],
+    "cube": [
+      {
+        "term": "rectangular",
+        "count": 5
+      },
+      {
+        "term": "box-shaped",
+        "count": 3
+      },
+      {
+        "term": "rectangle",
+        "count": 2
+      },
+      {
+        "term": "sphere",
+        "count": 2
+      },
+      {
+        "term": "cube-shaped",
+        "count": 1
+      }
+    ],
+    "other": [
+      {
+        "term": "structured craft",
+        "count": 4
+      },
+      {
+        "term": "round",
+        "count": 3
+      },
+      {
+        "term": "delta",
         "count": 1
       }
     ]

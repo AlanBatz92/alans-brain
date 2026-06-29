@@ -106,7 +106,9 @@ passages show a ✓ AI-checked badge in the page's drill-down.
 | `ingest.py` | TXT/EPUB/PDF → `sources/<id>/segments.jsonl` + registers metadata. |
 | `extract.py` | Lexicon match over all segments → `work/mentions.full.json`. |
 | `classify.py` | Optional AI disambiguation pass (Claude Haiku) → confirms/drops mentions. |
-| `build.py` | Publish gate → aggregate to `data/ufo-shapes/{mentions,summary}.json`. |
+| `build.py` | Publish gate → aggregate to `data/ufo-shapes/{mentions,summary}.json` (incl. `terms_by_shape`, the vernacular layer). |
+| `candidates.py` | **Grow the vocabulary:** scans local segments for shape-descriptors *not yet in* `shapes.json` ("ice-cream cone", "propane tank"), most frequent first. Report-only, runs locally. |
+| `report.py` | Sanity-check the committed data (sources, counts, duplicates/empties). Works on any clone. |
 | `_common.py` | Shared paths + JSON/JSONL helpers. |
 | `sources/` | Per-source raw text + segments. **Gitignored** (copyright). |
 
@@ -117,8 +119,11 @@ passages show a ✓ AI-checked badge in the page's drill-down.
 - **TXT** works with stdlib alone.
 - Scanned/image PDFs need OCR first — out of scope for now.
 
-## Status: Phase 0 (scaffold)
+## Status (2026-06-29)
 
-The TXT path and `extract.py`/`build.py` are exercised and working. The EPUB/PDF
-extractors are implemented but **not yet validated against a real file** — that's
-the Phase 1 first task. See `../PLAN-ufo-shapes.md` § "Next steps".
+TXT + **EPUB** validated; the full `ingest → extract → classify → build` loop has run on a real
+corpus. **Reframed as a vernacular / zeitgeist census** (how the culture *describes* the phenomenon,
+not physical truth) — so the page surfaces the colloquial words under each shape ("described as …",
+from `build.py`'s `terms_by_shape`) and `candidates.py` makes the vocabulary easy to grow. Alan is
+**rebuilding the corpus from scratch locally** (more sources + Jonathan Weygandt interviews). PDF
+(born-digital) path implemented; OCR/scanned PDFs still out of scope. See `../PLAN-ufo-shapes.md`.
