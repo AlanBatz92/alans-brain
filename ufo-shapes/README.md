@@ -10,6 +10,10 @@ schemas, and the phase plan live in **`../PLAN-ufo-shapes.md`** — read that fi
 
 > **Adding new sources** (books *or* transcribed interviews)? See the step-by-step
 > **[`INGESTING.md`](INGESTING.md)** reference guide.
+>
+> **Forget a command or hit a git error?** The **[`WORKFLOW.md`](WORKFLOW.md)**
+> cheat-sheet has the daily loop + fixes for every error. Run **`python report.py`**
+> any time to sanity-check the data (sources, counts, duplicates/empties).
 
 ## Ingestion path (do it this way)
 
