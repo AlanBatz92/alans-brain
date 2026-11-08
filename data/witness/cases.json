@@ -1,0 +1,22 @@
+{
+  "schema": "witness-scenes/cases v1",
+  "cases": [
+    {
+      "event_id": "EV-20220215-USCO-CHEYENNEMTN",
+      "title": "Cheyenne Mountain, 15 February 2022",
+      "event_date": "2022-02-15",
+      "place": "Cheyenne Mountain, from Fort Carson",
+      "region": "Colorado, US",
+      "witnesses": 5,
+      "candidates": 9,
+      "status": "published",
+      "version": "1.2.0",
+      "primary_source_id": "SRC-20260820-VID-SAFEAEROSPACE-BEST",
+      "aliases": [
+        "UAP-2022-CHEYENNE-BEST"
+      ],
+      "summary": "Five soldiers saw a still, white, panel-textured ellipsoid over the mountain's saddle in late morning; it was gone after a glance.",
+      "page": "witness/EV-20220215-USCO-CHEYENNEMTN/"
+    }
+  ]
+}

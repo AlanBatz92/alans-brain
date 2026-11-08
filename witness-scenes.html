@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e1a">
+  <title>Witness Scenes — Alan's Brain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      var t = localStorage.getItem('ab_theme');
+      if (t && t !== 'default') document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Witness Scenes hub — self-contained styles, ws- prefix ──────────── */
+    .ws-intro { max-width:760px; margin:0 auto 26px; color:var(--text-muted); font-size:.95rem; line-height:1.6 }
+    .ws-intro b { color:var(--text) }
+    .ws-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; margin:0 0 34px }
+    .ws-card { display:flex; flex-direction:column; gap:10px; background:var(--surface); border:1px solid var(--border);
+      border-radius:14px; padding:18px; color:var(--text); text-decoration:none; transition:transform .15s, border-color .15s }
+    .ws-card:hover { transform:translateY(-2px); border-color:var(--green) }
+    .ws-kicker { font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted) }
+    .ws-title { font-size:1.15rem; font-weight:700; margin:0 }
+    .ws-sum { color:var(--text-muted); font-size:.9rem; line-height:1.5; margin:0 }
+    .ws-facts { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:.82rem; color:var(--text-muted) }
+    .ws-facts b { color:var(--text); font-weight:700 }
+    .ws-id { font-family:'JetBrains Mono',monospace; font-size:.78rem; color:var(--green); word-break:break-all }
+    .ws-go { margin-top:auto; font-weight:700; color:var(--green); font-size:.9rem }
+    .ws-section { max-width:760px; margin:0 auto 30px }
+    .ws-section h2 { font-size:1.1rem; margin:0 0 8px }
+    .ws-section p, .ws-section li { color:var(--text-muted); font-size:.9rem; line-height:1.6 }
+    .ws-idbox { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 6px; font-family:'JetBrains Mono',monospace; font-size:.85rem }
+    .ws-idbox span { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:6px 9px; display:flex; flex-direction:column; gap:3px }
+    .ws-idbox small { font-family:inherit; color:var(--text-muted); font-size:.68rem; text-transform:uppercase; letter-spacing:.04em }
+    .ws-empty { color:var(--text-muted); font-size:.9rem }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">Alan's Brain <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Alan's_Brain/world-creativity-and-innovation-day.png" alt=""></a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="weather.html">Weather</a>
+        <a href="pulse.html">Pulse</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">
+            Explore <span class="nav-dropdown-arrow">▼</span>
+          </button>
+          <div class="nav-dropdown-menu">
+            <a href="youtube.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
+            <a href="transart.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
+            <a href="soundboards.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
+            <a href="tools.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""> Great & Free</a>
+            <a href="photos.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
+            <a href="art.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
+            <a href="paranormal.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
+            <a href="observatory.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Projects/observatory.png" alt=""> Observatory</a>
+            <a href="projects.html"><img class="dropdown-icon" width="24" height="24" src="img/Icons/icons/Projects/brain-thoughts.svg" alt=""> Personal Projects</a>
+          </div>
+        </div>
+        <a href="techstack.html">Stack</a>
+      </div>
+      <button class="nav-hamburger" aria-label="Menu" aria-expanded="false">
+        <div class="nav-hamburger-lines">
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="nav-mobile-overlay">
+    <a href="index.html">Home</a>
+    <a href="weather.html">Weather</a>
+    <a href="pulse.html">Pulse</a>
+    <a href="techstack.html"><span class="nav-mobile-icon" style="display:inline-block;width:28px;height:28px;text-align:center;font-size:20px;line-height:28px">⚙️</span> Stack</a>
+    <span class="mobile-section-label">Explore</span>
+    <a href="youtube.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Youtube_Channels/tv.png" alt=""> YouTube Channels</a>
+    <a href="transart.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Pride_and_Identity/flag.png" alt=""> Pride and Identity</a>
+    <a href="soundboards.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Audio_Related/speaker.png" alt=""> Soundboards</a>
+    <a href="tools.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Cool_Links/internet-explorer.png" alt=""> Great & Free</a>
+    <a href="photos.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Photo_Gallery/cam.png" alt=""> Photo Gallery</a>
+    <a href="art.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Art/starry-night.png" alt=""> Art Gallery</a>
+    <a href="paranormal.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Paranormal/clairvoyance.png" alt=""> Paranormal</a>
+    <a href="observatory.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Projects/observatory.png" alt=""> Observatory</a>
+    <a href="projects.html"><img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/Projects/brain-thoughts.svg" alt=""> Personal Projects</a>
+  </div>
+
+  <div class="page">
+
+    <!-- ══════ PAGE HERO ══════ -->
+    <section class="page-hero">
+      <div class="page-hero-icon anim" style="animation-delay:0.1s"><img width="72" height="72" src="img/Icons/icons/UFO/alien.png" alt=""></div>
+      <h1 class="anim" style="animation-delay:0.2s">
+        <span class="gradient-text">Witness Scenes</span>
+      </h1>
+      <div class="page-hero-tagline anim" style="animation-delay:0.35s">See what a witness described, placed where it would have had to be.</div>
+      <div class="anim" style="animation-delay:0.4s;margin-top:10px"><a href="paranormal.html" style="color:var(--text-muted);text-decoration:none;font-size:.85rem">← Back to Paranormal</a></div>
+    </section>
+
+    <p class="ws-intro anim" style="animation-delay:0.45s">Each scene is rebuilt from a witness's own words: where they stood, which way they looked, how big the object was against a thumb at arm's length, how long they watched. You see it from their eyes, to scale, and can swap in the ordinary explanations people suggest (a balloon, a cloud, a drone, a helicopter) to judge for yourself whether any of them could have looked like that. <b>It is a way to see testimony, not a verdict on it.</b> Every setting links back to the exact words it came from.</p>
+
+    <div class="ws-cards anim" style="animation-delay:0.5s" id="wsCards"><p class="ws-empty">Loading cases…</p></div>
+
+    <section class="ws-section reveal">
+      <h2>How to read a scene</h2>
+      <ul>
+        <li><b>Witness eye</b> is the view from where they stood; <b>Zoom 3x</b> helps on a phone.</li>
+        <li>Every candidate sits in the same spot at the same size, because that is what was reported. What changes is how far away it would have to be, and that decides whether it fits everything else they said.</li>
+        <li><b>Play the event</b> runs the sighting, the glance away and the look back, with each candidate drifting in that day's measured winds.</li>
+        <li>Claim tags like <span class="ws-id">C18</span> open the exact quote behind a setting.</li>
+      </ul>
+    </section>
+
+    <section class="ws-section reveal">
+      <h2>Case IDs</h2>
+      <p>Every sighting gets one ID, used for its page, its files and its research notes. It is built from the date and place, never from a witness's name:</p>
+      <div class="ws-idbox"><span>EV<small>event</small></span><span>20220215<small>date (00 if unknown)</small></span><span>USCO<small>country + state</small></span><span>CHEYENNEMTN<small>nearest landmark</small></span></div>
+    </section>
+
+    <!-- ══════ FOOTER ══════ -->
+    <footer class="site-footer reveal">
+      <div class="footer-stamp">Crafted by Alan <img class="nav-mobile-icon" width="28" height="28" src="img/Icons/icons/UFO/ufo.png" alt=""></div>
+      <div class="footer-text">
+        Part of the <a href="https://indieweb.org" target="_blank">indie web</a>. Just a human on the internet.
+      </div>
+      <div class="footer-buttons">
+        <span class="footer-btn">HTML</span>
+        <span class="footer-btn">CSS</span>
+        <span class="footer-btn">JS</span>
+      </div>
+      <div class="visit-ticker">
+        <span class="ticker-label">visitors</span>
+        <div class="ticker-digits" id="visitTicker"></div>
+      </div>
+    </footer>
+
+  </div><!-- /.page -->
+
+<script>
+  /* ── Nav dropdown ── */
+  (function() {
+    var dropdown = document.querySelector('.nav-dropdown');
+    if (!dropdown) return;
+    var toggle = dropdown.querySelector('.nav-dropdown-toggle');
+    toggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = dropdown.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) { dropdown.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); }
+    });
+  })();
+
+  /* ── Mobile hamburger ── */
+  (function() {
+    var hamburger = document.querySelector('.nav-hamburger');
+    var overlay = document.querySelector('.nav-mobile-overlay');
+    if (!hamburger || !overlay) return;
+    hamburger.addEventListener('click', function() {
+      var isOpen = hamburger.classList.toggle('open');
+      overlay.classList.toggle('open');
+      hamburger.setAttribute('aria-expanded', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+    overlay.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        hamburger.classList.remove('open');
+        overlay.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  })();
+</script>
+<script>
+  /* ── Witness Scenes hub — reads data/witness/cases.json (exported by the witness-scenes repo's
+     tools/registry.py). One card per published case; each links to witness/<EVENT_ID>/. ── */
+  (function () {
+    var box = document.getElementById('wsCards');
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    fetch('data/witness/cases.json').then(function (r) { return r.json(); }).then(function (d) {
+      var cs = (d.cases || []);
+      if (!cs.length) { box.innerHTML = '<p class="ws-empty">No published cases yet.</p>'; return; }
+      box.innerHTML = cs.map(function (c) {
+        return '<a class="ws-card" href="' + esc(c.page) + '">' +
+          '<span class="ws-kicker">' + esc(c.event_date) + ' · ' + esc(c.region) + '</span>' +
+          '<h3 class="ws-title">' + esc(c.title) + '</h3>' +
+          '<p class="ws-sum">' + esc(c.summary) + '</p>' +
+          '<div class="ws-facts"><span><b>' + c.witnesses + '</b> witnesses</span><span><b>' + c.candidates + '</b> candidates</span><span>v' + esc(c.version) + '</span></div>' +
+          '<span class="ws-id">' + esc(c.event_id) + '</span>' +
+          '<span class="ws-go">Open the scene →</span></a>';
+      }).join('');
+    }).catch(function () { box.innerHTML = '<p class="ws-empty">Could not load the case list.</p>'; });
+  })();
+</script>
+
+<script src="nav-menu.js" defer></script>
+<script src="theme-switcher.js?v=sf5" defer></script>
+<script src="visit-ticker.js" defer></script>
+<script data-goatcounter="https://dbatz92.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

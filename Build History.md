@@ -10,6 +10,34 @@
 
 ---
 
+## 2026-11-07 — Witness Scenes: hub + first case (Cheyenne Mountain 2022)
+
+New research section under Paranormal: sightings rebuilt to scale from the witness's own words, with candidate
+explanations (lenticular cloud, low lit cloud, tethered aerostat, small balloon, the largest balloon ever flown,
+blimp, helicopter, drone, and the craft as described) placed where each would have to be to match the reported
+direction, height above the ridge and angular size. Event playback runs the sighting, the glance away and the
+look back, with candidates drifting in that day's measured winds; every setting links to the exact quote it came
+from. Built for people who can't picture what a witness describes; framed as "a way to see testimony, not a verdict".
+
+- **`witness-scenes.html`** (hub, `ws-` prefix, self-contained styles) reads **`data/witness/cases.json`** and
+  renders one card per published case; a short "Case IDs" explainer.
+- **`witness/engine.js`** — one case-agnostic engine (three.js r128 + OrbitControls from jsDelivr, WebGL). Page
+  text, slider definitions and candidates all come from each case's data.
+- **`witness/EV-20220215-USCO-CHEYENNEMTN/`** — the first case page (`index.html` + `case-data.json`, fetched beside
+  the page). Carries only the transcript lines that claims cite, not the full podcast transcript.
+- **Paranormal hub:** a second featured card ("Witness Scenes", live case/candidate counts from `cases.json`).
+- **Stack page:** the alansbrain.com node now mentions the Witness Scenes viewer; glossary terms `three.js`, `WebGL`.
+- **Source of truth lives outside this repo:** the private `witness-scenes` repo holds the full case packages
+  (Python model, checks, transcripts), the engine source, the registry (`cases.csv`) and
+  `tools/publish_site.py`, which writes the files above into a site checkout. Edit there, publish here.
+- **One ID everywhere:** events are `EV-YYYYMMDD-CCSUB-PLACE` (date + ISO country/subdivision + landmark, never a
+  witness name), sources `SRC-YYYYMMDD-TYPE-SLUG`; the case page URL is `/witness/<EVENT_ID>/`.
+- Verified locally (`python -m http.server`, headless Chrome): hub, Paranormal card and case page load with no
+  console errors at desktop and 390px phone widths; the engine's own test compares every candidate's placement with
+  the Python model.
+
+---
+
 ## 2026-06-29 — UAP Shape Census: `ingest.py` now reads Markdown
 
 Alan had a source saved as Markdown (an OCR'd/converted *Majic Eyes Only*), which `ingest.py` rejected

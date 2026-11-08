@@ -127,6 +127,21 @@
       <div class="para-census-go">Explore →</div>
     </a>
 
+    <!-- ══════ FEATURED: WITNESS SCENES ══════ -->
+    <a href="witness-scenes.html" class="anim para-census-card" id="paraWitnessCard" style="animation-delay:0.42s">
+      <div class="para-census-icon"><img width="56" height="56" src="img/Icons/icons/UFO/alien.png" alt=""></div>
+      <div class="para-census-body">
+        <div class="para-census-kicker">Research project</div>
+        <h2 class="para-census-title">Witness Scenes</h2>
+        <p class="para-census-desc">Sightings rebuilt to scale from the witness's own words. Stand where they stood, swap in a balloon, a cloud or a drone, and see whether any of them could have looked like what they described.</p>
+        <div class="para-census-stats" id="paraWitnessStats" hidden>
+          <span class="para-census-stat"><b id="witnessCases">—</b> cases</span>
+          <span class="para-census-stat"><b id="witnessCands">—</b> candidates tested</span>
+        </div>
+      </div>
+      <div class="para-census-go">Explore →</div>
+    </a>
+
     <!-- ══════ FILTERS ══════ -->
     <div class="anim" style="animation-delay:0.45s;display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px" id="paraFilterBar">
       <div class="filter-dropdown" id="paraCategoryDropdown" style="margin-bottom:0">
@@ -231,6 +246,18 @@
       document.getElementById('censusSources').textContent = t.sources;
       document.getElementById('censusShapes').textContent = t.shapes;
       document.getElementById('paraCensusStats').hidden = false;
+    })
+    .catch(function(){ /* card stays description-only */ });
+
+  /* Populate the Witness Scenes featured card from the case list */
+  fetch('data/witness/cases.json')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var cs = (d && d.cases) || [];
+      if (!cs.length) return;
+      document.getElementById('witnessCases').textContent = cs.length;
+      document.getElementById('witnessCands').textContent = cs.reduce(function(n, c){ return n + (c.candidates || 0); }, 0);
+      document.getElementById('paraWitnessStats').hidden = false;
     })
     .catch(function(){ /* card stays description-only */ });
 
