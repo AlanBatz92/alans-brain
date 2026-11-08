@@ -222,6 +222,11 @@ venue sites), only adding a source once its fetch is proven reliable.
 
 ---
 
+### 4d. Witness Scenes — next  (source of truth: private `witness-scenes` repo)
+- Next case candidates: Zamora (Socorro 1964), Weygandt, Herrera; each starts from a transcriber SRT named by its `SRC-` ID.
+- Case page: consider the site's dark theme / nav bar for the case page, and moving the 3D view above the intro on phones.
+- Hub: filters by decade / region once there are several cases.
+
 ## ○ Later
 
 ### 5. Citation link resolution
@@ -258,6 +263,11 @@ Two parts, both asset-gated:
 ---
 
 ## ✓ Done (recent)
+
+- **2026-11-07** — **Witness Scenes: hub + first case.** `witness-scenes.html` (cards from `data/witness/cases.json`),
+  shared `witness/engine.js`, first case `witness/EV-20220215-USCO-CHEYENNEMTN/`, featured card on Paranormal, Stack
+  page note + glossary. Generated from the private `witness-scenes` repo (`tools/publish_site.py`). See
+  `Build History.md` (2026-11-07).
 
 - **2026-06-29** — **UAP Shape Census: reframed as a vernacular/zeitgeist census + the "described as"
   view.** Direction shift (Alan): it measures *how the culture describes* the phenomenon (the

@@ -307,6 +307,8 @@
    GLOSSARY
 ══════════════════════════════════════ */
 var GLOSSARY = {
+  'threejs':          { title: 'three.js', def: 'An open-source JavaScript library for drawing 3D scenes in a web page. Witness Scenes uses it to render the terrain, sky and candidate objects from the witness\'s point of view. Loaded from a CDN, so there is still no build step.' },
+  'webgl':            { title: 'WebGL', def: 'The browser\'s built-in interface to the graphics card. It lets a page draw 3D graphics quickly without plugins; three.js is a friendlier layer on top of it.' },
   'icecast':          { title: 'Icecast', def: 'Open-source audio/video streaming server software. It receives a live audio feed and broadcasts it as a continuous HTTP stream — like an internet radio station, but on the local network.' },
   'http-stream':      { title: 'HTTP Audio Stream', def: 'A never-ending HTTP response that delivers audio data in real time. Any connected software can tune in and receive audio indefinitely.' },
   'ssh':              { title: 'SSH — Secure Shell', def: 'An encrypted protocol for remote command-line access over a network. Alan uses it to log into birdstation from any machine and run commands as if sitting at the keyboard.' },
@@ -465,7 +467,8 @@ var NODES = [
     what: 'This website. A personal digital garden built with vanilla HTML, CSS, and JS — no frameworks, no build step.',
     role: 'A ' + T('static-site','static site') + ' that fetches live data client-side via ' + T('https','HTTPS') + ':<br>' +
           '• Observatory bird detections and train events from <code>birds.alansbrain.com</code> (via Cloudflare → birdstation)<br>' +
-          '• Pulse news feed and Morning Brief from the same endpoint<br><br>' +
+          '• Pulse news feed and Morning Brief from the same endpoint<br>' +
+          '• Witness Scenes: 3D sighting reconstructions drawn in the browser with ' + T('threejs','three.js') + ' (' + T('webgl','WebGL') + ', loaded from the jsDelivr CDN); case data is static JSON built in a separate private repo<br><br>' +
           'Hosted on Vercel; ' + T('dns','DNS') + ' and ' + T('cdn','CDN') + ' via Cloudflare.',
     connects: ['vercel', 'cloudflare', 'visitor']
   },
